@@ -1,0 +1,18 @@
+package org.example.filesharing.entities.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChunkRequest {
+    private String fingerPrint;
+    private String chunkName;
+    private String uploadId;
+    private Integer part;
+    private Boolean status;
+}

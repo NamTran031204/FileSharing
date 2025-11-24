@@ -1,0 +1,65 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: filesharing-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: metadata
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - filesharing-network
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    container_name: filesharing-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nam}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-nam123456}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - filesharing-network
+    healthcheck:
+      test: ["CMD", "mc",  "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # tạo bucket và cấu hình CORS cho minio
+  minio-setup:
+    image: minio/mc:latest
+    container_name: filesharing-minio-setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./cors.json:/tmp/cors.json
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-nam} ${MINIO_ROOT_PASSWORD:-nam123456};
+      mc mb myminio/file-sharing --ignore-existing;
+      echo 'Bucket file-sharing created successfully!';
+      mc anonymous set-json /tmp/cors.json myminio/file-sharing;
+      echo 'CORS configuration applied successfully!';
+      mc anonymous get-json myminio/file-sharing;
+      exit 0;
+      "
+    networks:
+      - filesharing-network
+
+volumes:
+  mongodb_data:
+  minio_data:
+
+networks:
+  filesharing-network:
+    driver: bridge

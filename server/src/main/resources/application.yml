@@ -1,0 +1,14 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: l915YEHBB4jRWzCdf8Q3
+  secret-key: NHY4gjLSgO2FsqxpGkSHrcCkQPAexP30Z1fSK3gc
+  bucket-name: file-sharing
