@@ -24,7 +24,7 @@ import java.util.Map;
 @ToString
 public class UserEntity {
     @Id
-    private String id;
+    private String userId;
 
     @Field("email")
     private String email; // unique enforced by index

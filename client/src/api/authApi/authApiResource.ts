@@ -18,10 +18,11 @@ interface UserRegisterRequestDto {
 }
 
 interface UserRegisterResponseDto {
+    userId: string;
     email: string;
     userName: string;
     createdAt: string;
-    providers: AuthProviderInfo[];
+    providers: AuthProvider[];
     roles: UserRole[];
     enabled: boolean;
 }

@@ -1,6 +1,7 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.entities.dtos.chunk.AbortUploadRequestDto;
 import org.example.filesharing.entities.dtos.chunk.CompleteUploadRequest;
@@ -21,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/file-metadata")
 @RequiredArgsConstructor
+@Slf4j
 public class FileMetadataController {
 
-    private static final Logger log = LoggerFactory.getLogger(FileMetadataController.class);
     private final MetadataService metadataService;
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;

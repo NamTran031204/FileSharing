@@ -29,6 +29,9 @@ public class MetadataServiceImpl implements MetadataService {
     @Override
     public void saveMetadata(MetadataDTO metadataDTO, String uploadId) {
         try {
+            // TODO: lay ra userId tu Spring Security
+            String currentUserId = ""; // gui den truong ownerId, xoa truong ownerId khoi dto
+
             MetadataEntity metadataEntity = MetadataEntity.builder()
                     .fileName(metadataDTO.getFileName())
                     .objectName(metadataDTO.getObjectName())

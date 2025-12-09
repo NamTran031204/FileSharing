@@ -1,4 +1,4 @@
-package org.example.filesharing.entities.dtos.user;
+package org.example.filesharing.entities.dtos.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

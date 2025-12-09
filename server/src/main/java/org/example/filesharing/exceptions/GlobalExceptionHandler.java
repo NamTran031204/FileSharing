@@ -4,6 +4,7 @@ import com.mongodb.*;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
+import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             FileBusinessException.class,
-//            SubmissionBusinessException.class
+            UserBusinessException.class,
     })
     public ResponseEntity<CommonResponse<Object>> handleBusinessException(Exception ex, WebRequest request) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
@@ -25,9 +26,9 @@ public class GlobalExceptionHandler {
         if (ex instanceof FileBusinessException) {
             errorCode = ((FileBusinessException) ex).getErrorCode();
         }
-//        else if (ex instanceof SubmissionBusinessException) {
-//            errorCode = ((SubmissionBusinessException) ex).getErrorCode();
-//        }
+        else if (ex instanceof UserBusinessException) {
+            errorCode = ((UserBusinessException) ex).getErrorCode();
+        }
 
         CommonResponse<Object> response = CommonResponse.fail(
                 errorCode,

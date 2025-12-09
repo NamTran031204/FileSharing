@@ -5,7 +5,7 @@ import org.example.filesharing.enums.UploadStatus;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Document(collection = "metadata")
@@ -26,9 +26,12 @@ public class MetadataEntity {
     private String ownerId;
     private String uploadId;
     private UploadStatus status;
-    private LocalDateTime creationTimestamp;
+
     private List<ChunkEntity> chunkEntityList;
 
     private int timeToLive;
     private Boolean isActive; // qua time to live, isActive = false
+
+    private Instant creationTimestamp;
+    private Instant modificationTimestamp;
 }

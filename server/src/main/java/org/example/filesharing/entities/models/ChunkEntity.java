@@ -3,7 +3,7 @@ package org.example.filesharing.entities.models;
 import lombok.*;
 import org.example.filesharing.enums.UploadStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -16,5 +16,5 @@ public class ChunkEntity {
     private UploadStatus status;
     private String minIoLink;
     private Long part;
-    private LocalDateTime updateAt;
+    private Instant updateAt;
 }

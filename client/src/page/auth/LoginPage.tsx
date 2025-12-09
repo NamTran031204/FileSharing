@@ -11,7 +11,7 @@ const LoginPage = () => {
             email: email,
             password: password,
         });
-
+        console.log(response);
     };
 
     return (

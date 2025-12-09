@@ -1,10 +1,10 @@
-package org.example.filesharing.entities.dtos.user;
+package org.example.filesharing.entities.dtos.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.entities.models.AuthProviderInfo;
+import org.example.filesharing.enums.auth.AuthProvider;
 import org.example.filesharing.enums.auth.UserRole;
 
 import java.time.Instant;
@@ -15,10 +15,11 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class UserRegisterResponseDto {
+    private String userId;
     private String email;
     private String userName;
     private Instant createdAt;
-    private List<AuthProviderInfo> providers;
+    private List<AuthProvider> providers;
     private List<UserRole> roles;
     private boolean enabled;
 }
