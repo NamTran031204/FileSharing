@@ -1,7 +1,7 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.dtos.ChunkRequest;
+import org.example.filesharing.entities.dtos.chunk.ChunkRequest;
 
 public interface ChunkService {
-    String signUploadUrl(ChunkRequest request);
+    String completeSave(ChunkRequest request);
 }

@@ -6,13 +6,14 @@ interface PartUpload {
     etag: string;
 }
 
-interface InitiateUploadResponse {
+interface InitiateUploadResponseDto {
     uploadId: string;
-    fileId: string;
+    partUrl: Map<number, string>;
 }
 
 interface FileMetadata {
     fileName: string;
+    objectName: string;
     mimeType: string;
     fileSize: number;
     compressionAlgo?: string;
@@ -39,13 +40,43 @@ interface AbortUploadRequest {
     objectName: string;
 }
 
-const fileApi = {
+interface DownloadFileRequest {
+    objectName: string;
+    downloadFileName?: string;
+}
 
-    initiateUpload: (data: FileMetadata, signal?: AbortSignal) =>
-        baseApi.post<string>('/file-metadata/upload-metadata', data, signal),
+interface DownloadUrlResponse {
+    url: string;
+    fileSize: number;
+    fileName: string;
+    contentType: string;
+}
 
-    getPartUploadUrl: (data: GetPartUrlRequest, signal?: AbortSignal) =>
-        baseApi.post<string>('/chunk/create-upload-url', data, signal),
+const fileApiResource = {
+
+    initiateUpload: async (data: FileMetadata, signal?: AbortSignal): Promise<{
+        uploadId: string;
+        partUrl: Map<number, string>;
+    }> => {
+        const response = await baseApi.post<InitiateUploadResponseDto>(
+            '/file-metadata/upload-metadata',
+            data,
+            signal
+        );
+
+        // Convert plain object thành Map
+        const partUrlMap = new Map<number, string>();
+        if (response.partUrl) {
+            Object.entries(response.partUrl).forEach(([key, value]) => {
+                partUrlMap.set(Number(key), value);
+            });
+        }
+
+        return {
+            uploadId: response.uploadId,
+            partUrl: partUrlMap,
+        };
+    },
 
     uploadChunk: async (
         presignedUrl: string,
@@ -53,7 +84,7 @@ const fileApi = {
         signal?: AbortSignal,
         onProgress?: (loaded: number, total: number) => void
     ): Promise<string> => {
-        console.log(`Uploading chunk to URL: ${presignedUrl}`);
+        console.log(`dang upload chunk to url: ${presignedUrl}`);
         const response = await axios.put(presignedUrl, chunk, {
             headers: {
                 'Content-Type': 'application/octet-stream',
@@ -79,14 +110,48 @@ const fileApi = {
 
     abortUpload: (data: AbortUploadRequest) =>
         baseApi.post<void>('/file-metadata/upload/stop-upload', data),
+
+    getDownloadUrl: (data: DownloadFileRequest, signal?: AbortSignal) =>
+        baseApi.post<DownloadUrlResponse>('/file-metadata/download', data, signal),
+
+    downloadChunk: async (
+        url: string,
+        startByte: number,
+        endByte: number,
+        signal?: AbortSignal,
+        onProgress?: (loaded: number, total: number) => void
+    ): Promise<{ data: ArrayBuffer; downloadTimeMs: number }> => {
+        const startTime = performance.now();
+        
+        const response = await axios.get(url, {
+            headers: {
+                'Range': `bytes=${startByte}-${endByte}`,
+            },
+            responseType: 'arraybuffer',
+            signal,
+            onDownloadProgress: (progressEvent) => {
+                if (onProgress && progressEvent.total) {
+                    onProgress(progressEvent.loaded, progressEvent.total);
+                }
+            },
+        });
+
+        const downloadTimeMs = performance.now() - startTime;
+        
+        return { 
+            data: response.data as ArrayBuffer, 
+            downloadTimeMs 
+        };
+    },
 };
 
-export default fileApi;
+export default fileApiResource;
 export type {
     PartUpload,
-    InitiateUploadResponse,
+    InitiateUploadResponseDto,
     FileMetadata,
     GetPartUrlRequest,
     CompleteUploadRequest,
     AbortUploadRequest,
+    DownloadFileRequest,
 };

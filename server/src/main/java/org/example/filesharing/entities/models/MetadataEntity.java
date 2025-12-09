@@ -15,17 +15,20 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @ToString
-public class Metadata {
+public class MetadataEntity {
     @Id
     private String fileId;
     private String fileName;
+    private String objectName;
     private String mimeType;
     private Double fileSize;
     private String compressionAlgo;
-    private int ownerId;
+    private String ownerId;
     private String uploadId;
     private UploadStatus status;
     private LocalDateTime creationTimestamp;
+    private List<ChunkEntity> chunkEntityList;
+
     private int timeToLive;
-    private List<Chunk> chunkList;
+    private Boolean isActive; // qua time to live, isActive = false
 }

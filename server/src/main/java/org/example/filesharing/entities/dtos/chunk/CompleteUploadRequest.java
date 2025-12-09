@@ -1,4 +1,4 @@
-package org.example.filesharing.entities.dtos;
+package org.example.filesharing.entities.dtos.chunk;
 
 import lombok.Data;
 import org.example.filesharing.services.impl.MinIoServiceImpl;

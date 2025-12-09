@@ -1,4 +1,4 @@
-package org.example.filesharing.entities.dtos;
+package org.example.filesharing.entities.dtos.chunk;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

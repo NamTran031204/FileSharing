@@ -39,15 +39,18 @@ export default function UploadButton() {
                     compressionAlgo: 'none',
                 },
                 (uploadProgress) => {
-                setProgress(uploadProgress);
-            });
+                    setProgress(uploadProgress);
+                }
+            );
 
             setUploadedObjectName(objectName);
-            console.log('Upload successful! Object name:', objectName);
+            console.log('upload thanh cong! ten object:', objectName);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Upload failed';
-            setError(errorMessage);
-            console.error('Upload error:', err);
+            if (!errorMessage.includes('cancelled')) {
+                setError(errorMessage);
+            }
+            console.error('loi upload:', err);
         } finally {
             setIsUploading(false);
         }
@@ -67,10 +70,35 @@ export default function UploadButton() {
         return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
     };
 
+    const formatTime = (ms: number): string => {
+        if (ms <= 0) return '--';
+        const seconds = Math.floor(ms / 1000);
+        if (seconds < 60) return `${seconds}s`;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}m ${remainingSeconds}s`;
+    };
+
+    // const getStabilityColor = (stability: string): string => {
+    //     switch (stability) {
+    //         case 'stable': return 'text-green-600';
+    //         case 'unstable': return 'text-red-600';
+    //         default: return 'text-gray-600';
+    //     }
+    // };
+    //
+    // const getStabilityIcon = (stability: string): string => {
+    //     switch (stability) {
+    //         case 'stable': return '🟢';
+    //         case 'unstable': return '🔴';
+    //         default: return '⚪';
+    //     }
+    // };
+
     return (
         <div className="font-sans m-5 bg-gray-100 p-5 rounded-lg max-w-2xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                Upload
+                UPLOAD FILE
             </h1>
 
             <input
@@ -79,27 +107,25 @@ export default function UploadButton() {
                 onChange={handleFileChange}
                 disabled={isUploading}
                 className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none
-          file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 my-4
-          disabled:opacity-50 disabled:cursor-not-allowed"
+                    file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 my-4
+                    disabled:opacity-50 disabled:cursor-not-allowed"
             />
 
             {file && (
                 <div className="bg-white p-3 rounded-lg mb-4 text-sm text-gray-700">
-                    <p><strong>File:</strong> {file.name}</p>
-                    <p><strong>Size:</strong> {formatBytes(file.size)}</p>
+                    <p><strong>file:</strong> {file.name}</p>
+                    <p><strong>size:</strong> {formatBytes(file.size)}</p>
                 </div>
             )}
 
             {progress && (
-                <div className="mb-4">
+                <div className="mb-4 bg-white p-4 rounded-lg">
                     <div className="flex justify-between text-sm text-gray-700 mb-2">
-            <span>
-              Chunk {progress.currentChunk}/{progress.totalChunks}
-            </span>
+                        <span>chunk: {progress.currentChunk}/{progress.totalChunks}</span>
                         <span>{progress.percentage}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-3">
                         <div
                             className="bg-blue-600 h-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold"
                             style={{ width: `${progress.percentage}%` }}
@@ -107,21 +133,44 @@ export default function UploadButton() {
                             {progress.percentage > 10 && `${progress.percentage}%`}
                         </div>
                     </div>
-                    <div className="text-xs text-gray-600 mt-1">
-                        {formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}
+
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-gray-50 p-2 rounded">
+                            <span className="text-gray-500">uploaded:</span>
+                            <p className="font-semibold">{formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}</p>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                            <span className="text-gray-500">speed:</span>
+                            <p className="font-semibold">{progress.throughputMbps?.toFixed(2) || '--'} Mbps</p>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                            <span className="text-gray-500">chunk size:</span>
+                            <p className="font-semibold">{formatBytes(progress.currentChunkSize || 0)}</p>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                            <span className="text-gray-500">eta:</span>
+                            <p className="font-semibold">{formatTime(progress.estimatedTimeRemainingMs || 0)}</p>
+                        </div>
                     </div>
+
+                    {/*<div className="mt-3 flex items-center gap-2 text-sm">*/}
+                    {/*    <span className="text-gray-500">network:</span>*/}
+                    {/*    <span className={`font-semibold ${getStabilityColor(progress.networkStability || 'unknown')}`}>*/}
+                    {/*        {getStabilityIcon(progress.networkStability || 'unknown')} {progress.networkStability || 'detecting...'}*/}
+                    {/*    </span>*/}
+                    {/*</div>*/}
                 </div>
             )}
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    <strong>Error:</strong> {error}
+                    <strong>error:</strong> {error}
                 </div>
             )}
 
             {uploadedObjectName && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    <strong>Success!</strong> File uploaded as: {uploadedObjectName}
+                    <strong>✅ Success!</strong> File uploaded as: {uploadedObjectName}
                 </div>
             )}
 
@@ -131,20 +180,20 @@ export default function UploadButton() {
                     onClick={handleUpload}
                     disabled={isUploading || !file}
                     className="py-2.5 px-5 text-base font-medium text-white bg-blue-600 rounded-lg
-            hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300
-            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300
+                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                    {isUploading ? 'Uploading...' : 'Upload File'}
+                    {isUploading ? 'uploading...' : 'upload file'}
                 </button>
 
                 {isUploading && (
                     <button
                         onClick={handleCancel}
                         className="py-2.5 px-5 text-base font-medium text-white bg-red-600 rounded-lg
-              hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300
-              transition-colors"
+                            hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300
+                            transition-colors"
                     >
-                        Cancel
+                        cancel
                     </button>
                 )}
             </div>

@@ -1,7 +1,7 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.dtos.ChunkRequest;
+import org.example.filesharing.entities.dtos.chunk.ChunkRequest;
 import org.example.filesharing.services.ChunkService;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class ChunkServiceImpl implements ChunkService {
 
     @Override
-    public String signUploadUrl(ChunkRequest request) {
+    public String completeSave(ChunkRequest request) {
         return null;
     }
 }

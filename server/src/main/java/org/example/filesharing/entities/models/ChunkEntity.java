@@ -11,9 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @ToString
-public class Chunk {
+public class ChunkEntity {
     private String fingerPrint;
     private UploadStatus status;
     private String minIoLink;
+    private Long part;
     private LocalDateTime updateAt;
 }

@@ -9,6 +9,6 @@ spring:
 
 minio:
   endpoint: http://localhost:9000
-  access-key: l915YEHBB4jRWzCdf8Q3
-  secret-key: NHY4gjLSgO2FsqxpGkSHrcCkQPAexP30Z1fSK3gc
+  access-key: A76R4P1XZTSSC0MBPK8R
+  secret-key: jY19VMwWBsaiOj3tz7AgyS8q601l2qMKtx4luEpb
   bucket-name: file-sharing

@@ -1,0 +1,134 @@
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl wget net-tools htop
+
+sudo nano /etc/netplan/00-installer-config.yaml
+// noi dung:
+# filepath: /etc/netplan/00-installer-config.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens33:
+      addresses:
+        - 192.168.153.131/24  # IP tĩnh cho MinIO server
+      routes:
+        - to: default
+          via: 192.168.1.1  # Gateway
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+
+# Áp dụng cấu hình
+sudo netplan apply
+
+# Đặt hostname
+sudo hostnamectl set-hostname minio-server
+
+# Thêm vào /etc/hosts
+echo "192.168.153.130 minio-server" | sudo tee -a /etc/hosts
+
+# Kiểm tra
+hostname
+
+# Tạo thư mục tạm để download
+cd /tmp
+
+# Tải MinIO binary mới nhất cho Linux AMD64
+wget https://dl.min.io/server/minio/release/linux-amd64/minio
+
+# Cấp quyền thực thi
+chmod +x minio
+
+# Di chuyển vào thư mục binary hệ thống
+sudo mv minio /usr/local/bin/
+
+# Kiểm tra cài đặt
+minio --version
+# Output: minio version RELEASE.2024-XX-XXTXX-XX-XXZ
+
+# Kiểm tra help
+minio --help
+
+# Tải mc binary
+cd /tmp
+wget https://dl.min.io/client/mc/release/linux-amd64/mc
+
+# Cấp quyền và cài đặt
+chmod +x mc
+sudo mv mc /usr/local/bin/
+
+# Kiểm tra
+mc --version
+
+
+# Tạo group minio-user
+sudo groupadd -r minio-user
+
+# Tạo user minio-user
+# -r: system account
+# -g: primary group
+# -s: shell (nologin vì không cần login)
+# -d: home directory
+sudo useradd -r -g minio-user -s /sbin/nologin -d /var/lib/minio minio-user
+
+# Kiểm tra user đã tạo
+id minio-user
+# Output: uid=999(minio-user) gid=999(minio-user) groups=999(minio-user)
+
+# Kiểm tra trong /etc/passwd
+grep minio-user /etc/passwd
+# Output: minio-user:x:999:999::/var/lib/minio:/sbin/nologin
+
+# MinIO binary thuộc root nhưng có thể execute bởi tất cả
+ls -l /usr/local/bin/minio
+# Output: -rwxr-xr-x 1 root root 98M Nov 29 10:00 /usr/local/bin/minio
+
+# Tạo thư mục home
+sudo mkdir -p /var/lib/minio
+
+# Set ownership
+sudo chown minio-user:minio-user /var/lib/minio
+
+# Set permissions
+sudo chmod 750 /var/lib/minio
+
+# Kiểm tra
+ls -la /var/lib/ | grep minio
+# Output: drwxr-x--- 2 minio-user minio-user 4096 Nov 29 10:00 minio
+
+Cấu trúc thư mục đề xuất:
+
+/
+├── var/
+│   └── lib/
+│       └── minio/              # MINIO_HOME - cấu hình và metadata
+│           ├── .minio.sys/     # System metadata (tự động tạo)
+│           └── certs/          # TLS certificates (nếu có)
+│
+├── opt/
+│   └── minio/                  # Application files
+│       ├── bin/                # Binary (alternative location)
+│       └── scripts/            # Utility scripts
+│
+├── srv/
+│   └── minio/                  # Data storage
+│       └── data/               # Object data
+│           ├── bucket1/
+│           ├── bucket2/
+│           └── .minio.sys/     # Bucket metadata
+│
+└── etc/
+    ├── default/
+    │   └── minio               # Environment variables
+    └── systemd/
+        └── system/
+            └── minio.service   # Systemd service file
+
+
+# Tạo thư mục chính cho data
+sudo mkdir -p /srv/minio/data
+
+
+
+
