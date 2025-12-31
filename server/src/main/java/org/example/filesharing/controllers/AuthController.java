@@ -1,5 +1,6 @@
 package org.example.filesharing.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.entities.dtos.auth.UserLoginRequestDto;
@@ -8,7 +9,6 @@ import org.example.filesharing.entities.dtos.auth.UserRegisterRequestDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterResponseDto;
 import org.example.filesharing.entities.models.AuthProviderInfo;
 import org.example.filesharing.enums.auth.AuthProvider;
-import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.services.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +22,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public CommonResponse<UserRegisterResponseDto> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+    public CommonResponse<UserRegisterResponseDto> register(@Valid @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
         // TODO: implement logic dang nhap bang LOCAL va GOOGLE
         AuthProviderInfo authProviderInfo = new AuthProviderInfo();
@@ -32,7 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<UserLoginResponseDto> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
+    public CommonResponse<UserLoginResponseDto> login(@Valid @RequestBody UserLoginRequestDto userLoginRequestDto) {
         return CommonResponse.success(userService.loginUser(userLoginRequestDto));
     }
 }

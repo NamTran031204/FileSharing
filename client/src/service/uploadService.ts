@@ -1,12 +1,13 @@
 import SparkMD5 from 'spark-md5';
+import type {PartUpload} from '../api/fileApi/fileApiResource';
 import fileApiResource from '../api/fileApi/fileApiResource';
-import type { PartUpload } from '../api/fileApi/fileApiResource';
-import { AdaptiveBandwidthManager} from '../utils/adaptiveBandwidth';
-import { v4 as uuidv4 } from 'uuid';
+import {AdaptiveBandwidthManager} from '../utils/adaptiveBandwidth';
+import {v4 as uuidv4} from 'uuid';
 
 // Constants
 const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;             // 1 second base delay
+const MIN_MULTIPART_FILE_SIZE = 5 * 1024 * 1024;
 
 export interface UploadProgress {
     uploadedBytes: number;
@@ -162,7 +163,7 @@ export class UploadService {
 
                 const uploadTimeMs = performance.now() - startTime;
 
-                return { etag, uploadTimeMs };
+                return {etag, uploadTimeMs};
             } catch (error) {
                 lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -206,7 +207,7 @@ export class UploadService {
 
             // upload chunk voi retry
             console.log(`[thread ${partNumber}] dang upload...`);
-            const { etag, uploadTimeMs } = await this.uploadChunkWithRetry(
+            const {etag, uploadTimeMs} = await this.uploadChunkWithRetry(
                 presignedUrl,
                 chunk,
                 partNumber,
@@ -243,7 +244,8 @@ export class UploadService {
             const bandwidthStats = this.bandwidthManager.recordSuccess(
                 chunkSize,
                 uploadTimeMs,
-                remainingBytes
+                remainingBytes,
+                partNumber
             );
 
             console.log(`[thread ${partNumber}] da upload trong ${uploadTimeMs.toFixed(0)}ms`);
@@ -251,12 +253,12 @@ export class UploadService {
 
             // cap nhat so luong neu can
             if (this.semaphore && bandwidthStats.nextThreads !== this.semaphore.getMaxPermits()) {
-                console.log(`dang cap nhat threads: ${this.semaphore.getMaxPermits()} -> ${bandwidthStats.nextThreads}`);
+                console.log(`[part ${partNumber}] dang cap nhat threads: ${this.semaphore.getMaxPermits()} -> ${bandwidthStats.nextThreads}`);
                 this.semaphore.updateMaxPermits(bandwidthStats.nextThreads);
             }
 
             // luu part info (thread-safe vi js la single-threaded event loop)
-            this.completedParts.push({ partNumber, etag });
+            this.completedParts.push({partNumber, etag});
             this.uploadedBytes += chunkSize;
 
             // cap nhat progress sau khi hoan thanh chunk
@@ -284,12 +286,16 @@ export class UploadService {
     async uploadFile(
         file: File,
         metadata: {
-            ownerId: number;
+            ownerId: string;
             timeToLive: number;
             compressionAlgo?: string;
         },
         onProgress?: (progress: UploadProgress) => void
     ): Promise<string> {
+        if (file.size < MIN_MULTIPART_FILE_SIZE) {
+            return await fileApiResource.directUpload(file);
+        }
+
         // reset state
         this.abortController = new AbortController();
         this.uploadedBytes = 0;
@@ -307,7 +313,6 @@ export class UploadService {
 
         try {
             const mimeType = file.type || 'application/octet-stream';
-            const creationTimestamp = new Date().toISOString();
 
             console.log('dang khoi tao multipart upload...');
             console.log(`file: ${file.name}, kich thuoc: ${this.formatBytes(file.size)}`);
@@ -320,8 +325,6 @@ export class UploadService {
                     mimeType,
                     fileSize: file.size,
                     compressionAlgo: metadata.compressionAlgo,
-                    ownerId: metadata.ownerId,
-                    creationTimestamp,
                     timeToLive: metadata.timeToLive,
                 },
                 this.abortController.signal
@@ -414,7 +417,7 @@ export class UploadService {
             if (uploadId && objectName) {
                 console.log('dang don dep upload chua hoan thanh...');
                 try {
-                    await fileApiResource.abortUpload({ uploadId, objectName });
+                    await fileApiResource.abortUpload({uploadId, objectName});
                 } catch (abortError) {
                     console.error('khong the huy upload:', abortError);
                 }

@@ -1,12 +1,14 @@
 package org.example.filesharing.exceptions;
 
 import com.mongodb.*;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -72,6 +74,32 @@ public class GlobalExceptionHandler {
         log.error("HTTP Message Not Readable: ", ex);
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(response);
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<CommonResponse<Object>> handleHttpMessageNotReadableException(MethodArgumentNotValidException ex, WebRequest request) {
+        CommonResponse<Object> response = CommonResponse.fail(
+                ErrorCode.INTERNAL_SERVER_ERROR,
+                "Dữ liệu đầu vào không hợp lệ"
+        );
+
+        log.error("MethodArgumentNotValidException: ", ex);
+        return ResponseEntity
+                .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(response);
+    }
+
+    @ExceptionHandler(MessagingException.class)
+    public ResponseEntity<CommonResponse<Object>> handleMailMessagingException(MessagingException ex, WebRequest request) {
+        CommonResponse<Object> response = CommonResponse.fail(
+                ErrorCode.MAIL_MESSAGING_ERROR,
+                ex.getMessage()
+        );
+
+        log.error("Internal Error: ", ex);
+        return ResponseEntity
+                .status(ErrorCode.MAIL_MESSAGING_ERROR.getHttpStatus())
                 .body(response);
     }
 

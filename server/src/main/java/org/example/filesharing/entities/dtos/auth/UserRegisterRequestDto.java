@@ -11,7 +11,7 @@ public class UserRegisterRequestDto {
 
     @NotNull
     @NotBlank
-    @Email
+    @Email(message = "Email khong dung dinh dang")
     private String email;
 
     @NotNull

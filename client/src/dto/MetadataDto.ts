@@ -1,4 +1,3 @@
-
 export interface MetadataDto {
     fileId: string;
     fileName: string;

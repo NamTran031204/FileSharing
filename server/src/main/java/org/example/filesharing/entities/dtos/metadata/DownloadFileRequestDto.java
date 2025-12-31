@@ -6,5 +6,4 @@ import lombok.Data;
 public class DownloadFileRequestDto {
     private String objectName;
     private String downloadFileName;
-    private int expireTime; // second
 }

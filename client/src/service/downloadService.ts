@@ -1,5 +1,5 @@
 import fileApiResource from '../api/fileApi/fileApiResource';
-import { AdaptiveBandwidthManager } from '../utils/adaptiveBandwidth';
+import {AdaptiveBandwidthManager} from '../utils/adaptiveBandwidth';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000;
@@ -90,17 +90,17 @@ class Semaphore {
 
 export class DownloadService {
     private abortController: AbortController | null = null;
-    
+
     private bandwidthManager: AdaptiveBandwidthManager;
-    
+
     private semaphore: Semaphore | null = null;
-    
+
     private downloadedChunks: DownloadedChunk[] = [];
-    
+
     private downloadPromises: Promise<void>[] = [];
-    
+
     private downloadedBytes: number = 0;
-    
+
     private totalChunksCreated: number = 0;
 
     constructor() {
@@ -179,12 +179,12 @@ export class DownloadService {
 
             // download chunk voi retry
             console.log(`[thread ${partNumber}] dang download...`);
-            const { data, downloadTimeMs } = await this.downloadChunkWithRetry(
+            const {data, downloadTimeMs} = await this.downloadChunkWithRetry(
                 presignedUrl,
                 startByte,
                 endByte,
                 partNumber,
-                (loaded, _total) => {
+                (loaded) => {
                     // progress callback trong khi download
                     const currentDownloaded = this.downloadedBytes + loaded;
                     const percentage = Math.round((currentDownloaded / totalFileSize) * 100);
@@ -211,7 +211,8 @@ export class DownloadService {
             const bandwidthStats = this.bandwidthManager.recordSuccess(
                 chunkSize,
                 downloadTimeMs,
-                remainingBytes
+                remainingBytes,
+                partNumber
             );
 
             console.log(`[thread ${partNumber}] da download trong ${downloadTimeMs.toFixed(0)}ms`);
@@ -219,7 +220,7 @@ export class DownloadService {
 
             const pacingDelay = this.bandwidthManager.calculatePacingDelay(chunkSize, downloadTimeMs);
             if (pacingDelay > 0) {
-                console.log(`[thread ${partNumber}] pacing delay: ${pacingDelay.toFixed(0)}ms`);
+                console.log(`[part ${partNumber}] pacing delay: ${pacingDelay.toFixed(0)}ms`);
                 await this.sleep(pacingDelay);
             }
 
@@ -257,7 +258,7 @@ export class DownloadService {
 
         const buffers = this.downloadedChunks.map(chunk => chunk.data);
 
-        return new Blob(buffers, { type: contentType });
+        return new Blob(buffers, {type: contentType});
     }
 
     // download file voi adaptive chunking va da luong
@@ -302,12 +303,6 @@ export class DownloadService {
             const presignedUrl = downloadInfo.url;
             const fileSize = downloadInfo.fileSize;
             const contentType = downloadInfo.contentType;
-
-            // lay thong tin file (size) bang head request
-            // const { fileSize, contentType } = await fileApi.getFileInfo(
-            //     presignedUrl,
-            //     this.abortController.signal
-            // );
 
             console.log(`kich thuoc file: ${this.formatBytes(fileSize)}, loai: ${contentType}`);
 
@@ -369,7 +364,7 @@ export class DownloadService {
             // xac dinh ten file
             const fileName = downloadFileName || objectName.split('_').slice(1).join('_') || objectName;
 
-            return { blob, fileName };
+            return {blob, fileName};
 
         } catch (error) {
             const isUserCancelled = error instanceof Error &&
@@ -402,7 +397,7 @@ export class DownloadService {
         downloadFileName?: string,
         onProgress?: (progress: DownloadProgress) => void
     ): Promise<void> {
-        const { blob, fileName } = await this.downloadFile(objectName, downloadFileName, onProgress);
+        const {blob, fileName} = await this.downloadFile(objectName, downloadFileName, onProgress);
 
         // tao url tam va trigger download
         const url = URL.createObjectURL(blob);

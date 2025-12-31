@@ -15,9 +15,11 @@ import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/file-metadata")
@@ -52,20 +54,21 @@ public class FileMetadataController {
         }
         if (input.getUploadId() == null || input.getUploadId().isBlank()) {
             log.error("uploadId is required");
-            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR,"uploadId is required");
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "uploadId is required");
         }
         if (input.getParts() == null || input.getParts().isEmpty()) {
             log.error("parts list is required");
-            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR,"parts list is required");
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "parts list is required");
         }
-
         minIoService.completeMultipartUpload(input.getObjectName(), input.getUploadId(), input.getParts());
+        metadataService.completeUpload(input.getObjectName(), input.getUploadId());
         return CommonResponse.success("complete upload");
     }
 
     @PostMapping("/upload/stop-upload")
     public CommonResponse<String> stopUpload(@RequestBody AbortUploadRequestDto input) {
         minIoService.abortMultipartUpload(input.getObjectName(), input.getUploadId());
+        metadataService.uploadFailed(input.getObjectName(), input.getUploadId());
         return CommonResponse.success("stopped upload");
     }
 
@@ -80,21 +83,57 @@ public class FileMetadataController {
                 input.setDownloadFileName(fileName);
             }
 
-            if (input.getExpireTime() == 0) {
-                input.setExpireTime(100000);
-            }
-
-            String presignedUrl = minIoService.getPresignedDownloadUrl(input);
+            String presignedUrl = minIoService.getPresignedDownloadUrl(input, metadataEntity.getFileSize());
 
             // Trả về cả URL và fileSize
             return CommonResponse.success(DownloadFileResponseDto.builder()
-                            .url(presignedUrl)
-                            .fileSize(metadataEntity.getFileSize())
-                            .fileName(fileName)
-                            .mimeType(metadataEntity.getMimeType())
+                    .url(presignedUrl)
+                    .fileSize(metadataEntity.getFileSize())
+                    .fileName(fileName)
+                    .mimeType(metadataEntity.getMimeType())
                     .build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @PostMapping(value = "/direct-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public CommonResponse<String> directUpload(@RequestParam("file") MultipartFile file) {
+        MetadataDTO dto = new MetadataDTO();
+        dto.setFileName(file.getOriginalFilename());
+        dto.setObjectName(UUID.randomUUID() + "_" + file.getOriginalFilename());
+        dto.setMimeType(file.getContentType());
+        dto.setFileSize((double) file.getSize());
+        dto.setCompressionAlgo(detectCompressionAlgo(file.getOriginalFilename(), file.getContentType()));
+
+        MetadataEntity response = metadataService.saveMetadata(dto, "");
+
+        return CommonResponse.success(minIoService.uploadSmallFile(file, response.getObjectName()));
+    }
+
+    private String detectCompressionAlgo(String fileName, String mimeType) {
+        if (fileName == null) return null;
+        String lowerName = fileName.toLowerCase();
+
+        if (lowerName.endsWith(".zip") || "application/zip".equals(mimeType)) {
+            return "ZIP";
+        } else if (lowerName.endsWith(".rar") || mimeType.contains("rar")) {
+            return "RAR";
+        } else if (lowerName.endsWith(".gz") || lowerName.endsWith(".gzip")) {
+            return "GZIP";
+        } else if (lowerName.endsWith(".7z")) {
+            return "7Z";
+        } else if (lowerName.endsWith(".tar")) {
+            return "TAR";
+        }
+
+        return null;
+    }
+
+    @DeleteMapping(value = "/delete/{fileId}")
+    public CommonResponse<String> deleteFile(@PathVariable("fileId") String fileId) {
+        // trong deleteMetadata đã có deleteFile tại Minio rồi :))
+        metadataService.deleteMetadata(fileId);
+        return CommonResponse.success();
     }
 }

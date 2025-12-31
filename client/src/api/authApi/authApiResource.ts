@@ -1,23 +1,21 @@
-import baseApi from '../baseApi';
+import {API_BASE, type CommonResponse, tokenManager} from '../baseApi';
+import type {AuthProvider, UserRole} from "../enums.ts";
+import axios from "axios";
 
-export type AuthProvider = 'LOCAL' | 'GOOGLE';
-
-export type UserRole = 'ROLE_USER' | 'ROLE_ADMIN';
-
-interface AuthProviderInfo {
+export interface AuthProviderInfo {
     provider: AuthProvider;
     providerId: string | null;
     linkedAt: string;
 }
 
-interface UserRegisterRequestDto {
+export interface UserRegisterRequestDto {
     email: string;
     password: string;
-    retypePassword: string;
+    confirmPassword: string;
     userName: string;
 }
 
-interface UserRegisterResponseDto {
+export interface UserRegisterResponseDto {
     userId: string;
     email: string;
     userName: string;
@@ -27,30 +25,55 @@ interface UserRegisterResponseDto {
     enabled: boolean;
 }
 
-interface UserLoginRequestDto {
+export interface UserLoginRequestDto {
     email: string;
     password: string;
 }
 
-interface UserLoginResponseDto {
-    token: string;
+export interface UserLoginResponseDto {
+    accessToken: string;
+    refreshToken?: string;
 }
+
+const authAxios = axios.create({
+    baseURL: API_BASE,
+    headers: {
+        'Content-Type': 'application/json',
+    }
+});
 
 const authApiResource = {
 
-    register: async (data: UserRegisterRequestDto) =>
-        baseApi.post<UserRegisterResponseDto>('/user/register', data),
+    register: async (data: UserRegisterRequestDto) => {
+        const response = await authAxios.post<CommonResponse<UserRegisterResponseDto>>(
+            '/auth/register',
+            data
+        );
 
-    login: async (data: UserLoginRequestDto) =>
-        baseApi.post<UserLoginResponseDto>('/user/login', data),
+        if (!response.data.isSuccessful) {
+            throw new Error(response.data.message || 'Register failed');
+        }
+        return response.data.data;
+    },
+
+    login: async (data: UserLoginRequestDto) => {
+        const response = await authAxios.post<CommonResponse<UserLoginResponseDto>>(
+            '/auth/login',
+            data
+        );
+
+        if (!response.data.isSuccessful) {
+            throw new Error(response.data.message || 'Login failed');
+        }
+
+        tokenManager.setTokens(
+            response.data.data.accessToken,
+            response.data.data.refreshToken!
+        );
+
+        return response.data.data;
+    },
 
 }
 
 export default authApiResource;
-export type {
-    UserRegisterRequestDto,
-    AuthProviderInfo,
-    UserRegisterResponseDto,
-    UserLoginRequestDto,
-    UserLoginResponseDto
-}

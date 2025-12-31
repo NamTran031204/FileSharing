@@ -9,7 +9,7 @@ import lombok.Data;
 public class UserLoginRequestDto {
     @NotNull
     @NotBlank
-    @Email
+    @Email(message = "Email khong dung dinh dang")
     private String email;
 
     @NotBlank

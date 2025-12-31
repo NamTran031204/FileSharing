@@ -1,17 +1,20 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import {useState} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
 import authApiResource from "../../api/authApi/authApiResource.ts";
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
-        const response = await authApiResource.login({
+        await authApiResource.login({
             email: email,
             password: password,
         });
-        console.log(response);
+        setTimeout(() => {
+            navigate('/my-files');
+        }, 2000);
     };
 
     return (

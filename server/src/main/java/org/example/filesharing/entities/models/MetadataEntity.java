@@ -2,7 +2,11 @@ package org.example.filesharing.entities.models;
 
 import lombok.*;
 import org.example.filesharing.enums.UploadStatus;
+import org.example.filesharing.enums.objectPermission.ObjectPermission;
+import org.example.filesharing.enums.objectPermission.ObjectVisibility;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -27,11 +31,17 @@ public class MetadataEntity {
     private String uploadId;
     private UploadStatus status;
 
-    private List<ChunkEntity> chunkEntityList;
-
     private int timeToLive;
     private Boolean isActive; // qua time to live, isActive = false
 
+    private ObjectPermission publicPermission;
+    private ObjectVisibility visibility;
+
+    private List<UserFilePermission> userFilePermissions;
+
+    @CreatedDate
     private Instant creationTimestamp;
+
+    @LastModifiedDate
     private Instant modificationTimestamp;
 }

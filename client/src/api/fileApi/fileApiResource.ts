@@ -1,4 +1,4 @@
-import baseApi from '../baseApi';
+import baseApi, {API_BASE, type CommonResponse} from '../baseApi';
 import axios from 'axios';
 
 interface PartUpload {
@@ -11,22 +11,13 @@ interface InitiateUploadResponseDto {
     partUrl: Map<number, string>;
 }
 
-interface FileMetadata {
+interface MetadataDto {
     fileName: string;
     objectName: string;
     mimeType: string;
     fileSize: number;
     compressionAlgo?: string;
-    ownerId: number;
-    creationTimestamp?: string;
     timeToLive: number;
-}
-
-interface GetPartUrlRequest {
-    chunkName: string;
-    uploadId: string;
-    part: number;
-    fingerPrint: string;
 }
 
 interface CompleteUploadRequest {
@@ -35,26 +26,30 @@ interface CompleteUploadRequest {
     parts: PartUpload[];
 }
 
-interface AbortUploadRequest {
+interface AbortUploadRequestDto {
     uploadId: string;
     objectName: string;
 }
 
-interface DownloadFileRequest {
+interface DownloadFileRequestDto {
     objectName: string;
     downloadFileName?: string;
 }
 
-interface DownloadUrlResponse {
+interface DownloadFileResponseDto {
     url: string;
     fileSize: number;
     fileName: string;
     contentType: string;
 }
 
+interface DirectDownloadRequestDto {
+    objectName: string;
+}
+
 const fileApiResource = {
 
-    initiateUpload: async (data: FileMetadata, signal?: AbortSignal): Promise<{
+    initiateUpload: async (data: MetadataDto, signal?: AbortSignal): Promise<{
         uploadId: string;
         partUrl: Map<number, string>;
     }> => {
@@ -108,11 +103,11 @@ const fileApiResource = {
     completeUpload: (data: CompleteUploadRequest, signal?: AbortSignal) =>
         baseApi.post<string>('/file-metadata/upload/complete', data, signal),
 
-    abortUpload: (data: AbortUploadRequest) =>
+    abortUpload: (data: AbortUploadRequestDto) =>
         baseApi.post<void>('/file-metadata/upload/stop-upload', data),
 
-    getDownloadUrl: (data: DownloadFileRequest, signal?: AbortSignal) =>
-        baseApi.post<DownloadUrlResponse>('/file-metadata/download', data, signal),
+    getDownloadUrl: (data: DownloadFileRequestDto, signal?: AbortSignal) =>
+        baseApi.post<DownloadFileResponseDto>('/file-metadata/download', data, signal),
 
     downloadChunk: async (
         url: string,
@@ -122,7 +117,7 @@ const fileApiResource = {
         onProgress?: (loaded: number, total: number) => void
     ): Promise<{ data: ArrayBuffer; downloadTimeMs: number }> => {
         const startTime = performance.now();
-        
+
         const response = await axios.get(url, {
             headers: {
                 'Range': `bytes=${startByte}-${endByte}`,
@@ -137,21 +132,67 @@ const fileApiResource = {
         });
 
         const downloadTimeMs = performance.now() - startTime;
-        
-        return { 
-            data: response.data as ArrayBuffer, 
-            downloadTimeMs 
+
+        return {
+            data: response.data as ArrayBuffer,
+            downloadTimeMs
         };
     },
+
+    directUpload: async (file: File, signal?: AbortSignal): Promise<string> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await axios.post<CommonResponse<string>>(
+            `${API_BASE}/file-metadata/direct-upload`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                signal
+            }
+        );
+        if (!response.data.isSuccessful) {
+            throw new Error(response.data.message || 'Direct upload failed');
+        }
+
+        return response.data.data;
+    },
+
+    directDownload: async (objectName: string, signal?: AbortSignal): Promise<ArrayBuffer> => {
+        const response = await axios.post<CommonResponse<number[]>>(
+            `${API_BASE}/file-metadata/direct-download`,
+            {objectName} as DirectDownloadRequestDto,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                signal
+            }
+        );
+
+        if (!response.data.isSuccessful) {
+            throw new Error(response.data.message || 'Direct download failed');
+        }
+
+        // chuyen tu byte[] sang buffer array
+        const byteArray = new Uint8Array(response.data.data);
+        return byteArray.buffer;
+    },
+
+    deleteFile: async (fileId: string, signal?: AbortSignal) =>
+        baseApi.delete<string>(`/file-metadata/${fileId}`, signal),
+
 };
 
 export default fileApiResource;
 export type {
     PartUpload,
     InitiateUploadResponseDto,
-    FileMetadata,
-    GetPartUrlRequest,
+    MetadataDto,
     CompleteUploadRequest,
-    AbortUploadRequest,
-    DownloadFileRequest,
+    AbortUploadRequestDto,
+    DownloadFileRequestDto,
+    DirectDownloadRequestDto,
 };

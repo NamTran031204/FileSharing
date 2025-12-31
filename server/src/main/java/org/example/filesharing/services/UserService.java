@@ -8,5 +8,6 @@ import org.example.filesharing.entities.models.AuthProviderInfo;
 
 public interface UserService {
     UserRegisterResponseDto registerUser(UserRegisterRequestDto input, AuthProviderInfo authProviderInfo);
+
     UserLoginResponseDto loginUser(UserLoginRequestDto input);
 }

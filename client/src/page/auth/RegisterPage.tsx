@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {useState} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
 import authApiResource from "../../api/authApi/authApiResource.ts";
 import {ApiError} from "../../api/baseApi.ts";
 
@@ -7,7 +7,7 @@ const RegisterPage = () => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [retypePassword, setRetypePassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -17,11 +17,11 @@ const RegisterPage = () => {
         setIsLoading(true);
         setMessage(null);
         try {
-            const response = await authApiResource.register({
+            await authApiResource.register({
                 email: email,
                 userName: username,
                 password: password,
-                retypePassword: retypePassword,
+                confirmPassword: confirmPassword,
             });
 
             setMessage({
@@ -122,8 +122,8 @@ const RegisterPage = () => {
                             </label>
                             <input
                                 type="password"
-                                value={retypePassword}
-                                onChange={(e) => setRetypePassword(e.target.value)}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                                 placeholder="Retype your password"
                             />

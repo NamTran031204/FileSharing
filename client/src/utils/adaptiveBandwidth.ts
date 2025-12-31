@@ -18,7 +18,7 @@ const EWMA_ALPHA = 0.3;
 // bandwidth limiting - su dung 70% bandwidth de khong gay nghen
 const BANDWIDTH_UTILIZATION_TARGET = 0.7;
 
-const INITIAL_CONCURRENT_THREADS = 3;      // so luong khoi tao
+const INITIAL_CONCURRENT_THREADS = 1;      // so luong khoi tao
 const MAX_CONCURRENT_THREADS = 5;          // so luong toi da
 const MIN_CONCURRENT_THREADS = 1;          // so luong toi thieu
 
@@ -26,14 +26,14 @@ export interface BandwidthStats {
     instantThroughputBps: number;      // bytes per second (tuc thoi)
     averageThroughputBps: number;      // bytes per second (ewma)
     averageThroughputMbps: number;     // megabits per second (hien thi)
-    
+
     currentChunkSize: number;
     nextChunkSize: number;
-    
+
     uploadTimeMs: number;
-    
+
     sampleCount: number;
-    
+
     estimatedTimeRemainingMs: number;
 
     currentThreads: number;
@@ -84,9 +84,9 @@ export class AdaptiveBandwidthManager {
     // reset ve trang thai ban dau
     reset(): void {
         this.averageThroughputBps = 0;
-        
+
         this.currentChunkSize = this.initialChunkSize;
-        
+
         this.sampleCount = 0;
         this.isPanicMode = false;
         this.consecutiveFailures = 0;
@@ -109,11 +109,13 @@ export class AdaptiveBandwidthManager {
     // chunkSizeBytes - kich thuoc chunk vua upload (bytes)
     // uploadTimeMs - thoi gian upload (milliseconds)
     // remainingBytes - so bytes con lai can upload
+    // partNumber - so thu tu cua chunk
     // tra ve BandwidthStats
     recordSuccess(
         chunkSizeBytes: number,
         uploadTimeMs: number,
-        remainingBytes: number
+        remainingBytes: number,
+        partNumber?: number
     ): BandwidthStats {
         // reset panic mode khi thanh cong
         this.consecutiveFailures = 0;
@@ -142,7 +144,7 @@ export class AdaptiveBandwidthManager {
         }
 
         // tinh toan chunk size tiep theo
-        const { nextChunkSize, nextThreads } = this.calculateNextChunkSizeAndThreads(uploadTimeMs);
+        const {nextChunkSize, nextThreads} = this.calculateNextChunkSizeAndThreads(uploadTimeMs, partNumber);
 
         // tinh thoi gian con lai uoc tinh
         const estimatedTimeRemainingMs = this.estimateTimeRemaining(remainingBytes);
@@ -165,6 +167,9 @@ export class AdaptiveBandwidthManager {
         this.currentChunkSize = nextChunkSize;
 
         this.currentThreads = nextThreads;
+
+        const partTag = partNumber !== undefined ? `[part ${partNumber}] ` : '';
+        console.log(`${partTag}stat hien tai: threads=${stats.nextThreads}, chunkSize=${this.formatBytes(stats.nextChunkSize)}`);
 
         return stats;
     }
@@ -199,75 +204,52 @@ export class AdaptiveBandwidthManager {
     // - tinh tong throughput = chunk_size * so_luong
     // - neu chua dat 70% bandwidth: tang luong truoc, neu dat max luong thi tang chunk size
     // - neu qua 70% bandwidth: giam chunk size truoc, neu dat min chunk thi giam luong
-    private calculateNextChunkSizeAndThreads(uploadTimeMs: number): { nextChunkSize: number; nextThreads: number } {
+    private calculateNextChunkSizeAndThreads(uploadTimeMs: number, partNumber?: number): {
+        nextChunkSize: number;
+        nextThreads: number
+    } {
         let nextChunkSize = this.currentChunkSize;
         let nextThreads = this.currentThreads;
 
-        // tinh tong throughput hien tai cua tat ca cac luong
-        // totalThroughput = (chunkSize / uploadTime) * numThreads
-        const currentTotalThroughputBps = (this.currentChunkSize / uploadTimeMs) * 1000 * this.currentThreads;
+        // tinh throughput trung binh moi thread
+        const perThreadThroughputBps = this.averageThroughputBps;
 
-        // uoc tinh bandwidth toi da (lay max tu lich su * so luong)
-        if (this.throughputHistory.length > 0) {
-            const maxObservedThroughput = Math.max(...this.throughputHistory);
-            this.estimatedMaxBandwidthBps = Math.max(
-                this.estimatedMaxBandwidthBps,
-                maxObservedThroughput * this.currentThreads * 1.2 // nhan 1.2 de co headroom
-            );
-        }
-
-        // tinh bandwidth target (70%)
-        // const targetBandwidthBps = this.estimatedMaxBandwidthBps * BANDWIDTH_UTILIZATION_TARGET;
-
-        // tinh ty le su dung bandwidth hien tai
-        const currentUtilization = this.estimatedMaxBandwidthBps > 0 
-            ? currentTotalThroughputBps / this.estimatedMaxBandwidthBps 
-            : 0;
-
-        console.log(`bandwidth utilization: ${(currentUtilization * 100).toFixed(1)}% (target: 70%)`);
+        const partTag = partNumber !== undefined ? `[part ${partNumber}] ` : '';
+        console.log(`${partTag}upload time: ${uploadTimeMs}ms, per-thread throughput: ${(perThreadThroughputBps * 8 / (1024 * 1024)).toFixed(2)} Mbps`);
 
         if (uploadTimeMs < TARGET_UPLOAD_TIME_MIN) {
-            // qua nhanh - can tang throughput
-            console.log(`chunk qua nhanh (${uploadTimeMs}ms), can tang throughput`);
-            
-            if (currentUtilization < BANDWIDTH_UTILIZATION_TARGET) {
-                // chua dat 70% bandwidth
-                if (nextThreads < MAX_CONCURRENT_THREADS) {
-                    // uu tien tang so luong truoc
-                    nextThreads++;
-                    console.log(`tang so luong len ${nextThreads}`);
-                } else {
-                    // da dat max luong, tang chunk size
-                    nextChunkSize = Math.floor(this.currentChunkSize * 1.5);
-                    console.log(`da dat max luong, tang chunk size`);
-                }
+            // qua nhanh - uu tien tang thread truoc, sau do tang chunk size
+            console.log(`${partTag}chunk qua nhanh (${uploadTimeMs}ms), can tang throughput`);
+
+            if (nextThreads < MAX_CONCURRENT_THREADS) {
+                // chua dat max thread - tang thread
+                nextThreads++;
+                console.log(`${partTag}tang so luong thread len ${nextThreads}`);
             } else {
-                // da dat/vuot 70% - giu nguyen
-                console.log(`da dat 70% bandwidth, giu nguyen cai dat hien tai`);
+                // da dat max thread - tang chunk size
+                nextChunkSize = Math.floor(this.currentChunkSize * 1.5);
+                console.log(`${partTag}da dat max thread, tang chunk size len ${this.formatBytes(nextChunkSize)}`);
             }
         } else if (uploadTimeMs > TARGET_UPLOAD_TIME_MAX) {
-            // qua cham - can giam throughput
-            console.log(`chunk qua cham (${uploadTimeMs}ms), can giam throughput`);
-            
-            // giam chunk size truoc
+            // qua cham - giam chunk size truoc, sau do giam thread
+            console.log(`${partTag}chunk qua cham (${uploadTimeMs}ms), can giam throughput`);
+
             if (nextChunkSize > this.minChunkSize) {
                 nextChunkSize = Math.floor(this.currentChunkSize / 1.2);
-                console.log(`giam chunk size`);
+                console.log(`${partTag}giam chunk size xuong ${this.formatBytes(nextChunkSize)}`);
             } else if (nextThreads > MIN_CONCURRENT_THREADS) {
-                // da dat min chunk, giam so luong
                 nextThreads--;
-                console.log(`da dat min chunk, giam so luong xuong ${nextThreads}`);
+                console.log(`${partTag}da dat min chunk, giam so luong xuong ${nextThreads}`);
             }
         } else {
-            // trong vung ly tuong
-            console.log(`thoi gian chunk toi uu (${uploadTimeMs}ms), giu nguyen kich thuoc`);
-            
-            // van kiem tra neu chua dat 70% thi co the tang nhe
-            if (currentUtilization < BANDWIDTH_UTILIZATION_TARGET * 0.8) {
-                // duoi 56% (80% cua 70%) - co the tang nhe
+            // trong vung ly tuong (1-5 giay) - co the tang nhe neu throughput tot
+            console.log(`${partTag}thoi gian chunk toi uu (${uploadTimeMs}ms)`);
+
+            // neu dang o giua vung ly tuong va chua max thread, co the tang
+            if (uploadTimeMs < (TARGET_UPLOAD_TIME_MIN + TARGET_UPLOAD_TIME_MAX) / 2) {
                 if (nextThreads < MAX_CONCURRENT_THREADS) {
                     nextThreads++;
-                    console.log(`chua su dung het, tang so luong len ${nextThreads}`);
+                    console.log(`${partTag}con headroom, tang thread len ${nextThreads}`);
                 }
             }
         }
@@ -276,7 +258,7 @@ export class AdaptiveBandwidthManager {
         nextChunkSize = Math.min(this.maxChunkSize, Math.max(this.minChunkSize, nextChunkSize));
         nextThreads = Math.min(MAX_CONCURRENT_THREADS, Math.max(MIN_CONCURRENT_THREADS, nextThreads));
 
-        return { nextChunkSize, nextThreads };
+        return {nextChunkSize, nextThreads};
     }
 
     // tinh delay can thiet de dat target bandwidth utilization (70%)

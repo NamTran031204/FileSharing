@@ -11,16 +11,22 @@ import org.example.filesharing.enums.auth.UserRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.JwtService;
 import org.example.filesharing.services.UserService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepo userRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public UserRegisterResponseDto registerUser(UserRegisterRequestDto input, AuthProviderInfo authProviderInfo) {
@@ -28,8 +34,7 @@ public class UserServiceImpl implements UserService {
         if (!input.getPassword().equals(input.getConfirmPassword())) {
             throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID, "Passwords do not match");
         }
-        //TODO: hash password
-        String passwordHash = input.getPassword();
+        String passwordHash = passwordEncoder.encode(input.getPassword());
         boolean isEmailVerified = verifyEmail(input.getEmail());
 
         UserEntity userEntity = UserEntity.builder()
@@ -41,18 +46,21 @@ public class UserServiceImpl implements UserService {
                 .providers(List.of(authProviderInfo))
                 .build();
         if (!input.getUserName().isBlank() && !input.getPassword().isEmpty()) {
-            userEntity.setUserName(input.getUserName());
+            userEntity.setPublicUserName(input.getUserName());
         } else {
             // TODO: kiem tra lai cach tao userName neu input.getUserName() null hoac blank
             // tam thoi la lay ten email
-            userEntity.setUserName(input.getEmail().substring(0, input.getEmail().indexOf("@")));
+            userEntity.setPublicUserName(input.getEmail().substring(0, input.getEmail().indexOf("@")));
         }
         UserEntity savedUser = userRepo.save(userEntity);
 
-        UserRegisterResponseDto response = UserRegisterResponseDto.builder()
+        var accessToken = jwtService.generateToken(savedUser);
+        var refreshToken = jwtService.generateRefreshToken(savedUser);
+
+        return UserRegisterResponseDto.builder()
                 .userId(savedUser.getUserId())
                 .email(savedUser.getEmail())
-                .userName(savedUser.getUserName())
+                .userName(savedUser.getPublicUserName())
                 .createdAt(savedUser.getCreatedAt())
                 .providers(savedUser.getProviders().parallelStream()
                         .map(AuthProviderInfo::getProvider)
@@ -60,24 +68,28 @@ public class UserServiceImpl implements UserService {
                 .roles(savedUser.getRoles())
                 .enabled(savedUser.isEnabled())
                 .build();
-        return response;
     }
 
     @Override
     public UserLoginResponseDto loginUser(UserLoginRequestDto input) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        input.getEmail(),
+                        input.getPassword()
+                )
+        );
+
         UserEntity user = userRepo.findByEmail(input.getEmail())
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND));
 
-        //TODO: hash password
-        String passwordHash = input.getPassword();
-        if (!user.getPassword().equals(passwordHash)) {
-            throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID, "Passwords do not correct");
-        }
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
 
-        // TODO: lay ra token khi login
-        String token = "";
-
-        return UserLoginResponseDto.builder().token(token).build();
+        return UserLoginResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     // TODO: sau khi cau hinh Spring Security: can cau hinh verify Email

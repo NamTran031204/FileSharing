@@ -1,20 +1,24 @@
 package org.example.filesharing.services.impl;
 
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
-import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.exceptions.ErrorCode;
+import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MinIoService;
 import org.springframework.beans.factory.annotation.Value;
-
-import io.minio.GetPresignedObjectUrlArgs;
-import okhttp3.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +33,8 @@ public class MinIoServiceImpl implements MinIoService {
     private final OkHttpClient httpClient = new OkHttpClient();
     private final MetadataRepo metadataRepo;
 
-    private Integer CHUNK_SIZE = 5 * 1024 * 1024;
+    private final Integer CHUNK_SIZE = 5 * 1024 * 1024;
+    private static final long MAX_DIRECT_UPLOAD_SIZE = 5 * 1024 * 1024;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -78,7 +83,7 @@ public class MinIoServiceImpl implements MinIoService {
                 String uploadId = extractUploadIdFromXml(xmlResponse);
 
                 Map<Integer, String> partUrls = new HashMap<>();
-                int numberOfPart = fileSize.intValue()/CHUNK_SIZE + 1;
+                int numberOfPart = fileSize.intValue() / CHUNK_SIZE + 1;
 
                 log.info("Number of parts: {}", numberOfPart);
 
@@ -245,16 +250,6 @@ public class MinIoServiceImpl implements MinIoService {
                 if (!response.isSuccessful()) {
                     throw new RuntimeException("Failed to abort multipart upload: " + response.code());
                 }
-
-                MetadataEntity current = metadataRepo.findByObjectNameAndUploadId(objectName, uploadId)
-                        .orElse(null);
-
-                if (current != null) {
-                    metadataRepo.delete(current);
-                    log.info("Deleted metadata for aborted upload: {}", objectName);
-                } else {
-                    log.warn("Metadata not found for object: {}, uploadId: {}", objectName, uploadId);
-                }
             }
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi abort upload", e);
@@ -262,7 +257,7 @@ public class MinIoServiceImpl implements MinIoService {
     }
 
     @Override
-    public String getPresignedDownloadUrl(DownloadFileRequestDto input) throws Exception {
+    public String getPresignedDownloadUrl(DownloadFileRequestDto input, Double fileSize) throws Exception {
         Map<String, String> queryParams = new HashMap<>();
 
         // Content-Disposition header để browser download với tên file custom
@@ -276,11 +271,63 @@ public class MinIoServiceImpl implements MinIoService {
                         .method(Method.GET)
                         .bucket(bucketName)
                         .object(input.getObjectName())
-                        .expiry(input.getExpireTime(), TimeUnit.SECONDS)
+                        .expiry(calculateExpireTime((int) (fileSize / (5 * 1024 * 1024))), TimeUnit.SECONDS)
                         .extraQueryParams(queryParams)
                         .build()
         );
         return url;
+    }
+
+    @Override
+    public String uploadSmallFile(MultipartFile file, String objectName) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be null or empty");
+        }
+        if (objectName == null || objectName.isBlank()) {
+            throw new IllegalArgumentException("Object name cannot be null or empty");
+        }
+        if (file.getSize() > MAX_DIRECT_UPLOAD_SIZE) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed size for direct upload (5MB). Use multipart upload instead.");
+        }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
+                            .build()
+            );
+
+            log.info("Successfully uploaded small file '{}' to bucket '{}', size: {} bytes",
+                    objectName, bucketName, file.getSize());
+
+            return objectName;
+        } catch (Exception e) {
+            log.error("Failed to upload small file '{}' to bucket '{}'", objectName, bucketName, e);
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void deleteFile(String objectName) {
+        if (objectName == null || objectName.isBlank()) {
+            throw new FileBusinessException(ErrorCode.FILE_OBJECT_NAME_CANNOT_BE_EMPTY, "Object name cannot be null or empty");
+        }
+
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+            log.info("Successfully deleted file '{}' from bucket '{}'", objectName, bucketName);
+        } catch (Exception e) {
+            log.error("Failed to delete file '{}' from bucket '{}'", objectName, bucketName, e);
+            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to delete file: " + e.getMessage());
+        }
     }
 
     private String extractUploadIdFromXml(String xml) {
@@ -315,7 +362,7 @@ public class MinIoServiceImpl implements MinIoService {
         } else if (partNumber < 100) {
             return partNumber * 60; // 500Mb dau cho du gia thoi gian: 60s/chunk
         } else {
-            return 10*60*5 + 90*60 + partNumber * 10; // tu cac part sau thi chi cho 10s/chunk
+            return 10 * 60 * 5 + 90 * 60 + partNumber * 10; // tu cac part sau thi chi cho 10s/chunk
         }
         // => voi 1 file 4Gb thi expireTime se la 4 hours 30 minutes
     }

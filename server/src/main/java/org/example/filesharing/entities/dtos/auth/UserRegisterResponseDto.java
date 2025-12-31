@@ -21,5 +21,5 @@ public class UserRegisterResponseDto {
     private Instant createdAt;
     private List<AuthProvider> providers;
     private List<UserRole> roles;
-    private boolean enabled;
+    private Boolean enabled;
 }
