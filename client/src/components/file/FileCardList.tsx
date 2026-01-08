@@ -1,6 +1,8 @@
-import {useEffect, useState} from 'react';
-import userFileApiResource, {type MetadataEntity} from '../../api/fileApi/userFileApiResource';
+import { useEffect, useState } from 'react';
+import userFileApiResource, { type MetadataEntity } from '../../api/fileApi/userFileApiResource';
 import FileCardComp from './FileCardComp';
+import { Button, Empty, Spin } from 'antd';
+import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
 
 const FileCardList = () => {
     const [files, setFiles] = useState<MetadataEntity[]>([]);
@@ -40,47 +42,84 @@ const FileCardList = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h2 className="text-2xl font-bold text-foreground">My Files</h2>
+                    <p className="text-muted-foreground mt-1">
+                        Manage and organize your uploaded files
+                    </p>
+                </div>
+                <Button
+                    type="default"
+                    icon={<ReloadOutlined />}
+                    onClick={fetchFiles}
+                    loading={loading}
+                    className="flex items-center gap-2"
+                >
+                    Refresh
+                </Button>
+            </div>
+
             {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="flex flex-col justify-center items-center h-64 gap-4">
+                    <Spin size="large" />
+                    <p className="text-muted-foreground">Loading files...</p>
                 </div>
             ) : (
                 <>
                     {/* Grid Layout */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                         {files.length > 0 ? (
                             files.map((file, index) => (
-                                <div key={index}
-                                     className="transform hover:scale-105 transition-transform duration-200">
-                                    {/* FileCardComp nhận props là MetadataDto */}
+                                <div
+                                    key={index}
+                                    className="transform hover:scale-[1.02] transition-transform duration-200"
+                                >
                                     <FileCardComp {...file} />
                                 </div>
                             ))
                         ) : (
-                            <div className="col-span-full text-center text-gray-500 py-10">
-                                No files found.
+                            <div className="col-span-full">
+                                <Empty
+                                    description={
+                                        <span className="text-muted-foreground">
+                      No files found. Start uploading!
+                    </span>
+                                    }
+                                    className="py-16"
+                                />
                             </div>
                         )}
                     </div>
 
-                    {/* Pagination UI */}
-                    <div className="flex justify-center items-center gap-4 mt-8 border-t pt-4">
-                        <button
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            disabled={page === 1}
-                            className="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-                        <span className="text-gray-700 font-medium">Page {page}</span>
-                        <button
-                            onClick={() => setPage(p => p + 1)}
-                            // disabled={files.length < PAGE_SIZE} // Logic disable nút Next
-                            className="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50"
-                        >
-                            Next
-                        </button>
-                    </div>
+                    {/* Pagination */}
+                    {files.length > 0 && (
+                        <div className="flex justify-center items-center gap-4 pt-6 border-t border-border">
+                            <Button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                icon={<LeftOutlined />}
+                                className="flex items-center gap-2"
+                            >
+                                Previous
+                            </Button>
+
+                            <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
+                                <span className="text-sm text-muted-foreground">Page</span>
+                                <span className="text-sm font-semibold text-foreground">{page}</span>
+                            </div>
+
+                            <Button
+                                onClick={() => setPage((p) => p + 1)}
+                                icon={<RightOutlined />}
+                                iconPosition="end"
+                                className="flex items-center gap-2"
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
                 </>
             )}
         </div>

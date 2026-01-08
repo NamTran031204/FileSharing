@@ -1,5 +1,6 @@
 import BreadCrumbMenu from "../breadCrumb/BreadCrumbMenu.tsx";
 import type {MetadataEntity} from "../../api/fileApi/userFileApiResource.ts";
+import {FileViewUtil} from "../../utils/FileViewUtil.ts";
 
 const FileCardComp = (metadata: MetadataEntity) => {
 
@@ -12,7 +13,7 @@ const FileCardComp = (metadata: MetadataEntity) => {
     const getMimeTypeImage = () => {
         const fileType = getFileGroup(metadata.mimeType);
         return <img src={"src/assets/mimeTypeImage/" + fileType + ".png"} alt={metadata.mimeType}
-                    className="w-[15rem] h-[15rem] object-contain"/>
+                    className="w-60 h-60 object-contain"/>
     }
 
     function getFileGroup(mimeType: string): string {
@@ -62,26 +63,34 @@ const FileCardComp = (metadata: MetadataEntity) => {
 
     return (
         <>
-            <div className={"flex-row items-center justify-center border border-gray-900 rounded-md shadow-sm"}>
-                <div className={"flex gap-2 h-12 w-full bg-blue-200 p-3 items-center justify-center"}>
-                    <div className="flex-none text-gray-500 w-auto h-auto rounded-md">
+            <div className="group bg-card rounded-xl border border-border shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary/10 to-[hsl(var(--info))]/10 border-b border-border">
+                    <div className="flex-shrink-0 w-10 h-10 bg-card rounded-lg flex items-center justify-center shadow-sm">
                         {getMimeTypeIcon()}
                     </div>
 
-                    <div className={"flex-1 min-w-0"}>
-                        <p className={"text-sm font-medium text-gray-900"}>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-card-foreground truncate" title={metadata.fileName}>
                             {metadata.fileName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {FileViewUtil.formatBytes(metadata.fileSize)}
                         </p>
                     </div>
 
-                    <div className={"flex-none w-10 h-10 hover:bg-blue-500 hover:shadow-2xl"}>
-                        <BreadCrumbMenu objectName={metadata.objectName} fileName={metadata.fileName}
-                                        fileSize={metadata.fileSize}/>
+                    <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <BreadCrumbMenu
+                            objectName={metadata.objectName}
+                            fileName={metadata.fileName}
+                            fileSize={metadata.fileSize}
+                        />
                     </div>
                 </div>
 
-                <div className={"flex-1 p-6"}>
-                    {getMimeTypeImage()}
+                <div className="flex items-center justify-center py-10 px-6 bg-gradient-to-br from-muted/30 to-muted/50">
+                    <div className="p-6 bg-card/60 rounded-2xl backdrop-blur-sm">
+                        {getMimeTypeImage()}
+                    </div>
                 </div>
             </div>
         </>
