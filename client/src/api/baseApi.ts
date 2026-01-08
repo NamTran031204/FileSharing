@@ -132,3 +132,7 @@ const baseApi = {
 };
 
 export default baseApi;
+
+export const GetFileUrl = (fileId: string) => {
+    return API_BASE + '/file/avatar-image/' + fileId;
+}

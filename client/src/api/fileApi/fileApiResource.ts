@@ -1,4 +1,4 @@
-import baseApi, {API_BASE, type CommonResponse} from '../baseApi';
+import baseApi, {API_BASE, type CommonResponse, tokenManager} from '../baseApi';
 import axios from 'axios';
 
 interface PartUpload {
@@ -142,6 +142,7 @@ const fileApiResource = {
     directUpload: async (file: File, signal?: AbortSignal): Promise<string> => {
         const formData = new FormData();
         formData.append('file', file);
+        const token = tokenManager.getAccessToken();
 
         const response = await axios.post<CommonResponse<string>>(
             `${API_BASE}/file-metadata/direct-upload`,
@@ -149,6 +150,7 @@ const fileApiResource = {
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
                 },
                 signal
             }
@@ -184,6 +186,8 @@ const fileApiResource = {
     deleteFile: async (fileId: string, signal?: AbortSignal) =>
         baseApi.delete<string>(`/file-metadata/${fileId}`, signal),
 
+    moveToTrash: async (fileId: string, signal?: AbortSignal) =>
+        baseApi.delete<string>(`/file-metadata/move-to-trash/${fileId}`, signal),
 };
 
 export default fileApiResource;

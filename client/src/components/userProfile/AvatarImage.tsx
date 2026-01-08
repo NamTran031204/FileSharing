@@ -1,22 +1,27 @@
-import {Avatar, Upload} from "antd";
-import {UploadOutlined, UserOutlined} from "@ant-design/icons";
-import {useEffect, useState} from "react";
+import {Avatar} from "antd";
+import {useEffect, useMemo, useState} from "react";
+import UpdateDeleteAvatar from "./UpdateDeleteAvatar.tsx";
+import {GetFileUrl} from "../../api/baseApi.ts";
+import {UserIcon} from "./UserIcon.tsx";
 
-interface AvatarImageProps {
-    src?: string;
+
+interface Props {
+    imageUrl?: string;
     onFileSelect?: (file: File | null) => void;
-    editable?: boolean;
+    isCreateOrUpdate?: boolean;
 }
 
-const AvatarImage = ({src, onFileSelect, editable = false}: AvatarImageProps) => {
-    const [previewUrl, setPreviewUrl] = useState<string | undefined>(src);
+const AvatarImage = ({
+                         imageUrl, onFileSelect, isCreateOrUpdate
+                     }: Props) => {
 
-    // Đồng bộ khi src từ cha thay đổi (load data lần đầu)
-    useEffect(() => {
-        setPreviewUrl(src);
-    }, [src]);
+    const [previewUrl, setPreviewUrl] = useState<string | undefined>('');
 
-    // Cleanup blob url khi unmount để tránh memory leak
+    const serverUrl = useMemo(() => {
+        if (!imageUrl || imageUrl.trim() === '') return "src/assets/userProfile/user.svg";
+        return GetFileUrl(imageUrl);
+    }, [imageUrl]);
+
     useEffect(() => {
         return () => {
             if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -25,49 +30,21 @@ const AvatarImage = ({src, onFileSelect, editable = false}: AvatarImageProps) =>
         };
     }, [previewUrl]);
 
-    const handleBeforeUpload = (file: File) => {
-        // 1. Tạo preview ngay lập tức
-        const objectUrl = URL.createObjectURL(file);
-        setPreviewUrl(objectUrl);
+    useEffect(() => {
+        setPreviewUrl(serverUrl!);
+    }, [isCreateOrUpdate, imageUrl]);
 
-        // 2. Đẩy file gốc ra cho cha giữ
-        if (onFileSelect) {
-            onFileSelect(file);
-        }
-
-        // 3. Return false để chặn Antd tự upload
-        return false;
-    };
-
+    const displayUrl = previewUrl || serverUrl;
     return (
         <div className="flex flex-col items-center gap-2">
             <div className="relative group">
-                <Avatar
-                    size={150}
-                    icon={<UserOutlined/>}
-                    src={previewUrl} // Hiển thị state nội bộ
-                    className="border-2 border-gray-200"
-                />
-                {editable && (
-                    <div
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 overflow-hidden">
-                        <Upload
-                            showUploadList={false}
-                            beforeUpload={handleBeforeUpload}
-                            accept="image/*"
-                            // VISUAL TRICK:
-                            // 1. w-full h-full: Ép Upload component to bằng cha
-                            // 2. [&>.ant-upload-select]:... : Ép thẻ span nội bộ của Antd to bằng cha
-                            className="w-full h-full block [&>.ant-upload-select]:w-full [&>.ant-upload-select]:h-full"
-                        >
-                            {/* Vùng click (Trigger Area) chiếm trọn không gian */}
-                            <div
-                                className="w-full h-full flex flex-col items-center justify-center text-white cursor-pointer">
-                                <UploadOutlined style={{fontSize: '24px'}}/>
-                                <span className="text-xs mt-1 font-semibold">Đổi ảnh</span>
-                            </div>
-                        </Upload>
-                    </div>
+                <Avatar size={150}
+                        icon={<UserIcon style={{marginTop: '13px'}}/>}
+                        src={displayUrl}
+                > </Avatar>
+
+                {isCreateOrUpdate && (
+                    <UpdateDeleteAvatar imageUrl={imageUrl} onFileSelect={onFileSelect} setPreviewUrl={setPreviewUrl}/>
                 )}
             </div>
         </div>

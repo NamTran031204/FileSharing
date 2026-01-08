@@ -23,4 +23,6 @@ public interface MetadataService {
     PageResult<MetadataEntity> getFilesByFilter(PageRequestDto<UserFileFilterPageRequestDto> input);
 
     void deleteMetadata(String fileId);
+
+    void moveMetadataToTrash(String fileId);
 }

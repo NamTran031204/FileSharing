@@ -9,6 +9,7 @@ import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
+import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.repositories.MetadataRepo;
@@ -135,5 +136,24 @@ public class FileMetadataController {
         // trong deleteMetadata đã có deleteFile tại Minio rồi :))
         metadataService.deleteMetadata(fileId);
         return CommonResponse.success();
+    }
+
+    @DeleteMapping(value = "/move-to-trash/{fileId}")
+    public CommonResponse<String> moveToTrash(@PathVariable("fileId") String fileId) {
+        metadataService.moveMetadataToTrash(fileId);
+        return CommonResponse.success();
+    }
+
+    @PutMapping(value = "/update/{fileId}")
+    public CommonResponse<MetadataEntity> updateFileDetail(
+            @PathVariable("fileId") String fileId,
+            @RequestBody MetadataUpdateRequestDto request) {
+        try {
+            MetadataEntity updatedMetadata = metadataService.updateMetadata(request, fileId);
+            return CommonResponse.success(updatedMetadata);
+        } catch (Exception e) {
+            log.error("Failed to update file detail: {}", e.getMessage());
+            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 }

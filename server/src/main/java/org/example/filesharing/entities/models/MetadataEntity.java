@@ -28,8 +28,11 @@ public class MetadataEntity {
     private Double fileSize;
     private String compressionAlgo;
     private String ownerId;
+    private String ownerEmail;
     private String uploadId;
     private UploadStatus status;
+
+    private String shareToken;
 
     private int timeToLive;
     private Boolean isActive; // qua time to live, isActive = false
@@ -38,6 +41,8 @@ public class MetadataEntity {
     private ObjectVisibility visibility;
 
     private List<UserFilePermission> userFilePermissions;
+
+    private Boolean isTrash;
 
     @CreatedDate
     private Instant creationTimestamp;

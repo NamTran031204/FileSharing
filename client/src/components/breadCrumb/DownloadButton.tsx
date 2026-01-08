@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import type {DownloadProgress as DownloadProgressType} from '../../service/downloadService.ts';
 import {downloadService} from '../../service/downloadService.ts';
-import {VerticalAlignBottomOutlined} from '@ant-design/icons';
+import {DownloadOutlined} from '@ant-design/icons';
 import DownloadProgress from "../uploadDownloadProgress/DownloadProgress.tsx";
 
 interface DownloadButtonProps {
@@ -91,15 +91,16 @@ export default function DownloadButton(props: DownloadButtonProps) {
                 onClick={handleDownload}
                 disabled={isDownloading}
                 className={`
-                    w-full h-full
-                    ${isDownloading
-                    ? 'bg-blue-100 text-blue-600 cursor-wait'
-                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md'
+          w-full h-full rounded-lg transition-all duration-200
+          ${
+                    isDownloading
+                        ? 'bg-primary/20 text-primary cursor-wait'
+                        : 'text-muted-foreground hover:bg-muted hover:text-primary hover:shadow-md'
                 }
-                `}
+        `}
                 title="Download File"
             >
-                <VerticalAlignBottomOutlined className={isDownloading ? "animate-bounce" : ""}/>
+                <DownloadOutlined className={isDownloading ? 'animate-bounce' : ''} />
             </button>
 
             <DownloadProgress

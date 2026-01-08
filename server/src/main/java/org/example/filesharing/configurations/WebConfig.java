@@ -20,6 +20,13 @@ public class WebConfig implements WebMvcConfigurer {
                 )
                 .allowedHeaders("*")
                 .allowCredentials(false);
+        registry.addMapping("/v3/api-docs/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET");
+
+        registry.addMapping("/swagger-ui/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET");
     }
 
     @Override

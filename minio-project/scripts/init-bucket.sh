@@ -92,7 +92,7 @@ echo "  - Endpoint:    ${MINIO_HOST}"
 echo "  - Console:     http://localhost:9001"
 echo "  - Bucket:      ${BUCKET_NAME}"
 echo "  - Access Key:  ${ACCESS_KEY}"
-echo "  - Secret Key:  ****** (xem trong ${ACCESS_FILE})"
+echo "  - Secret Key:  ${ACCESS_KEY_OUTPUT} (xem trong ${ACCESS_FILE})"
 echo ""
 echo "============================================"
 

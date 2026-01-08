@@ -21,6 +21,8 @@ import org.example.filesharing.services.MinIoService;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,26 +39,36 @@ public class MetadataServiceImpl implements MetadataService {
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final MinIoService minIoService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
         try {
             String currentUserId = auditService.getCurrentUserId();
+            String currentUserEmail = auditService.getCurrentUserEmail();
 
             MetadataEntity metadataEntity = MetadataEntity.builder()
                     .fileName(metadataDTO.getFileName())
                     .objectName(metadataDTO.getObjectName())
+                    .ownerEmail(currentUserEmail)
                     .mimeType(metadataDTO.getMimeType())
                     .fileSize(metadataDTO.getFileSize())
                     .compressionAlgo(metadataDTO.getCompressionAlgo())
                     .ownerId(currentUserId)
                     .uploadId(uploadId)
-                    .timeToLive(metadataDTO.getTimeToLive())
                     .status(UploadStatus.UPLOADING)
                     .isActive(true)
                     .publicPermission(ObjectPermission.READ) // mac dinh la read
                     .visibility(ObjectVisibility.PRIVATE)
                     .build();
+
+            if (metadataDTO.getTimeToLive() == null) {
+                metadataDTO.setTimeToLive(Integer.MAX_VALUE);
+            }
+            metadataEntity.setTimeToLive(metadataDTO.getTimeToLive());
+
+            String encodeInfo = metadataDTO.getObjectName() + "|" + metadataDTO.getMimeType() + "|" + metadataDTO.getFileSize();
+            metadataEntity.setShareToken(passwordEncoder.encode(encodeInfo));
 
             return metadataRepo.save(metadataEntity);
 
@@ -104,30 +116,9 @@ public class MetadataServiceImpl implements MetadataService {
         MetadataEntity entity = metadataRepo.findById(fileId)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
-        String currentUserId = auditService.getCurrentUserId();
-        boolean ok = true;
-        if (!currentUserId.equals(entity.getOwnerId())) {
-            if (entity.getVisibility().equals(ObjectVisibility.PUBLIC)) {
-                if (!entity.getPublicPermission().equals(ObjectPermission.MODIFY)) {
-                    ok = false;
-                }
-            } else {
-                var userFilePermission = entity.getUserFilePermissions();
-                ok = false;
-                for (var user : userFilePermission) {
-                    if (user.getEmail().equals(auditService.getCurrentUserEmail())) {
-                        for (var permission : user.getPermissionList()) {
-                            if (permission.equals(ObjectPermission.MODIFY)) {
-                                ok = true;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        if (!ok) {
+        String currentUserEmail = auditService.getCurrentUserEmail();
+
+        if (!hasEditPermissionOnFile(entity, currentUserEmail)) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
 
@@ -266,4 +257,64 @@ public class MetadataServiceImpl implements MetadataService {
         metadataRepo.delete(metadataEntity);
     }
 
+    @Override
+    public void moveMetadataToTrash(String fileId) {
+        MetadataEntity entity = metadataRepo.findById(fileId)
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
+        String email = auditService.getCurrentUserEmail();
+        if (!hasDeletePermissionOnFile(entity, email)) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+        entity.setIsTrash(true);
+        metadataRepo.save(entity);
+    }
+
+    Boolean hasEditPermissionOnFile(MetadataEntity metadataEntity, String email) {
+        if (email.equals(metadataEntity.getOwnerEmail())) {
+            return true;
+        }
+
+        if (metadataEntity.getVisibility() == ObjectVisibility.PUBLIC) {
+            return metadataEntity.getPublicPermission() == ObjectPermission.MODIFY;
+        }
+
+        if (!hasScopeOnFile(metadataEntity, email)) {
+            return false;
+        }
+
+        List<UserFilePermission> permissions = metadataEntity.getUserFilePermissions();
+        if (permissions == null) {
+            return false;
+        }
+
+        return permissions.stream()
+                .filter(ufp -> email.equals(ufp.getEmail()))
+                .findFirst()
+                .map(ufp -> ufp.getPermissionList() != null &&
+                        ufp.getPermissionList().contains(ObjectPermission.MODIFY))
+                .orElse(false);
+    }
+
+    Boolean hasDeletePermissionOnFile(MetadataEntity metadataEntity, String email) {
+        return email.equals(metadataEntity.getOwnerEmail());
+    }
+
+    Boolean hasScopeOnFile(MetadataEntity metadataEntity, String email) {
+        if (email.equals(metadataEntity.getOwnerEmail())) {
+            return true;
+        }
+        if (metadataEntity.getVisibility() == ObjectVisibility.PUBLIC) {
+            return true;
+        }
+
+        List<UserFilePermission> permissions = metadataEntity.getUserFilePermissions();
+        if (permissions == null || permissions.isEmpty()) {
+            return false;
+        }
+
+        return permissions.stream()
+                .anyMatch(ufp -> email.equals(ufp.getEmail()) &&
+                        ufp.getPermissionList() != null &&
+                        !ufp.getPermissionList().isEmpty());
+    }
 }

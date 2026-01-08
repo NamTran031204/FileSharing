@@ -53,58 +53,58 @@ services:
     networks:
       - minio-network
 
-  minio-vm:
-    build:
-      context: ./minio
-      dockerfile: Dockerfile
-    image: minio:latest
-    container_name: filesharing-minio-vm
-    restart: unless-stopped
-    hostname: minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_PROMETHEUS_AUTH_TYPE: "public"
-      THROTTLE_ENABLED: ${THROTTLE_ENABLED:-true}
-      BANDWIDTH_LIMIT: ${BANDWIDTH_LIMIT:-10mbit}
-      LATENCY_MS: ${LATENCY_MS:-50}
-      LATENCY_JITTER_MS: ${LATENCY_JITTER_MS:-10}
-      PACKET_LOSS_PERCENT: ${PACKET_LOSS_PERCENT:-0}
-      NETWORK_INTERFACE: eth0
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - minio_data-vm:/data
-      - ./config:/root/.minio
-      - ./scripts/init-bucket-vm.sh:/scripts/init-bucket.sh
-    entrypoint: /bin/bash
-    command: -c "
-      chmod +x /scripts/init-bucket.sh &&
-      /usr/local/bin/entrypoint.sh server /data --console-address ':9001' &
-      PID=$!
-      sleep 5;
-      /scripts/init-bucket.sh;
-      wait $PID
-      "
-    networks:
-      - minio-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 4G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
+#  minio-vm:
+#    build:
+#      context: ./minio
+#      dockerfile: Dockerfile
+#    image: minio:latest
+#    container_name: filesharing-minio-vm
+#    restart: unless-stopped
+#    hostname: minio
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+#    environment:
+#      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+#      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+#      MINIO_PROMETHEUS_AUTH_TYPE: "public"
+#      THROTTLE_ENABLED: ${THROTTLE_ENABLED:-true}
+#      BANDWIDTH_LIMIT: ${BANDWIDTH_LIMIT:-10mbit}
+#      LATENCY_MS: ${LATENCY_MS:-50}
+#      LATENCY_JITTER_MS: ${LATENCY_JITTER_MS:-10}
+#      PACKET_LOSS_PERCENT: ${PACKET_LOSS_PERCENT:-0}
+#      NETWORK_INTERFACE: eth0
+#    cap_add:
+#      - NET_ADMIN
+#    volumes:
+#      - minio_data-vm:/data
+#      - ./config:/root/.minio
+#      - ./scripts/init-bucket-vm.sh:/scripts/init-bucket.sh
+#    entrypoint: /bin/bash
+#    command: -c "
+#      chmod +x /scripts/init-bucket.sh &&
+#      /usr/local/bin/entrypoint.sh server /data --console-address ':9001' &
+#      PID=$!
+#      sleep 5;
+#      /scripts/init-bucket.sh;
+#      wait $PID
+#      "
+#    networks:
+#      - minio-network
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 10s
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '2'
+#          memory: 4G
+#        reservations:
+#          cpus: '0.5'
+#          memory: 512M
 
 volumes:
   minio-data:
@@ -113,12 +113,12 @@ volumes:
       type: none
       o: bind
       device: ./data/minio
-  minio_data-vm:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/minio
+#  minio_data-vm:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      o: bind
+#      device: ./data/minio
 
 networks:
   minio-network:

@@ -4,13 +4,14 @@ import {
     DownloadOutlined,
     EditOutlined,
     InfoCircleOutlined,
-    MailOutlined,
-    ShareAltOutlined,
-    UnorderedListOutlined
+    MailOutlined, MoreOutlined,
+    ShareAltOutlined
 } from '@ant-design/icons';
 import DownloadButton from "./DownloadButton.tsx";
+import fileApiResource from "../../api/fileApi/fileApiResource.ts";
 
 interface Props {
+    fileId: string;
     objectName: string;
     fileName: string;
     fileSize: number;
@@ -82,10 +83,10 @@ const BreadCrumbMenu = (prop: Props) => {
         // TODO: Implement edit logic
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         console.log('Delete clicked:', prop.fileName);
         setIsOpen(false);
-        // TODO: Implement delete logic
+        await fileApiResource.moveToTrash(prop.fileId);
     };
 
     const handleSendEmail = () => {
@@ -145,32 +146,31 @@ const BreadCrumbMenu = (prop: Props) => {
             <button
                 onClick={handleToggle}
                 className={`
-                    w-10 h-10 flex items-center justify-center
-                    ${isOpen
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+          w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
+          ${
+                    isOpen
+                        ? 'bg-primary text-primary-foreground shadow-lg'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }
-                `}
+        `}
                 title="Menu"
             >
-                <UnorderedListOutlined className="text-lg"/>
+                <MoreOutlined className="text-lg" />
             </button>
 
             {isOpen && (
                 <div
                     className="
-                        absolute right-0 mt-2 w-48 z-50
-                        bg-white rounded-lg shadow-xl
-                        border border-gray-200
-                        py-1 overflow-hidden
-                        animate-fade-in
-                    "
+            absolute right-0 mt-2 w-48 z-50
+            bg-popover rounded-xl shadow-xl
+            border border-border
+            py-2 overflow-hidden
+            animate-in fade-in-0 zoom-in-95 duration-200
+          "
                 >
                     {menuOptions.map((option, index) => (
                         <div key={option.key}>
-                            {option.danger && index > 0 && (
-                                <div className="border-t border-gray-100 my-1"/>
-                            )}
+                            {option.danger && index > 0 && <div className="border-t border-border my-1" />}
 
                             <button
                                 onClick={(e) => {
@@ -178,14 +178,15 @@ const BreadCrumbMenu = (prop: Props) => {
                                     option.onClick();
                                 }}
                                 className={`
-                                    w-full px-4 py-2.5 text-left
-                                    flex items-center gap-3
-                                    transition-colors duration-150
-                                    ${option.danger
-                                    ? 'text-red-600 hover:bg-red-50'
-                                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  w-full px-4 py-2.5 text-left
+                  flex items-center gap-3
+                  transition-colors duration-150
+                  ${
+                                    option.danger
+                                        ? 'text-destructive hover:bg-destructive/10'
+                                        : 'text-popover-foreground hover:bg-muted'
                                 }
-                                `}
+                `}
                             >
                                 <span className="text-base">{option.icon}</span>
                                 <span className="text-sm font-medium">{option.label}</span>

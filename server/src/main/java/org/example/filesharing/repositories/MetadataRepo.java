@@ -15,4 +15,6 @@ public interface MetadataRepo extends MongoRepository<MetadataEntity, String> {
     Optional<MetadataEntity> findByObjectName(String objectName);
 
     boolean existsByObjectName(String objectName);
+
+    Optional<MetadataEntity> findByShareToken(String shareToken);
 }

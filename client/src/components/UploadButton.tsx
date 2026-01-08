@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import type {UploadProgress} from '../service/uploadService';
 import {uploadService} from '../service/uploadService';
+import { Button, Progress, Alert } from 'antd';
+import { CloudUploadOutlined, CloseCircleOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons';
 
 export default function UploadButton() {
     const [file, setFile] = useState<File | null>(null);
@@ -8,11 +10,34 @@ export default function UploadButton() {
     const [progress, setProgress] = useState<UploadProgress | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [uploadedObjectName, setUploadedObjectName] = useState<string | null>(null);
+    const [isDragOver, setIsDragOver] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0];
         if (selectedFile) {
             setFile(selectedFile);
+            setError(null);
+            setProgress(null);
+            setUploadedObjectName(null);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const droppedFile = e.dataTransfer.files[0];
+        if (droppedFile) {
+            setFile(droppedFile);
             setError(null);
             setProgress(null);
             setUploadedObjectName(null);
@@ -81,110 +106,166 @@ export default function UploadButton() {
     };
 
     return (
-        <>
-            <div className="font-sans m-5 bg-gray-100 p-5 rounded-lg max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                    UPLOAD FILE
-                </h1>
+        <div className="container mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-foreground mb-2">Upload File</h1>
+                    <p className="text-muted-foreground">Drag and drop or select a file to upload</p>
+                </div>
 
-                <input
-                    type="file"
-                    id="file-input"
-                    onChange={handleFileChange}
-                    disabled={isUploading}
-                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none
-                    file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 my-4
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                />
+                {/* Upload Area */}
+                <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`
+            relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 cursor-pointer
+            ${isDragOver
+                        ? 'border-primary bg-primary/5 scale-[1.02]'
+                        : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                    }
+            ${isUploading ? 'pointer-events-none opacity-60' : ''}
+          `}
+                >
+                    <input
+                        type="file"
+                        id="file-input"
+                        onChange={handleFileChange}
+                        disabled={isUploading}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
 
+                    <div className="flex flex-col items-center gap-4">
+                        <div className={`
+              w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300
+              ${isDragOver ? 'bg-primary text-primary-foreground scale-110' : 'bg-muted text-muted-foreground'}
+            `}>
+                            <InboxOutlined className="text-4xl" />
+                        </div>
+                        <div>
+                            <p className="text-lg font-medium text-foreground">
+                                {isDragOver ? 'Drop your file here' : 'Click to upload or drag and drop'}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Support all file types
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Selected File Info */}
                 {file && (
-                    <div className="bg-white p-3 rounded-lg mb-4 text-sm text-gray-700">
-                        <p><strong>file:</strong> {file.name}</p>
-                        <p><strong>size:</strong> {formatBytes(file.size)}</p>
+                    <div className="mt-6 bg-card rounded-xl p-4 border border-border">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <CloudUploadOutlined className="text-xl text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-card-foreground truncate">{file.name}</p>
+                                <p className="text-sm text-muted-foreground">{formatBytes(file.size)}</p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
+                {/* Progress */}
                 {progress && (
-                    <div className="mb-4 bg-white p-4 rounded-lg">
-                        <div className="flex justify-between text-sm text-gray-700 mb-2">
-                            <span>chunk: {progress.currentChunk}/{progress.totalChunks}</span>
+                    <div className="mt-6 bg-card rounded-xl p-6 border border-border">
+                        <div className="flex justify-between text-sm text-muted-foreground mb-3">
+                            <span>Chunk: {progress.currentChunk}/{progress.totalChunks}</span>
                             <span>{progress.percentage}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-3">
-                            <div
-                                className="bg-blue-600 h-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold"
-                                style={{width: `${progress.percentage}%`}}
-                            >
-                                {progress.percentage > 10 && `${progress.percentage}%`}
+
+                        <Progress
+                            percent={progress.percentage}
+                            strokeColor={{
+                                '0%': 'hsl(var(--primary))',
+                                '100%': 'hsl(var(--success))',
+                            }}
+                            trailColor="hsl(var(--muted))"
+                            showInfo={false}
+                        />
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div className="bg-muted/50 rounded-lg p-3">
+                                <p className="text-xs text-muted-foreground">Uploaded</p>
+                                <p className="font-semibold text-foreground">
+                                    {formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}
+                                </p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-3">
+                                <p className="text-xs text-muted-foreground">Speed</p>
+                                <p className="font-semibold text-foreground">
+                                    {progress.throughputMbps?.toFixed(2) || '--'} Mbps
+                                </p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-3">
+                                <p className="text-xs text-muted-foreground">Chunk Size</p>
+                                <p className="font-semibold text-foreground">
+                                    {formatBytes(progress.currentChunkSize || 0)}
+                                </p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-3">
+                                <p className="text-xs text-muted-foreground">ETA</p>
+                                <p className="font-semibold text-foreground">
+                                    {formatTime(progress.estimatedTimeRemainingMs || 0)}
+                                </p>
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-gray-50 p-2 rounded">
-                                <span className="text-gray-500">uploaded:</span>
-                                <p className="font-semibold">{formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}</p>
-                            </div>
-                            <div className="bg-gray-50 p-2 rounded">
-                                <span className="text-gray-500">speed:</span>
-                                <p className="font-semibold">{progress.throughputMbps?.toFixed(2) || '--'} Mbps</p>
-                            </div>
-                            <div className="bg-gray-50 p-2 rounded">
-                                <span className="text-gray-500">chunk size:</span>
-                                <p className="font-semibold">{formatBytes(progress.currentChunkSize || 0)}</p>
-                            </div>
-                            <div className="bg-gray-50 p-2 rounded">
-                                <span className="text-gray-500">eta:</span>
-                                <p className="font-semibold">{formatTime(progress.estimatedTimeRemainingMs || 0)}</p>
-                            </div>
-                        </div>
-
-                        {/*<div className="mt-3 flex items-center gap-2 text-sm">*/}
-                        {/*    <span className="text-gray-500">network:</span>*/}
-                        {/*    <span className={`font-semibold ${getStabilityColor(progress.networkStability || 'unknown')}`}>*/}
-                        {/*        {getStabilityIcon(progress.networkStability || 'unknown')} {progress.networkStability || 'detecting...'}*/}
-                        {/*    </span>*/}
-                        {/*</div>*/}
                     </div>
                 )}
 
+                {/* Error */}
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <strong>error:</strong> {error}
-                    </div>
+                    <Alert
+                        message="Upload Error"
+                        description={error}
+                        type="error"
+                        showIcon
+                        className="mt-6"
+                    />
                 )}
 
+                {/* Success */}
                 {uploadedObjectName && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                        <strong>✅ Success!</strong> File uploaded as: {uploadedObjectName}
-                    </div>
+                    <Alert
+                        message="Upload Successful!"
+                        description={`File uploaded as: ${uploadedObjectName}`}
+                        type="success"
+                        showIcon
+                        icon={<CheckCircleOutlined />}
+                        className="mt-6"
+                    />
                 )}
 
-                <div className="flex gap-3">
-                    <button
-                        id="upload-button"
+                {/* Actions */}
+                <div className="flex gap-4 mt-6">
+                    <Button
+                        type="primary"
+                        size="large"
                         onClick={handleUpload}
                         disabled={isUploading || !file}
-                        className="py-2.5 px-5 text-base font-medium text-white bg-blue-600 rounded-lg
-                        hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300
-                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        loading={isUploading}
+                        icon={<CloudUploadOutlined />}
+                        className="flex-1 h-12 text-base font-semibold"
                     >
-                        {isUploading ? 'uploading...' : 'upload file'}
-                    </button>
+                        {isUploading ? 'Uploading...' : 'Upload File'}
+                    </Button>
 
                     {isUploading && (
-                        <button
+                        <Button
+                            danger
+                            size="large"
                             onClick={handleCancel}
-                            className="py-2.5 px-5 text-base font-medium text-white bg-red-600 rounded-lg
-                            hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300
-                            transition-colors"
+                            icon={<CloseCircleOutlined />}
+                            className="h-12 text-base font-semibold"
                         >
-                            cancel
-                        </button>
+                            Cancel
+                        </Button>
                     )}
                 </div>
             </div>
-        </>
-
+        </div>
     );
 }

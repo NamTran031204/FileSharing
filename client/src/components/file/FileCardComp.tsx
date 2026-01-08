@@ -80,6 +80,7 @@ const FileCardComp = (metadata: MetadataEntity) => {
 
                     <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <BreadCrumbMenu
+                            fileId={metadata.fileId}
                             objectName={metadata.objectName}
                             fileName={metadata.fileName}
                             fileSize={metadata.fileSize}

@@ -1,137 +1,201 @@
-import {useEffect, useState} from "react";
-import {Button, Card, Form, Input, message, Spin} from "antd";
-import {SaveOutlined} from "@ant-design/icons";
-import AvatarImage from "./AvatarImage"; // Import component con vừa sửa
-// Giả lập import API Service
-// import { FileAppServiceService } from "@api/pos/FileAppServiceService";
-// import { UserApiResourceService } from "@api/pos/UserApiResourceService";
+import { useEffect, useState } from 'react';
+import { Button, Card, Form, Input, message, Spin } from 'antd';
+import { SaveOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
+import AvatarImage from './AvatarImage';
+import userApiResource, { type UpdateUserRequestDto, type UserDto } from "../../api/userApiResource.ts";
+import fileApiResource from "../../api/fileApi/fileApiResource.ts";
 
-const UserProfile = () => {
+interface UserProfileProps {
+    mode?: 'view' | 'edit';
+    onModeChange?: (mode: 'view' | 'edit') => void;
+}
+
+const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-
-    // --- STATE QUẢN LÝ DỮ LIỆU ---
-    // 1. Data User hiện tại (Lấy từ API getById)
-    const [userInfo, setUserInfo] = useState<any>(null);
-
-    // 2. File ảnh mới (Tạm thời nằm ở RAM, chưa gửi lên Server)
-    // Đây là biến quan trọng nhất để quyết định luồng Save
+    const [fetchLoading, setFetchLoading] = useState(true);
+    const [userInfo, setUserInfo] = useState<UserDto | null>(null);
     const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
-    // Giả lập load data ban đầu
+    const isEditMode = mode === 'edit';
+
+    // Fetch user data
     useEffect(() => {
-        // Mock API call
-        setTimeout(() => {
-            const mockData = {
-                id: 1,
-                fullName: "Nguyễn Văn A",
-                description: "Backend Developer",
-                imageId: "old-image-guid-123", // ID ảnh cũ trên server
-                imageUrl: "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png" // URL ảnh cũ
-            };
-            setUserInfo(mockData);
-            form.setFieldsValue(mockData);
-        }, 1000);
+        const fetchUserData = async () => {
+            try {
+                setFetchLoading(true);
+                const data = await userApiResource.getCurrentUser();
+                if (!data) {
+                    throw new Error('User data is null');
+                }
+                console.log("data", data);
+                setUserInfo(data);
+                form.setFieldsValue({
+                    publicUserName: data.publicUserName,
+                    email: data.email,
+                });
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                message.error('Không thể tải thông tin người dùng');
+            } finally {
+                setFetchLoading(false);
+            }
+        };
+
+        fetchUserData();
     }, [form]);
 
-    // --- LOGIC XỬ LÝ SỰ KIỆN TỪ CON ---
-    const handleFileSelectFromChild = (file: File) => {
-        console.log("Cha đã nhận được file từ con:", file.name);
-        setPendingAvatarFile(file); // Cất vào kho, chưa làm gì cả
+    const handleFileSelectFromChild = (file: File | null) => {
+        // file có thể là File object (upload mới) hoặc null (xóa ảnh/giữ nguyên)
+        setPendingAvatarFile(file);
     };
 
-    // --- LOGIC SAVE (TRỌNG TÂM) ---
+    const handleEdit = () => {
+        onModeChange?.('edit');
+    };
+
+    const handleCancel = () => {
+        // Reset form về giá trị ban đầu
+        form.setFieldsValue({
+            publicUserName: userInfo?.publicUserName,
+            email: userInfo?.email,
+        });
+        setPendingAvatarFile(null);
+        onModeChange?.('view');
+    };
+
     const onSave = async () => {
         try {
-            // Validate form thông tin cơ bản trước
             const values = await form.validateFields();
             setLoading(true);
 
-            let finalImageId = userInfo?.imageId; // Mặc định dùng ID cũ
+            let finalAvatarUrl = userInfo?.avatarUrl || null;
 
-            // BƯỚC 1: KIỂM TRA XEM CÓ ẢNH MỚI KHÔNG?
             if (pendingAvatarFile) {
-                console.log("Phát hiện ảnh mới, đang upload...");
-                const formData = new FormData();
-                formData.append('file', pendingAvatarFile);
-
-                // Gọi API Upload ảnh
-                // const uploadRes = await FileAppServiceService.uploadFile(formData);
-
-                // Giả lập API trả về
-                const uploadRes = await new Promise<any>(resolve =>
-                    setTimeout(() => resolve({data: {data: {id: "new-image-guid-999"}}}), 1000)
-                );
-
-                if (uploadRes?.data?.data?.id) {
-                    finalImageId = uploadRes.data.data.id; // Cập nhật ID mới
-                    console.log("Upload ảnh thành công, ID mới:", finalImageId);
+                try {
+                    const objectName = await fileApiResource.directUpload(pendingAvatarFile);
+                    finalAvatarUrl = objectName;
+                } catch (uploadError) {
+                    console.error('Upload avatar error:', uploadError);
+                    message.error('Không thể upload ảnh đại diện');
+                    setLoading(false);
+                    return;
                 }
             }
 
-            // BƯỚC 2: GỬI TOÀN BỘ DATA USER (Kèm ID ảnh chuẩn)
-            const submitData = {
-                ...userInfo,     // ID user, các trường cũ
-                ...values,       // Tên, mô tả mới từ Form
-                imageId: finalImageId // ID ảnh (cũ hoặc mới)
+            const updateData: UpdateUserRequestDto = {
+                publicUserName: values.publicUserName,
+                avatarUrl: finalAvatarUrl,
             };
 
-            console.log("Đang lưu User Profile với data:", submitData);
+            const updatedUser = await userApiResource.updateUser(userInfo!.userId, updateData);
 
-            // Gọi API Update User
-            // await UserApiResourceService.update(submitData);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Giả lập
-
-            message.success("Cập nhật hồ sơ thành công!");
-            setPendingAvatarFile(null); // Reset file tạm sau khi save thành công
+            setUserInfo(updatedUser);
+            message.success('Cập nhật hồ sơ thành công!');
+            setPendingAvatarFile(null);
+            onModeChange?.('view');
 
         } catch (error) {
-            console.error(error);
-            message.error("Có lỗi xảy ra khi lưu thông tin.");
+            console.error('Save error:', error);
+            message.error('Có lỗi xảy ra khi lưu thông tin.');
         } finally {
             setLoading(false);
         }
     };
 
-    if (!userInfo) return <Spin className="flex justify-center mt-10"/>;
+    if (fetchLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[400px]">
+                <Spin size="large" />
+            </div>
+        );
+    }
 
     return (
-        <Card title="Hồ sơ người dùng" className="max-w-2xl mx-auto mt-10 shadow-md">
-            <div className="flex flex-col items-center mb-6">
-                {/* COMPONENT CON: AVATAR IMAGE
-                   - src: Truyền URL ảnh hiện tại xuống để hiển thị
-                   - editable: Cho phép sửa
-                   - onFileSelect: Hàm nhận hàng (File) từ con
-                */}
-                <AvatarImage
-                    src={userInfo.imageUrl}
-                    editable={true}
-                    onFileSelect={handleFileSelectFromChild}
-                />
-                <span className="text-gray-400 text-sm mt-2">Chạm vào ảnh để thay đổi</span>
-            </div>
-
-            <Form form={form} layout="vertical" onFinish={onSave}>
-                <Form.Item label="Họ và tên" name="fullName" rules={[{required: true}]}>
-                    <Input placeholder="Nhập họ tên"/>
-                </Form.Item>
-
-                <Form.Item label="Mô tả" name="description">
-                    <Input.TextArea rows={3} placeholder="Giới thiệu bản thân"/>
-                </Form.Item>
-
-                <div className="flex justify-end mt-4">
-                    <Button
-                        type="primary"
-                        htmlType="submit" // Kích hoạt onFinish của Form -> gọi onSave
-                        loading={loading}
-                        icon={<SaveOutlined/>}
-                    >
-                        Lưu thay đổi
-                    </Button>
+        <div className="container mx-auto px-4 py-8">
+            <Card
+                className="max-w-2xl mx-auto shadow-lg border-border"
+                styles={{
+                    header: {
+                        background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--info)) 100%)',
+                        borderRadius: '0.75rem 0.75rem 0 0',
+                    },
+                }}
+                title={
+                    <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold text-primary-foreground">
+                            Hồ sơ người dùng
+                        </span>
+                        {!isEditMode && (
+                            <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={handleEdit}
+                                className="text-primary-foreground hover:bg-primary-foreground/20"
+                            >
+                                Chỉnh sửa
+                            </Button>
+                        )}
+                    </div>
+                }
+            >
+                <div className="flex flex-col items-center mb-8">
+                    <AvatarImage
+                        imageUrl={userInfo?.avatarUrl || undefined}
+                        isCreateOrUpdate={isEditMode}
+                        onFileSelect={handleFileSelectFromChild}
+                    />
                 </div>
-            </Form>
-        </Card>
+
+                <Form form={form} layout="vertical" onFinish={onSave} className="space-y-4">
+                    <Form.Item
+                        label={<span className="font-medium text-foreground">Tên người dùng</span>}
+                        name="publicUserName"
+                        rules={[{ required: true, message: 'Vui lòng nhập tên người dùng' }]}
+                    >
+                        <Input
+                            placeholder="Nhập tên người dùng"
+                            className="h-11 rounded-lg"
+                            disabled={!isEditMode}
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        label={<span className="font-medium text-foreground">Email</span>}
+                        name="email"
+                    >
+                        <Input
+                            placeholder="Email"
+                            className="h-11 rounded-lg"
+                            disabled
+                        />
+                    </Form.Item>
+
+                    {isEditMode && (
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                                icon={<CloseOutlined />}
+                                size="large"
+                                onClick={handleCancel}
+                                className="h-11 px-6"
+                            >
+                                Hủy
+                            </Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={loading}
+                                icon={<SaveOutlined />}
+                                size="large"
+                                className="h-11 px-8 font-semibold"
+                            >
+                                Lưu thay đổi
+                            </Button>
+                        </div>
+                    )}
+                </Form>
+            </Card>
+        </div>
     );
 };
 
