@@ -356,6 +356,7 @@ public class MinIoServiceImpl implements MinIoService {
     private int calculateExpireTime(int partNumber) {
         // chat gpt bao la voi toc do 4G o Viet Nam thi upload 1 chunk 5Mb mat 3s
 
+        partNumber++;
         // do co the gap van de ve xu ly tai backend, hieu nang backend, thoi gian gui goi tin tu backend ve client,... nen 10 chunk dau tien moi set expireTime: 5 minutes / chunk
         if (partNumber < 10) {
             return partNumber * 60 * 5;

@@ -4,17 +4,24 @@ import {
     DownloadOutlined,
     EditOutlined,
     InfoCircleOutlined,
-    MailOutlined, MoreOutlined,
+    MailOutlined,
+    MoreOutlined,
+    RotateLeftOutlined,
     ShareAltOutlined
 } from '@ant-design/icons';
 import DownloadButton from "./DownloadButton.tsx";
+import FileDetailModal, {type FileDetailModalRef} from '../file/FileDetailModal';
+import EmailSender, {type ShareFileModalRef} from '../file/EmailSender.tsx';
+import type {MetadataEntity} from "../../api/fileApi/userFileApiResource.ts";
 import fileApiResource from "../../api/fileApi/fileApiResource.ts";
+import {message} from 'antd';
+import {hasPermission} from '../../utils/permissionUtils';
+import {FileAppPermission} from "../../api/enums.ts";
 
 interface Props {
-    fileId: string;
-    objectName: string;
-    fileName: string;
-    fileSize: number;
+    file: MetadataEntity;
+    isTrashItem?: boolean;
+    onRefresh?: () => void;
 }
 
 interface MenuOption {
@@ -25,10 +32,15 @@ interface MenuOption {
     onClick: () => void;
 }
 
-const BreadCrumbMenu = (prop: Props) => {
+const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showDownload, setShowDownload] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const fileDetailModalRef = useRef<FileDetailModalRef>(null);
+    const shareFileModalRef = useRef<ShareFileModalRef>(null);
+
+    // Lấy quyền của user hiện tại từ file entity
+    const fileAppPermission = file.publishUserPermission || FileAppPermission.PUBLIC;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -63,9 +75,8 @@ const BreadCrumbMenu = (prop: Props) => {
 
     // Handlers cho từng option
     const handleDetail = () => {
-        console.log('Detail clicked:', prop.fileName);
         setIsOpen(false);
-        // TODO: Implement detail logic
+        fileDetailModalRef.current?.open(file);
     };
 
     const handleDownload = () => {
@@ -78,68 +89,98 @@ const BreadCrumbMenu = (prop: Props) => {
     };
 
     const handleEdit = () => {
-        console.log('Edit clicked:', prop.fileName);
         setIsOpen(false);
-        // TODO: Implement edit logic
+        fileDetailModalRef.current?.open(file);
     };
 
     const handleDelete = async () => {
-        console.log('Delete clicked:', prop.fileName);
         setIsOpen(false);
-        await fileApiResource.moveToTrash(prop.fileId);
+        try {
+            await fileApiResource.moveToTrash(file.fileId);
+            message.success('File moved to trash successfully');
+            onRefresh?.();
+        } catch (error) {
+            message.error('Failed to move file to trash');
+            console.error('Move to trash error:', error);
+        }
+    };
+
+    const handleRestore = async () => {
+        setIsOpen(false);
+        try {
+            await fileApiResource.restoreFileFromTrash(file.fileId);
+            message.success('File restored successfully');
+            onRefresh?.();
+        } catch (error) {
+            message.error('Failed to restore file');
+            console.error('Restore error:', error);
+        }
     };
 
     const handleSendEmail = () => {
-        console.log('Send Email clicked:', prop.fileName);
         setIsOpen(false);
-        // TODO: Implement send email logic
+        shareFileModalRef.current?.open(file);
     };
 
     const handleShare = () => {
-        console.log('Share clicked:', prop.fileName);
         setIsOpen(false);
-        // TODO: Implement share logic
+        fileDetailModalRef.current?.open(file);
     };
 
-    const menuOptions: MenuOption[] = [
-        {
-            key: 'detail',
-            label: 'Chi tiết',
-            icon: <InfoCircleOutlined/>,
-            onClick: handleDetail,
-        },
-        {
-            key: 'download',
-            label: 'Tải xuống',
-            icon: <DownloadOutlined/>,
-            onClick: handleDownload,
-        },
-        {
-            key: 'edit',
-            label: 'Chỉnh sửa',
-            icon: <EditOutlined/>,
-            onClick: handleEdit,
-        },
-        {
-            key: 'sendEmail',
-            label: 'Gửi Email',
-            icon: <MailOutlined/>,
-            onClick: handleSendEmail,
-        },
-        {
-            key: 'share',
-            label: 'Chia sẻ',
-            icon: <ShareAltOutlined/>,
-            onClick: handleShare,
-        },
-        {
-            key: 'delete',
-            label: 'Xóa file',
-            icon: <DeleteOutlined/>,
-            danger: true,
-            onClick: handleDelete,
-        },
-    ];
+    // Dynamic menu options based on isTrashItem and fileAppPermission
+    const menuOptions: MenuOption[] = isTrashItem
+        ? [
+            {
+                key: 'restore',
+                label: 'Khôi phục',
+                icon: <RotateLeftOutlined/>,
+                onClick: handleRestore,
+            },
+        ]
+        : [
+            // Base (PUBLIC): Chi tiết + Tải xuống
+            {
+                key: 'detail',
+                label: 'Chi tiết',
+                icon: <InfoCircleOutlined/>,
+                onClick: handleDetail,
+            },
+            {
+                key: 'download',
+                label: 'Tải xuống',
+                icon: <DownloadOutlined/>,
+                onClick: handleDownload,
+            },
+            // >= READ/COMMENT: Thêm Gửi Email
+            ...(hasPermission(fileAppPermission, FileAppPermission.READ) ? [{
+                key: 'sendEmail',
+                label: 'Gửi Email',
+                icon: <MailOutlined/>,
+                onClick: handleSendEmail,
+            }] : []),
+            // >= MODIFY: Thêm Chia sẻ
+            ...(hasPermission(fileAppPermission, FileAppPermission.MODIFY) ? [{
+                key: 'share',
+                label: 'Chia sẻ',
+                icon: <ShareAltOutlined/>,
+                onClick: handleShare,
+            }] : []),
+            // OWNER: Thêm Chỉnh sửa
+            ...(fileAppPermission === FileAppPermission.OWNER ? [{
+                key: 'edit',
+                label: 'Chỉnh sửa',
+                icon: <EditOutlined/>,
+                onClick: handleEdit,
+            }] : []),
+            // OWNER: Thêm Xóa file
+            ...(fileAppPermission === FileAppPermission.OWNER ? [{
+                key: 'delete',
+                label: 'Xóa file',
+                icon: <DeleteOutlined/>,
+                danger: true,
+                onClick: handleDelete,
+            }] : []),
+        ];
 
     return (
         <div className="relative" ref={menuRef}>
@@ -155,7 +196,7 @@ const BreadCrumbMenu = (prop: Props) => {
         `}
                 title="Menu"
             >
-                <MoreOutlined className="text-lg" />
+                <MoreOutlined className="text-lg"/>
             </button>
 
             {isOpen && (
@@ -170,7 +211,7 @@ const BreadCrumbMenu = (prop: Props) => {
                 >
                     {menuOptions.map((option, index) => (
                         <div key={option.key}>
-                            {option.danger && index > 0 && <div className="border-t border-border my-1" />}
+                            {option.danger && index > 0 && <div className="border-t border-border my-1"/>}
 
                             <button
                                 onClick={(e) => {
@@ -198,13 +239,27 @@ const BreadCrumbMenu = (prop: Props) => {
 
             {showDownload && (
                 <DownloadButton
-                    objectName={prop.objectName}
-                    fileName={prop.fileName}
-                    fileSize={prop.fileSize}
+                    objectName={file.objectName}
+                    fileName={file.fileName}
+                    fileSize={file.fileSize}
                     autoStart={true}
                     onComplete={handleDownloadComplete}
                 />
             )}
+
+            <FileDetailModal
+                ref={fileDetailModalRef}
+                onFileUpdated={() => {
+                    // TODO: Refresh file list
+                    console.log('File updated');
+                }}
+                onFileDeleted={() => {
+                    // TODO: Refresh file list
+                    console.log('File deleted');
+                }}
+            />
+
+            <EmailSender ref={shareFileModalRef} />
         </div>
     );
 };

@@ -100,7 +100,7 @@ export default function DownloadButton(props: DownloadButtonProps) {
         `}
                 title="Download File"
             >
-                <DownloadOutlined className={isDownloading ? 'animate-bounce' : ''} />
+                <DownloadOutlined className={isDownloading ? 'animate-bounce' : ''}/>
             </button>
 
             <DownloadProgress

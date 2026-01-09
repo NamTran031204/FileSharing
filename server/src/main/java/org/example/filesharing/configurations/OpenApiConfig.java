@@ -7,13 +7,20 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OpenApiCustomizer;
-import org.springdoc.core.models.GroupedOpenApi;
+import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class OpenApiConfig {
+
+    @Value("${server.port:8080}")
+    private String serverPort;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -28,6 +35,15 @@ public class OpenApiConfig {
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
+                // Thêm server URLs
+                .servers(List.of(
+                        new Server()
+                                .url("http://localhost:" + serverPort)
+                                .description("Local Development Server"),
+                        new Server()
+                                .url("https://api.filesharing.com")
+                                .description("Production Server")
+                ))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication",
@@ -38,40 +54,14 @@ public class OpenApiConfig {
                                         .description("Enter JWT token")));
     }
 
-    // Group cho Auth APIs
     @Bean
-    public GroupedOpenApi authApi() {
-        return GroupedOpenApi.builder()
-                .group("1. Authentication")
-                .pathsToMatch("/api/auth/**")
-                .build();
-    }
-
-    // Group cho File APIs
-    @Bean
-    public GroupedOpenApi fileApi() {
-        return GroupedOpenApi.builder()
-                .group("2. File Operations")
-                .pathsToMatch("/api/files/**")
-                .build();
-    }
-
-    // Group cho Metadata APIs
-    @Bean
-    public GroupedOpenApi metadataApi() {
-        return GroupedOpenApi.builder()
-                .group("3. File Metadata")
-                .pathsToMatch("/api/metadata/**")
-                .build();
-    }
-
-    // Group cho tất cả APIs
-    @Bean
-    public GroupedOpenApi allApi() {
-        return GroupedOpenApi.builder()
-                .group("All APIs")
-                .pathsToMatch("/api/**")
-                .build();
+    public OperationCustomizer operationIdCustomizer() {
+        return (operation, handlerMethod) -> {
+            // Sử dụng tên method làm operationId
+            String methodName = handlerMethod.getMethod().getName();
+            operation.setOperationId(methodName);
+            return operation;
+        };
     }
 
     @Bean

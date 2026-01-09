@@ -1,5 +1,6 @@
 package org.example.filesharing.controllers;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.CommonResponse;
@@ -9,7 +10,6 @@ import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
-import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.repositories.MetadataRepo;
@@ -144,16 +144,14 @@ public class FileMetadataController {
         return CommonResponse.success();
     }
 
-    @PutMapping(value = "/update/{fileId}")
-    public CommonResponse<MetadataEntity> updateFileDetail(
-            @PathVariable("fileId") String fileId,
-            @RequestBody MetadataUpdateRequestDto request) {
-        try {
-            MetadataEntity updatedMetadata = metadataService.updateMetadata(request, fileId);
-            return CommonResponse.success(updatedMetadata);
-        } catch (Exception e) {
-            log.error("Failed to update file detail: {}", e.getMessage());
-            return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+    @PostMapping(value = "/restore-file/{fileId}")
+    public CommonResponse<String> restoreFile(@PathVariable("fileId") String fileId) {
+        metadataService.restoreFileFromTrash(fileId);
+        return CommonResponse.success();
+    }
+
+    @GetMapping(value = "/get-file-by-token/{token}")
+    public CommonResponse<MetadataEntity> getFileByToken(@PathVariable("token") String token) {
+        return CommonResponse.success(metadataService.getFileByToken(token));
     }
 }

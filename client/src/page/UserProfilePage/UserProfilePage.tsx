@@ -7,7 +7,7 @@ const UserProfilePage = () => {
 
     return (
         <MainLayout>
-            <UserProfile mode={mode} onModeChange={setMode} />
+            <UserProfile mode={mode} onModeChange={setMode}/>
         </MainLayout>
     );
 };

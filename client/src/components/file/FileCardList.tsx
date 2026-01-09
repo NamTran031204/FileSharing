@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
-import userFileApiResource, { type MetadataEntity } from '../../api/fileApi/userFileApiResource';
+import {useEffect, useState} from 'react';
+import userFileApiResource, {type MetadataEntity} from '../../api/fileApi/userFileApiResource';
 import FileCardComp from './FileCardComp';
-import { Button, Empty, Spin } from 'antd';
-import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
+import {Button, Empty, Spin} from 'antd';
+import {LeftOutlined, ReloadOutlined, RightOutlined} from '@ant-design/icons';
 
-const FileCardList = () => {
+interface FileCardListProps {
+    viewMode?: 'active' | 'trash';
+}
+
+const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
     const [files, setFiles] = useState<MetadataEntity[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -20,6 +24,7 @@ const FileCardList = () => {
                     mimeType: null,
                     status: null,
                     isActive: null,
+                    isTrash: viewMode === 'trash',
                     isIncludeSharedFile: null,
                     creationTimestampStartDate: null,
                     creationTimestampEndDate: null
@@ -45,14 +50,19 @@ const FileCardList = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground">My Files</h2>
+                    <h2 className="text-2xl font-bold text-foreground">
+                        {viewMode === 'trash' ? 'Trash Bin' : 'My Files'}
+                    </h2>
                     <p className="text-muted-foreground mt-1">
-                        Manage and organize your uploaded files
+                        {viewMode === 'trash' 
+                            ? 'Files moved to trash - you can restore them'
+                            : 'Manage and organize your uploaded files'
+                        }
                     </p>
                 </div>
                 <Button
                     type="default"
-                    icon={<ReloadOutlined />}
+                    icon={<ReloadOutlined/>}
                     onClick={fetchFiles}
                     loading={loading}
                     className="flex items-center gap-2"
@@ -63,7 +73,7 @@ const FileCardList = () => {
 
             {loading ? (
                 <div className="flex flex-col justify-center items-center h-64 gap-4">
-                    <Spin size="large" />
+                    <Spin size="large"/>
                     <p className="text-muted-foreground">Loading files...</p>
                 </div>
             ) : (
@@ -76,7 +86,11 @@ const FileCardList = () => {
                                     key={index}
                                     className="transform hover:scale-[1.02] transition-transform duration-200"
                                 >
-                                    <FileCardComp {...file} />
+                                    <FileCardComp 
+                                        {...file} 
+                                        isTrashItem={viewMode === 'trash'}
+                                        onRefresh={fetchFiles}
+                                    />
                                 </div>
                             ))
                         ) : (
@@ -99,7 +113,7 @@ const FileCardList = () => {
                             <Button
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                icon={<LeftOutlined />}
+                                icon={<LeftOutlined/>}
                                 className="flex items-center gap-2"
                             >
                                 Previous
@@ -112,8 +126,8 @@ const FileCardList = () => {
 
                             <Button
                                 onClick={() => setPage((p) => p + 1)}
-                                icon={<RightOutlined />}
-                                iconPosition="end"
+                                icon={<RightOutlined/>}
+                                iconPlacement="end"
                                 className="flex items-center gap-2"
                             >
                                 Next

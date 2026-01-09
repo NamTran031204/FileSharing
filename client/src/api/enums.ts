@@ -1,12 +1,37 @@
-export type UploadStatus = 'UPLOADING' | 'COMPLETED' | 'FAILED';
+export enum ObjectPermission {
+    READ = 'READ',
+    COMMENT = 'COMMENT',
+    MODIFY = 'MODIFY'
+}
 
-export type ObjectPermission = 'READ' | 'COMMENT' | 'MODIFY';
+export enum ObjectVisibility {
+    PRIVATE = 'PRIVATE',
+    PUBLIC = 'PUBLIC'
+}
 
-export type ObjectVisibility = 'PRIVATE' | 'PUBLIC';
+export enum UploadStatus {
+    UPLOADING = 'UPLOADING',
+    COMPLETED = 'COMPLETED',
+    FAILED = 'FAILED'
+}
 
-export type AuthProvider = 'LOCAL' | 'GOOGLE';
+export enum AuthProvider {
+    LOCAL = 'LOCAL',
+    GOOGLE = 'GOOGLE'
+}
 
-export type UserRole = 'ROLE_USER' | 'ROLE_ADMIN';
+export enum UserRole {
+    ROLE_USER = 'ROLE_USER',
+    ROLE_ADMIN = 'ROLE_ADMIN'
+}
+
+export enum FileAppPermission {
+    READ = 'READ',
+    COMMENT = 'COMMENT',
+    MODIFY = 'MODIFY',
+    PUBLIC = 'PUBLIC',
+    OWNER = 'OWNER'
+}
 
 export type ErrorCode =
     | '200'

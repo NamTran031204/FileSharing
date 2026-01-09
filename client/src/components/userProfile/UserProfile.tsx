@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, message, Spin } from 'antd';
-import { SaveOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
+import {useEffect, useState} from 'react';
+import {Button, Card, Form, Input, message, Spin} from 'antd';
+import {CloseOutlined, EditOutlined, SaveOutlined} from '@ant-design/icons';
 import AvatarImage from './AvatarImage';
-import userApiResource, { type UpdateUserRequestDto, type UserDto } from "../../api/userApiResource.ts";
+import userApiResource, {type UpdateUserRequestDto, type UserDto} from "../../api/userApiResource.ts";
 import fileApiResource from "../../api/fileApi/fileApiResource.ts";
 
 interface UserProfileProps {
@@ -10,7 +10,7 @@ interface UserProfileProps {
     onModeChange?: (mode: 'view' | 'edit') => void;
 }
 
-const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
+const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(true);
@@ -106,7 +106,7 @@ const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
     if (fetchLoading) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
-                <Spin size="large" />
+                <Spin size="large"/>
             </div>
         );
     }
@@ -129,7 +129,7 @@ const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
                         {!isEditMode && (
                             <Button
                                 type="text"
-                                icon={<EditOutlined />}
+                                icon={<EditOutlined/>}
                                 onClick={handleEdit}
                                 className="text-primary-foreground hover:bg-primary-foreground/20"
                             >
@@ -151,7 +151,7 @@ const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
                     <Form.Item
                         label={<span className="font-medium text-foreground">Tên người dùng</span>}
                         name="publicUserName"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên người dùng' }]}
+                        rules={[{required: true, message: 'Vui lòng nhập tên người dùng'}]}
                     >
                         <Input
                             placeholder="Nhập tên người dùng"
@@ -174,7 +174,7 @@ const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
                     {isEditMode && (
                         <div className="flex justify-end gap-3 pt-4">
                             <Button
-                                icon={<CloseOutlined />}
+                                icon={<CloseOutlined/>}
                                 size="large"
                                 onClick={handleCancel}
                                 className="h-11 px-6"
@@ -185,7 +185,7 @@ const UserProfile = ({ mode = 'view', onModeChange }: UserProfileProps) => {
                                 type="primary"
                                 htmlType="submit"
                                 loading={loading}
-                                icon={<SaveOutlined />}
+                                icon={<SaveOutlined/>}
                                 size="large"
                                 className="h-11 px-8 font-semibold"
                             >

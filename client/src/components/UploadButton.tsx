@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import type {UploadProgress} from '../service/uploadService';
 import {uploadService} from '../service/uploadService';
-import { Button, Progress, Alert } from 'antd';
-import { CloudUploadOutlined, CloseCircleOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons';
+import {Alert, Button, Progress} from 'antd';
+import {CheckCircleOutlined, CloseCircleOutlined, CloudUploadOutlined, InboxOutlined} from '@ant-design/icons';
 
 export default function UploadButton() {
     const [file, setFile] = useState<File | null>(null);
@@ -141,7 +141,7 @@ export default function UploadButton() {
               w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300
               ${isDragOver ? 'bg-primary text-primary-foreground scale-110' : 'bg-muted text-muted-foreground'}
             `}>
-                            <InboxOutlined className="text-4xl" />
+                            <InboxOutlined className="text-4xl"/>
                         </div>
                         <div>
                             <p className="text-lg font-medium text-foreground">
@@ -159,7 +159,7 @@ export default function UploadButton() {
                     <div className="mt-6 bg-card rounded-xl p-4 border border-border">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                                <CloudUploadOutlined className="text-xl text-primary" />
+                                <CloudUploadOutlined className="text-xl text-primary"/>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-medium text-card-foreground truncate">{file.name}</p>
@@ -234,7 +234,7 @@ export default function UploadButton() {
                         description={`File uploaded as: ${uploadedObjectName}`}
                         type="success"
                         showIcon
-                        icon={<CheckCircleOutlined />}
+                        icon={<CheckCircleOutlined/>}
                         className="mt-6"
                     />
                 )}
@@ -247,7 +247,7 @@ export default function UploadButton() {
                         onClick={handleUpload}
                         disabled={isUploading || !file}
                         loading={isUploading}
-                        icon={<CloudUploadOutlined />}
+                        icon={<CloudUploadOutlined/>}
                         className="flex-1 h-12 text-base font-semibold"
                     >
                         {isUploading ? 'Uploading...' : 'Upload File'}
@@ -258,7 +258,7 @@ export default function UploadButton() {
                             danger
                             size="large"
                             onClick={handleCancel}
-                            icon={<CloseCircleOutlined />}
+                            icon={<CloseCircleOutlined/>}
                             className="h-12 text-base font-semibold"
                         >
                             Cancel

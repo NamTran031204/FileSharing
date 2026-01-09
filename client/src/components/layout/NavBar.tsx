@@ -1,8 +1,8 @@
-import { NavLink } from 'react-router-dom';
-import { CloudUploadOutlined, FolderOutlined, UserOutlined } from '@ant-design/icons';
+import {NavLink} from 'react-router-dom';
+import {CloudUploadOutlined, DeleteOutlined, FolderOutlined, UserOutlined} from '@ant-design/icons';
 
 const NavBar = () => {
-    const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    const navLinkClass = ({isActive}: { isActive: boolean }) =>
         `flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 ${
             isActive
                 ? 'bg-card text-primary shadow-lg scale-105'
@@ -15,7 +15,7 @@ const NavBar = () => {
                 <div className="flex flex-col items-center gap-6">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-card rounded-xl flex items-center justify-center shadow-md">
-                            <CloudUploadOutlined className="text-2xl text-primary" />
+                            <CloudUploadOutlined className="text-2xl text-primary"/>
                         </div>
                         <h1 className="text-3xl font-bold text-primary-foreground tracking-tight">
                             FILE SHARING
@@ -24,16 +24,20 @@ const NavBar = () => {
 
                     <nav className="flex gap-4">
                         <NavLink to="/upload" className={navLinkClass}>
-                            <CloudUploadOutlined className="text-lg" />
+                            <CloudUploadOutlined className="text-lg"/>
                             Upload & Share
                         </NavLink>
                         <NavLink to="/my-files" className={navLinkClass}>
-                            <FolderOutlined className="text-lg" />
+                            <FolderOutlined className="text-lg"/>
                             My Files
                         </NavLink>
                         <NavLink to="/profile" className={navLinkClass}>
-                            <UserOutlined className="text-lg" />
+                            <UserOutlined className="text-lg"/>
                             Profile
+                        </NavLink>
+                        <NavLink to="/trash" className={navLinkClass}>
+                            <DeleteOutlined className="text-lg"/>
+                            Trash
                         </NavLink>
                     </nav>
                 </div>

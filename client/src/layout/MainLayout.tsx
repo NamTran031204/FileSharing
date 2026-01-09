@@ -4,10 +4,10 @@ interface MainLayoutProps {
     children: React.ReactNode;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = ({children}: MainLayoutProps) => {
     return (
         <div className="min-h-screen bg-background">
-            <NavBar />
+            <NavBar/>
             <main className="flex items-center justify-center">
                 {children}
             </main>

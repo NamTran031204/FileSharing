@@ -13,6 +13,7 @@ public class MetadataUpdateRequestDto {
     private String fileName;
 
     private Integer timeToLive;
+    private Boolean isTrash;
 
     private ObjectPermission publicPermission;
     private ObjectVisibility visibility;

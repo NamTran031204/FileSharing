@@ -15,6 +15,8 @@ public class UserFileFilterPageRequestDto {
 
     private Boolean isActive; // phu thuoc vao time to live
 
+    private Boolean isTrash;
+
     private Boolean isIncludeSharedFile;
 
     private Instant creationTimestampStartDate;

@@ -1,6 +1,7 @@
 import {API_BASE, type CommonResponse, tokenManager} from '../baseApi';
 import type {AuthProvider, UserRole} from "../enums.ts";
 import axios from "axios";
+import type {MetadataEntity} from "../fileApi/userFileApiResource.ts";
 
 export interface AuthProviderInfo {
     provider: AuthProvider;
@@ -73,6 +74,18 @@ const authApiResource = {
 
         return response.data.data;
     },
+
+    checkLegit: async (shareToken: string) => {
+        const accessToken = tokenManager.getAccessToken();
+        const response = await authAxios.post<CommonResponse<MetadataEntity>>(
+            `/auth/check-legit/${shareToken}/${accessToken}`
+        );
+
+        if (!response.data.isSuccessful) {
+            throw new Error(response.data.message || 'You has no Legit! Please Login/Register to continue.');
+        }
+        return response.data.data;
+    }
 
 }
 

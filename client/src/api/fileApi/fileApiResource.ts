@@ -1,5 +1,6 @@
 import baseApi, {API_BASE, type CommonResponse, tokenManager} from '../baseApi';
 import axios from 'axios';
+import type {MetadataEntity} from "./userFileApiResource.ts";
 
 interface PartUpload {
     partNumber: number;
@@ -188,6 +189,12 @@ const fileApiResource = {
 
     moveToTrash: async (fileId: string, signal?: AbortSignal) =>
         baseApi.delete<string>(`/file-metadata/move-to-trash/${fileId}`, signal),
+
+    restoreFileFromTrash: async (fileId: string, signal?: AbortSignal) =>
+        baseApi.post<string>(`/file-metadata/restore-file/${fileId}`, signal),
+
+    getFileByToken: async (shareToken: string) =>
+        baseApi.get<MetadataEntity>(`/get-file-by-token/${shareToken}`),
 };
 
 export default fileApiResource;
