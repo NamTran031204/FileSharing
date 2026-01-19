@@ -16,7 +16,7 @@ const DownloadProgress = ({fileName, progress, error, onCancel, isVisible}: Down
 
     return (
         <div
-            className="fixed bottom-5 right-5 z-50 w-80 bg-card rounded-xl shadow-2xl border border-border p-4 animate-in slide-in-from-bottom-5 duration-300">
+            className="fixed bottom-5 right-5 z-50 w-80 bg-card rounded-xl shadow-2xl border border-border p-4 animate-in slide-in-from-bottom-5 duration-300 bg-blue-100">
             <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-card-foreground truncate" title={fileName}>

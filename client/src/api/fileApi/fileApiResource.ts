@@ -194,7 +194,7 @@ const fileApiResource = {
         baseApi.post<string>(`/file-metadata/restore-file/${fileId}`, signal),
 
     getFileByToken: async (shareToken: string) =>
-        baseApi.get<MetadataEntity>(`/get-file-by-token/${shareToken}`),
+        baseApi.get<MetadataEntity>(`/file-metadata/get-file-by-token/${shareToken}`),
 };
 
 export default fileApiResource;

@@ -36,7 +36,7 @@ public class EmailService {
         Context context = new Context();
         context.setVariable("senderEmail", auditService.getCurrentUserEmail());
         context.setVariable("fileName", input.getObjectName());
-        context.setVariable("downloadLink", metadata.getFileName());
+        context.setVariable("downloadLink", "http://localhost:5173/preview/" + metadata.getShareToken());
 
         String htmlBody = templateEngine.process("email/fileSender", context);
 

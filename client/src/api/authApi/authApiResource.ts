@@ -76,9 +76,8 @@ const authApiResource = {
     },
 
     checkLegit: async (shareToken: string) => {
-        const accessToken = tokenManager.getAccessToken();
         const response = await authAxios.post<CommonResponse<MetadataEntity>>(
-            `/auth/check-legit/${shareToken}/${accessToken}`
+            `/auth/check-legit/${shareToken}`
         );
 
         if (!response.data.isSuccessful) {

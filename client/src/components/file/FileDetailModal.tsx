@@ -29,7 +29,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
         const [deleteLoading, setDeleteLoading] = useState(false);
         const [userPermissions, setUserPermissions] = useState<UserPermission[]>([]);
 
-        // Lưu dữ liệu gốc để revert khi cancel
         const [originalPermissions, setOriginalPermissions] = useState<UserPermission[]>([]);
 
         const isEditMode = mode === 'edit';
@@ -76,14 +75,9 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             }
         };
 
-        /**
-         * Handler khi user nhấn nút Hủy (Cancel)
-         * Revert tất cả thay đổi về trạng thái ban đầu
-         */
         const handleCancel = () => {
             if (!currentFile) return;
 
-            // Revert form values về dữ liệu gốc
             form.setFieldsValue({
                 fileName: currentFile.fileName,
                 mimeType: currentFile.mimeType,
@@ -95,10 +89,8 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 visibility: currentFile.visibility,
             });
 
-            // Revert userPermissions về danh sách gốc
             setUserPermissions([...originalPermissions]);
 
-            // Chuyển về view mode
             setMode('view');
         };
 
@@ -120,12 +112,10 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 // Gọi API và nhận response
                 const updatedFile = await userFileApiResource.updateFileDetail(currentFile.fileId, updateData);
 
-                // Đồng bộ state với dữ liệu từ backend (Source of Truth)
                 setCurrentFile(updatedFile);
                 setUserPermissions(updatedFile.userFilePermissions || []);
                 setOriginalPermissions(updatedFile.userFilePermissions || []);
 
-                // Cập nhật lại form với dữ liệu mới từ backend
                 form.setFieldsValue({
                     fileName: updatedFile.fileName,
                     mimeType: updatedFile.mimeType,
@@ -185,10 +175,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             {label: 'Public', value: ObjectVisibility.PUBLIC},
         ];
 
-        /**
-         * Handler khi user thay đổi permissions trong UserFilePermissionList
-         * Component con gọi callback này → Parent update state → Re-render
-         */
         const handlePermissionChange = (email: string, newPermissions: ObjectPermission[]) => {
             setUserPermissions(prevPermissions =>
                 prevPermissions.map(user =>
@@ -199,11 +185,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             );
         };
 
-        /**
-         * Handler khi xóa một user khỏi danh sách permissions
-         * Logic: Set permissionList = [] để backend xóa khỏi DB
-         * UI sẽ tự động ẩn user này do filtering ở child component
-         */
         const handleRemoveUser = (email: string) => {
             setUserPermissions(prevPermissions =>
                 prevPermissions.map(user =>
@@ -214,11 +195,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             );
         };
 
-        /**
-         * Handler khi thêm user mới từ UserFilePermissionList
-         */
         const handleAddUser = (email: string, permissions: ObjectPermission[]) => {
-            // Thêm user mới vào danh sách
             const newUser: UserPermission = {
                 email,
                 permissionList: permissions
@@ -228,7 +205,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             message.success(`Đã thêm ${email}`);
         };
 
-        // Lấy quyền của user hiện tại từ file
         const fileAppPermission = currentFile?.publishUserPermission || FileAppPermission.PUBLIC;
 
         console.log("current file", currentFile);
@@ -249,7 +225,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 footer={null}
                 destroyOnHidden
             >
-                {/* Section 1: File Info */}
                 <div className="max-h-[60vh] overflow-y-auto">
                     <Form
                         form={form}
@@ -271,7 +246,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 />
                             </Form.Item>
 
-                            {/* MIME Type - Read Only */}
                             <Form.Item
                                 label={<span className="font-medium">Loại file</span>}
                                 name="mimeType"
@@ -280,7 +254,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 <Input disabled className="bg-muted"/>
                             </Form.Item>
 
-                            {/* File Size - Read Only */}
                             <Form.Item
                                 label={<span className="font-medium">Kích thước</span>}
                                 name="fileSize"
@@ -289,7 +262,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 <Input disabled className="bg-muted"/>
                             </Form.Item>
 
-                            {/* Compression Algorithm - Read Only */}
                             <Form.Item
                                 label={<span className="font-medium">Thuật toán nén</span>}
                                 name="compressionAlgo"
@@ -298,7 +270,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 <Input disabled className="bg-muted"/>
                             </Form.Item>
 
-                            {/* Owner ID - Read Only - Hidden for PUBLIC */}
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
                                     label={<span className="font-medium">Owner ID</span>}
@@ -309,7 +280,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 </Form.Item>
                             )}
 
-                            {/* Time To Live - Editable */}
                             <Form.Item
                                 label={<span className="font-medium">Thời gian lưu trữ (giây)</span>}
                                 name="timeToLive"
@@ -324,7 +294,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 />
                             </Form.Item>
 
-                            {/* Public Permission - Editable with Select - Hidden for PUBLIC */}
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
                                     label={<span className="font-medium">Quyền công khai</span>}
@@ -341,7 +310,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 </Form.Item>
                             )}
 
-                            {/* Visibility - Editable with Select - Hidden for PUBLIC */}
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
                                     label={<span className="font-medium">Chế độ hiển thị</span>}
@@ -359,7 +327,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                             )}
                         </div>
 
-                        {/* User File Permissions - Hidden for PUBLIC, READ, COMMENT */}
                         {hasPermission(fileAppPermission, FileAppPermission.MODIFY) && (
                             <Form.Item
                                 label={<span className="font-medium">Quyền chia sẻ với người dùng</span>}
@@ -380,9 +347,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
 
                 <Divider className="my-4"/>
 
-                {/* Action Buttons - Single Row Layout */}
                 <div className="flex items-center justify-between gap-3 pt-2">
-                    {/* Left: Delete Button - Only for OWNER */}
                     {fileAppPermission === FileAppPermission.OWNER && (
                         <Button
                             danger
@@ -397,7 +362,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                         </Button>
                     )}
 
-                    {/* Right: Cancel & Save/Edit Buttons - Only for >= MODIFY */}
                     {hasPermission(fileAppPermission, FileAppPermission.MODIFY) && (
                         <div className="flex items-center gap-2 ml-auto">
                             {isEditMode && (

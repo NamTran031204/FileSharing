@@ -11,61 +11,17 @@ const FileCardComp = (props: FileCardCompProps) => {
     const { isTrashItem, onRefresh, ...metadata } = props;
 
     const getMimeTypeIcon = () => {
-        const fileType = getFileGroup(metadata.mimeType!);
+        const fileType = FileViewUtil.getFileGroup(metadata.mimeType!);
         return <img src={"src/assets/mimeTypeIcon/" + fileType + ".png"} alt={metadata.mimeType}
                     className="w-[2rem] h-[2rem] object-contain"/>
     }
 
     const getMimeTypeImage = () => {
-        const fileType = getFileGroup(metadata.mimeType!);
+        const fileType = FileViewUtil.getFileGroup(metadata.mimeType!);
         return <img src={"src/assets/mimeTypeImage/" + fileType + ".png"} alt={metadata.mimeType}
                     className="w-60 h-60 object-contain"/>
     }
 
-    function getFileGroup(mimeType: string): string {
-        const typePrefix = mimeType.split('/')[0];
-
-        if (typePrefix === 'image') return 'image';
-        if (typePrefix === 'video') return 'video';
-        if (typePrefix === 'audio') return 'audio';
-
-        if (typePrefix === 'text') {
-            if (mimeType.includes('html') || mimeType.includes('css') || mimeType.includes('javascript') || mimeType.includes('xml')) {
-                return 'code';
-            }
-            return 'text';
-        }
-
-        if (typePrefix === 'application') {
-            if (
-                mimeType.includes('pdf') ||
-                mimeType.includes('word') ||
-                mimeType.includes('excel') ||
-                mimeType.includes('sheet') ||
-                mimeType.includes('presentation') ||
-                mimeType.includes('powerpoint')
-            ) {
-                return 'document';
-            }
-
-            if (
-                mimeType.includes('zip') ||
-                mimeType.includes('rar') ||
-                mimeType.includes('tar') ||
-                mimeType.includes('gzip') ||
-                mimeType.includes('compressed') ||
-                mimeType.includes('7z')
-            ) {
-                return 'archive';
-            }
-
-            if (mimeType.includes('json') || mimeType.includes('xml')) {
-                return 'code';
-            }
-        }
-
-        return 'other';
-    }
 
     return (
         <>

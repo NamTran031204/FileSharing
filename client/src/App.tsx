@@ -6,6 +6,7 @@ import UploadPage from "./page/uploadPage";
 import UserProfilePage from "./page/UserProfilePage/UserProfilePage.tsx";
 import TrashPage from "./page/trashPage";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
+import FilePreviewPage from "./page/filePreviewPage";
 
 const App = () => {
     return (
@@ -15,6 +16,7 @@ const App = () => {
                     <Route path="/" element={<Navigate to="/login" replace/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
+                    <Route path={`/preview/*`} element={<FilePreviewPage/>}/>
                     <Route path="/my-files" element={
                         <ProtectedRoute>
                             <UserFilePage/>

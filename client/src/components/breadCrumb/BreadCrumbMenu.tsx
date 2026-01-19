@@ -206,7 +206,7 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
             bg-popover rounded-xl shadow-xl
             border border-border
             py-2 overflow-hidden
-            animate-in fade-in-0 zoom-in-95 duration-200
+            animate-in fade-in-0 zoom-in-95 duration-200 bg-blue-100
           "
                 >
                     {menuOptions.map((option, index) => (
