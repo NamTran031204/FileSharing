@@ -6,9 +6,57 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tpnam1w3@gmail.com
+    password: dxcd sxwu viga ozss
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
 
 minio:
   endpoint: http://localhost:9000
-  access-key: A76R4P1XZTSSC0MBPK8R
-  secret-key: jY19VMwWBsaiOj3tz7AgyS8q601l2qMKtx4luEpb
+  access-key: PMIIFZWCTKVOFXS8UQB6
+  secret-key: Put1DZZ4QKOhiB5QeUFy1kWZQ0L3tzQH5ph3nf1M
   bucket-name: file-sharing
+#  access-key: 71K8C26O4RRFQN8NRRDM
+#  secret-key: Ol3stdZi5z7OLKwl2ku78vpP2oYCRsF61+bZL7Aj
+
+application:
+  security:
+    jwt:
+      expiration: 86400000 # 24 hours
+      secret-key: nprtI/yUVAZiaZBTM7K1CYqEkrvXOPyeOIFq/1wCfzE=
+      refresh-token:
+        expiration: 604800000     # 7 days
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+    resolve-schema-properties: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    filter: true
+  paths-to-exclude: /api/auth/**
+  packages-to-scan: org.example.filesharing.controllers
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  show-actuator: false
+  writer-with-default-pretty-printer: true
+  # Cấu hình để giữ nguyên tên method làm operationId
+  override-with-generic-response: false
+  use-management-port: false
+  # Sử dụng tên method làm operationId
+  operationsSorter: method

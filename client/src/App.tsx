@@ -1,12 +1,12 @@
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
 import LoginPage from './page/auth/LoginPage';
 import RegisterPage from './page/auth/RegisterPage';
-import UserFilePage from "./page/userFilePage";
 import UploadPage from "./page/uploadPage";
 import UserProfilePage from "./page/UserProfilePage/UserProfilePage.tsx";
 import TrashPage from "./page/trashPage";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import FilePreviewPage from "./page/filePreviewPage";
+import {UserFilePage} from "./page/userFile";
 
 const App = () => {
     return (
