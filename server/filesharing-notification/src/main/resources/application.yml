@@ -1,9 +1,9 @@
+server:
+  port: 5001
+
 spring:
   application:
     name: filesharing-notification
-  data:
-    mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
   mail:
     host: smtp.gmail.com
     port: 587
@@ -18,3 +18,5 @@ spring:
           connectiontimeout: 10000
           timeout: 10000
           writetimeout: 10000
+  kafka:
+    bootstrap-servers: localhost:9092

@@ -1,3 +1,6 @@
+server:
+  port: 5000
+
 spring:
   application:
     name: filesharing-filehandler
@@ -25,8 +28,8 @@ spring:
 
 minio:
   endpoint: http://localhost:9000
-  access-key: PMIIFZWCTKVOFXS8UQB6
-  secret-key: Put1DZZ4QKOhiB5QeUFy1kWZQ0L3tzQH5ph3nf1M
+  access-key: 5UVTKA00N1U9060FMZW0
+  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
   bucket-name: file-sharing
 #  access-key: 71K8C26O4RRFQN8NRRDM
 #  secret-key: Ol3stdZi5z7OLKwl2ku78vpP2oYCRsF61+bZL7Aj
