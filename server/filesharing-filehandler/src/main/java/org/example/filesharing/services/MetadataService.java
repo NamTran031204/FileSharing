@@ -3,6 +3,7 @@ package org.example.filesharing.services;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.auth.UserFileAuthPermissionRequestDto;
+import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
@@ -20,7 +21,7 @@ public interface MetadataService {
 
     List<Integer> resumeUpload(String uploadId);
 
-    Boolean addUserViaEmail(String objectName, String email, List<ObjectPermission> permission);
+    Boolean addUserViaEmail(EmailSenderRequestDto input);
 
     MetadataEntity updateMetadata(MetadataUpdateRequestDto input, String fileId);
 

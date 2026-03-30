@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.auth.UserFileAuthPermissionRequestDto;
+import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
@@ -16,6 +17,7 @@ import org.example.filesharing.enums.objectPermission.ObjectPermission;
 import org.example.filesharing.enums.objectPermission.ObjectVisibility;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
+import org.example.filesharing.jobs.kafka.EmailProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MetadataService;
@@ -40,6 +42,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final AuditService auditService;
     private final MinIoService minIoService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailProducer emailProducer;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
@@ -113,17 +116,18 @@ public class MetadataServiceImpl implements MetadataService {
     }
 
     @Override
-    public Boolean addUserViaEmail(String objectName, String email, List<ObjectPermission> permission) {
-        MetadataEntity metadataEntity = metadataRepo.findByObjectName(objectName)
+    public Boolean addUserViaEmail(EmailSenderRequestDto input) {
+        MetadataEntity metadataEntity = metadataRepo.findByObjectName(input.getObjectName())
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
         List<UserFilePermission> result = mergeUserPermissions(List.of(UserFilePermission.builder()
-                        .email(email)
-                        .permissionList(permission)
+                        .email(input.getToEmail())
+                        .permissionList(input.getObjectPermission())
                 .build()), metadataEntity.getUserFilePermissions());
 
         metadataEntity.setUserFilePermissions(result);
         metadataRepo.save(metadataEntity);
 
+        emailProducer.sendEmail(input);
         return true;
     }
 
