@@ -24,6 +24,7 @@ import org.example.filesharing.utils.PermissionUtil;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -122,6 +123,7 @@ public class MetadataServiceImpl implements MetadataService {
 
         metadataEntity.setUserFilePermissions(result);
         metadataRepo.save(metadataEntity);
+
         return true;
     }
 

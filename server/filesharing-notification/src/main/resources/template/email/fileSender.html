@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Shared With You</title>
+    <style>
+        /* CSS reset cho email */
+        body { margin: 0; padding: 0; width: 100%; background-color: #f4f4f4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background-color: #2563eb; padding: 30px 20px; text-align: center; color: #ffffff; }
+        .content { padding: 40px 30px; color: #333333; }
+        .file-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0; display: flex; align-items: center; }
+        .file-icon { font-size: 24px; margin-right: 15px; }
+        .btn { display: inline-block; padding: 14px 28px; background-color: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .btn:hover { background-color: #1d4ed8; }
+        .footer { background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #888888; }
+        .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+        .value { font-size: 16px; color: #1e293b; margin-top: 4px; margin-bottom: 16px; font-weight: 500; word-break: break-all; }
+    </style>
+</head>
+<body>
+<div style="padding: 40px 0;">
+    <table class="container" role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 600px;">
+        <tr>
+            <td class="header" bgcolor="#2563eb" align="center">
+                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">File Sharing Service</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">You received a new file</p>
+            </td>
+        </tr>
+        <tr>
+            <td class="content" bgcolor="#ffffff">
+                <p style="margin-top: 0;">Hello,</p>
+                <p>A file has been shared with you via our secure File Sharing Service.</p>
+                <div style="margin-top: 25px;">
+                    <div class="label">From Sender</div>
+                    <div class="value" th:text="${senderEmail}">sender@example.com</div>
+                </div>
+                <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin: 10px 0 25px 0;">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <div class="label">File Name</div>
+                            <div class="value" style="margin-bottom: 0; color: #0f172a;">📄 <span th:text="${fileName}">example.pdf</span></div>
+                        </td>
+                    </tr>
+                </table>
+                <div style="text-align: center; margin-top: 30px;">
+                    <a th:href="${downloadLink}" class="btn" target="_blank">Download File Now</a>
+                    <p style="margin-top: 20px; font-size: 13px; color: #94a3b8;">
+                        Link will expire soon. Please download it immediately.
+                    </p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer" bgcolor="#f4f4f4" align="center">
+                <p style="margin: 0;">&copy; 2025 File Sharing Service. All rights reserved.</p>
+                <p style="margin: 5px 0 0 0;">This is an automated email, please do not reply.</p>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

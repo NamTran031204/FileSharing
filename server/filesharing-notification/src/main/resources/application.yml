@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: filesharing-notification
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tpnam1w3@gmail.com
+    password: dxcd sxwu viga ozss
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000

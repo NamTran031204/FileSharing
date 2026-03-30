@@ -1,5 +1,6 @@
 package org.example.filesharing.entities.dtos.file;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,9 @@ import java.util.List;
 
 @Data
 public class EmailSenderRequestDto {
+    @JsonIgnore
+    private String fromUser;
+
     @NotNull
     @NotBlank
     @Email
@@ -24,4 +28,8 @@ public class EmailSenderRequestDto {
     @NotNull
     @NotBlank
     private String objectName;
+
+    @JsonIgnore
+    private String shareToken;
+
 }
