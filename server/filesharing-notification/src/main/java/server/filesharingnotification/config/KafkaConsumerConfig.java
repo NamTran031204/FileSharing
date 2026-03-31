@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import server.filesharingnotification.entity.dto.EmailSenderRequestDto;
 
@@ -37,16 +39,27 @@ public class KafkaConsumerConfig {
     @Value(value = "${spring.kafka.consumer.group-id}")
     private String kafkaGroupId;
 
+    @Value(value = "${spring.kafka.consumer.enable-auto-commit:false}")
+    private boolean enableAutoCommit;
+
+    @Value(value = "${spring.kafka.consumer.auto-offset-reset:latest}")
+    private String autoOffsetReset;
+
+    @Value(value = "${spring.kafka.listener.concurrency:1}")
+    private Integer concurrency;
+
     @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
+    public ConsumerFactory<String, EmailSenderRequestDto> consumerFactory() {
         Map<String, Object> props = configProps();
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, EmailSenderRequestDto> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, EmailSenderRequestDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.setConcurrency(concurrency);
         return factory;
     }
 
@@ -57,7 +70,16 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroupId);
 
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        // Use ErrorHandlingDeserializer to surface serialization errors as recoverable
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, EmailSenderRequestDto.class);
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "server.filesharingnotification.entity.dto,org.example.filesharing.entities.dtos.file");
+        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        props.put(JsonDeserializer.REMOVE_TYPE_INFO_HEADERS, false);
+
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
 
         if (kafkaAuthen) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");

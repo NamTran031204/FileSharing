@@ -12,6 +12,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,15 @@ public class KafkaConsumerConfig {
     @Value(value = "${spring.kafka.consumer.group-id}")
     private String kafkaGroupId;
 
+    @Value(value = "${spring.kafka.consumer.enable-auto-commit:false}")
+    private boolean enableAutoCommit;
+
+    @Value(value = "${spring.kafka.consumer.auto-offset-reset:latest}")
+    private String autoOffsetReset;
+
+    @Value(value = "${spring.kafka.listener.concurrency:1}")
+    private Integer concurrency;
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = configProps();
@@ -45,6 +55,8 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.setConcurrency(concurrency);
         return factory;
     }
 
@@ -56,6 +68,9 @@ public class KafkaConsumerConfig {
 
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
 
         if (kafkaAuthen) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
