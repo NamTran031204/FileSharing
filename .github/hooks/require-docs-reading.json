@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "Automatically read project documentation before analysis or code changes",
+        "type": "command",
+        "windows": ".github\\scripts\\inject-docs-context.ps1",
+        "linux": ".github/scripts/inject-docs-context.sh",
+        "osx": ".github/scripts/inject-docs-context.sh",
+        "cwd": ".",
+        "timeout": 30
+      }
+    ]
+  },
+  "metadata": {
+    "name": "require-docs-reading",
+    "description": "Enforce reading documentation before analysis or code modifications. Automatically injects relevant docs from /docs, /client/docs, and /server/docs into context when user prompts indicate analysis or changes.",
+    "keywords": ["documentation", "context-injection", "analysis", "code-changes"],
+    "created": "2026-03-31"
+  }
+}
