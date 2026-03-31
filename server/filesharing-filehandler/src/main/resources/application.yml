@@ -25,11 +25,42 @@ spring:
           connectiontimeout: 10000
           timeout: 10000
           writetimeout: 10000
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1
+      retries: 5
+      batch-size: 32768
+      linger-ms: 30
+      buffer-memory: 67108864
+      compression-type: lz4
+      properties:
+        max.block.ms: 10000
+        request.timeout.ms: 20000
+        delivery.timeout.ms: 30000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: latest
+      group-id: file-handler
+    listener:
+      ack-mode: manual
+      concurrency: 1
+
+kafka:
+  topics:
+    notification_email_sender: notification_email_sender
+  authen: ${KAFKA_AUTH:false}
+  username: ${KAFKA_USER:admin}
+  password: ${KAFKA_PASS:adminKafka123}
 
 minio:
   endpoint: http://localhost:9000
-  access-key: 5UVTKA00N1U9060FMZW0
-  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
+  access-key: 20YG284ICBVC7BL4I4LA
+  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
   bucket-name: file-sharing
 #  access-key: 71K8C26O4RRFQN8NRRDM
 #  secret-key: Ol3stdZi5z7OLKwl2ku78vpP2oYCRsF61+bZL7Aj
