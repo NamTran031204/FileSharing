@@ -9,13 +9,13 @@ import {
     EyeOutlined,
     LockOutlined
 } from '@ant-design/icons';
-import type {MetadataEntity} from "../../api/fileApi/userFileApiResource.ts";
-import {tokenManager} from "../../api/baseApi.ts";
-import fileApiResource from "../../api/fileApi/fileApiResource.ts";
-import authApiResource from "../../api/authApi/authApiResource.ts";
-import {FileAppPermission, ObjectVisibility} from "../../api/enums.ts";
-import {FileViewUtil} from "../../utils/FileViewUtil.ts";
-import NotFoundPage from "../../components/NotFoundPage.tsx";
+import type {MetadataEntity} from "../../../api/fileApi/userFileApiResource.ts";
+import {tokenManager} from "../../../api/baseApi.ts";
+import fileApiResource from "../../../api/fileApi/fileApiResource.ts";
+import authApiResource from "../../../api/authApi/authApiResource.ts";
+import {FileAppPermission, ObjectVisibility} from "../../../api/enums.ts";
+import {FileViewUtil} from "../../../utils/FileViewUtil.ts";
+import NotFoundPage from "../../../components/NotFoundPage.tsx";
 
 const FilePreviewPage = () => {
     const params = useParams();

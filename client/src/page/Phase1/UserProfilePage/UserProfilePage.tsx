@@ -1,6 +1,6 @@
 import {useState} from "react";
-import MainLayout from "../../layout/MainLayout.tsx";
-import UserProfile from "../../components/userProfile/UserProfile.tsx";
+import MainLayout from "../../../layout/MainLayout.tsx";
+import UserProfile from "../../../components/userProfile/UserProfile.tsx";
 
 const UserProfilePage = () => {
     const [mode, setMode] = useState<'view' | 'edit'>('view');

@@ -1,5 +1,5 @@
-import FileCardList from '../../components/file/FileCardList';
-import NavBar from "../../components/layout/NavBar.tsx";
+import FileCardList from '../../../components/file/FileCardList.tsx';
+import NavBar from "../../../components/layout/NavBar.tsx";
 
 const TrashPage = () => {
     return (

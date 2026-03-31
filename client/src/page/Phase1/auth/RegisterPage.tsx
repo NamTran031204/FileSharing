@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import authApiResource from "../../api/authApi/authApiResource.ts";
-import {ApiError} from "../../api/baseApi.ts";
+import authApiResource from "../../../api/authApi/authApiResource.ts";
+import {ApiError} from "../../../api/baseApi.ts";
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('');

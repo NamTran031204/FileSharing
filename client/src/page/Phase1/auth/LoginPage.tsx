@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import authApiResource from "../../api/authApi/authApiResource.ts";
+import authApiResource from "../../../api/authApi/authApiResource.ts";
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
