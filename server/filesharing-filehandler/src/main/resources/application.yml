@@ -53,17 +53,18 @@ spring:
 kafka:
   topics:
     notification_email_sender: notification_email_sender
+    video_encode_topic: video_encode_topic
   authen: ${KAFKA_AUTH:false}
   username: ${KAFKA_USER:admin}
   password: ${KAFKA_PASS:adminKafka123}
 
 minio:
   endpoint: http://localhost:9000
-  access-key: 20YG284ICBVC7BL4I4LA
-  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
+#  access-key: 20YG284ICBVC7BL4I4LA
+#  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
   bucket-name: file-sharing
-#  access-key: 71K8C26O4RRFQN8NRRDM
-#  secret-key: Ol3stdZi5z7OLKwl2ku78vpP2oYCRsF61+bZL7Aj
+  access-key: 5UVTKA00N1U9060FMZW0
+  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
 application:
   security:
@@ -96,3 +97,32 @@ springdoc:
   use-management-port: false
   # Sử dụng tên method làm operationId
   operationsSorter: method
+
+ffmpeg:
+  bin-path: ${FFMPEG_BIN_PATH:ffmpeg}  # Mặc định dùng system PATH
+
+  # Đường dẫn lưu output
+  output-dir: ${VIDEO_OUTPUT_DIR:./videos/processed}
+  temp-dir: ${VIDEO_TEMP_DIR:./videos/temp}
+  # HLS Configuration
+  hls:
+    segment-duration: 10  # seconds
+    segment-list-size: 0  # 0 = unlimited
+
+  # Encoding presets
+  encoding:
+    # Chất lượng gốc
+    original:
+      codec: libx264
+      preset: medium
+      crf: 23  # Constant Rate Factor (18-28, thấp hơn = chất lượng cao hơn)
+
+    # Chất lượng 720p
+    hd720:
+      codec: libx264
+      preset: medium
+      crf: 23
+      width: 1280
+      height: 720
+      bitrate: 2500k  # Video bitrate
+      audio-bitrate: 128k

@@ -16,7 +16,9 @@ import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +33,10 @@ public class FileMetadataController {
     private final MetadataService metadataService;
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;
+    private final KafkaTemplate<String, String> videoEncodeKafkaTemplate;
+
+    @Value(value = "${kafka.topics.video_encode_topic:video_encode_topic}")
+    private String videoEncodeTopic;
 
     @PostMapping("/upload-metadata")
     public CommonResponse<InitiateUploadResponseDto> startUpload(@RequestBody MetadataDTO metadataDTO) {
@@ -110,6 +116,12 @@ public class FileMetadataController {
         MetadataEntity response = metadataService.saveMetadata(dto, "");
 
         return CommonResponse.success(minIoService.uploadSmallFile(file, response.getObjectName()));
+    }
+
+    @PostMapping(value = "/process-encode")
+    public CommonResponse<String> processEncode(@RequestBody String objectName) {
+        videoEncodeKafkaTemplate.send(videoEncodeTopic, objectName);
+        return CommonResponse.success();
     }
 
     private String detectCompressionAlgo(String fileName, String mimeType) {
