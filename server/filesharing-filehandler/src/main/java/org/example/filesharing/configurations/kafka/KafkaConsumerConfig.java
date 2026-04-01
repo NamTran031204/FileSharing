@@ -82,6 +82,10 @@ public class KafkaConsumerConfig {
         }
 
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
+        // Chỉ poll 1 message mỗi lần để tránh xử lý trùng lặp
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
+        // Tăng thời gian poll để đảm bảo có đủ thời gian xử lý
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "300000");
 
         return props;
     }
