@@ -1,0 +1,22 @@
+{
+  "inputs": [
+    {
+      "type": "promptString"
+    }
+  ],
+  "servers": {
+    "grapuco": {
+      "$typeName": "exa.cascade_plugins_pb.CascadePluginCommandTemplate",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://api.grapuco.com/mcp",
+        "--header",
+        "X-Api-Key: gyc_sk_55a7a1f92f85a1eca2eda9524049569cd8892cddcbfb23896653a6e7ec597cf8"
+      ],
+      "env": {},
+      "disabled": true
+    }
+  }
+}
