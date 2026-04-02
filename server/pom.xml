@@ -10,7 +10,7 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>org.example</groupId>
+	<groupId>com.file.service</groupId>
 	<artifactId>filesharing</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -19,10 +19,65 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<minio.version>8.5.7</minio.version>
+		<openapi.version>2.7.0</openapi.version>
+		<jwt.version>0.12.6</jwt.version>
+		<apachecommon.version>1.4.0</apachecommon.version>
 	</properties>
 
 	<modules>
 		<module>filesharing-filehandler</module>
 		<module>filesharing-notification</module>
 	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Internal modules -->
+			<dependency>
+				<groupId>com.file.service</groupId>
+				<artifactId>filesharing-filehandler</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.file.service</groupId>
+				<artifactId>filesharing-notification</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+
+			<!-- External modules -->
+			<dependency>
+				<groupId>io.minio</groupId>
+				<artifactId>minio</artifactId>
+				<version>${minio.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>${openapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.jsonwebtoken</groupId>
+				<artifactId>jjwt-api</artifactId>
+				<version>${jwt.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.jsonwebtoken</groupId>
+				<artifactId>jjwt-impl</artifactId>
+				<version>${jwt.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.jsonwebtoken</groupId>
+				<artifactId>jjwt-jackson</artifactId>
+				<version>${jwt.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-exec</artifactId>
+				<version>${apachecommon.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>
