@@ -28,6 +28,7 @@
 	<modules>
 		<module>filesharing-filehandler</module>
 		<module>filesharing-notification</module>
+		<module>filesharing-videocodec</module>
 	</modules>
 
 	<dependencyManagement>
@@ -41,6 +42,11 @@
 			<dependency>
 				<groupId>com.file.service</groupId>
 				<artifactId>filesharing-notification</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.file.service</groupId>
+				<artifactId>filesharing-videocodec</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 

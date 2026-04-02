@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: filesharing-videocodec
+
+minio:
+  endpoint: http://localhost:9000
+  #  access-key: 20YG284ICBVC7BL4I4LA
+  #  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
+  bucket-name: file-sharing
+  access-key: 5UVTKA00N1U9060FMZW0
+  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
