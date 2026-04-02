@@ -1,6 +1,9 @@
 package org.example.filesharing.entities.models;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.example.filesharing.enums.auth.AuthProvider;
 
 import java.time.Instant;

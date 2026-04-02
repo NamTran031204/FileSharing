@@ -93,13 +93,13 @@ public class KafkaConsumerConfig {
         // === TIMEOUT CONFIGS cho gửi email ===
         // Session timeout: thời gian tối đa không nhận heartbeat trước khi consumer bị kick
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "120000"); // 2 phút (tăng từ 30s)
-        
+
         // Heartbeat interval: gửi heartbeat mỗi 10s để Kafka biết consumer vẫn sống
         props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, "10000"); // 10 giây
-        
+
         // Max poll interval: thời gian tối đa giữa 2 lần poll (xử lý message)
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "600000"); // 10 phút cho email chậm
-        
+
         // Poll 1 message mỗi lần để tránh xử lý đồng thời nhiều email
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
 

@@ -12,7 +12,6 @@ import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;
 import org.example.filesharing.entities.models.AuthProviderInfo;
 import org.example.filesharing.entities.models.UserEntity;
-import org.example.filesharing.enums.auth.AuthProvider;
 import org.example.filesharing.enums.auth.UserRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
@@ -27,7 +26,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 

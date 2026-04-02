@@ -1,6 +1,5 @@
 package org.example.filesharing.entities.dtos.file;
 
-import lombok.Builder;
 import lombok.Data;
 import org.example.filesharing.enums.UploadStatus;
 

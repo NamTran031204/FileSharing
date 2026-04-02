@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.auth.UserFileAuthPermissionRequestDto;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
@@ -26,7 +25,6 @@ import org.example.filesharing.utils.PermissionUtil;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -120,8 +118,8 @@ public class MetadataServiceImpl implements MetadataService {
         MetadataEntity metadataEntity = metadataRepo.findByObjectName(input.getObjectName())
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
         List<UserFilePermission> result = mergeUserPermissions(List.of(UserFilePermission.builder()
-                        .email(input.getToEmail())
-                        .permissionList(input.getObjectPermission())
+                .email(input.getToEmail())
+                .permissionList(input.getObjectPermission())
                 .build()), metadataEntity.getUserFilePermissions());
 
         metadataEntity.setUserFilePermissions(result);
@@ -225,7 +223,7 @@ public class MetadataServiceImpl implements MetadataService {
 
         List<MetadataEntity> metadataEntityList = mongoTemplate.find(query, MetadataEntity.class);
 
-        for (var metadata: metadataEntityList) {
+        for (var metadata : metadataEntityList) {
             if (metadata.getOwnerId().equals(currentUserId)) {
                 metadata.setPublishUserPermission(PermissionUtil.calculatePermission(null, null, true));
                 continue;
@@ -313,8 +311,7 @@ public class MetadataServiceImpl implements MetadataService {
         }
         if (metadata.getOwnerId().equals(currentUserId)) {
             metadata.setPublishUserPermission(PermissionUtil.calculatePermission(null, null, true));
-        } else
-        if (metadata.getVisibility() == ObjectVisibility.PUBLIC) {
+        } else if (metadata.getVisibility() == ObjectVisibility.PUBLIC) {
             ObjectPermission publicPerm = metadata.getPublicPermission() != null
                     ? metadata.getPublicPermission()
                     : ObjectPermission.READ;
@@ -346,8 +343,7 @@ public class MetadataServiceImpl implements MetadataService {
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
         if (hasScopeOnFile(metadataEntity, "")) {
             return metadataEntity;
-        }
-        else return null;
+        } else return null;
     }
 
     List<UserFilePermission> mergeUserPermissions(List<UserFilePermission> inputListPermission, List<UserFilePermission> entityListPermission) {

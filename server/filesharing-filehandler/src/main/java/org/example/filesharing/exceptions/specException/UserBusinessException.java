@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.example.filesharing.exceptions.ErrorCode;
 
 @Getter
-public class UserBusinessException extends RuntimeException{
+public class UserBusinessException extends RuntimeException {
     private final ErrorCode errorCode;
 
     public UserBusinessException(ErrorCode errorCode) {

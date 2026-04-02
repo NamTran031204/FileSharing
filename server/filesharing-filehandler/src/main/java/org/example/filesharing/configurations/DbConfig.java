@@ -8,7 +8,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
 @EnableMongoRepositories("org.example.filesharing.repositories")
-public class DbConfig{
+public class DbConfig {
 
     @Bean
     public ValidatingMongoEventListener validatingMongoEventListener() {

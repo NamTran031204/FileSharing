@@ -27,8 +27,7 @@ public class GlobalExceptionHandler {
 
         if (ex instanceof FileBusinessException) {
             errorCode = ((FileBusinessException) ex).getErrorCode();
-        }
-        else if (ex instanceof UserBusinessException) {
+        } else if (ex instanceof UserBusinessException) {
             errorCode = ((UserBusinessException) ex).getErrorCode();
         }
 

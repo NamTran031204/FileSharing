@@ -28,7 +28,7 @@ public class EmailService {
     public void sendDownloadLinkViaEmail(EmailSenderRequestDto input) throws MessagingException {
         Instant startTime = Instant.now();
         log.info("Starting to send email to: {}, fileName: {}", input.getToEmail(), input.getObjectName());
-        
+
         try {
             String subject = "A File Send To Your Email";
 
@@ -48,13 +48,13 @@ public class EmailService {
             helper.setText(htmlBody, true);
 
             mailSender.send(mimeMessage);
-            
+
             Duration duration = Duration.between(startTime, Instant.now());
             log.info("Email sent successfully to {} in {} ms", input.getToEmail(), duration.toMillis());
         } catch (MessagingException e) {
             Duration duration = Duration.between(startTime, Instant.now());
-            log.error("Failed to send email to {} after {} ms: {}", 
-                input.getToEmail(), duration.toMillis(), e.getMessage());
+            log.error("Failed to send email to {} after {} ms: {}",
+                    input.getToEmail(), duration.toMillis(), e.getMessage());
             throw e;
         }
     }

@@ -1,7 +1,7 @@
 package org.example.filesharing.exceptions.specException;
 
-import org.example.filesharing.exceptions.ErrorCode;
 import lombok.Getter;
+import org.example.filesharing.exceptions.ErrorCode;
 
 @Getter
 public class FileBusinessException extends RuntimeException {

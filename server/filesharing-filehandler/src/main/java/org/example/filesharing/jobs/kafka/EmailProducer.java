@@ -1,6 +1,5 @@
 package org.example.filesharing.jobs.kafka;
 
-import org.example.filesharing.configurations.kafka.KafkaTopic;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
