@@ -1,11 +1,46 @@
 spring:
   application:
     name: filesharing-videocodec
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: video-encoding-consumer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual
 
 minio:
   endpoint: http://localhost:9000
-  #  access-key: 20YG284ICBVC7BL4I4LA
-  #  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
+  access-key: 20YG284ICBVC7BL4I4LA
+  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
   bucket-name: file-sharing
-  access-key: 5UVTKA00N1U9060FMZW0
-  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
+#  access-key: 5UVTKA00N1U9060FMZW0
+#  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
+
+video:
+  encoding:
+    ffmpeg:
+      path: ${FFMPEG_PATH:src/main/resources/ffmpeg/ffmpeg.exe}
+      timeout: 3600000
+    kafka:
+      topic: filesharing_encode_video
+    segment:
+      duration: 5
+      audio-bitrate: 128k
+    profiles:
+      - ORIGINAL
+      - PROFILE_720P
+    retry:
+      max-attempts: 3
+      delay-ms: 1000
+    thread-pool:
+      core-size: 3
+      max-size: 5
+      queue-capacity: 100
+      thread-name-prefix: video-encoder-
+    temp-dir: ${java.io.tmpdir}/video-encoding
+    output:
+      bucket: videos
