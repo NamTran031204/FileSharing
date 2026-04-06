@@ -1,8 +1,8 @@
 import {useState} from 'react';
 import {Button, Empty, Input, Select, Tag} from 'antd';
 import {DeleteOutlined, PlusOutlined, UserOutlined} from '@ant-design/icons';
-import {FileAppPermission, ObjectPermission} from '../../api/enums';
-import {getAvailableObjectPermissions} from '../../utils/permissionUtils';
+import {FileAppPermission, ObjectPermission} from '../../../api/enums.ts';
+import {getAvailableObjectPermissions} from '../../../utils/permissionUtils.ts';
 
 export interface UserPermission {
     email: string;

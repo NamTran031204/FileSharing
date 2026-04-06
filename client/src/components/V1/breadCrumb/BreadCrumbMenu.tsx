@@ -10,13 +10,13 @@ import {
     ShareAltOutlined
 } from '@ant-design/icons';
 import DownloadButton from "./DownloadButton.tsx";
-import FileDetailModal, {type FileDetailModalRef} from '../file/FileDetailModal';
+import FileDetailModal, {type FileDetailModalRef} from '../file/FileDetailModal.tsx';
 import EmailSender, {type ShareFileModalRef} from '../file/EmailSender.tsx';
-import type {MetadataEntity} from "../../api/fileApi/userFileApiResource.ts";
-import fileApiResource from "../../api/fileApi/fileApiResource.ts";
+import type {MetadataEntity} from "../../../api/fileApi/userFileApiResource.ts";
+import fileApiResource from "../../../api/fileApi/fileApiResource.ts";
 import {message} from 'antd';
-import {hasPermission} from '../../utils/permissionUtils';
-import {FileAppPermission} from "../../api/enums.ts";
+import {hasPermission} from '../../../utils/permissionUtils.ts';
+import {FileAppPermission} from "../../../api/enums.ts";
 
 interface Props {
     file: MetadataEntity;

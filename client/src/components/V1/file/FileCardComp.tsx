@@ -1,6 +1,6 @@
 import BreadCrumbMenu from "../breadCrumb/BreadCrumbMenu.tsx";
-import {FileViewUtil} from "../../utils/FileViewUtil.ts";
-import type {MetadataEntity} from "../../api/fileApi/userFileApiResource.ts";
+import {FileViewUtil} from "../../../utils/FileViewUtil.ts";
+import type {MetadataEntity} from "../../../api/fileApi/userFileApiResource.ts";
 
 interface FileCardCompProps extends MetadataEntity {
     isTrashItem?: boolean;

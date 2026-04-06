@@ -1,12 +1,12 @@
 import {forwardRef, useImperativeHandle, useState} from 'react';
 import {Button, Divider, Form, Input, message, Modal, Select} from 'antd';
 import {CloseOutlined, DeleteOutlined, EditOutlined, EyeOutlined, SaveOutlined} from '@ant-design/icons';
-import userFileApiResource, {type MetadataEntity} from '../../api/fileApi/userFileApiResource';
-import fileApiResource from '../../api/fileApi/fileApiResource';
-import {FileViewUtil} from '../../utils/FileViewUtil';
-import {FileAppPermission, ObjectPermission, ObjectVisibility} from "../../api/enums.ts";
-import UserFilePermissionList, {type UserPermission} from './UserFilePermissionList';
-import {hasPermission} from '../../utils/permissionUtils';
+import userFileApiResource, {type MetadataEntity} from '../../../api/fileApi/userFileApiResource.ts';
+import fileApiResource from '../../../api/fileApi/fileApiResource.ts';
+import {FileViewUtil} from '../../../utils/FileViewUtil.ts';
+import {FileAppPermission, ObjectPermission, ObjectVisibility} from "../../../api/enums.ts";
+import UserFilePermissionList, {type UserPermission} from './UserFilePermissionList.tsx';
+import {hasPermission} from '../../../utils/permissionUtils.ts';
 
 type Mode = 'view' | 'edit';
 

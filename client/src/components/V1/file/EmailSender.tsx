@@ -1,8 +1,8 @@
 import {forwardRef, useImperativeHandle, useState} from 'react';
 import {Button, Input, message, Modal, Select} from 'antd';
 import {MailOutlined, SendOutlined} from '@ant-design/icons';
-import userFileApiResource, {type EmailSenderRequestDto, type MetadataEntity} from '../../api/fileApi/userFileApiResource';
-import {ObjectPermission} from '../../api/enums';
+import userFileApiResource, {type EmailSenderRequestDto, type MetadataEntity} from '../../../api/fileApi/userFileApiResource.ts';
+import {ObjectPermission} from '../../../api/enums.ts';
 
 export interface ShareFileModalRef {
     open: (file: MetadataEntity) => void;

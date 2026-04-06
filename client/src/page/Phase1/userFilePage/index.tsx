@@ -1,5 +1,5 @@
-import NavBar from "../../../components/layout/NavBar.tsx";
-import FileCardList from "../../../components/file/FileCardList.tsx";
+import NavBar from "../../../components/V1/layout/NavBar.tsx";
+import FileCardList from "../../../components/V1/file/FileCardList.tsx";
 
 const UserFilePage = () => {
     return (

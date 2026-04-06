@@ -1,8 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
-import type {DownloadProgress as DownloadProgressType} from '../../service/downloadService.ts';
-import {downloadService} from '../../service/downloadService.ts';
+import type {DownloadProgress as DownloadProgressType} from '../../../service/downloadService.ts';
+import {downloadService} from '../../../service/downloadService.ts';
 import {DownloadOutlined} from '@ant-design/icons';
-import DownloadProgress from "../uploadDownloadProgress/DownloadProgress.tsx";
+import DownloadProgress from "../../uploadDownloadProgress/DownloadProgress.tsx";
 
 interface DownloadButtonProps {
     objectName: string;

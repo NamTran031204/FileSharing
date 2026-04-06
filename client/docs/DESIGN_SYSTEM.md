@@ -47,22 +47,45 @@ Platform review media (video & ấn phẩm design) với giao diện chuyên ngh
 
 ## 4. Spacing & Sizing
 
-| Token        | Value   | Sử dụng                     |
-|--------------|---------|------------------------------|
-| `gap-1`      | 4px     | Khoảng cách giữa icons      |
-| `gap-1.5`    | 6px     | Buttons cạnh nhau            |
-| `gap-2`      | 8px     | Elements trong group         |
-| `gap-3`      | 12px    | Sections cạnh nhau           |
-| `p-3`        | 12px    | Padding panel                |
-| `p-4`        | 16px    | Padding control bar          |
-| `p-6`        | 24px    | Padding header               |
-| `rounded-lg` | 8px     | Card, panel                  |
+| Token        | Value | Sử dụng                                |
+|--------------|-------|----------------------------------------|
+| `gap-1`      | 4px   | Khoảng cách giữa icons, Inline spacing |
+| `gap-1.5`    | 6px   | Buttons cạnh nhau                      |
+| `gap-2`      | 8px   | Elements trong group, Tight spacing    |
+| `gap-3`      | 12px  | Sections cạnh nhau, Component internal |
+| `gap-4`      | 16px  | Section gaps                           |
+| `gap-6`      | 24px  | Page padding                           |
+| `p-3`        | 12px  | Padding panel                          |
+| `p-5`        | 20px  | Large card padding                     |
+| `p-4`        | 16px  | Padding control bar                    |
+| `p-6`        | 24px  | Padding header                         |
+| `rounded-lg` | 8px   | Card, panel                            |
+
+•	Border radius: 0.75rem (lg), 0.5rem (md), 0.25rem (sm)
+•	Shadow: hover:shadow-md cho cards
+•	Border: 1px solid hsl(var(--border)) — màu lightest #D2CAFF
 
 ---
 
 ## 5. Layout Grid
-
 ### Cấu trúc tổng thể
+```
+┌─────────────────────────────────────────────────┐
+│  HEADER (h-[10vh])                              │
+│  bg-primary-dark                                │
+│  Breadcrumb navigation                          │
+├──────┬──────────────────────┬───────────────────┤
+│      │                                          │
+│ SIDE │  Content Layout                          │
+│ BAR  │                                          │
+│      │                                          ┤
+│ 60px │                                          │
+│  ↔   │                                          │
+│ 220px│                                          │
+└──────┴──────────────────────-───────────────────┘
+```
+
+### Cấu trúc Màn hình review
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -97,12 +120,11 @@ Platform review media (video & ấn phẩm design) với giao diện chuyên ngh
 - Component: Ant Design `<Menu>` với `inlineCollapsed`
 - Các mục:
   - 🏠 Trang chủ
-  - 🎬 Video
-  - 🖼️ Design
   - 📁 Projects
   - 👥 Team
   - 🔔 Thông báo
   - ⚙️ Cài đặt
+  - Bên trong mục Projects có 3 option: Video, Design, Ảnh
 
 #### Media Player (`MediaPlayer`)
 - Chiếm toàn bộ chiều rộng còn lại (`flex-1`)
@@ -197,39 +219,6 @@ className="[&_.ant-menu-item]:text-muted [&_.ant-menu-item-selected]:bg-primary"
 
 ---
 
-## 8. Responsive Rules
-
-| Breakpoint     | Thay đổi                                    |
-|----------------|----------------------------------------------|
-| ≥1280px        | Layout đầy đủ như thiết kế                   |
-| 1024–1279px    | Right panel thu nhỏ xuống 280px              |
-| 768–1023px     | Right panel chuyển xuống dưới media player   |
-| <768px         | Sidebar ẩn hoàn toàn, hamburger menu         |
-
-> **Lưu ý**: Phase 1 tập trung desktop (≥1280px). Responsive sẽ triển khai ở phase sau.
-
----
-
-## 9. File Structure
-
-```
-src/
-├── components/
-│   ├── layout/
-│   │   ├── AppHeader.tsx      # Header + Breadcrumb
-│   │   └── AppSidebar.tsx     # Collapsible sidebar
-│   ├── review/
-│   │   ├── MediaPlayer.tsx    # Video/image player + pins
-│   │   ├── ToolPanel.tsx      # Drawing tools
-│   │   └── FeedbackPanel.tsx  # Comments + replies
-│   └── ui/                    # shadcn/ui components
-├── pages/
-│   └── Index.tsx              # Review page layout
-└── index.css                  # Design tokens
-```
-
----
-
 ## 10. Interaction States
 
 | State          | Visual                                          |
@@ -243,4 +232,3 @@ src/
 
 ---
 
-*Document version: 1.0 — Created: 2026-04-05*

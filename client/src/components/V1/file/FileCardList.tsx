@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
-import userFileApiResource, {type MetadataEntity} from '../../api/fileApi/userFileApiResource';
-import FileCardComp from './FileCardComp';
+import userFileApiResource, {type MetadataEntity} from '../../../api/fileApi/userFileApiResource.ts';
+import FileCardComp from './FileCardComp.tsx';
 import {Button, Empty, Spin} from 'antd';
 import {LeftOutlined, ReloadOutlined, RightOutlined} from '@ant-design/icons';
 

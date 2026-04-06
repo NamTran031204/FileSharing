@@ -13,6 +13,7 @@ const App = () => {
         <>
             <BrowserRouter>
                 <Routes>
+                    {/* ================ Phase 1 ================ */}
                     <Route path="/" element={<Navigate to="/login" replace/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
@@ -37,6 +38,11 @@ const App = () => {
                             <TrashPage/>
                         </ProtectedRoute>
                     }/>
+                    {/* ================ Phase 1 ================ */}
+
+                    {/* ================ Phase 2 ================ */}
+
+                    {/* ================ Phase 2 ================ */}
                 </Routes>
             </BrowserRouter>
         </>

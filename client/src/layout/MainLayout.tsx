@@ -1,4 +1,4 @@
-import NavBar from '../components/layout/NavBar';
+import NavBar from '../components/V1/layout/NavBar';
 
 interface MainLayoutProps {
     children: React.ReactNode;
