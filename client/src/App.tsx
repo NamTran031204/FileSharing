@@ -7,6 +7,7 @@ import UserProfilePage from "./page/Phase1/UserProfilePage/UserProfilePage.tsx";
 import TrashPage from "./page/Phase1/trashPage";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import FilePreviewPage from "./page/Phase1/filePreviewPage";
+import ImageReviewPage from "./page/ImageReviewPage";
 
 const App = () => {
     return (
@@ -40,8 +41,12 @@ const App = () => {
                     }/>
                     {/* ================ Phase 1 ================ */}
 
-                    {/* ================ Phase 2 ================ */}
-
+                    {/* ================ Phase 2 - Review System ================ */}
+                    <Route path="/review/image" element={
+                        <ProtectedRoute>
+                            <ImageReviewPage/>
+                        </ProtectedRoute>
+                    }/>
                     {/* ================ Phase 2 ================ */}
                 </Routes>
             </BrowserRouter>

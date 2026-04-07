@@ -1,32 +1,48 @@
 # Media Review Platform — Design System
+## "Lumina Pro" Theme
 
 ## 1. Tổng quan
 
 Platform review media (video & ấn phẩm design) với giao diện chuyên nghiệp, hỗ trợ feedback trực tiếp trên media thông qua pin annotation và comment thread.
 
+**Design Philosophy**: Theme "Lumina Pro" kết hợp sự chuyên nghiệp của navy-purple tones với sự nhẹ nhàng của lavender palette, tạo không gian làm việc tập trung nhưng không gây căng thẳng.
+
 **Tech stack**: React 18 + Tailwind CSS v3 + Ant Design 5 + TypeScript
+
+**Color Story**: 
+- 🎨 **Primary**: Deep Navy-Purple (#2A2F6F) - Authoritative, professional
+- 💜 **Accent**: Primary Purple (#535297) - Interactive, engaging  
+- ✨ **Highlight**: Soft Purple (#A6A0ED) - Delicate, attention-drawing
+- 🌫️ **Surfaces**: Lavender grays - Calm, spacious
 
 ---
 
-## 2. Bảng màu (Color Palette)
+## 2. Bảng màu (Color Palette) - "Lumina Pro" Theme
 
-| Token              | HSL                  | HEX       | Sử dụng                          |
-|--------------------|----------------------|-----------|-----------------------------------|
-| `--primary-dark`    | 237 45% 30%          | #2A2F6F   | Header, sidebar, nền tối          |
-| `--primary`         | 240 30% 46%          | #535297   | Buttons, active states, links     |
-| `--secondary`       | 244 30% 61%          | #7C78C1   | Hover, borders, secondary actions |
-| `--accent`          | 246 72% 78%          | #A6A0ED   | Highlights, badges, pin markers   |
-| `--muted`           | 252 100% 90%         | #D2CAFF   | Backgrounds nhẹ, surfaces         |
-| `--background`      | 240 10% 96%          | #F3F2F7   | Nền chính của app                 |
-| `--foreground`      | 235 45% 30%          | #2A2F6F   | Text chính                        |
-| `--card`            | 0 0% 100%            | #FFFFFF   | Card backgrounds                  |
-| `--border`          | 244 30% 80%          | #C5C0E6   | Borders, dividers                 |
-| `--destructive`     | 0 84.2% 60.2%        | #EF4444   | Xoá, lỗi                         |
+Design system sử dụng theme **"Lumina Pro"** với bảng màu lavender-purple nhẹ nhàng, chuyên nghiệp.
+
+| Token              | HSL                  | HEX       | Tên màu | Sử dụng |
+|--------------------|----------------------|-----------|---------|---------|
+| `--background`      | 240 10% 96%          | #F3F2F7   | Light lavender-gray | Main application canvas |
+| `--card`            | 0 0% 100%            | #FFFFFF   | Pure White | Sidebar panels, project cards, comment boxes |
+| `--foreground` / `--primary-dark` | 237 45% 30% | #2A2F6F | Deep Navy-Purple | Primary text, headers, sidebars (high contrast) |
+| `--primary`         | 240 30% 46%          | #535297   | Primary Purple | CTAs, active states, buttons (Accent & Interaction) |
+| `--accent`          | 246 72% 78%          | #A6A0ED   | Soft Purple | Badges, markers, secondary highlights |
+| `--muted`           | 252 100% 90%         | #D2CAFF   | Soft Lavender | Backgrounds of less critical UI sections |
+| `--border`          | 244 30% 80%          | #C5C0E6   | Light Lavender | Borders and dividers |
+| `--secondary`       | 244 30% 61%          | #7C78C1   | Medium Purple | Hover states, secondary actions |
+| `--destructive`     | 0 84.2% 60.2%        | #EF4444   | Error Red | Delete actions, error states |
 
 ### Nguyên tắc sử dụng màu
 - **KHÔNG** dùng mã màu trực tiếp trong component. Luôn dùng semantic token qua Tailwind classes.
-- Ví dụ: `bg-primary-dark` thay vì `bg-[#2A2F6F]`
-- Tất cả màu định nghĩa trong `src/index.css` dưới dạng HSL.
+- Ví dụ: `bg-[hsl(var(--primary))]` hoặc trong Tailwind config: `bg-primary`
+- Tất cả màu định nghĩa trong `src/index.css` dưới dạng HSL để dễ tạo variants (opacity, lightness).
+
+### Theme "Lumina Pro" - Đặc điểm
+- **Professional**: Navy-purple (#2A2F6F) cho text tạo độ tương phản cao, dễ đọc
+- **Calming**: Lavender tones (#F3F2F7, #D2CAFF) tạo không gian làm việc nhẹ nhàng
+- **Accessible**: Tỷ lệ contrast đạt WCAG AA cho text và backgrounds
+- **Cohesive**: Toàn bộ palette xoay quanh purple hue (240-252) tạo sự nhất quán
 
 ---
 

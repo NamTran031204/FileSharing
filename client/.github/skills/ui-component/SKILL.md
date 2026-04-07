@@ -1,12 +1,13 @@
 ---
 name: ui-component
-description: 'Tạo và kiểm tra React components tuân thủ design system. Sử dụng khi: tạo UI mới, review component, fix design inconsistency, đảm bảo màu sắc/spacing/typography đúng chuẩn. Hỗ trợ React 18, Tailwind CSS v3, Ant Design 5.'
+description: 'Tạo và kiểm tra React components tuân thủ "Lumina Pro" design system. Sử dụng khi: tạo UI mới, review component, fix design inconsistency với purple/lavender palette, đảm bảo màu sắc/spacing/typography đúng chuẩn. Hỗ trợ React 18, Tailwind v4, Ant Design 5.'
 argument-hint: 'Tên component hoặc file path cần tạo/kiểm tra'
 ---
 
 # UI Component Design System Compliance
+## "Lumina Pro" Theme
 
-Skill này giúp tạo và kiểm tra React components tuân thủ hoàn toàn design system của dự án (Media Review Platform).
+Skill này giúp tạo và kiểm tra React components tuân thủ hoàn toàn **"Lumina Pro"** design system - theme chuyên nghiệp với purple/lavender palette cho Media Review Platform.
 
 ## Khi nào sử dụng skill này
 
@@ -49,21 +50,20 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 <div className="bg-[#2A2F6F] text-[#2A2F6F] border-[#C5C0E6]">
 ```
 
-**Bảng màu design tokens** (xem chi tiết trong [design-system-spec](./references/design-system-spec.md)):
+**Bảng màu design tokens - "Lumina Pro" Theme** (xem chi tiết trong [design-system-spec](./references/design-system-spec.md)):
 
-| Token | Sử dụng |
-|-------|---------|
-| `bg-primary-dark` | Header, sidebar, nền tối |
-| `bg-primary` | Buttons, active states, links |
-| `bg-secondary` | Hover, borders, secondary actions |
-| `bg-accent` | Highlights, badges, pin markers |
-| `bg-muted` | Backgrounds nhẹ, surfaces |
-| `bg-background` | Nền chính của app |
-| `bg-card` | Card backgrounds |
-| `text-foreground` | Text chính |
-| `text-muted-foreground` | Text secondary |
-| `border-border` | Borders, dividers |
-| `text-destructive` | Xoá, lỗi |
+| Token | HEX | Sử dụng |
+|-------|-----|---------|
+| `bg-background` | #F3F2F7 | Main application canvas (Light lavender-gray) |
+| `bg-card` | #FFFFFF | Sidebar panels, project cards, comment boxes (Pure White) |
+| `text-foreground` / `bg-primary-dark` | #2A2F6F | Primary text, headers, sidebars (Deep Navy-Purple) |
+| `bg-primary` | #535297 | CTAs, active states, buttons (Primary Purple) |
+| `bg-accent` | #A6A0ED | Badges, markers, secondary highlights (Soft Purple) |
+| `bg-muted` | #D2CAFF | Backgrounds of less critical UI sections (Soft Lavender) |
+| `border-border` | #C5C0E6 | Borders and dividers (Light Lavender) |
+| `bg-secondary` | #7C78C1 | Hover states, secondary actions |
+| `text-muted-foreground` | #6B6B6B | Secondary text, captions |
+| `text-destructive` | #EF4444 | Error states, delete actions |
 
 #### **Bước 3: Áp dụng Typography**
 
@@ -107,20 +107,20 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 <div className="rounded-sm">   {/* 4px - Small */}
 ```
 
-#### **Bước 5: Component Patterns**
+#### **Bước 5: Component Patterns - Lumina Pro Theme**
 
 **Button Component:**
 ```tsx
-// Primary button
+// Primary button (Purple #535297 - Interactive)
 <Button 
-  className="bg-primary text-white hover:opacity-90"
+  className="bg-[hsl(var(--primary))] text-white hover:opacity-90"
 >
   Action
 </Button>
 
-// Default button
+// Default button (White surface with Lavender border)
 <Button 
-  className="bg-card text-foreground border border-border hover:border-secondary"
+  className="bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border border-[hsl(var(--border))] hover:border-[hsl(var(--secondary))]"
 >
   Cancel
 </Button>
@@ -128,7 +128,7 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 // Ghost/Text button
 <Button 
   type="text"
-  className="text-muted-foreground hover:text-primary"
+  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]"
 >
   Link
 </Button>
@@ -136,106 +136,135 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 // Destructive button
 <Button 
   type="text"
-  className="text-destructive hover:opacity-80"
+  className="text-[hsl(var(--destructive))] hover:opacity-80"
 >
   Delete
 </Button>
 ```
 
-**Card/Panel Component:**
+**Card/Panel Component (Pure White with Lavender border):**
 ```tsx
-<div className="bg-card border border-border rounded-lg p-3">
+<div className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg p-3">
   {/* Content */}
 </div>
 ```
 
-**Pin Marker (annotation):**
+**Badge/Highlight (Soft Purple #A6A0ED):**
 ```tsx
-<div className="w-6 h-6 bg-accent border-2 border-white rounded-full animate-pulse flex items-center justify-center">
+<span className="bg-[hsl(var(--accent))]/30 text-[hsl(var(--primary))] px-2 py-1 rounded-md text-xs font-semibold">
+  Featured
+</span>
+```
+
+**Pin Marker (Soft Purple annotation #A6A0ED):**
+```tsx
+<div className="w-6 h-6 bg-[hsl(var(--accent))] border-2 border-white rounded-full animate-pulse flex items-center justify-center">
   <PushpinOutlined className="text-white text-xs" />
 </div>
 ```
 
-#### **Bước 6: Ant Design Integration**
+#### **Bước 6: Ant Design Integration - Lumina Pro Styling**
 
-Sử dụng Ant Design components với Tailwind overrides:
+Sử dụng Ant Design components với Tailwind overrides theo Lumina Pro theme:
 
 ```tsx
 import { Menu, Button, Breadcrumb, Avatar, Tag, Tooltip } from 'antd';
 
-// Menu với custom styling
+// Menu với Lumina Pro colors
 <Menu
-  className="[&_.ant-menu-item]:text-muted [&_.ant-menu-item-selected]:bg-primary"
+  className="
+    [&_.ant-menu-item]:text-white/70
+    [&_.ant-menu-item-selected]:bg-[hsl(var(--secondary))]
+    [&_.ant-menu-item-selected]:text-white
+  "
   items={menuItems}
 />
 
-// Button với Tailwind
-<Button className="bg-primary hover:opacity-90">
+// Button với Primary Purple
+<Button className="bg-[hsl(var(--primary))] text-white hover:opacity-90">
   Click me
 </Button>
 
-// Tag với color preset
-<Tag color="purple">Pin #1</Tag>
+// Tag với Soft Purple highlight
+<Tag color="purple" className="bg-[hsl(var(--accent))]/20 text-[hsl(var(--primary))] border-[hsl(var(--accent))]">
+  Pin #1
+</Tag>
+
+// Avatar với Navy-Purple background
+<Avatar className="bg-[hsl(var(--primary-dark))]">
+  U
+</Avatar>
 ```
 
-#### **Bước 7: Interaction States**
+#### **Bước 7: Interaction States - Lumina Pro Theme**
 
 ```tsx
-// Hover states
-<button className="border border-border hover:border-secondary hover:text-primary transition-colors">
+// Hover states (Lavender border → Medium Purple)
+<button className="border border-[hsl(var(--border))] hover:border-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] transition-colors">
 
-// Active tool state
+// Active tool state (Primary Purple background)
 <button className={cn(
   "border border-transparent",
-  isActive && "bg-primary text-white border-primary"
+  isActive && "bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]"
 )}>
 
-// Pin mode active
+// Pin mode active (Soft Purple highlight)
 <button className={cn(
-  "text-muted-foreground",
-  isPinMode && "text-accent"
+  "text-[hsl(var(--muted-foreground))]",
+  isPinMode && "text-[hsl(var(--accent))]"
 )}>
 
-// Sidebar hover expansion
-<aside className="w-[60px] hover:w-[220px] transition-all duration-300 ease-in-out">
+// Sidebar hover expansion (Navy-Purple background)
+<aside className="w-[60px] hover:w-[220px] bg-[hsl(var(--primary-dark))] transition-all duration-300 ease-in-out">
+
+// Card hover (Shadow + Lavender tint)
+<div className="bg-[hsl(var(--card))] hover:shadow-md hover:bg-[hsl(var(--muted))]/20 transition-all">
 ```
 
 ### 2. Kiểm tra Component Hiện Có
 
 Khi review hoặc fix component:
 
-#### **Checklist kiểm tra:**
+#### **Checklist kiểm tra - Lumina Pro Theme:**
 
-1. **✅ Màu sắc - Colors**
-   - [ ] KHÔNG có hard-coded colors (`#HEX` hoặc `bg-[#HEX]`)
-   - [ ] Tất cả màu dùng design tokens (`bg-primary`, `text-foreground`, etc.)
-   - [ ] Màu hover/active states đúng spec
+1. **✅ Màu sắc - Lumina Pro Palette**
+   - [ ] KHÔNG có hard-coded colors (`#HEX` trực tiếp)
+   - [ ] Tất cả màu dùng `hsl(var(--token))`: `bg-[hsl(var(--primary))]`
+   - [ ] Background: #F3F2F7 (Light lavender-gray)
+   - [ ] Cards/Surfaces: #FFFFFF (Pure White)
+   - [ ] Text: #2A2F6F (Deep Navy-Purple)
+   - [ ] Primary actions: #535297 (Primary Purple)
+   - [ ] Highlights: #A6A0ED (Soft Purple)
+   - [ ] Borders: #C5C0E6 (Light Lavender)
 
 2. **✅ Typography**
    - [ ] Font sizes đúng: `text-2xl` (H1), `text-xl` (H2), `text-sm` (H3/Body), `text-xs` (Caption)
-   - [ ] Font weights đúng: `font-bold` (H1), `font-semibold` (H2/H3)
-   - [ ] Text colors đúng token: `text-foreground`, `text-muted-foreground`
+   - [ ] Font weights đúng: `font-bold` (H1), `font-semibold` (H2/H3), `font-black` (uppercase labels)
+   - [ ] Text colors: `text-[hsl(var(--foreground))]` (#2A2F6F) cho primary text
 
 3. **✅ Spacing**
    - [ ] Padding đúng: `p-6` (header), `p-5` (large card), `p-3` (panel)
    - [ ] Gap đúng: `gap-4` (sections), `gap-3` (components), `gap-2` (tight)
-   - [ ] Border radius đúng: `rounded-lg` (8px), `rounded-md` (6px)
+   - [ ] Border radius đúng: `rounded-lg` (8px), `rounded-md` (6px), `rounded-2xl` (16px)
 
-4. **✅ Layout**
-   - [ ] Header: `h-[10vh]`, `bg-primary-dark`, `px-6`
-   - [ ] Sidebar: `w-[60px]` → `hover:w-[220px]`, transition smooth
-   - [ ] Panels: đúng width specification (e.g., `w-[340px]` cho Tool Panel)
+4. **✅ Layout - Lumina Pro Structure**
+   - [ ] Header: `h-[10vh]`, `bg-[hsl(var(--primary-dark))]` (#2A2F6F), `px-6`
+   - [ ] Sidebar: `w-[60px]` → `hover:w-[220px]`, Navy-Purple background
+   - [ ] Main background: `bg-[hsl(var(--background))]` (#F3F2F7)
+   - [ ] Panels: White cards với Lavender borders
 
-5. **✅ Components**
-   - [ ] Ant Design components có Tailwind overrides khi cần
-   - [ ] Buttons đúng variants (Primary, Default, Ghost, Destructive)
-   - [ ] Cards có `bg-card border border-border rounded-lg`
-   - [ ] Pins có `bg-accent`, `animate-pulse`, `rounded-full`
+5. **✅ Components - Lumina Pro Styling**
+   - [ ] Ant Design components có Lumina Pro overrides
+   - [ ] Primary buttons: Purple (#535297) background
+   - [ ] Cards: White (#FFFFFF) với Lavender border (#C5C0E6)
+   - [ ] Pins/Badges: Soft Purple (#A6A0ED) với pulse animation
+   - [ ] Tags: Purple variants với appropriate contrast
 
 6. **✅ Interaction States**
-   - [ ] Hover states: border → `secondary`, text → `primary`
-   - [ ] Active states: `bg-primary`, `text-white`
-   - [ ] Transitions: `transition-colors`, `duration-300 ease-in-out`
+   - [ ] Hover: Lavender border → Medium Purple (#7C78C1)
+   - [ ] Active: Primary Purple (#535297) background, white text
+   - [ ] Highlight: Soft Purple (#A6A0ED) tint
+   - [ ] Transitions: `transition-all duration-300 ease-in-out`
 
 #### **Quy trình fix:**
 
@@ -330,26 +359,28 @@ export function CommentItem({ author, timestamp, content, pinNumber }: CommentIt
 
 - **[Design System Specification](./references/design-system-spec.md)**: Toàn bộ design system chi tiết (colors, typography, layout, components)
 
-## Best Practices
+## Best Practices - Lumina Pro Theme
 
-1. **Design tokens first**: Luôn check design system spec trước khi code
-2. **Component reusability**: Tạo base components có thể tái sử dụng
+1. **Design tokens first**: Luôn dùng `hsl(var(--token))` thay vì HEX colors
+2. **Component reusability**: Tạo base components với Lumina Pro styling
 3. **Type safety**: Sử dụng TypeScript interfaces/types cho props
-4. **Consistency**: Giữ naming conventions và patterns nhất quán
-5. **Accessibility**: Thêm ARIA labels, keyboard navigation khi cần
+4. **Consistency**: Purple palette (#2A2F6F → #535297 → #A6A0ED) xuyên suốt
+5. **Accessibility**: Navy-Purple text (#2A2F6F) đảm bảo contrast ratio WCAG AA
 6. **Performance**: Memoize components nặng với `React.memo`
-7. **Documentation**: Comment các variants phức tạp hoặc edge cases
+7. **Visual hierarchy**: White cards (#FFFFFF) trên Lavender background (#F3F2F7)
 
-## Common Mistakes
+## Common Mistakes - Lumina Pro Theme
 
-| Lỗi | Cách fix |
-|-----|----------|
-| Hard-coded colors | Thay bằng design tokens |
-| Wrong spacing values | Dùng gap-2/3/4, p-3/4/5/6 |
-| Missing hover states | Thêm hover:* classes |
-| Inline styles | Chuyển sang Tailwind classes |
-| Wrong font sizes | Dùng text-xs/sm/xl/2xl |
-| No transition | Thêm transition-colors/all |
+| Lỗi | Ví dụ SAI | Cách fix ĐÚNG |
+|-----|-----------|---------------|
+| Hard-coded colors | `bg-[#535297]` | `bg-[hsl(var(--primary))]` |
+| Wrong background | `bg-gray-100` | `bg-[hsl(var(--background))]` (#F3F2F7) |
+| Wrong text color | `text-gray-800` | `text-[hsl(var(--foreground))]` (#2A2F6F) |
+| Wrong borders | `border-gray-300` | `border-[hsl(var(--border))]` (#C5C0E6) |
+| Wrong hover | `hover:bg-blue-500` | `hover:border-[hsl(var(--secondary))]` |
+| Missing purple tint | Generic grays | Use Lumina lavender tones (#D2CAFF) |
+| Wrong spacing | Random px values | Dùng gap-2/3/4, p-3/4/5/6 |
+| No transition | Instant changes | `transition-all duration-300 ease-in-out` |
 
 ## Output Format
 

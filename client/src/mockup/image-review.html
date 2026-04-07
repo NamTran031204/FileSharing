@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Ethereal Media | Asset Review</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#fbf8ff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#474650",
+                        "on-primary-container": "#ceccff",
+                        "tertiary-container": "#565198",
+                        "on-background": "#0d1154",
+                        "inverse-surface": "#242969",
+                        "surface-container-low": "#f4f2ff",
+                        "primary-fixed": "#e2dfff",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "inverse-primary": "#c2c1ff",
+                        "on-secondary-fixed-variant": "#423e83",
+                        "surface-dim": "#d6d7ff",
+                        "tertiary-fixed": "#e4dfff",
+                        "on-primary-fixed-variant": "#403f83",
+                        "surface": "#fbf8ff",
+                        "outline": "#777681",
+                        "on-tertiary-fixed": "#170d56",
+                        "surface-container-highest": "#e0e0ff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e6ff",
+                        "surface-container": "#eeecff",
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "primary-container": "#535297",
+                        "secondary-container": "#b5b1fe",
+                        "tertiary": "#3f397e",
+                        "secondary-fixed": "#e3dfff",
+                        "inverse-on-surface": "#f1efff",
+                        "on-secondary-container": "#444085",
+                        "primary": "#3b3a7e",
+                        "outline-variant": "#c8c5d2",
+                        "surface-variant": "#e0e0ff",
+                        "on-primary-fixed": "#130e56",
+                        "on-secondary-fixed": "#150d56",
+                        "on-surface": "#0d1154",
+                        "secondary": "#5a569c",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#fbf8ff",
+                        "on-tertiary-container": "#d1ccff",
+                        "surface-tint": "#58579c",
+                        "error": "#ba1a1a",
+                        "custom-canvas": "#2A2F6F",
+                        "custom-accent": "#A6A0ED"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .canvas-shadow {
+            box-shadow: 0 25px 50px -12px rgba(13, 17, 84, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-background min-h-screen overflow-hidden flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#3b3a7e]/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full shadow-xl shadow-[#3b3a7e]/10">
+    <div class="flex items-center gap-8">
+        <span class="text-xl font-bold tracking-tighter text-white">Ethereal Media</span>
+        <div class="hidden md:flex gap-6 items-center">
+            <a class="font-inter text-sm font-medium tracking-tight text-white/70 hover:text-white transition-colors"
+               href="#">Dashboard</a>
+            <a class="font-inter text-sm font-medium tracking-tight text-white border-b-2 border-white pb-1" href="#">Review
+                Queue</a>
+            <a class="font-inter text-sm font-medium tracking-tight text-white/70 hover:text-white transition-colors"
+               href="#">Assets</a>
+            <a class="font-inter text-sm font-medium tracking-tight text-white/70 hover:text-white transition-colors"
+               href="#">Archive</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-4">
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 transition-transform scale-95">
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        </button>
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 transition-transform scale-95">
+            <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        </button>
+        <div class="h-8 w-8 rounded-full bg-primary-container overflow-hidden ring-2 ring-white/20">
+            <img alt="User profile"
+                 data-alt="Close-up portrait of a professional woman in a bright studio with soft lighting and minimalist background"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0m09jZOmFBhKw9_sG9Jcew1GTBjk3SN26hmey-LBWTrNiRhn7pGFOFzWyNoUJrUsTF2lNML6pz_Ne1R5r5Y_7HqvO_BhSb86OSuigdTErhpGWsAKwrPI353PBPHthvI3yOZMfLBFi6FfqjUonMN-KtJhB73PCVG4CqZ4r-2TBClPUQ26q6n02sYLOkfp2fkrA_lvA_S9mJITC4ZF7-B2ePs7bfw6ZOO1gbjYd7aePWzXlFa3lbPlJf-5vvZBULMfCf-LfnDvAMBs"/>
+        </div>
+    </div>
+</nav>
+<!-- Main Workspace Container -->
+<main class="flex flex-1 pt-16 h-screen overflow-hidden">
+    <!-- SideNavBar (Left) -->
+    <aside class="hidden md:flex flex-col h-full py-6 px-4 gap-4 bg-surface-container-low w-64 border-none">
+        <div class="flex flex-col gap-1 mb-4 px-2">
+            <span class="text-lg font-black text-[#3b3a7e]">Creative Suite</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Premium Tier</span>
+        </div>
+        <nav class="flex flex-col gap-1">
+            <a class="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-sm tracking-wide uppercase font-semibold text-[#474650] hover:text-[#3b3a7e] hover:bg-[#e7e6ff] transition-all translate-x-1 duration-200"
+               href="#">
+                <span class="material-symbols-outlined text-xl" data-icon="grid_view">grid_view</span>
+                Overview
+            </a>
+            <a class="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-sm tracking-wide uppercase font-semibold text-[#3b3a7e] font-bold border-r-4 border-[#535297] bg-[#e7e6ff] transition-all translate-x-1 duration-200"
+               href="#">
+                <span class="material-symbols-outlined text-xl" data-icon="folder_special">folder_special</span>
+                Projects
+            </a>
+            <a class="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-sm tracking-wide uppercase font-semibold text-[#474650] hover:text-[#3b3a7e] hover:bg-[#e7e6ff] transition-all translate-x-1 duration-200"
+               href="#">
+                <span class="material-symbols-outlined text-xl" data-icon="group">group</span>
+                Team
+            </a>
+            <a class="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-sm tracking-wide uppercase font-semibold text-[#474650] hover:text-[#3b3a7e] hover:bg-[#e7e6ff] transition-all translate-x-1 duration-200"
+               href="#">
+                <span class="material-symbols-outlined text-xl" data-icon="insert_chart">insert_chart</span>
+                Analytics
+            </a>
+        </nav>
+        <div class="mt-auto px-2">
+            <button class="w-full py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-lg font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity">
+                New Project
+            </button>
+            <div class="mt-4 pt-4 border-t border-outline-variant/30">
+                <a class="flex items-center gap-3 py-2 px-2 text-on-surface-variant hover:text-error transition-colors"
+                   href="#">
+                    <span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    <span class="text-xs font-bold uppercase tracking-wider">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+    <!-- Tool & Canvas Area -->
+    <section class="flex-1 flex flex-col bg-surface overflow-hidden p-6 gap-6">
+        <!-- Context Header -->
+        <div class="flex justify-between items-end px-2">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-custom-accent mb-1 block">Active Project: Summer Campaign</span>
+                <h1 class="text-2xl font-extrabold tracking-tight text-on-surface">Asset_092_Hero_Final.jpg</h1>
+            </div>
+            <div class="flex gap-3">
+                <button class="px-4 py-2 bg-surface-container-low text-primary font-bold text-xs rounded-lg hover:bg-surface-container-high transition-colors">
+                    Compare Versions
+                </button>
+                <button class="px-6 py-2 bg-gradient-to-r from-primary to-primary-container text-white font-bold text-xs rounded-lg shadow-lg shadow-primary/20">
+                    Approve Asset
+                </button>
+            </div>
+        </div>
+        <!-- Image Canvas -->
+        <div class="relative flex-1 bg-custom-canvas rounded-3xl overflow-hidden canvas-shadow flex items-center justify-center group">
+            <!-- Main Image -->
+            <div class="relative max-w-4xl w-full mx-12">
+                <img alt="Hero asset" class="w-full rounded-lg shadow-2xl"
+                     data-alt="Sophisticated abstract 3D render with flowing silk textures in deep indigos and soft purples with moody atmospheric lighting"
+                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa74m61LO6g-PKzNXhRS6yKQtSwDNEjdvTQ8EO8nerDe_7UZnEQYrF84YH6WlorFkmj-XdEGrCN78dEGl3K11GdptRyrcTxOqP5D0OGqJ-bFYqaqJoeZo3MmLFu3sTte0GZinVFbl7lDSlGldiXnJLseicyUIsR_Fd5dm2yDFS5mZw9sEFs2FjMWEhQSc4KKslPjGNIBqzwwBxco2ejRIVXuoxsmN8HpyEgHjw4tKKm2mDrMDL1SgoJ_MFlxvhOUiYhQZLYQ7YB-s"/>
+                <!-- Annotation Circles -->
+                <div class="absolute top-[20%] left-[30%] w-8 h-8 border-2 border-custom-accent rounded-full bg-custom-accent/20 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                    <div class="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div class="absolute bottom-[40%] right-[25%] w-10 h-10 border-2 border-error rounded-full bg-error/20 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                    <span class="text-white text-[10px] font-black">2</span>
+                </div>
+                <!-- Arrow Annotation -->
+                <div class="absolute top-[45%] left-[55%] pointer-events-none">
+                    <svg fill="none" height="40" viewbox="0 0 60 40" width="60" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 39C15 25 45 35 58 2" stroke="#A6A0ED" stroke-dasharray="6 6" stroke-linecap="round"
+                              stroke-width="3"></path>
+                        <path d="M52 5L58 2L59 9" stroke="#A6A0ED" stroke-linecap="round" stroke-width="3"></path>
+                    </svg>
+                </div>
+            </div>
+            <!-- Floating Canvas Controls -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-surface-container-lowest/90 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-4 shadow-2xl">
+                <button class="p-2 hover:bg-surface-container-high rounded-xl text-primary transition-all">
+                    <span class="material-symbols-outlined" data-icon="zoom_out">zoom_out</span>
+                </button>
+                <div class="w-[1px] h-4 bg-outline-variant/30"></div>
+                <span class="text-xs font-black text-on-surface">85%</span>
+                <div class="w-[1px] h-4 bg-outline-variant/30"></div>
+                <button class="p-2 hover:bg-surface-container-high rounded-xl text-primary transition-all">
+                    <span class="material-symbols-outlined" data-icon="zoom_in">zoom_in</span>
+                </button>
+                <button class="p-2 hover:bg-surface-container-high rounded-xl text-primary transition-all">
+                    <span class="material-symbols-outlined" data-icon="fullscreen">fullscreen</span>
+                </button>
+            </div>
+            <!-- Tool Palette (Left Side of Canvas) -->
+            <div class="absolute left-6 top-1/2 -translate-y-1/2 bg-surface-container-lowest/95 backdrop-blur-md p-2 rounded-2xl flex flex-col gap-2 shadow-2xl">
+                <button class="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined" data-icon="edit">edit</span>
+                </button>
+                <button class="p-3 hover:bg-surface-container-high text-on-surface-variant rounded-xl transition-all">
+                    <span class="material-symbols-outlined" data-icon="gesture">gesture</span>
+                </button>
+                <button class="p-3 hover:bg-surface-container-high text-on-surface-variant rounded-xl transition-all">
+                    <span class="material-symbols-outlined" data-icon="ads_click">ads_click</span>
+                </button>
+                <button class="p-3 hover:bg-surface-container-high text-on-surface-variant rounded-xl transition-all">
+                    <span class="material-symbols-outlined" data-icon="text_fields">text_fields</span>
+                </button>
+                <div class="h-[1px] w-full bg-outline-variant/30 my-1"></div>
+                <button class="p-3 hover:bg-surface-container-high text-error rounded-xl transition-all">
+                    <span class="material-symbols-outlined" data-icon="delete">delete</span>
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- Right Feedback Sidebar -->
+    <aside class="w-80 bg-surface-container-lowest h-full overflow-y-auto p-6 flex flex-col gap-6">
+        <div>
+            <h3 class="text-sm font-black uppercase tracking-wider text-on-surface mb-4">Activity Log</h3>
+            <div class="flex flex-col gap-6">
+                <!-- Comment 1 -->
+                <div class="bg-surface-container-low rounded-2xl p-4 relative">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 rounded-full bg-custom-accent/30 flex items-center justify-center text-[10px] font-bold text-primary">
+                            1
+                        </div>
+                        <span class="text-[11px] font-bold text-on-surface">Alex Rivera</span>
+                        <span class="text-[10px] text-on-surface-variant/60 ml-auto">2m ago</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">The texture here feels a bit too sharp.
+                        Can we soften the grain in the highlight area?</p>
+                    <div class="mt-3 flex gap-2">
+                        <span class="px-2 py-1 bg-surface-container-highest text-[10px] font-bold text-primary rounded-md uppercase">Action Required</span>
+                    </div>
+                </div>
+                <!-- Comment 2 -->
+                <div class="bg-error/5 border border-error/10 rounded-2xl p-4 relative">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 rounded-full bg-error/20 flex items-center justify-center text-[10px] font-bold text-error">
+                            2
+                        </div>
+                        <span class="text-[11px] font-bold text-on-surface">Sarah Chen</span>
+                        <span class="text-[10px] text-on-surface-variant/60 ml-auto">15m ago</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">Logo placement should follow the new
+                        guidelines. Move it 20px to the left.</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-error text-xs" data-icon="priority_high">priority_high</span>
+                        <span class="text-[10px] font-bold text-error uppercase">High Priority</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-auto">
+            <div class="bg-surface-container-low p-4 rounded-2xl">
+                <label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant block mb-2">Add
+                    Feedback</label>
+                <textarea
+                        class="w-full bg-transparent border-none focus:ring-0 text-sm p-0 placeholder-on-surface-variant/40 resize-none h-24"
+                        placeholder="Type a comment or drag a tool to annotate..."></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <div class="flex gap-1">
+                        <button class="p-1 text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg" data-icon="attach_file">attach_file</span>
+                        </button>
+                        <button class="p-1 text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg" data-icon="mood">mood</span>
+                        </button>
+                    </div>
+                    <button class="px-4 py-1.5 bg-primary text-white text-[10px] font-bold uppercase rounded-lg">Post
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+</main>
+<!-- Success Toast - Glassmorphism -->
+<div class="fixed bottom-8 right-8 bg-[#3b3a7e]/90 backdrop-blur-md text-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl border border-white/10">
+    <span class="material-symbols-outlined text-custom-accent" data-icon="check_circle">check_circle</span>
+    <span class="text-sm font-medium">Draft saved successfully</span>
+</div>
+</body>
+</html>

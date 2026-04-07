@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+/* Design System Tokens - Media Review Platform */
+@layer base {
+  :root {
+    /* Primary Colors */
+    --primary-dark: 237 45% 30%; /* #2A2F6F - Header, sidebar, nền tối */
+    --primary: 240 30% 46%; /* #535297 - Buttons, active states, links */
+    --secondary: 244 30% 61%; /* #7C78C1 - Hover, borders, secondary actions */
+    --accent: 246 72% 78%; /* #A6A0ED - Highlights, badges, pin markers */
+    --muted: 252 100% 90%; /* #D2CAFF - Backgrounds nhẹ, surfaces */
+    
+    /* Neutral Colors */
+    --background: 240 10% 96%; /* #F3F2F7 - Nền chính của app */
+    --foreground: 235 45% 30%; /* #2A2F6F - Text chính */
+    --card: 0 0% 100%; /* #FFFFFF - Card backgrounds */
+    --border: 244 30% 80%; /* #C5C0E6 - Borders, dividers */
+    
+    /* Semantic Colors */
+    --destructive: 0 84.2% 60.2%; /* #EF4444 - Xoá, lỗi */
+    --muted-foreground: 244 10% 40%; /* Text secondary */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+  }
+}
+
+@layer utilities {
+  /* Custom utilities cho design system */
+  .canvas-shadow {
+    box-shadow: 0 25px 50px -12px rgba(13, 17, 84, 0.25);
+  }
+}
