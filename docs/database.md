@@ -240,7 +240,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 ```javascript
 { "versionId": 1, "renditionType": 1 }      
 { "assetId": 1 }    
-{ "status": 1 }    
+{ "status": 1 }                                   // processing queue
 ```
 
 ---
@@ -251,42 +251,59 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,  // annotationId
-  "assetId": ObjectId, // ref → media_assets
-  "versionId": ObjectId,  // ref → media_versions (quan trọng!)
+  "_id": ObjectId,                    // annotationId
+  "assetId": ObjectId,                // ref → media_assets
+  "versionId": ObjectId,              // ref → media_versions (quan trọng!)
   
   "annotationType": "TIMECODE" | "REGION" | "FRAME_REGION",
   
+  // Timecode annotation (video)
   "timecode": {
-    "startMs": Number, // mốc bắt đầu (ms)
-    "endMs": Number // mốc kết thúc (ms), có thể = startMs nếu point
+    "startMs": Number,                // mốc bắt đầu (ms)
+    "endMs": Number                   // mốc kết thúc (ms), có thể = startMs nếu point
   },
   
   // Region annotation (image hoặc video frame)
   "region": {
     "shape": "RECTANGLE" | "CIRCLE" | "POLYGON" | "FREEFORM",
+    // Normalized coordinates (0-1) để responsive với kích thước viewport
     "points": [
-      { "x": Number, "y": Number }  
-    ],          
-    "strokeColor": String,   
-    "strokeWidth": Number, 
-    "fillColor": String    
+      { "x": Number, "y": Number }    // RECTANGLE: 2 điểm (topLeft, bottomRight)
+    ],                                // POLYGON: n điểm
+                                      // CIRCLE: center + radius point
+    "strokeColor": String,            // #FF0000
+    "strokeWidth": Number,            // px
+    "fillColor": String               // rgba(255,0,0,0.2)
   },
   
-  "frameNumber": Number,      
+  // Frame-specific region (video frame annotation)
+  "frameNumber": Number,              // frame cụ thể (optional, dùng với FRAME_REGION)
   
+  // Status
   "status": "OPEN" | "RESOLVED",
   "resolvedAt": ISODate,
-  "resolvedBy": ObjectId,   
+  "resolvedBy": ObjectId,             // ref → users
   
-  "threadId": ObjectId, 
+  // Thread reference
+  "threadId": ObjectId,               // ref → comment_threads
   
-  "createdBy": ObjectId,  
-  "createdByEmail": String,  
+  // Creator
+  "createdBy": ObjectId,              // ref → users
+  "createdByEmail": String,           // denormalized
   
   "createdAt": ISODate,
   "updatedAt": ISODate
 }
+```
+
+**Indexes**:
+```javascript
+{ "versionId": 1, "createdAt": -1 }               // list annotations of version
+{ "assetId": 1, "versionId": 1 }                  // cross-version query
+{ "versionId": 1, "status": 1 }                   // filter by status
+{ "versionId": 1, "timecode.startMs": 1 }         // timeline ordering
+{ "threadId": 1 }                                 // lookup by thread
+{ "createdBy": 1 }                                // user's annotations
 ```
 
 ---
@@ -297,17 +314,17 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId, // threadId
-  "assetId": ObjectId,  // ref → media_assets
-  "versionId": ObjectId, // ref → media_versions
-  "annotationId": ObjectId, // ref → annotations (nullable nếu general comment)
+  "_id": ObjectId,                    // threadId
+  "assetId": ObjectId,                // ref → media_assets
+  "versionId": ObjectId,              // ref → media_versions
+  "annotationId": ObjectId,           // ref → annotations (nullable nếu general comment)
   
   // Root comment
   "rootComment": {
-    "commentId": ObjectId,  // unique ID cho comment
-    "content": String,  // nội dung text (có thể chứa @mentions)
-    "mentions": [ObjectId], // danh sách userId được mention
-    "attachments": [ // file đính kèm (optional)
+    "commentId": ObjectId,            // unique ID cho comment
+    "content": String,                // nội dung text (có thể chứa @mentions)
+    "mentions": [ObjectId],           // danh sách userId được mention
+    "attachments": [                  // file đính kèm (optional)
       {
         "type": "IMAGE" | "FILE",
         "objectKey": String,
@@ -316,10 +333,10 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
       }
     ],
     "createdBy": ObjectId,
-    "createdByEmail": String, // denormalized
-    "createdByName": String, // denormalized
+    "createdByEmail": String,         // denormalized
+    "createdByName": String,          // denormalized
     "createdAt": ISODate,
-    "editedAt": ISODate  // null nếu chưa edit
+    "editedAt": ISODate               // null nếu chưa edit
   },
   
   // Replies
@@ -338,10 +355,11 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   ],
   
   // Thread metadata
-  "replyCount": Number,  // cached count
-  "participants": [ObjectId], // unique users in thread
-  "lastActivityAt": ISODate, // thời điểm hoạt động cuối
+  "replyCount": Number,               // cached count
+  "participants": [ObjectId],         // unique users in thread
+  "lastActivityAt": ISODate,          // thời điểm hoạt động cuối
   
+  // Status (sync với annotation nếu có)
   "status": "OPEN" | "RESOLVED",
   "resolvedAt": ISODate,
   "resolvedBy": ObjectId,
@@ -349,6 +367,16 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   "createdAt": ISODate,
   "updatedAt": ISODate
 }
+```
+
+**Indexes**:
+```javascript
+{ "versionId": 1, "lastActivityAt": -1 }          // recent threads
+{ "assetId": 1, "versionId": 1 }                  // cross-version
+{ "annotationId": 1 }                             // lookup by annotation
+{ "participants": 1 }                             // threads user participated
+{ "status": 1 }                                   // filter resolved/open
+{ "rootComment.mentions": 1 }                     // find by mention
 ```
 
 ---
@@ -359,14 +387,16 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,  
-  "assetId": ObjectId,     
-  "activeVersionId": ObjectId, 
+  "_id": ObjectId,                    // reviewSessionId
+  "assetId": ObjectId,                // ref → media_assets
+  "activeVersionId": ObjectId,        // ref → media_versions (version đang review)
   
-  "title": String,  
-  "description": String,  
-  "dueDate": ISODate,   
+  // Review info
+  "title": String,                    // tên phiên review
+  "description": String,              // mô tả/notes
+  "dueDate": ISODate,                 // deadline (optional)
   
+  // Workflow status
   "status": "DRAFT" | "IN_REVIEW" | "REQUEST_CHANGES" | "APPROVED",
   "statusHistory": [
     {
@@ -374,7 +404,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
       "changedBy": ObjectId,
       "changedByEmail": String,
       "changedAt": ISODate,
-      "note": String   
+      "note": String                  // lý do thay đổi (optional)
     }
   ],
   
@@ -383,14 +413,14 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
     {
       "userId": ObjectId,
       "email": String,
-      "role": "REVIEWER" | "APPROVER",
+      "role": "REVIEWER" | "APPROVER",  // APPROVER có quyền chuyển APPROVED
       "invitedAt": ISODate,
-      "lastViewedAt": ISODate,  
-      "hasCommented": Boolean 
+      "lastViewedAt": ISODate,        // tracking engagement
+      "hasCommented": Boolean         // đã comment chưa
     }
   ],
   
-  // Metrics 
+  // Metrics (denormalized)
   "metrics": {
     "totalAnnotations": Number,
     "openAnnotations": Number,
@@ -404,8 +434,17 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   
   "createdAt": ISODate,
   "updatedAt": ISODate,
-  "completedAt": ISODate    
+  "completedAt": ISODate              // khi status = APPROVED
 }
+```
+
+**Indexes**:
+```javascript
+{ "assetId": 1, "createdAt": -1 }                 // list sessions of asset
+{ "status": 1 }                                   // filter by status
+{ "reviewers.userId": 1 }                         // sessions user is reviewing
+{ "dueDate": 1, "status": 1 }                     // deadline tracking
+{ "createdBy": 1 }                                // user's sessions
 ```
 
 ---
@@ -425,6 +464,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   
   // Job config
   "config": {
+    // Transcode specific
     "profiles": ["360p", "720p", "1080p"],
     
     // Thumbnail specific
@@ -435,40 +475,132 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
     "scanEngine": String
   },
   
+  // Status
   "status": "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED",
-  "priority": Number,                 // 1 (cao nhat) - 10 (thap nhat)
+  "priority": Number,                 // 1 (highest) - 10 (lowest)
+  
+  // Progress
+  "progress": {
+    "percent": Number,                // 0-100
+    "currentStep": String,            // "Encoding 720p..."
+    "estimatedTimeRemainingMs": Number
+  },
   
   // Result
   "result": {
     "success": Boolean,
-    "outputKeys": [String],      
+    "outputKeys": [String],           // MinIO keys của output
     "errorMessage": String,
     "errorDetails": Object
   },
+  
+  // Timing
+  "scheduledAt": ISODate,
+  "startedAt": ISODate,
+  "completedAt": ISODate,
+  
+  // Retry
+  "retryCount": Number,               // default: 0
+  "maxRetries": Number,               // default: 3
+  "lastError": String,
+  
+  // Worker info
+  "workerId": String,                 // ID của worker đang xử lý
+  "workerHeartbeat": ISODate,         // heartbeat để detect stuck jobs
   
   "createdAt": ISODate,
   "updatedAt": ISODate
 }
 ```
 
+**Indexes**:
+```javascript
+{ "status": 1, "priority": 1, "scheduledAt": 1 }  // job queue query
+{ "versionId": 1 }                                // jobs của version
+{ "workerId": 1, "status": 1 }                    // worker's jobs
+{ "workerHeartbeat": 1 }                          // detect stuck jobs
+{ "createdAt": 1 }                                // TTL index for cleanup
+```
+
 ---
 
-### 2.9 Collection: `notifications`
+### 2.9 Collection: `audit_logs`
+
+**Mục đích**: Ghi lại các action quan trọng để truy vết và compliance.
+
+```javascript
+{
+  "_id": ObjectId,                    // logId
+  
+  // Actor
+  "actorId": ObjectId,                // ref → users (null nếu system)
+  "actorEmail": String,
+  "actorType": "USER" | "SYSTEM" | "API_KEY",
+  
+  // Action
+  "action": "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE" | 
+            "PERMISSION_CHANGE" | "LOGIN" | "LOGOUT" | "SHARE" | 
+            "DOWNLOAD" | "UPLOAD_COMPLETE",
+  
+  // Target
+  "targetType": "MEDIA_ASSET" | "MEDIA_VERSION" | "ANNOTATION" | 
+                "COMMENT" | "REVIEW_SESSION" | "USER" | "PERMISSION",
+  "targetId": ObjectId,
+  "targetName": String,               // human-readable name
+  
+  // Context
+  "assetId": ObjectId,                // nullable, cho query theo asset
+  "versionId": ObjectId,              // nullable
+  "reviewSessionId": ObjectId,        // nullable
+  
+  // Change details
+  "changes": {
+    "before": Object,                 // state trước
+    "after": Object                   // state sau
+  },
+  
+  // Request metadata
+  "requestInfo": {
+    "ipAddress": String,
+    "userAgent": String,
+    "requestId": String               // correlation ID
+  },
+  
+  "timestamp": ISODate,
+  "expiresAt": ISODate                // TTL cho auto-cleanup (optional)
+}
+```
+
+**Indexes**:
+```javascript
+{ "actorId": 1, "timestamp": -1 }                 // user's actions
+{ "targetType": 1, "targetId": 1, "timestamp": -1 } // target history
+{ "assetId": 1, "timestamp": -1 }                 // asset audit trail
+{ "action": 1, "timestamp": -1 }                  // filter by action type
+{ "timestamp": -1 }                               // recent logs
+{ "expiresAt": 1 }                                // TTL index
+```
+
+---
+
+### 2.10 Collection: `notifications`
 
 **Mục đích**: Lưu trữ thông báo cho người dùng (in-app notifications).
 
 ```javascript
 {
-  "_id": ObjectId,   
-  "userId": ObjectId, 
+  "_id": ObjectId,                    // notificationId
+  "userId": ObjectId,                 // ref → users (recipient)
   
   "type": "NEW_COMMENT" | "MENTION" | "STATUS_CHANGE" | "NEW_VERSION" | 
           "REVIEW_INVITATION" | "ANNOTATION_RESOLVED" | "DEADLINE_REMINDER",
   
-  "title": String,     
-  "message": String,  
-  "link": String,   
+  // Content
+  "title": String,                    // tiêu đề ngắn
+  "message": String,                  // nội dung chi tiết
+  "link": String,                     // deep link đến resource
   
+  // Context
   "context": {
     "assetId": ObjectId,
     "assetName": String,
@@ -476,21 +608,31 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
     "annotationId": ObjectId,
     "commentId": ObjectId,
     "reviewSessionId": ObjectId,
-    "actorId": ObjectId,    
+    "actorId": ObjectId,              // người tạo action
     "actorName": String
   },
   
-  "isRead": Boolean, 
+  // Status
+  "isRead": Boolean,                  // default: false
   "readAt": ISODate,
   
+  // Delivery status (for multi-channel)
   "deliveryStatus": {
     "inApp": "DELIVERED",
     "email": "PENDING" | "SENT" | "FAILED" | "SKIPPED"
   },
   
   "createdAt": ISODate,
-  "expiresAt": ISODate    
+  "expiresAt": ISODate                // TTL
 }
+```
+
+**Indexes**:
+```javascript
+{ "userId": 1, "isRead": 1, "createdAt": -1 }     // unread notifications
+{ "userId": 1, "createdAt": -1 }                  // all notifications
+{ "expiresAt": 1 }                                // TTL index
+{ "deliveryStatus.email": 1 }                     // email queue
 ```
 
 ---
