@@ -6,6 +6,7 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
+import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.models.MetadataEntity;
@@ -17,6 +18,7 @@ import org.example.filesharing.enums.objectPermission.ObjectVisibility;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.jobs.kafka.EmailProducer;
+import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MetadataService;
@@ -41,6 +43,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final MinIoService minIoService;
     private final PasswordEncoder passwordEncoder;
     private final EmailProducer emailProducer;
+    private final VideoEncodeProducer videoEncodeProducer;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
@@ -91,6 +94,15 @@ public class MetadataServiceImpl implements MetadataService {
 
         entity.setStatus(UploadStatus.COMPLETED);
         metadataRepo.save(entity);
+
+        try {
+            DownloadFileRequestDto input = new DownloadFileRequestDto();
+            input.setObjectName(entity.getObjectName());
+            String presignedDownloadUrl = minIoService.getPresignedDownloadUrl(input, entity.getFileSize());
+            videoEncodeProducer.sendPreSignedUrlViaKafka(presignedDownloadUrl);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

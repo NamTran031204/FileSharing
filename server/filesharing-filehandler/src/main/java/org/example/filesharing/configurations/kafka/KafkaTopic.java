@@ -12,11 +12,22 @@ public class KafkaTopic {
     @Value(value = "${kafka.topics.notification_email_sender}")
     private String notificationEmailSender;
 
+    @Value(value = "${kafka.topics.video_encode_topic}")
+    private String videoEncodeTopic;
+
     @Bean
-    public NewTopic forbiddenTransportScanTopic() {
+    public NewTopic emailSenderTopic() {
         return TopicBuilder.name(notificationEmailSender)
-                .partitions(1)    // 8 partition
+                .partitions(1)
                 .replicas(1)      // 1 bản sao (dev). Production: 3.
+                .build();
+    }
+
+    @Bean
+    public NewTopic videoEncodeTopic() {
+        return TopicBuilder.name(videoEncodeTopic)
+                .partitions(1)
+                .replicas(1)
                 .build();
     }
 }

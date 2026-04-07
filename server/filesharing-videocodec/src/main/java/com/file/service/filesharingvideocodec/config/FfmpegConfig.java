@@ -65,9 +65,12 @@ public class FfmpegConfig {
         cmdLine.addArgument("0");
         
         cmdLine.addArgument("-hls_segment_filename");
-        cmdLine.addArgument(outputDir + "/segment_%03d.ts", false);
+        // Fix: Use backslashes for Windows paths
+        String segmentPath = outputDir + "\\segment_%03d.ts";
+        cmdLine.addArgument(segmentPath, false);
         
-        cmdLine.addArgument(outputDir + "/master.m3u8", false);
+        String m3u8Path = outputDir + "\\master.m3u8";
+        cmdLine.addArgument(m3u8Path, false);
         
         return cmdLine;
     }

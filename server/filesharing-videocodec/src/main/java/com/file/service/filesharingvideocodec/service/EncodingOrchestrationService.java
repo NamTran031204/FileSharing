@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.net.URL;
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +45,7 @@ public class EncodingOrchestrationService {
         
         try {
             for (EncodingProfile profile : profiles) {
-                ProfileResult profileResult = processProfileWithRetry(
+                ProfileResult profileResult = processProfileWithRetry1(
                     presignedUrl, profile, jobId, maxAttempts, retryDelayMs
                 );
                 profileResults.put(profile, profileResult);
@@ -127,6 +131,87 @@ public class EncodingOrchestrationService {
         }
         
         throw new EncodingException("Should not reach here");
+    }
+
+    private ProfileResult processProfileWithRetry1(String presignedUrl, EncodingProfile profile, 
+                                                    String jobId, int maxAttempts, long retryDelayMs) {
+        long startTime = System.currentTimeMillis();
+        String localVideoPath = null;
+        
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                if (attempt > 1) {
+                    encodingLogger.logRetryAttempt(jobId, attempt, maxAttempts);
+                    Thread.sleep(retryDelayMs);
+                }
+                localVideoPath = "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-videocodec\\temp\\ruabat.mp4";
+                log.info("Video downloaded successfully to: {}", localVideoPath);
+
+                File outputDir = videoEncodingService.encodeVideoToHLS(localVideoPath, profile, jobId);
+
+                List<String> uploadedUrls = videoUploadService.uploadEncodedSegments(jobId, outputDir, profile);
+                
+                String m3u8Url = uploadedUrls.stream()
+                    .filter(url -> url.endsWith(".m3u8"))
+                    .findFirst()
+                    .orElse(null);
+                
+                List<String> tsUrls = uploadedUrls.stream()
+                    .filter(url -> url.endsWith(".ts"))
+                    .toList();
+                
+                long duration = System.currentTimeMillis() - startTime;
+                encodingLogger.logProfileComplete(jobId, profile.getName(), duration, m3u8Url);
+                
+                // Cleanup downloaded file
+                cleanupLocalVideo(localVideoPath);
+                
+                return ProfileResult.builder()
+                    .profile(profile)
+                    .m3u8Url(m3u8Url)
+                    .tsFileUrls(tsUrls)
+                    .durationMs(duration)
+                    .status("SUCCESS")
+                    .build();
+                    
+            } catch (Exception e) {
+                log.error("Encoding attempt {} failed for profile {}: {}", attempt, profile.getName(), e.getMessage(), e);
+                
+                // Cleanup on error
+                if (localVideoPath != null) {
+                    cleanupLocalVideo(localVideoPath);
+                }
+                
+                if (attempt == maxAttempts) {
+                    encodingLogger.logEncodingError(jobId, profile.getName(), 
+                        "Failed after " + maxAttempts + " attempts: " + e.getMessage());
+                    
+                    return ProfileResult.builder()
+                        .profile(profile)
+                        .status("FAILED")
+                        .error(e.getMessage())
+                        .durationMs(System.currentTimeMillis() - startTime)
+                        .build();
+                }
+            }
+        }
+        
+        throw new EncodingException("Should not reach here");
+    }
+
+    private void cleanupLocalVideo(String localVideoPath) {
+        if (localVideoPath == null) {
+            return;
+        }
+        
+        try {
+            File videoFile = new File(localVideoPath);
+            if (videoFile.exists() && videoFile.delete()) {
+                log.info("Cleaned up local video file: {}", localVideoPath);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to cleanup local video file {}: {}", localVideoPath, e.getMessage());
+        }
     }
 
     private List<EncodingProfile> parseProfiles() {

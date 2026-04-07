@@ -82,12 +82,22 @@ public class VideoEncodingService {
         try {
             int exitCode = executor.execute(cmdLine);
             
+            // Log stderr regardless
+            String stdErr = errorStream.toString();
+            if (!stdErr.isEmpty()) {
+                log.info("FFmpeg stderr output: {}", stdErr);
+            }
+            
             if (exitCode != 0) {
-                String error = errorStream.toString();
+                String error = stdErr;
+                log.error("FFmpeg exited with code {}: {}", exitCode, error);
                 throw new EncodingException("FFmpeg exited with code " + exitCode + ": " + error);
             }
             
-            log.debug("FFmpeg output: {}", outputStream.toString());
+            String stdOut = outputStream.toString();
+            if (!stdOut.isEmpty()) {
+                log.debug("FFmpeg stdout: {}", stdOut);
+            }
             
         } catch (IOException e) {
             String error = errorStream.toString();
