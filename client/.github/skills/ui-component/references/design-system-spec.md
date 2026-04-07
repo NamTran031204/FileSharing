@@ -21,17 +21,17 @@ Platform review media (video & ấn phẩm design) với giao diện chuyên ngh
 
 Design system sử dụng theme **"Lumina Pro"** với bảng màu lavender-purple nhẹ nhàng, chuyên nghiệp.
 
-| Token              | HSL                  | HEX       | Tên màu | Sử dụng |
-|--------------------|----------------------|-----------|---------|---------|
-| `--background`      | 240 10% 96%          | #F3F2F7   | Light lavender-gray | Main application canvas |
-| `--card`            | 0 0% 100%            | #FFFFFF   | Pure White | Sidebar panels, project cards, comment boxes |
-| `--foreground` / `--primary-dark` | 237 45% 30% | #2A2F6F | Deep Navy-Purple | Primary text, headers, sidebars (high contrast) |
-| `--primary`         | 240 30% 46%          | #535297   | Primary Purple | CTAs, active states, buttons (Accent & Interaction) |
-| `--accent`          | 246 72% 78%          | #A6A0ED   | Soft Purple | Badges, markers, secondary highlights |
-| `--muted`           | 252 100% 90%         | #D2CAFF   | Soft Lavender | Backgrounds of less critical UI sections |
-| `--border`          | 244 30% 80%          | #C5C0E6   | Light Lavender | Borders and dividers |
-| `--secondary`       | 244 30% 61%          | #7C78C1   | Medium Purple | Hover states, secondary actions |
-| `--destructive`     | 0 84.2% 60.2%        | #EF4444   | Error Red | Delete actions, error states |
+| Token                             | HSL           | HEX     | Tên màu             | Sử dụng                                             |
+|-----------------------------------|---------------|---------|---------------------|-----------------------------------------------------|
+| `--background`                    | 240 10% 96%   | #F3F2F7 | Light lavender-gray | Main application canvas                             |
+| `--card`                          | 0 0% 100%     | #FFFFFF | Pure White          | Sidebar panels, project cards, comment boxes        |
+| `--foreground` / `--primary-dark` | 237 45% 30%   | #2A2F6F | Deep Navy-Purple    | Primary text, headers, sidebars (high contrast)     |
+| `--primary`                       | 240 30% 46%   | #535297 | Primary Purple      | CTAs, active states, buttons (Accent & Interaction) |
+| `--accent`                        | 246 72% 78%   | #A6A0ED | Soft Purple         | Badges, markers, secondary highlights               |
+| `--muted`                         | 252 100% 90%  | #D2CAFF | Soft Lavender       | Backgrounds of less critical UI sections            |
+| `--border`                        | 244 30% 80%   | #C5C0E6 | Light Lavender      | Borders and dividers                                |
+| `--secondary`                     | 244 30% 61%   | #7C78C1 | Medium Purple       | Hover states, secondary actions                     |
+| `--destructive`                   | 0 84.2% 60.2% | #EF4444 | Error Red           | Delete actions, error states                        |
 
 ### Nguyên tắc sử dụng màu
 - **KHÔNG** dùng mã màu trực tiếp trong component. Luôn dùng semantic token qua Tailwind classes.
@@ -112,7 +112,7 @@ Design system sử dụng theme **"Lumina Pro"** với bảng màu lavender-purp
 │      │                      │  TOOL PANEL       │
 │ SIDE │  MEDIA PLAYER        │  w-[340px]        │
 │ BAR  │  flex-1              │  bg-card          │
-│      │  bg-black            ├───────────────────┤
+│      │  bg-primary          ├───────────────────┤
 │ 60px │                      │  FEEDBACK PANEL   │
 │  ↔   │                      │  flex-1           │
 │ 220px│                      │  bg-card          │
@@ -147,13 +147,13 @@ Design system sử dụng theme **"Lumina Pro"** với bảng màu lavender-purp
 ## 6. Component Specifications
 
 ### Buttons
-| Variant     | Background        | Text               | Border           | Hover              |
-|-------------|-------------------|--------------------|--------------------|---------------------|
-| Primary     | `bg-primary`      | `text-primary-fg`  | none               | `opacity-90`        |
-| Default     | `bg-card`         | `text-foreground`  | `border-border`    | `border-secondary`  |
-| Text/Ghost  | transparent       | `text-muted-fg`    | none               | `text-primary`      |
-| Active Tool | `bg-primary`      | `text-white`       | `border-primary`   | —                   |
-| Destructive | transparent       | `text-destructive` | none               | `opacity-80`        |
+| Variant     | Background   | Text               | Border           | Hover              |
+|-------------|--------------|--------------------|------------------|--------------------|
+| Primary     | `bg-primary` | `text-primary-fg`  | none             | `opacity-90`       |
+| Default     | `bg-card`    | `text-foreground`  | `border-border`  | `border-secondary` |
+| Text/Ghost  | transparent  | `text-muted-fg`    | none             | `text-primary`     |
+| Active Tool | `bg-primary` | `text-white`       | `border-primary` | —                  |
+| Destructive | transparent  | `text-destructive` | none             | `opacity-80`       |
 
 ### Cards/Panels
 - Background: `bg-card`
@@ -189,30 +189,30 @@ className="[&_.ant-menu-item]:text-muted [&_.ant-menu-item-selected]:bg-primary"
 ```
 
 ### Components sử dụng
-| Component     | Ant Design         | Vị trí            |
-|---------------|--------------------|--------------------|
-| Breadcrumb    | `<Breadcrumb>`     | Header             |
-| Menu          | `<Menu>`           | Sidebar            |
-| Button        | `<Button>`         | ToolPanel, Controls|
-| Tooltip       | `<Tooltip>`        | Tools, Pins        |
-| Input         | `<Input>`          | FeedbackPanel      |
-| Slider        | `<Slider>`         | MediaPlayer        |
-| Avatar        | `<Avatar>`         | Comments           |
-| Tag           | `<Tag>`            | Pin indicators     |
-| Divider       | `<Divider>`        | ToolPanel          |
-| List          | `<List>`           | FeedbackPanel      |
+| Component  | Ant Design     | Vị trí              |
+|------------|----------------|---------------------|
+| Breadcrumb | `<Breadcrumb>` | Header              |
+| Menu       | `<Menu>`       | Sidebar             |
+| Button     | `<Button>`     | ToolPanel, Controls |
+| Tooltip    | `<Tooltip>`    | Tools, Pins         |
+| Input      | `<Input>`      | FeedbackPanel       |
+| Slider     | `<Slider>`     | MediaPlayer         |
+| Avatar     | `<Avatar>`     | Comments            |
+| Tag        | `<Tag>`        | Pin indicators      |
+| Divider    | `<Divider>`    | ToolPanel           |
+| List       | `<List>`       | FeedbackPanel       |
 
 ---
 
 ## 10. Interaction States
 
-| State          | Visual                                          |
+| State          | Visual                                           |
 |----------------|--------------------------------------------------|
 | Hover (button) | Border chuyển sang `secondary`, text → `primary` |
 | Active tool    | `bg-primary`, `text-white`                       |
 | Pin mode ON    | Pin button icon chuyển sang `text-accent`        |
 | Comment reply  | Inline input xuất hiện dưới comment (`ml-8`)     |
-| Sidebar hover  | Mở rộng từ 60px → 220px, smooth transition      |
+| Sidebar hover  | Mở rộng từ 60px → 220px, smooth transition       |
 | Pin marker     | Pulse animation, tooltip hiển thị label          |
 
 ---

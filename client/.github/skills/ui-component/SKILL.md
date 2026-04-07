@@ -52,18 +52,18 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 
 **Bảng màu design tokens - "Lumina Pro" Theme** (xem chi tiết trong [design-system-spec](./references/design-system-spec.md)):
 
-| Token | HEX | Sử dụng |
-|-------|-----|---------|
-| `bg-background` | #F3F2F7 | Main application canvas (Light lavender-gray) |
-| `bg-card` | #FFFFFF | Sidebar panels, project cards, comment boxes (Pure White) |
-| `text-foreground` / `bg-primary-dark` | #2A2F6F | Primary text, headers, sidebars (Deep Navy-Purple) |
-| `bg-primary` | #535297 | CTAs, active states, buttons (Primary Purple) |
-| `bg-accent` | #A6A0ED | Badges, markers, secondary highlights (Soft Purple) |
-| `bg-muted` | #D2CAFF | Backgrounds of less critical UI sections (Soft Lavender) |
-| `border-border` | #C5C0E6 | Borders and dividers (Light Lavender) |
-| `bg-secondary` | #7C78C1 | Hover states, secondary actions |
-| `text-muted-foreground` | #6B6B6B | Secondary text, captions |
-| `text-destructive` | #EF4444 | Error states, delete actions |
+| Token                                 | HEX     | Sử dụng                                                   |
+|---------------------------------------|---------|-----------------------------------------------------------|
+| `bg-background`                       | #F3F2F7 | Main application canvas (Light lavender-gray)             |
+| `bg-card`                             | #FFFFFF | Sidebar panels, project cards, comment boxes (Pure White) |
+| `text-foreground` / `bg-primary-dark` | #2A2F6F | Primary text, headers, sidebars (Deep Navy-Purple)        |
+| `bg-primary`                          | #535297 | CTAs, active states, buttons (Primary Purple)             |
+| `bg-accent`                           | #A6A0ED | Badges, markers, secondary highlights (Soft Purple)       |
+| `bg-muted`                            | #D2CAFF | Backgrounds of less critical UI sections (Soft Lavender)  |
+| `border-border`                       | #C5C0E6 | Borders and dividers (Light Lavender)                     |
+| `bg-secondary`                        | #7C78C1 | Hover states, secondary actions                           |
+| `text-muted-foreground`               | #6B6B6B | Secondary text, captions                                  |
+| `text-destructive`                    | #EF4444 | Error states, delete actions                              |
 
 #### **Bước 3: Áp dụng Typography**
 

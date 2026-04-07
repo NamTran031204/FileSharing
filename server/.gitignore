@@ -1,3 +1,5 @@
 .idea/
 
 init/data/minio/.minio.sys
+
+init/data/minio/file-sharing
