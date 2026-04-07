@@ -232,3 +232,80 @@ className="[&_.ant-menu-item]:text-muted [&_.ant-menu-item-selected]:bg-primary"
 
 ---
 
+# Media Review Platform: Design Specification & Guidelines
+
+This document provides a comprehensive design framework for the "Media Review" web application, based on the high-fidelity designs generated.
+
+## 1. Design Philosophy
+**"Media-First & Distraction-Free"**
+The primary goal is to provide a neutral but sophisticated workspace where media (videos/images) is the hero. The UI should disappear, providing professional tools only when needed.
+
+---
+
+## 2. Visual Style & Theming
+Based on the provided palette from {{DATA:IMAGE:IMAGE_1}}.
+
+### Color Palette (The "Lumina Purple" Theme)
+- **Primary Background:** `#03054D` (Deep Navy-Purple) for core player areas.
+- **Surface/Sidebar:** `#0D1154` (Slightly lighter navy-purple).
+- **Secondary Surfaces:** `#1D2262` (For active tabs or hover states).
+- **Accents & Interaction:** `#A6A0ED` (Primary Purple) for CTAs, active states, and focus borders.
+- **Support Colors:** `#D2CAFF` (Soft Lavender) for borders and subtle icons.
+- **Typography:** `#C8C5D2` (Off-white for readability) and `#FFFFFF` for primary text.
+
+### Typography
+- **Typeface:** Inter (Sans-serif)
+- **Scale:**
+    - **H1 (Header/Screen Title):** 28px, Bold, Tracking -0.02em.
+    - **H2 (Section Header):** 20px, Semi-bold.
+    - **Body (Standard):** 14px, Regular.
+    - **Small (Metadata/Timestamps):** 12px, Medium.
+
+### Iconography
+- **Set:** Material Design Icons or Feather Icons.
+- **Style:** Outlined for inactive states, Filled with `#A6A0ED` for active states.
+
+---
+
+## 3. Key Layout Components
+
+### A. Dashboard / Project Library ({{DATA:SCREEN:SCREEN_11}})
+- **Grid Layout:** 4-5 items per row (Desktop).
+- **Media Cards:** Aspect ratio 16:9 for thumbnails.
+- **Metadata:** Show version number (e.g., 'v2'), status badge, and file name.
+- **Global Search:** Prominent at the top for quick file retrieval.
+
+### B. Video & Image Player ({{DATA:SCREEN:SCREEN_9}} & {{DATA:SCREEN:SCREEN_6}})
+- **Canvas Area:** Center-aligned, dynamically sized to fit the browser viewport.
+- **Timeline:** Frame-accurate scrub bar.
+- **Annotation Toolbar:**
+    - **Drawing:** Pencil (freehand), Arrow, Rectangle, Circle.
+    - **Text:** Box tool for typing feedback directly on media.
+    - **Color Picker:** 3-5 presets for drawing colors (Red, Green, Yellow, etc.).
+- **Feedback Sidebar:** Chronological list of comments. Clicking a comment skips the timeline to that specific frame.
+
+### C. Version Comparison ({{DATA:SCREEN:SCREEN_8}})
+- **Split View:** Perfectly centered split-screen (50/50).
+- **Sync Toggle:** On by default. Moving the playhead on one side moves it on the other to maintain sync.
+
+---
+
+## 4. Reusable Design Patterns
+
+### Feedback Loop Pattern
+1. **User action:** Selects a drawing tool (e.g., Arrow).
+2. **Annotation:** Draws on a frame in the player.
+3. **Trigger:** The comment input field automatically opens on the right sidebar.
+4. **Save:** The comment is saved with a timestamp and the visual drawing metadata.
+
+### Status Indicators
+- **In Review:** Purple border/badge.
+- **Approved:** Green checkmark/badge.
+- **Draft:** Gray/dashed border.
+
+---
+
+## 5. Interaction Guidelines
+- **Transitions:** Smooth fade-in (150ms) for hover states.
+- **Empty States:** Provide clear 'Upload' prompts with drag-and-drop zones.
+- **Loading:** Use a skeleton UI for the media grid during initial load.
