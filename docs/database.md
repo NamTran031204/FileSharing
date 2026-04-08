@@ -37,7 +37,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,  
+  "userId": ObjectId,  
   "email": String,  
   "password": String,   
   "publicUserName": String,  
@@ -57,7 +57,9 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
     "avatar": String,   
     "locale": String,     
     "timezone": String 
-  },
+  }, // luu gi thi luu, thuong la luu avt image
+
+  // references
   "notificationPreferences": {
     "emailOnNewComment": Boolean, 
     "emailOnMention": Boolean,   
@@ -72,32 +74,64 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 **Indexes**:
 ```javascript
-"email", "providers.provider", "providers.providerId"
+{"email" = 1}, 
+{"providers.provider" = 1, "providers.providerId" = 1}
 ```
 
 ---
 
-### 2.2 Collection: `media_assets`
+### 2.2 Collection: `metadata`
 
-**Mục đích**: Đại diện cho một media item (video/image), quản lý metadata tổng quan và permissions.
+**Mục đích**: Đại diện cho một media item (video/image), quản lý metadata tổng quan và permissions, version của asset.
 
-**Chuyển đổi từ Phase 1**: Tách từ `MetadataEntity`, giữ thông tin asset-level, version-specific chuyển sang `media_versions`.
+**Chuyển đổi từ Phase 1**: thêm thông tin về asset, version-specific.
 
 ```javascript
 {
-  "_id": ObjectId,
-  "name": String,  
-  "description": String,
-  "mediaType": "VIDEO" | "IMAGE",
-  
+  "fileId": ObjectId,
+  "fileName": String,  // tên file được upload
+  "objectName": String,
   "projectId": ObjectId,  
   "folderId": ObjectId,
+
+  "assetId": ObjectId, // asset quản lý media
+
+  // dành cho trải nghiệm khách hàng
+  "downloadFileName": String, // use case: khi producer upload asset lên thì dựa vào version và tên dự án sẽ đặt tên cho file download. người dùng cần download về thì sẽ nhận được file với tên này.
+
+  // version
+  "versionNumber": Number, 
+
+  "description": String, // new
+  "mediaType": "VIDEO" | "IMAGE" | "DESIGN", // new
+  "mimeType": String,
+
+  "fileSize": Number, // double
+  "compressionAlgo": String, // check lai co can khong, khong thi bo qua 
+
+  // danh cho upload
+  "uploadId": String,
+  "status": "UPLOADING", "COMPLETED", "FAILED"
+
+  // rieng cho video
+  "processingStatus": "PENDING" | "PROCESSING" | "READY" | "FAILED",
+  "processingError": String,  
+  "processingStartedAt": ISODate,
+  "processingCompletedAt": ISODate,
+  "mediaInfo": {
+    "durationMs": Number,      // video  
+    "width": Number, // do phan giai
+    "height": Number,
+    "frameRate": Number, 
+    "codec": String,      
+    "bitrate": Number,  
+    
+    "colorSpace": String,
+    "hasAlpha": Boolean 
+  },
   
   "ownerId": ObjectId,  
   "ownerEmail": String,  
-  
-  "currentVersionId": ObjectId,  
-  "versionCount": Number,
   
   "visibility": "PRIVATE" | "PUBLIC",
   "publicPermission": "READ" | "COMMENT" | "MODIFY",
@@ -108,16 +142,14 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
       "permissions": ["READ", "COMMENT", "MODIFY"]
     }
   ],
+  "publishUserPermission": "PUBLIC", "READ", "COMMENT", "MODIFY", "OWNER"
   
-  "shareToken": String, 
-  "shareExpiry": ISODate,  
-  
-  "isActive": Boolean,   
+  "timeToLive": Number,
+  "isActive": Boolean,   // xoa mềm
   "isTrash": Boolean,  
   "trashedAt": ISODate, 
   
-  "latestReviewStatus": "DRAFT" | "IN_REVIEW" | "REQUEST_CHANGES" | "APPROVED",
-  "latestReviewSessionId": ObjectId,
+  "renditionCount": Number, // số lượng các rendition cần render, ví dụ như thumbnail, hls,...
   
   "createdAt": ISODate,
   "updatedAt": ISODate
@@ -126,72 +158,48 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 **Indexes**:
 ```javascript
-{ "ownerId", "isTrash", "createdAt" } 
-{ "shareToken" } 
-{ "projectId" }  
-{ "visibility", "publicPermission"} 
-{ "userPermissions.userId" } 
-{ "latestReviewStatus" }  
+{ "ownerId"=1, "isTrash" = 1, "createdAt" = -1 } // createAt sort 
+{ "objectName" = 1},
+{ "folderId": 1, "objectName": 1 },
+{ "projectId": 1, "folderId": 1 },
+{ "projectId": 1, "objectName": 1 },
+{ "shareToken" = 1 } 
+{ "visibility" = 1, "publicPermission" = 1} ,
+{ "userPermissions.userId" = 1 } ,
+{ "latestReviewStatus" = 1 }  ,
+{ "assetId" = 1, "versionNumber" = 1}
 ```
+
+**Constrain**
+* mongo tự xoá các bản ghi có isActive = false quá 30 ngày
 
 ---
 
-### 2.3 Collection: `media_versions`
+### 2.3 Collection: `asset`
 
-**Mục đích**: Mỗi lần upload mới tạo một version, giữ nguyên version cũ để truy vết lịch sử.
+**Mục đích**: Lưu thông tin của một asset. asset sẽ lưu thông tin của media, các phiên bản,...
 
 ```javascript
 {
-  "_id": ObjectId,
-  "assetId": ObjectId, 
-  "versionNumber": Number,
-  "versionLabel": String, 
-  
-  "originalFileName": String, 
-  "objectKey": String,      
-  "mimeType": String, 
-  "fileSize": Number, 
-  "checksum": String,  
-  
-  "mediaInfo": {
-    "durationMs": Number,        
-    "width": Number,
-    "height": Number,
-    "frameRate": Number, 
-    "codec": String,      
-    "bitrate": Number,  
-    
-    "colorSpace": String,
-    "hasAlpha": Boolean 
-  },
-  
-  "uploadId": String,   
-  "uploadStatus": "UPLOADING" | "COMPLETED" | "FAILED" | "ABORTED",
-  
-  "processingStatus": "PENDING" | "PROCESSING" | "READY" | "FAILED",
-  "processingError": String,  
-  "processingStartedAt": ISODate,
-  "processingCompletedAt": ISODate,
-  
-  "virusScanStatus": "PENDING" | "CLEAN" | "INFECTED" | "SKIPPED",
-  "virusScanResult": String,  
-  
-  "renditionCount": Number,
-  
-  "createdBy": ObjectId,  
-  "createdByEmail": String, 
-  
+  "assetId": ObjectId,
+  "assetName": String, // init ban đầu là fileName của lần đầu upload, user có thể sửa
+  "description": String,
+
+  "ownerId": ObjectId,  
+  "ownerEmail": String,
+
+  "versionCount": Number,
+
+  "assetStatus": "DRAFT" | "IN_REVIEW" | "APPROVED" | "REQUEST_CHANGES",
+  "latestReviewSessionId": ObjectId,
+
+  // share token đi kèm với asset thay vì metadata, có sharetoken thì access được vào tất cả phiên bản
+  "shareToken": String, 
+  "shareExpiry": ISODate,  // new
+
   "createdAt": ISODate,
   "updatedAt": ISODate
 }
-```
-
-**Indexes**:
-```javascript
-{ "assetId", "versionNumber"} 
-{ "assetId", "uploadStatus"}  
-{ "processingStatus", "createdAt"}  
-{ "uploadId"}  
 ```
 
 ---
@@ -204,7 +212,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 {
   "_id": ObjectId,  
   "versionId": ObjectId,       
-  "assetId": ObjectId,            
+  "assetId": ObjectId,   // co asset va version se lay duoc file         
   
   "renditionType": "HLS" | "THUMBNAIL" | "SPRITE" | "WAVEFORM" | "POSTER",
   
@@ -251,7 +259,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // annotationId
+  "annotationId": ObjectId,                    // id mongo
   "assetId": ObjectId,                // ref → media_assets
   "versionId": ObjectId,              // ref → media_versions (quan trọng!)
   
@@ -285,7 +293,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   "resolvedBy": ObjectId,             // ref → users
   
   // Thread reference
-  "threadId": ObjectId,               // ref → comment_threads
+  "threadId": ObjectId,               // ref → comment_threads: luồng comment
   
   // Creator
   "createdBy": ObjectId,              // ref → users
@@ -314,10 +322,10 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // threadId
-  "assetId": ObjectId,                // ref → media_assets
-  "versionId": ObjectId,              // ref → media_versions
-  "annotationId": ObjectId,           // ref → annotations (nullable nếu general comment)
+  "threadId": ObjectId,                    // mongo id
+  "assetId": ObjectId,                // ref → asset
+  "version": Number,             
+  "annotations": [ObjectId],           // có thể nhiều annotation trong một comment (thường trường hợp này sẽ rơi vào ảnh nhiều hơn, video thường ít), ref → annotations (nullable nếu general comment)
   
   // Root comment
   "rootComment": {
@@ -327,7 +335,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
     "attachments": [                  // file đính kèm (optional)
       {
         "type": "IMAGE" | "FILE",
-        "objectKey": String,
+        "fileId": String,
         "fileName": String,
         "fileSize": Number
       }
@@ -340,9 +348,11 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   },
   
   // Replies
+  // mặc định tất cả các reply đều nhỏ cấp hơn so với rootComment
   "replies": [
     {
       "commentId": ObjectId,
+      "replyToComment": ObjectId, // id của comment được trả lời
       "content": String,
       "mentions": [ObjectId],
       "attachments": [],
@@ -373,7 +383,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 ```javascript
 { "versionId": 1, "lastActivityAt": -1 }          // recent threads
 { "assetId": 1, "versionId": 1 }                  // cross-version
-{ "annotationId": 1 }                             // lookup by annotation
+{ "annotations": 1 }                              // lookup by annotation (array field)
 { "participants": 1 }                             // threads user participated
 { "status": 1 }                                   // filter resolved/open
 { "rootComment.mentions": 1 }                     // find by mention
@@ -388,8 +398,8 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 ```javascript
 {
   "_id": ObjectId,                    // reviewSessionId
-  "assetId": ObjectId,                // ref → media_assets
-  "activeVersionId": ObjectId,        // ref → media_versions (version đang review)
+  "assetId": ObjectId,                // ref → asset
+  "versionId": ObjectId,              // ref → metadata (version đang review)
   
   // Review info
   "title": String,                    // tên phiên review
@@ -441,10 +451,11 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 **Indexes**:
 ```javascript
 { "assetId": 1, "createdAt": -1 }                 // list sessions of asset
-{ "status": 1 }                                   // filter by status
-{ "reviewers.userId": 1 }                         // sessions user is reviewing
-{ "dueDate": 1, "status": 1 }                     // deadline tracking
-{ "createdBy": 1 }                                // user's sessions
+{ "status": 1, "dueDate": 1 }                     // deadline tracking with status filter
+{ "reviewers.userId": 1, "status": 1 }            // sessions user is reviewing (active)
+{ "dueDate": 1 }                                  // upcoming deadlines
+{ "createdBy": 1, "status": 1 }                   // user's sessions by status
+{ "versionId": 1 }                                // lookup reviews by version
 ```
 
 ---
@@ -543,7 +554,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
             "DOWNLOAD" | "UPLOAD_COMPLETE",
   
   // Target
-  "targetType": "MEDIA_ASSET" | "MEDIA_VERSION" | "ANNOTATION" | 
+  "targetType": "FILE" | "ASSET" | "ANNOTATION" | 
                 "COMMENT" | "REVIEW_SESSION" | "USER" | "PERMISSION",
   "targetId": ObjectId,
   "targetName": String,               // human-readable name
@@ -639,143 +650,120 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ## 3. Quan hệ giữa các Collections
 
-```
-┌─────────────┐     1:N     ┌──────────────────┐     1:N     ┌───────────────────┐
-│   users     │────────────▶│   media_assets   │────────────▶│  media_versions   │
-└─────────────┘             └──────────────────┘             └───────────────────┘
-      │                            │                                  │
-      │                            │ 1:N                              │ 1:N
-      │                            ▼                                  ▼
-      │                     ┌──────────────────┐              ┌───────────────────┐
-      │                     │ review_sessions  │              │ media_renditions  │
-      │                     └──────────────────┘              └───────────────────┘
-      │                            │
-      │                            │ 1:N (via versionId)
-      │                            ▼
-      │                     ┌──────────────────┐     1:1     ┌───────────────────┐
-      │                     │   annotations    │────────────▶│  comment_threads  │
-      │                     └──────────────────┘             └───────────────────┘
-      │
-      │ 1:N
-      ▼
-┌─────────────┐
-│notifications│
-└─────────────┘
-
-     ┌───────────────────┐
-     │  processing_jobs  │  (ref → media_versions)
-     └───────────────────┘
-     
-     ┌───────────────────┐
-     │    audit_logs     │  (ref → multiple collections)
-     └───────────────────┘
-```
-
----
-
-## 4. Migration từ Database cũ
-
-### 4.1 Collection `metadata` → `media_assets` + `media_versions`
-
-**Mapping fields**:
-
-| metadata (cũ) | media_assets (mới) | media_versions (mới) |
-|---------------|-------------------|---------------------|
-| fileId | _id | - |
-| fileName | name | originalFileName |
-| objectName | - | objectKey |
-| mimeType | mediaType (derived) | mimeType |
-| fileSize | - | fileSize |
-| ownerId | ownerId | - |
-| ownerEmail | ownerEmail | - |
-| uploadId | - | uploadId |
-| status | - | uploadStatus |
-| shareToken | shareToken | - |
-| visibility | visibility | - |
-| publicPermission | publicPermission | - |
-| userFilePermissions | userPermissions | - |
-| isActive | isActive | - |
-| isTrash | isTrash | - |
-| creationTimestamp | createdAt | createdAt |
-| modificationTimestamp | updatedAt | updatedAt |
-
-**Migration script (pseudo-code)**:
-```javascript
-// 1. Tạo media_asset từ mỗi metadata document
-// 2. Tạo media_version (version 1) với file info
-// 3. Set currentVersionId của asset = versionId vừa tạo
-// 4. Xóa collection metadata cũ (sau khi verify)
-```
-
-### 4.2 Collection `user` → `users`
-
-**Không thay đổi cấu trúc**, chỉ bổ sung:
-- `notificationPreferences` với default values
-
----
-
-## 5. Access Patterns và Query Examples
-
-### 5.1 List assets của user
-```javascript
-db.media_assets.find({
-  $or: [
-    { ownerId: userId },
-    { "userPermissions.userId": userId }
-  ],
-  isTrash: false,
-  isActive: true
-}).sort({ updatedAt: -1 })
-```
-
-### 5.2 Get asset với version history
-```javascript
-// Asset
-const asset = db.media_assets.findOne({ _id: assetId })
-
-// Versions
-const versions = db.media_versions.find({ 
-  assetId: assetId 
-}).sort({ versionNumber: -1 })
-```
-
-### 5.3 Get annotations timeline cho video
-```javascript
-db.annotations.find({
-  versionId: versionId,
-  annotationType: "TIMECODE"
-}).sort({ "timecode.startMs": 1 })
-```
-
-### 5.4 Get unresolved annotations
-```javascript
-db.annotations.find({
-  versionId: versionId,
-  status: "OPEN"
-})
+```mermaid
+erDiagram
+    USERS ||--o{ METADATA : "owns/uploads"
+    USERS ||--o{ ASSET : "owns"
+    USERS ||--o{ ANNOTATIONS : "creates"
+    USERS ||--o{ COMMENT_THREADS : "participates"
+    USERS ||--o{ REVIEW_SESSIONS : "creates/reviews"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ AUDIT_LOGS : "performs actions"
+    
+    ASSET ||--o{ METADATA : "has versions"
+    ASSET ||--o{ REVIEW_SESSIONS : "has reviews"
+    ASSET ||--o{ ANNOTATIONS : "has annotations"
+    ASSET ||--o{ COMMENT_THREADS : "has threads"
+    
+    METADATA ||--o{ MEDIA_RENDITIONS : "generates"
+    METADATA ||--o{ PROCESSING_JOBS : "triggers"
+    METADATA ||--o{ ANNOTATIONS : "version-specific"
+    METADATA ||--o{ COMMENT_THREADS : "version-specific"
+    METADATA ||--o{ REVIEW_SESSIONS : "reviews version"
+    
+    ANNOTATIONS ||--|| COMMENT_THREADS : "has thread"
+    REVIEW_SESSIONS ||--o{ COMMENT_THREADS : "contains discussions"
+    
+    ASSET {
+        ObjectId assetId PK
+        String assetName
+        ObjectId ownerId FK
+        Number versionCount
+        String assetStatus
+        ObjectId latestReviewSessionId FK
+    }
+    
+    METADATA {
+        ObjectId fileId PK
+        ObjectId assetId FK
+        Number versionNumber
+        String mediaType
+        ObjectId ownerId FK
+        String processingStatus
+    }
+    
+    REVIEW_SESSIONS {
+        ObjectId _id PK
+        ObjectId assetId FK
+        ObjectId versionId FK
+        String status
+        Array reviewers
+        ObjectId createdBy FK
+    }
+    
+    ANNOTATIONS {
+        ObjectId annotationId PK
+        ObjectId assetId FK
+        ObjectId versionId FK
+        String annotationType
+        ObjectId threadId FK
+        ObjectId createdBy FK
+    }
+    
+    COMMENT_THREADS {
+        ObjectId threadId PK
+        ObjectId assetId FK
+        ObjectId versionId FK
+        Array annotations FK
+        String status
+    }
+    
+    MEDIA_RENDITIONS {
+        ObjectId _id PK
+        ObjectId versionId FK
+        ObjectId assetId FK
+        String renditionType
+        String status
+    }
+    
+    PROCESSING_JOBS {
+        ObjectId _id PK
+        ObjectId versionId FK
+        ObjectId assetId FK
+        String jobType
+        String status
+    }
+    
+    NOTIFICATIONS {
+        ObjectId _id PK
+        ObjectId userId FK
+        String type
+        Object context
+    }
+    
+    AUDIT_LOGS {
+        ObjectId _id PK
+        ObjectId actorId FK
+        String action
+        String targetType
+        ObjectId targetId
+    }
+    
+    USERS {
+        ObjectId userId PK
+        String email
+        String publicUserName
+        Array roles
+    }
 ```
 
-### 5.5 Get threads với replies
-```javascript
-db.comment_threads.find({
-  versionId: versionId
-}).sort({ lastActivityAt: -1 })
-```
-
-### 5.6 Get review sessions pending approval
-```javascript
-db.review_sessions.find({
-  "reviewers.userId": userId,
-  status: { $in: ["IN_REVIEW", "REQUEST_CHANGES"] }
-}).sort({ dueDate: 1 })
-```
-
-### 5.7 Get pending processing jobs
-```javascript
-db.processing_jobs.find({
-  status: "PENDING"
-}).sort({ priority: 1, scheduledAt: 1 }).limit(10)
-```
+**Giải thích mối quan hệ chính:**
+- `ASSET` là đơn vị trung tâm, chứa nhiều `METADATA` versions
+- `METADATA` (version) được annotate, comment và review độc lập
+- `ANNOTATIONS` và `COMMENT_THREADS` luôn gắn với version cụ thể (`versionId`)
+- `REVIEW_SESSIONS` tham chiếu đến version đang được review
+- Denormalization: email, name được duplicate để tránh joins
+- One-to-many relationships chủ yếu sử dụng ObjectId references
 
 ---
 
@@ -800,62 +788,86 @@ db.processing_jobs.find({
 ## 7. Data Validation Rules
 
 ### 7.1 Required Fields per Collection
-- **media_assets**: name, mediaType, ownerId, visibility
-- **media_versions**: assetId, versionNumber, objectKey, mimeType
+- **metadata**: name, mediaType, ownerId, visibility
+- **media_versions**: assetId, versionNumber, objectName, mimeType
 - **annotations**: assetId, versionId, annotationType, createdBy
 - **comment_threads**: assetId, versionId, rootComment
 - **review_sessions**: assetId, activeVersionId, status
 
 ### 7.2 Enum Constraints
 ```javascript
-// mediaType
-["VIDEO", "IMAGE"]
+// mediaType (metadata, asset)
+["VIDEO", "IMAGE", "DESIGN"]
 
-// visibility  
-["PRIVATE", "PUBLIC"]
-
-// permission
-["READ", "COMMENT", "MODIFY"]
-
-// uploadStatus
-["UPLOADING", "COMPLETED", "FAILED", "ABORTED"]
-
-// processingStatus
+// processingStatus (metadata)
 ["PENDING", "PROCESSING", "READY", "FAILED"]
 
-// reviewStatus
+// uploadStatus (metadata)
+["UPLOADING", "COMPLETED", "FAILED"]
+
+// visibility (metadata, asset)
+["PRIVATE", "PUBLIC"]
+
+// publicPermission (metadata)
+["READ", "COMMENT", "MODIFY"]
+
+// publishUserPermission (metadata)
+["PUBLIC", "READ", "COMMENT", "MODIFY", "OWNER"]
+
+// assetStatus (asset)
+["DRAFT", "IN_REVIEW", "APPROVED", "REQUEST_CHANGES"]
+
+// reviewSessionStatus (review_sessions)
 ["DRAFT", "IN_REVIEW", "REQUEST_CHANGES", "APPROVED"]
 
-// annotationType
+// annotationType (annotations)
 ["TIMECODE", "REGION", "FRAME_REGION"]
 
-// annotationStatus
+// annotationStatus (annotations)
 ["OPEN", "RESOLVED"]
+
+// regionShape (annotations.region)
+["RECTANGLE", "CIRCLE", "POLYGON", "FREEFORM"]
+
+// threadStatus (comment_threads)
+["OPEN", "RESOLVED"]
+
+// reviewerRole (review_sessions.reviewers)
+["REVIEWER", "APPROVER"]
+
+// renditionType (media_renditions)
+["HLS", "THUMBNAIL", "SPRITE", "WAVEFORM", "POSTER"]
+
+// renditionStatus (media_renditions)
+["PENDING", "PROCESSING", "READY", "FAILED"]
+
+// jobType (processing_jobs)
+["TRANSCODE_HLS", "GENERATE_THUMBNAILS", "GENERATE_SPRITE", "GENERATE_POSTER", "GENERATE_WAVEFORM", "VIRUS_SCAN"]
+
+// jobStatus (processing_jobs)
+["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]
+
+// auditAction (audit_logs)
+["CREATE", "UPDATE", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE"]
+
+// targetType (audit_logs)
+["FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION"]
+
+// actorType (audit_logs)
+["USER", "SYSTEM", "API_KEY"]
+
+// notificationType (notifications)
+["NEW_COMMENT", "MENTION", "STATUS_CHANGE", "NEW_VERSION", "REVIEW_INVITATION", "ANNOTATION_RESOLVED", "DEADLINE_REMINDER"]
+
+// deliveryStatus (notifications)
+["PENDING", "SENT", "FAILED", "SKIPPED", "DELIVERED"]
+
+// userRoles (users)
+["USER", "ADMIN"]
+
+// providers (users)
+["LOCAL", "GOOGLE"]
+
+// permissions (metadata.userPermissions)
+["READ", "COMMENT", "MODIFY"]
 ```
-
----
-
-## 8. Backup và Retention
-
-### 8.1 Backup Strategy
-- **Daily**: Full backup MongoDB
-- **Hourly**: Oplog backup cho point-in-time recovery
-- **MinIO**: Enable versioning + replication
-
-### 8.2 Data Retention
-| Collection | Retention | Policy |
-|------------|-----------|--------|
-| media_assets | Permanent (until delete) | Trash → 30 days → permanent delete |
-| media_versions | Permanent | Giữ tất cả versions |
-| annotations | Permanent | Giữ với version |
-| audit_logs | 1 year | TTL index on `expiresAt` |
-| notifications | 90 days | TTL index on `expiresAt` |
-| processing_jobs | 30 days (completed) | Clean up via cron |
-
----
-
-## 9. Changelog
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2024-XX-XX | - | Initial database design for Media Review Platform |
