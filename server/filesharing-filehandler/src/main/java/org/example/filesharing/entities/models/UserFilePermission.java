@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @Builder
 public class UserFilePermission {
+    private String userId;
     private String email;
     private List<ObjectPermission> permissionList;
 }

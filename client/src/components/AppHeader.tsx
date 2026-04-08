@@ -23,7 +23,7 @@ const AppHeader = () => {
       <div className="flex items-center gap-8">
         {/* Logo */}
         <Link to="/" className="text-xl font-bold tracking-tighter text-white hover:opacity-90 transition-opacity">
-          Ethereal Media
+          <img src={"src/assets/logo/logo2k.png"} alt="logo" />
         </Link>
 
         {/* Navigation Links */}

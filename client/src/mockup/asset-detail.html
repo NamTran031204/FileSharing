@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Lumina Pro - Asset Detail</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e7e6ff",
+                        "secondary": "#5a569c",
+                        "primary": "#3b3a7e",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "tertiary-fixed": "#e4dfff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#170d56",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#565198",
+                        "on-secondary-container": "#444085",
+                        "error": "#ba1a1a",
+                        "surface-container": "#eeecff",
+                        "surface-container-highest": "#e0e0ff",
+                        "outline": "#777681",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "background": "#fbf8ff",
+                        "on-primary-container": "#ceccff",
+                        "inverse-primary": "#c2c1ff",
+                        "on-surface": "#0d1154",
+                        "surface-container-low": "#f4f2ff",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "surface-bright": "#fbf8ff",
+                        "inverse-on-surface": "#f1efff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#e3dfff",
+                        "primary-fixed": "#e2dfff",
+                        "on-secondary-fixed": "#150d56",
+                        "surface-variant": "#e0e0ff",
+                        "on-primary-fixed": "#130e56",
+                        "on-background": "#0d1154",
+                        "secondary-container": "#b5b1fe",
+                        "outline-variant": "#c8c5d2",
+                        "surface-dim": "#d6d7ff",
+                        "on-tertiary-container": "#d1ccff",
+                        "tertiary": "#3f397e",
+                        "on-secondary": "#ffffff",
+                        "surface": "#fbf8ff",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#535297",
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "on-primary-fixed-variant": "#403f83",
+                        "inverse-surface": "#242969",
+                        "on-surface-variant": "#474650",
+                        "surface-tint": "#58579c",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#423e83"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-header { background: rgba(251, 248, 255, 0.8); backdrop-filter: blur(20px); }
+        .primary-gradient { background: linear-gradient(135deg, #3b3a7e 0%, #535297 100%); }
+        /* Sidebar transition utilities */
+        .sidebar-expanded { width: 220px; }
+        .sidebar-collapsed { width: 60px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-x-hidden">
+<!-- Sticky Header (h-[10vh]) -->
+<header class="fixed top-0 left-0 right-0 h-[10vh] z-[60] glass-header shadow-sm flex items-center justify-between px-6 border-b border-surface-container-high">
+    <div class="flex items-center gap-6">
+<!--        <h1 class="text-xl font-bold tracking-tighter text-indigo-900 dark:text-indigo-100">Lumina Pro</h1>-->
+        <img src="logo2k.png" class="w-[2rem] h-[2rem] object-contain"/>
+        <nav class="hidden md:flex items-center gap-2 text-sm font-medium tracking-tight border-l border-outline-variant pl-6">
+            <span class="text-on-surface-variant hover:text-primary cursor-pointer">Dashboard</span>
+            <span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span>
+            <span class="text-on-surface font-bold">Asset Detail</span>
+        </nav>
+    </div>
+    <div class="flex items-center gap-2">
+        <button class="p-2 hover:bg-slate-50/50 rounded-full transition-colors"><span class="material-symbols-outlined text-on-surface-variant">search</span></button>
+        <button class="p-2 hover:bg-slate-50/50 rounded-full transition-colors relative">
+            <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+            <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+        </button>
+        <button class="p-2 hover:bg-slate-50/50 rounded-full transition-colors mr-2"><span class="material-symbols-outlined text-on-surface-variant">settings</span></button>
+        <img alt="User profile photo" class="w-8 h-8 rounded-full border-2 border-primary-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT6dq4QIfa4wlFcntF4-vI_Nll_Lt4G1B5K6o13RbPMLxY4NGzjbhLqJvmnuCaFeWzyk_IMa0tMg-SbkCY6utTFKU0tuT1jbLcvz3B3KYZY0jNWxxOLPff2vkqPiqMdYdtAjTV42w0xUJ_XXoVWAKyFMVVhkHOaJ_J2vQV00dbp3NRctVZJCG8ryqGeSvN3HwcgOcyrtljzjMQ2zxX81eLFSAGnBS7kU4oFpa8O-LFgoLAkUdoJJ-6dBwWekieslZcNEzMtgYidIk"/>
+    </div>
+</header>
+<!-- Sidebar: Collapsed by default (60px), expands on hover (220px) -->
+<aside class="fixed left-0 top-[10vh] bottom-0 z-50 bg-slate-50 dark:bg-slate-900 border-r border-surface-container-high transition-all duration-300 ease-in-out sidebar-collapsed hover:sidebar-expanded group overflow-hidden">
+    <div class="flex flex-col h-full py-4">
+        <nav class="flex-1 space-y-1 px-3">
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-900/30" href="#">
+                <span class="material-symbols-outlined shrink-0">grid_view</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Gallery</span>
+            </a>
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">rate_review</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Review Queue</span>
+            </a>
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">group</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Collaborators</span>
+            </a>
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">analytics</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Analytics</span>
+            </a>
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">settings</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Settings</span>
+            </a>
+        </nav>
+        <div class="px-3 border-t border-surface-container-high pt-4 space-y-1">
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">help</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Support</span>
+            </a>
+            <a class="flex items-center gap-4 px-1.5 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+                <span class="material-symbols-outlined shrink-0">archive</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">Archive</span>
+            </a>
+        </div>
+    </div>
+</aside>
+<!-- Main Content Area: Responsive width to the right of sidebar -->
+<main class="pt-[10vh] pb-32 pl-[60px] min-h-screen transition-all duration-300">
+    <div class="max-w-7xl mx-auto p-6 lg:p-12">
+        <!-- Breadcrumb (Local navigation for current asset) -->
+        <div class="mb-8 flex items-center justify-between">
+            <h2 class="text-2xl font-bold tracking-tight">Cyberpunk_Teaser_Final_v4.mp4</h2>
+            <div class="flex items-center gap-2">
+                <button class="px-4 py-2 bg-secondary-container/30 text-primary rounded-lg text-sm font-bold hover:bg-secondary-container/50 transition-colors">
+                    Edit Metadata
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <!-- Left Content: Version History -->
+            <aside class="lg:col-span-3 space-y-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant">Version History</h3>
+                    <button class="text-xs text-primary font-semibold hover:underline">View All</button>
+                </div>
+                <!-- Version Cards -->
+                <div class="space-y-3">
+                    <!-- Active Version -->
+                    <div class="p-4 bg-surface-container-lowest rounded-xl shadow-[0px_4px_32px_rgba(59,58,126,0.06)] border-l-4 border-primary group">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-lg font-bold text-primary">v4</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-[#e6f4ea] text-[#1e7e34] uppercase">READY</span>
+                        </div>
+                        <p class="text-sm font-semibold text-on-surface">Alex Rivera</p>
+                        <div class="flex justify-between items-end mt-3">
+                            <p class="text-[11px] text-on-surface-variant">Oct 24, 2023</p>
+                            <span class="material-symbols-outlined text-primary text-lg cursor-pointer">download</span>
+                        </div>
+                    </div>
+                    <!-- Inactive Version -->
+                    <div class="p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-lowest transition-all cursor-pointer group">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-lg font-bold text-outline">v3</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-[#fff4e5] text-[#b45d00] uppercase">PROCESSING</span>
+                        </div>
+                        <p class="text-sm font-semibold text-on-surface">Alex Rivera</p>
+                        <div class="flex justify-between items-end mt-3">
+                            <p class="text-[11px] text-on-surface-variant">Oct 22, 2023</p>
+                            <span class="material-symbols-outlined text-outline group-hover:text-primary text-lg">download</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-lowest transition-all cursor-pointer group">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-lg font-bold text-outline">v2</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-[#e6f4ea] text-[#1e7e34] uppercase">READY</span>
+                        </div>
+                        <p class="text-sm font-semibold text-on-surface">Alex Rivera</p>
+                        <div class="flex justify-between items-end mt-3">
+                            <p class="text-[11px] text-on-surface-variant">Oct 20, 2023</p>
+                            <span class="material-symbols-outlined text-outline group-hover:text-primary text-lg">download</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <!-- Right Content: Media & Info -->
+            <section class="lg:col-span-9 space-y-8">
+                <!-- Media Preview -->
+                <div class="relative group aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+                    <img alt="Wide shot of a cinematic futuristic cyberpunk cityscape at night with neon purple and blue lights reflecting on wet streets" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCi80oruX46IKULrZNgSJAOFOVLTkKqXn1FyPPTxks_LNkgdxSRwWWQ1kHVslUXxP-F7yQhhb5HbYp11LIp4zcIQ17ha6LXg-MfUfUkegxlsuBNofB8nkedp85Fq1xFeibmhOQU2_SNkUkxL1meuKboXm95yWv6JmJfYYY6Eq5slhMVKJLMXyVgEZm1QJDVxHjKk0kTo_CCXD4NKPs9vE8oq3EmZCdNsCvtA8LiH18d3v-W1BU0_rox5Tu0HmFda_smHTCgBy_g2fw"/>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-20 h-20 bg-primary/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm cursor-pointer hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-6 right-6 px-3 py-1.5 glass-header rounded-lg text-xs font-bold text-primary">
+                        4K ULTRA HD
+                    </div>
+                </div>
+                <!-- Info Header -->
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-extrabold tracking-tight text-on-surface">Project: Neo-Tokyo Cinematic</h2>
+                    <p class="text-lg text-on-surface-variant mt-2 max-w-4xl leading-relaxed">
+                        Final composite for the teaser trailer including color grade and sound design. This version addresses the feedback regarding the lens flare intensity in the opening shot.
+                    </p>
+                </div>
+                <!-- Metadata Bento Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-6 bg-surface-container-low rounded-xl">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.1em] text-outline">Format</span>
+                        <p class="text-lg font-bold text-on-surface mt-1">ProRes 422 HQ</p>
+                    </div>
+                    <div class="p-6 bg-surface-container-low rounded-xl">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.1em] text-outline">File Size</span>
+                        <p class="text-lg font-bold text-on-surface mt-1">2.4 GB</p>
+                    </div>
+                    <div class="p-6 bg-surface-container-low rounded-xl">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.1em] text-outline">Duration</span>
+                        <p class="text-lg font-bold text-on-surface mt-1">00:45</p>
+                    </div>
+                    <div class="p-6 bg-surface-container-low rounded-xl">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.1em] text-outline">Modified</span>
+                        <p class="text-lg font-bold text-on-surface mt-1 leading-tight">Oct 24, 2023<br/><span class="text-sm font-medium text-on-surface-variant">10:15 AM</span></p>
+                    </div>
+                </div>
+                <!-- Permissions Section -->
+                <div class="p-8 bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-container-high space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold tracking-tight">Permissions &amp; Roles</h3>
+                        <button class="px-4 py-2 bg-secondary-container/30 text-primary rounded-lg text-sm font-bold hover:bg-secondary-container/50 transition-colors">
+                            Manage Team
+                        </button>
+                    </div>
+                    <div class="w-full">
+                        <div class="grid grid-cols-12 pb-4 mb-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                            <div class="col-span-6">User</div>
+                            <div class="col-span-4">Role</div>
+                            <div class="col-span-2 text-right">Activity</div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-12 items-center py-2 border-b border-surface-container-low pb-4">
+                                <div class="col-span-6 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary">ER</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-on-surface">Elena Rossi</p>
+                                        <p class="text-xs text-on-surface-variant">elena.r@lumina-pro.com</p>
+                                    </div>
+                                </div>
+                                <div class="col-span-4">
+                                    <span class="px-2 py-1 bg-surface-container text-primary text-[10px] font-black uppercase rounded">OWNER</span>
+                                </div>
+                                <div class="col-span-2 text-right text-xs text-on-surface-variant">Active 2m ago</div>
+                            </div>
+                            <div class="grid grid-cols-12 items-center py-2">
+                                <div class="col-span-6 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary">MT</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-on-surface">Marcus Thorne</p>
+                                        <p class="text-xs text-on-surface-variant">m.thorne@vfx-studios.co</p>
+                                    </div>
+                                </div>
+                                <div class="col-span-4">
+                                    <span class="px-2 py-1 bg-surface-container text-on-surface-variant text-[10px] font-black uppercase rounded">COMMENT</span>
+                                </div>
+                                <div class="col-span-2 text-right text-xs text-on-surface-variant">Active yesterday</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<!-- Action Footer: Sticky Bar -->
+<footer class="fixed bottom-0 left-[60px] group-hover:left-[220px] right-0 glass-header border-t border-surface-container-high py-6 px-12 shadow-[0_-10px_30px_-15px_rgba(59,58,126,0.1)] z-40 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-4">
+            <div class="flex -space-x-3">
+                <img alt="Close-up of a smiling young man in a casual hoodie" class="w-10 h-10 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKKiMv3GeyEXFN8aJi_mgsXwAXrxcKcmmnekPgtBIQiDNWVLAbMtADJM8hhZXKHTlmLE4e8xHt5cdwDeV_Spi08ARpUPKrDfDmGcvmLadJ_z0fcbPTs31eeYAqpvUpFIeApXLPnjvCe9b4pystpPNfCqilnZ0K-5n-RMU0dy_Mw1wwOCiW3eGgNeb5p6mBuCCIToRE_ZMKdKFTCvzn8-PASWMT-evWvONBm4-upbPpnu0jvx3dNM28ug4-X5VVwj-U-QbIcHUnIdw"/>
+                <img alt="Portrait of a confident professional woman" class="w-10 h-10 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtl7uq8t_D2NV8yKdut3GGpPAYqGqA0hRbEgvwsgYgnM-n2vF3SlTU4Jx9HYdEpgh9WjMcwPJ8YV-jrCYvFSBAKBFrYxS6lOVmchsZK9znww5aWfyWcLOOu9A5BV2FgbhLJL6fRHI0WUl6BGcWca0vefnfb-fOD9TrHtaSuwC5C8AeffIcpBZ_xuUlm18ew7N7-uxx9BkOcSXcY8tLJJlt02imIn9cCty8zuuab3F_FBhwaNT0s-aDKp8j6NDAID49Zp9krbiffAk"/>
+                <div class="w-10 h-10 rounded-full border-2 border-white bg-tertiary-container text-white flex items-center justify-center text-xs font-bold">+5</div>
+            </div>
+            <p class="text-sm font-medium text-on-surface-variant">7 people reviewing this version</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+            <button class="px-6 py-3 rounded-lg text-primary font-bold text-sm hover:bg-surface-container transition-all">
+                Share Link
+            </button>
+            <button class="px-6 py-3 rounded-lg text-primary font-bold text-sm bg-secondary-container/20 hover:bg-secondary-container/40 transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">download</span>
+                Download
+            </button>
+            <button class="px-6 py-3 rounded-lg text-primary font-bold text-sm bg-surface-container-high hover:bg-surface-container-highest transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">add</span>
+                Upload New
+            </button>
+            <button class="px-10 py-3 primary-gradient text-white rounded-lg font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                Review This Asset
+            </button>
+        </div>
+    </div>
+</footer>
+</body></html>
