@@ -91,8 +91,6 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   "fileId": ObjectId,
   "fileName": String,  // tên file được upload
   "objectName": String,
-  "projectId": ObjectId,  
-  "folderId": ObjectId,
 
   "assetId": ObjectId, // asset quản lý media
 
@@ -160,9 +158,6 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 ```javascript
 { "ownerId"=1, "isTrash" = 1, "createdAt" = -1 } // createAt sort 
 { "objectName" = 1},
-{ "folderId": 1, "objectName": 1 },
-{ "projectId": 1, "folderId": 1 },
-{ "projectId": 1, "objectName": 1 },
 { "shareToken" = 1 } 
 { "visibility" = 1, "publicPermission" = 1} ,
 { "userPermissions.userId" = 1 } ,
@@ -185,6 +180,9 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   "assetName": String, // init ban đầu là fileName của lần đầu upload, user có thể sửa
   "description": String,
 
+  "projectId": ObjectId,
+  "folderId": ObjectId,
+
   "ownerId": ObjectId,  
   "ownerEmail": String,
 
@@ -202,6 +200,124 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 }
 ```
 
+**Indexes:**
+
+```javascript
+{ "assetId": 1 }
+{ "folderId": 1, "assetId": 1 },
+{ "projectId": 1, "folderId": 1 },
+{ "projectId": 1, "assetId": 1 },
+```
+
+
+### 2.4 Collection: `projects`
+
+**Mục đích**: lưu thông tin project, project là nơi chứa các folder và asset, tuỳ theo phương án tổ chức nội dung của user
+
+```javascript
+{
+  "projectId": ObjectId, // id mongo
+  "projectName": String,          
+  "projectCode": String,           // unique code, user đặt
+  "description": String,
+  
+  // Ownership
+  "ownerId": ObjectId,  
+  "ownerEmail": String,
+  
+  // Metadata
+  "category": String,
+  "startDate": ISODate,
+  "endDate": ISODate,
+  
+  // Permissions
+  "collaborators": [
+    {
+      "userId": ObjectId,
+      "email": String,
+      "role": "PRODUCER" | "REVIEWER" | "VIEWER",
+      "addedAt": ISODate
+    }
+  ],
+  
+  // Statistics (denormalized)
+  "stats": {
+    "folderCount": Number,
+    "assetCount": Number,
+    "totalVersions": Number,
+    "pendingReviews": Number  
+  },
+  
+  // Status
+  "status": "ACTIVE" | "ARCHIVED" | "COMPLETED",
+  "isActive": Boolean,
+  "trashedAt": ISODate,            // soft delete
+  
+  "createdAt": ISODate,
+  "updatedAt": ISODate
+}
+```
+
+**indexes:**
+
+```javascript
+{ "ownerId": 1, "createdAt": -1 }           // user's projects
+{ "projectCode": 1 }                        // unique lookup
+{ "status": 1, "updatedAt": -1 }           // list active projects
+{ "collaborators.userId": 1 }               // projects I collaborate on
+{ "category": 1 }     
+```
+
+### 2.5 Collection: `folder`
+
+**Mục đích**: Tổ chức folder trong project
+
+```javascript
+{
+  "folderId": ObjectId,        // id mongo
+  "projectId": ObjectId,           // ref → projects (required)
+  "parentFolderId": ObjectId,      // ref → folders (null nếu root)
+  
+  "folderName": String,
+  "description": String,
+  
+  // Hierarchy & path
+  "folderPath": String,            // ví dụ "Banner/Variants/Hero" (denormalized for query)
+  "level": Number,                 // 1=root, 2=subfolder, etc
+  
+  // Permissions (inherit từ project nhưng có thể override)
+  "permissions": [
+    {
+      "userId": ObjectId,
+      "permissions": ["READ", "COMMENT", "MODIFY"],
+      "grantedAt": ISODate
+    }
+  ],
+  
+  // Statistics (denormalized)
+  "stats": {
+    "assetCount": Number,          // direct children assets
+    "subfoldersCount": Number,
+    "pendingReviewsCount": Number
+  },
+  
+  // Status
+  "isActive": Boolean,
+  "createdBy": ObjectId,
+  "createdAt": ISODate,
+  "updatedAt": ISODate
+}
+```
+
+**indexes:**
+```javascript
+{ "projectId": 1, "parentFolderId": 1 }      // list children folders
+{ "projectId": 1, "folderPath": 1 }           // path lookup
+{ "folderId": 1 }                             // direct lookup
+{ "parentFolderId": 1 }                       // navigate up
+{ "permissions.userId": 1}
+```
+
 ---
 
 ### 2.4 Collection: `media_renditions`
@@ -210,7 +326,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,  
+  "renditionId": ObjectId,  // id mongo
   "versionId": ObjectId,       
   "assetId": ObjectId,   // co asset va version se lay duoc file         
   
@@ -652,13 +768,22 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```mermaid
 erDiagram
-    USERS ||--o{ METADATA : "owns/uploads"
+    USERS ||--o{ PROJECTS : "owns/manages"
+    USERS ||--o{ FOLDERS : "creates"
     USERS ||--o{ ASSET : "owns"
+    USERS ||--o{ METADATA : "owns/uploads"
     USERS ||--o{ ANNOTATIONS : "creates"
     USERS ||--o{ COMMENT_THREADS : "participates"
     USERS ||--o{ REVIEW_SESSIONS : "creates/reviews"
     USERS ||--o{ NOTIFICATIONS : "receives"
     USERS ||--o{ AUDIT_LOGS : "performs actions"
+    
+    PROJECTS ||--o{ FOLDERS : "contains"
+    PROJECTS ||--o{ ASSET : "has assets"
+    PROJECTS ||--o{ REVIEW_SESSIONS : "reviews within"
+    
+    FOLDERS ||--o{ FOLDERS : "parent/children"
+    FOLDERS ||--o{ ASSET : "organizes"
     
     ASSET ||--o{ METADATA : "has versions"
     ASSET ||--o{ REVIEW_SESSIONS : "has reviews"
@@ -674,8 +799,30 @@ erDiagram
     ANNOTATIONS ||--|| COMMENT_THREADS : "has thread"
     REVIEW_SESSIONS ||--o{ COMMENT_THREADS : "contains discussions"
     
+    PROJECTS {
+        ObjectId projectId PK
+        String projectName
+        String projectCode
+        ObjectId ownerId FK
+        String category
+        Object stats
+        String status
+    }
+    
+    FOLDERS {
+        ObjectId folderId PK
+        ObjectId projectId FK
+        ObjectId parentFolderId FK
+        String folderName
+        String folderPath
+        Number level
+        Object stats
+    }
+    
     ASSET {
         ObjectId assetId PK
+        ObjectId projectId FK
+        ObjectId folderId FK
         String assetName
         ObjectId ownerId FK
         Number versionCount
@@ -686,6 +833,8 @@ erDiagram
     METADATA {
         ObjectId fileId PK
         ObjectId assetId FK
+        ObjectId projectId FK
+        ObjectId folderId FK
         Number versionNumber
         String mediaType
         ObjectId ownerId FK
@@ -694,6 +843,7 @@ erDiagram
     
     REVIEW_SESSIONS {
         ObjectId _id PK
+        ObjectId projectId FK
         ObjectId assetId FK
         ObjectId versionId FK
         String status
@@ -758,11 +908,14 @@ erDiagram
 ```
 
 **Giải thích mối quan hệ chính:**
-- `ASSET` là đơn vị trung tâm, chứa nhiều `METADATA` versions
+- **Hierarchy**: USERS → PROJECTS → FOLDERS → ASSET → METADATA (versions) → REVIEW_SESSIONS
+- **Navigation**: `FOLDERS` có thể lồng nhau (parent-child), hỗ trợ multi-level folder structure
+- **Permissions**: Inherit từ PROJECT level, có thể override tại FOLDER level
+- `ASSET` là đơn vị trung tâm chứa nhiều `METADATA` versions
 - `METADATA` (version) được annotate, comment và review độc lập
 - `ANNOTATIONS` và `COMMENT_THREADS` luôn gắn với version cụ thể (`versionId`)
-- `REVIEW_SESSIONS` tham chiếu đến version đang được review
-- Denormalization: email, name được duplicate để tránh joins
+- `REVIEW_SESSIONS` tham chiếu đến version đang được review, scoped trong project
+- Denormalization: email, name, stats được duplicate để tránh joins
 - One-to-many relationships chủ yếu sử dụng ObjectId references
 
 ---
