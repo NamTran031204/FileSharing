@@ -1,0 +1,20 @@
+{
+  "skill_name": "html-to-react-refactor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Refactor full page HTML dashboard thành React component. HTML có: header với logo + nav links, sidebar nav menu với icons, main content area có multiple stat cards (card pattern repeat). Dùng AppHeader + AppSidebar sẵn có, extract card thành StatCard component.",
+      "expected_output": "Page component sử dụng AppHeader + AppSidebar layout, StatCard component ở @src/components, TypeScript interface, Tailwind styling"
+    },
+    {
+      "id": 2,
+      "prompt": "Convert form HTML thành React component: có text input, email input, password input, select dropdown, checkbox, submit button. Dùng Ant Design Form, Input, Select, Checkbox, Button components.",
+      "expected_output": "React Form component với antd components, TypeScript form data interface, validation support, layout wrapper"
+    },
+    {
+      "id": 3,
+      "prompt": "Refactor card-based list HTML thành React component: mỗi item có title, description, 2 action buttons. Extract repeating item pattern thành ListItem component. Dùng antd Button cho actions.",
+      "expected_output": "Page component + ListItem component ở @src/components, antd Button, map qua data array, TypeScript types"
+    }
+  ]
+}

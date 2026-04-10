@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Lumina Pro - Đăng Nhập</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e0e0ff",
+                        "outline": "#777681",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#170d56",
+                        "surface-container-low": "#f4f2ff",
+                        "secondary-fixed": "#e3dfff",
+                        "on-secondary-fixed": "#150d56",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#403f83",
+                        "tertiary-fixed": "#e4dfff",
+                        "on-tertiary-container": "#d1ccff",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#c2c1ff",
+                        "on-surface": "#0d1154",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "primary-container": "#535297",
+                        "primary": "#3b3a7e",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "tertiary-container": "#565198",
+                        "secondary-container": "#b5b1fe",
+                        "surface-variant": "#e0e0ff",
+                        "surface-tint": "#58579c",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#d6d7ff",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "on-secondary-container": "#444085",
+                        "on-primary-fixed": "#130e56",
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "surface": "#fbf8ff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#423e83",
+                        "on-primary-container": "#ceccff",
+                        "inverse-on-surface": "#f1efff",
+                        "inverse-surface": "#242969",
+                        "on-surface-variant": "#474650",
+                        "surface-container": "#eeecff",
+                        "tertiary": "#3f397e",
+                        "background": "#fbf8ff",
+                        "secondary": "#5a569c",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#fbf8ff",
+                        "on-background": "#0d1154",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-high": "#e7e6ff",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "outline-variant": "#c8c5d2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F2F7; /* Specific requirement override */
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-glow {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- Suppressing Navigation Shell for Login Journey per PRotocol -->
+<main class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-[480px]">
+        <!-- Login Card -->
+        <div class="bg-white rounded-lg shadow-[0_8px_30px_rgb(59,58,126,0.06)] p-10 flex flex-col gap-8 border border-outline-variant/10">
+            <!-- Brand Header -->
+            <div class="flex flex-col items-center text-center gap-4">
+                <div class="w-16 h-16 rounded-xl overflow-hidden shadow-sm">
+                    <img class="w-full h-full object-cover"
+                         data-alt="Modern geometric logo for a tech company with deep purple and lavender tones, minimalist corporate aesthetic"
+                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHUBxyBHHm0Ty-7dEhq-AdYj8uHXoQvvdfbM7tZOPHkGIBR_EXafE0hWp3dtyojmL8Ef5OqDNCkcuGVXFnjXeatRVxN42fW84Vul3SGZU2glsg4p9Q_rwC39NXFkjowTUarWvregKlzE34VFIpkRhTeUAIDGYfg2FDIwlXE8tmflY7qMSXGX7X6RIFfT6jrvvWvLncHy_g82DGhT8XXju63eA23UUoSBSeZijahMDz3ncbJQu4YwmVmf5cfdrqlQ0OE9-lXm6ufP4"/>
+                </div>
+                <div class="space-y-1">
+                    <h1 class="text-2xl font-bold tracking-tight text-on-surface">Media Review Platform</h1>
+                    <p class="text-sm text-on-surface-variant font-medium">Chào mừng bạn quay trở lại</p>
+                </div>
+            </div>
+            <!-- Login Form -->
+            <form action="#" class="flex flex-col gap-6">
+                <!-- Email Field -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant" for="email">Email</label>
+                    <div class="relative group">
+                        <input class="w-full h-12 px-4 rounded-lg bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-outline transition-all duration-200"
+                               id="email" name="email" placeholder="your@email.com" type="email"/>
+                    </div>
+                </div>
+                <!-- Password Field -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant" for="password">Password</label>
+                    <div class="relative group">
+                        <input class="w-full h-12 px-4 rounded-lg bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-outline transition-all duration-200"
+                               id="password" name="password" placeholder="Nhập mật khẩu" type="password"/>
+                        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant hover:text-primary transition-colors"
+                                type="button">
+                            <span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Options Row -->
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary transition-all"
+                               type="checkbox"/>
+                        <span class="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me (for 30 days)</span>
+                    </label>
+                    <a class="text-sm font-semibold text-primary hover:text-primary-container transition-colors"
+                       href="#">Quên mật khẩu?</a>
+                </div>
+                <!-- Submit Button -->
+                <button class="w-full h-12 rounded-lg bg-primary-container text-white font-semibold tracking-wide shadow-md hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center justify-center"
+                        type="submit">
+                    Đăng Nhập
+                </button>
+            </form>
+            <!-- Divider -->
+            <div class="relative flex items-center gap-4">
+                <div class="h-px bg-outline-variant/30 flex-grow"></div>
+                <span class="text-xs font-bold uppercase tracking-widest text-outline">hoặc</span>
+                <div class="h-px bg-outline-variant/30 flex-grow"></div>
+            </div>
+            <!-- Social Login -->
+            <button class="w-full h-12 rounded-lg bg-white border border-outline-variant/40 flex items-center justify-center gap-3 hover:bg-surface-container-low active:scale-95 transition-all duration-300">
+                <svg class="w-5 h-5" viewbox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          fill="#4285F4"></path>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          fill="#34A853"></path>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                          fill="#FBBC05"></path>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          fill="#EA4335"></path>
+                </svg>
+                <span class="text-sm font-semibold text-on-surface-variant">Tiếp tục với Google</span>
+            </button>
+            <!-- Footer Link -->
+            <p class="text-center text-sm text-on-surface-variant">
+                Chưa có tài khoản?
+                <a class="font-bold text-primary hover:underline underline-offset-4 ml-1" href="#">Đăng ký tại đây</a>
+            </p>
+        </div>
+        <!-- Contextual Branding Shadow -->
+        <div class="mt-8 text-center">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-outline opacity-50">Lumina Pro Elite Suite</p>
+        </div>
+    </div>
+</main>
+<!-- Footer from Shared Components JSON -->
+<footer class="w-full py-12 bg-[#f4f2ff] dark:bg-slate-950 flex flex-col md:flex-row justify-between items-center px-12 gap-6 mt-auto">
+    <div class="text-[#535297] dark:text-[#b5b1fe] text-xs font-medium uppercase tracking-[0.05em] font-['Inter']">
+        © 2024 Lumina Pro. Built for the creative elite.
+    </div>
+    <nav class="flex flex-wrap justify-center gap-6">
+        <a class="text-xs font-medium uppercase tracking-[0.05em] font-['Inter'] text-[#474650] dark:text-slate-500 hover:text-[#535297] dark:hover:text-white underline-offset-4 hover:underline transition-all duration-300"
+           href="#">Privacy Policy</a>
+        <a class="text-xs font-medium uppercase tracking-[0.05em] font-['Inter'] text-[#474650] dark:text-slate-500 hover:text-[#535297] dark:hover:text-white underline-offset-4 hover:underline transition-all duration-300"
+           href="#">Terms of Service</a>
+        <a class="text-xs font-medium uppercase tracking-[0.05em] font-['Inter'] text-[#474650] dark:text-slate-500 hover:text-[#535297] dark:hover:text-white underline-offset-4 hover:underline transition-all duration-300"
+           href="#">Help Center</a>
+        <a class="text-xs font-medium uppercase tracking-[0.05em] font-['Inter'] text-[#474650] dark:text-slate-500 hover:text-[#535297] dark:hover:text-white underline-offset-4 hover:underline transition-all duration-300"
+           href="#">Contact</a>
+    </nav>
+</footer>
+</body>
+</html>

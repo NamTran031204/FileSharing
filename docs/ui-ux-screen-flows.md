@@ -29,9 +29,29 @@ JOURNEY 4: NAVIGATION - Browse Assets
 
 ---
 
+## 1.1 Global App Shell (Applied to all screens)
+
+> **Layout rule bắt buộc:** tất cả layout luôn có **Header + Sidebar**.
+
+### Header (Fixed)
+- **Bên trái:** `Logo`, `Breadcrumb menu`
+- **Bên phải:** `Search bar`, `Notification icon`, `Setting icon`, `User avatar`
+
+### Sidebar (Fixed)
+- `Trang chủ`
+- `Dashboard`
+- `Projects`
+  - Danh sách project con (expand/collapse)
+- Các đề mục khác sẽ phát triển sau
+- Cuối sidebar: nút `[+ Thêm mới project]`
+
+---
+
 ## 2. Screen 1: Dashboard / Home
 
 ### 2.1 Layout
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Logo | Search Bar | 🔔 Notifications | 👤 User Menu         │
@@ -78,22 +98,18 @@ JOURNEY 4: NAVIGATION - Browse Assets
 
 ### 3.1 Sidebar Navigation
 ```
-MY PROJECTS
+SIDEBAR MENU (Fixed):
 
-📁 Holiday Campaign 2026
-   ├─ 3 pending reviews ⏳
-   ├─ Created: 2026-02-01
-   └─ Last updated: 2026-04-08
+🏠 Trang chủ
+📊 Dashboard
+📁 Projects
+   ├─ Holiday Campaign 2026
+   ├─ Q1 Product Launch
+   └─ Brand Refresh
 
-📁 Q1 Product Launch
-   ├─ All approved ✅
-   └─ Archived: 2026-03-15
+(Các đề mục khác sẽ phát triển sau)
 
-📁 Brand Refresh
-   ├─ 1 pending review ⏳
-   └─ Last updated: 2026-04-07
-
-[+ Create Project]
+[+ Thêm mới project]
 ```
 
 ### 3.2 Interactions
@@ -107,6 +123,8 @@ MY PROJECTS
 ## 4. Screen 3: Project Detail / Overview
 
 ### 4.1 Layout
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ ◀ Holiday Campaign 2026 | [Edit] [Archive] [Share] [⋯]    │
@@ -180,6 +198,8 @@ Collaborators (3):
 ## 5. Screen 4: Project Settings / Manage
 
 ### 5.1 Layout
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Project Settings - Holiday Campaign 2026                    │
@@ -215,6 +235,8 @@ Collaborators (3):
 ## 6. Screen 5: Folder Browser / File Manager
 
 ### 6.1 Layout (3-Column)
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Holiday Campaign 2026 > Banner Designs > Desktop Variants    │
@@ -274,6 +296,8 @@ Collaborators (3):
 ## 7. Screen 6: Asset Detail Page
 
 ### 7.1 Layout (Tabbed)
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ ◀ Banner - Hero | [Edit] [Rename] [Move] [Delete] [⋯]       │
@@ -479,6 +503,8 @@ After Submit:
 ## 9. Screen 8: Review Interface (Reviewer POV)
 
 ### 9.1 Layout
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Review Session: Banner - Hero | John's Review               │
@@ -526,6 +552,8 @@ After Submit:
 ## 10. Screen 9: Notification Center
 
 ### 10.1 Layout
+_Dùng Global App Shell ở mục 1.1 (Header + Sidebar cố định)._
+
 ```
 ┌─────────────────────────────────────┐
 │ 🔔 Notifications (3 new)            │
