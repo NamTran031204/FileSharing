@@ -8,6 +8,7 @@ import TrashPage from "./page/Phase1/trashPage";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import FilePreviewPage from "./page/Phase1/filePreviewPage";
 import ImageReviewPage from "./page/ImageReviewPage";
+import LoginPageV2 from "./page/LoginPageV2.tsx";
 
 const App = () => {
     return (
@@ -17,6 +18,7 @@ const App = () => {
                     {/* ================ Phase 1 ================ */}
                     <Route path="/" element={<Navigate to="/login" replace/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
+                    <Route path={"/loginv2"} element={<LoginPageV2/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
                     <Route path={`/preview/*`} element={<FilePreviewPage/>}/>
                     <Route path="/my-files" element={
