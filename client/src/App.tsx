@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import FilePreviewPage from "./page/Phase1/filePreviewPage";
 import ImageReviewPage from "./page/ImageReviewPage";
 import LoginPageV2 from "./page/LoginPageV2.tsx";
+import DrawingDemo from "./mockup/pages/KonvaDemo.tsx";
 
 const App = () => {
     return (
@@ -50,6 +51,11 @@ const App = () => {
                         </ProtectedRoute>
                     }/>
                     {/* ================ Phase 2 ================ */}
+
+                    {/* ================ Mockup ================ */}
+                    <Route path="/mockup/image-review" element={<DrawingDemo/>}/>
+                    {/* ================ Mockup ================ */}
+
                 </Routes>
             </BrowserRouter>
         </>
