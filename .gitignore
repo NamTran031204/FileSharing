@@ -2,3 +2,6 @@ target
 minio-project/.idea
 minio-project/data
 ans.md
+
+.idea/
+.idea/inspectionProfiles/
