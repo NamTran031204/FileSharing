@@ -43,6 +43,7 @@ public class MetadataEntity {
     private Double fileSize;
     private String compressionAlgo;
     private String uploadId;
+    private String shareToken;
 
     private UploadStatus status;
     private ProcessingStatus processingStatus;
@@ -62,6 +63,9 @@ public class MetadataEntity {
     private List<UserFilePermission> userFilePermissions;
 
     private Boolean isTrash;
+    private Instant trashedAt;
+
+    private Integer renditionCount;
 
     @Transient
     @JsonInclude

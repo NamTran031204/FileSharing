@@ -1,10 +1,13 @@
 package org.example.filesharing.entities.models.core;
 
 import lombok.*;
+import org.example.filesharing.entities.models.AnnotationRegion;
+import org.example.filesharing.entities.models.AnnotationTimeCode;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.enums.AnnotationType;
-import org.example.filesharing.enums.Shape;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -28,46 +31,27 @@ public class AnnotationsEntity {
 
     private AnnotationType annotationType;
 
-    private TimeCode timeCode;
+    private AnnotationTimeCode timeCode;
 
-    private Region region;
+    private AnnotationRegion region;
 
     private Integer frameNumber;
 
     private AnnotationStatus status;
 
-    private Instant resolveAt;
+    private Instant resolvedAt;
 
-    private String resolveBy; // user
+    private String resolvedBy;
 
     private String threadId;
 
     private String createdBy;
     private String createdByEmail;
 
+    @CreatedDate
     private Instant createdAt;
-    private String updatedAt;
 
-
-    @Data
-    static class TimeCode {
-        private Integer startMs;
-        private Integer endMs;
-    }
-
-    @Data
-    static class Region {
-        private Shape shape;
-        private Point point;
-        private String strokeColor;
-        private String strokeWidth;
-        private String fillColor;
-    }
-
-    @Data
-    static class Point {
-        private Double x;
-        private Double y;
-    }
+    @LastModifiedDate
+    private Instant updatedAt;
 
 }

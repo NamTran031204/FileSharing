@@ -381,7 +381,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   "annotationType": "TIMECODE" | "REGION" | "FRAME_REGION",
   
   // Timecode annotation (video)
-  "timecode": {
+  "timeCode": {
     "startMs": Number,                // mốc bắt đầu (ms)
     "endMs": Number                   // mốc kết thúc (ms), có thể = startMs nếu point
   },
@@ -512,7 +512,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // reviewSessionId
+  "reviewSessionId": ObjectId,                    // id mongo
   "assetId": ObjectId,                // ref → asset
   "versionId": ObjectId,              // ref → metadata (version đang review)
   
@@ -581,7 +581,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // jobId
+  "jobId": ObjectId,                    // id mongo
   "versionId": ObjectId,              // ref → media_versions
   "assetId": ObjectId,                // denormalized
   
@@ -656,7 +656,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // logId
+  "logId": ObjectId,                    // id mongo
   
   // Actor
   "actorId": ObjectId,                // ref → users (null nếu system)
@@ -715,7 +715,7 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
 
 ```javascript
 {
-  "_id": ObjectId,                    // notificationId
+  "notificationId": ObjectId,                    // id mongo
   "userId": ObjectId,                 // ref → users (recipient)
   
   "type": "NEW_COMMENT" | "MENTION" | "STATUS_CHANGE" | "NEW_VERSION" | 
