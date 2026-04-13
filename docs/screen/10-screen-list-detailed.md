@@ -798,27 +798,19 @@ Phát video streaming với timeline annotation.
 
 #### Layout
 ```
-┌──────────────────────────────────────────┐
-│ VIDEO PLAYER (responsive)                │
-│ ┌────────────────────────────────────┐   │
-│ │                                    │   │
-│ │     [Video Content Area]           │   │
-│ │                                    │   │
-│ └────────────────────────────────────┘   │
-│                                          │
-│ Timeline with Annotations:               │
-│ ◼─────●──────●──────────────────────◼   │
-│ 0:00  0:15   0:45              5:30      │
-│       [marker] [marker]                 │
-│                                          │
-│ Controls:                                │
-│ [▶] [🔊] [Speed: 1x] [Full Screen]     │
-│ Current: 0:45 / Duration: 5:30         │
-│                                          │
-│ Info:                                    │
-│ Resolution: 1920x1080 | Codec: H.264   │
-│ Bitrate: 5000 kbps | Status: Ready     │
-└──────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  HEADER (h-[10vh])                              │
+│  bg-primary-dark                                │
+│  Breadcrumb navigation                          │
+├──────┬──────────────────────┬───────────────────┤
+│      │                      │  TOOL PANEL       │
+│ SIDE │  MEDIA PLAYER        │  w-[340px]        │
+│ BAR  │  flex-1              │  bg-card          │
+│      │  bg-primary          ├───────────────────┤
+│ 60px │                      │  FEEDBACK PANEL   │
+│  ↔   │                      │  flex-1           │
+│ 220px│                      │  bg-card          │
+└──────┴──────────────────────┴───────────────────┘
 ```
 
 #### Input Fields & Data Mapping
@@ -883,26 +875,19 @@ Xem ảnh zoom/pan, vẽ annotation vùng.
 
 #### Layout
 ```
-┌────────────────────────────────────┐
-│ IMAGE VIEWER                       │
-│ ┌──────────────────────────────┐   │
-│ │                              │   │
-│ │     [Image with Regions]     │   │
-│ │     ┌──────────────────┐     │   │
-│ │     │ ◆ Region 1       │     │   │
-│ │     │ Comment: "..."   │     │   │
-│ │     └──────────────────┘     │   │
-│ │                              │   │
-│ └──────────────────────────────┘   │
-│                                    │
-│ Controls:                          │
-│ [🔍+] [🔍-] [Fit] [100%] [Full]   │
-│ [🎨 Draw] [✎ Text] [Clear]       │
-│                                    │
-│ Regions List:                      │
-│ • Region 1: Comment by John       │
-│ • Region 2: Comment by Mary       │
-└────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  HEADER (h-[10vh])                              │
+│  bg-primary-dark                                │
+│  Breadcrumb navigation                          │
+├──────┬──────────────────────┬───────────────────┤
+│      │                      │  TOOL PANEL       │
+│ SIDE │  MEDIA PLAYER        │  w-[340px]        │
+│ BAR  │  flex-1              │  bg-card          │
+│      │  bg-primary          ├───────────────────┤
+│ 60px │                      │  FEEDBACK PANEL   │
+│  ↔   │                      │  flex-1           │
+│ 220px│                      │  bg-card          │
+└──────┴──────────────────────┴───────────────────┘
 ```
 
 #### Input Fields & Data Mapping

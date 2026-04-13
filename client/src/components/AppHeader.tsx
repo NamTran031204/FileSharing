@@ -49,12 +49,12 @@ const AppHeader = () => {
       {/* Right: Actions + Profile */}
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <button className="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 transition-transform scale-95">
+        <button className="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 scale-95">
           <BellOutlined className="text-lg" />
         </button>
 
         {/* Settings */}
-        <button className="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 transition-transform scale-95">
+        <button className="p-2 hover:bg-white/10 rounded-lg transition-all text-white active:opacity-80 scale-95">
           <SettingOutlined className="text-lg" />
         </button>
 

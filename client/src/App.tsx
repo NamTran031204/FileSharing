@@ -8,8 +8,9 @@ import TrashPage from "./page/Phase1/trashPage";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import FilePreviewPage from "./page/Phase1/filePreviewPage";
 import ImageReviewPage from "./page/ImageReviewPage";
+import ImageReviewV2 from "./page/ImageReviewV2";
 import LoginPageV2 from "./page/LoginPageV2.tsx";
-import DrawingDemo from "./mockup/pages/KonvaDemo.tsx";
+import LocalImageCanvas from "./mockup/pages/KonvaDemo.tsx";
 
 const App = () => {
     return (
@@ -52,8 +53,9 @@ const App = () => {
                     }/>
                     {/* ================ Phase 2 ================ */}
 
-                    {/* ================ Mockup ================ */}
-                    <Route path="/mockup/image-review" element={<DrawingDemo/>}/>
+                    {/* ================ Mockup - Màn hình được tạo ra từ folder mockup, không cần bọc bởi ProtectedRoute, mục đích để người dùng test trước khi đưa lên Phase 2 ================ */}
+                    <Route path="/mockup/image-review" element={<LocalImageCanvas/>}/>
+                    <Route path="/review/image-v2" element={<ImageReviewV2/>}/>
                     {/* ================ Mockup ================ */}
 
                 </Routes>
