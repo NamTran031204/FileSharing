@@ -100,7 +100,6 @@ Thiết kế database cho hệ thống Media Review Platform dựa trên MongoDB
   // version
   "versionNumber": Number, 
 
-  "description": String, // new
   "mediaType": "VIDEO" | "IMAGE" | "DESIGN", // new
   "mimeType": String,
 

@@ -8,7 +8,7 @@ import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
-import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.services.MetadataService;
 import org.springframework.web.bind.annotation.*;
 

@@ -9,7 +9,7 @@ import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
-import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.entities.models.UserFilePermission;
 import org.example.filesharing.enums.UploadStatus;
 import org.example.filesharing.enums.objectPermission.FileAppPermission;

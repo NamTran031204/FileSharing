@@ -11,7 +11,7 @@ import org.example.filesharing.entities.dtos.user.UpdateUserRequestDto;
 import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;
 import org.example.filesharing.entities.models.AuthProviderInfo;
-import org.example.filesharing.entities.models.UserEntity;
+import org.example.filesharing.entities.models.core.UserEntity;
 import org.example.filesharing.enums.auth.UserRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.UserBusinessException;

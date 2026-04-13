@@ -8,7 +8,7 @@ import org.example.filesharing.entities.dtos.auth.UserLoginResponseDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterRequestDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterResponseDto;
 import org.example.filesharing.entities.models.AuthProviderInfo;
-import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.enums.auth.AuthProvider;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.UserService;

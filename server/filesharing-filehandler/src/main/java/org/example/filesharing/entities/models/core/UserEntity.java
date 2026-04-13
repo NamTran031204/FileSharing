@@ -1,6 +1,7 @@
-package org.example.filesharing.entities.models;
+package org.example.filesharing.entities.models.core;
 
 import lombok.*;
+import org.example.filesharing.entities.models.AuthProviderInfo;
 import org.example.filesharing.enums.auth.AuthProvider;
 import org.example.filesharing.enums.auth.UserRole;
 import org.springframework.data.annotation.CreatedDate;

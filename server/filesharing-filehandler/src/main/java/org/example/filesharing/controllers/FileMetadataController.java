@@ -9,7 +9,7 @@ import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
-import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;

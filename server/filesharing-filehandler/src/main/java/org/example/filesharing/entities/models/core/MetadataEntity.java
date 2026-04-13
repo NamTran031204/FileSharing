@@ -1,7 +1,10 @@
-package org.example.filesharing.entities.models;
+package org.example.filesharing.entities.models.core;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
+import org.example.filesharing.entities.models.UserFilePermission;
+import org.example.filesharing.enums.MediaType;
+import org.example.filesharing.enums.ProcessingStatus;
 import org.example.filesharing.enums.UploadStatus;
 import org.example.filesharing.enums.objectPermission.FileAppPermission;
 import org.example.filesharing.enums.objectPermission.ObjectPermission;
@@ -27,16 +30,29 @@ public class MetadataEntity {
     private String fileId;
     private String fileName;
     private String objectName;
+
+    private String assetId;
+
+    private String downloadFileName;
+
+    private Integer versionNumber;
+
+    private MediaType mediaType;
+
     private String mimeType;
     private Double fileSize;
     private String compressionAlgo;
+    private String uploadId;
+
+    private UploadStatus status;
+    private ProcessingStatus processingStatus;
+    private String processingError;
+    private Instant processingStartAt;
+    private Instant processingCompleteAt;
+    private MediaInfo mediaInfo;
+
     private String ownerId;
     private String ownerEmail;
-    private String uploadId;
-    private UploadStatus status;
-
-    private String shareToken;
-
     private int timeToLive;
     private Boolean isActive; // qua time to live, isActive = false
 
@@ -56,4 +72,15 @@ public class MetadataEntity {
 
     @LastModifiedDate
     private Instant modificationTimestamp;
+
+    @Data
+    static class MediaInfo {
+        private Integer durationMs;
+        private Integer width;
+        private Integer height;
+        private Integer frameRate;
+        private String codec;
+        private String colorSpace;
+        private String hasAlpha;
+    }
 }
