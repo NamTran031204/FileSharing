@@ -42,9 +42,9 @@ public class ProjectEntity {
     private List<ProjectCollaborator> collaborators;
     private ProjectStats stats;
 
-    private ProjectStatus status;
-    private Boolean isActive;
-    private Instant trashedAt;
+    private ProjectStatus status; // khi cho vao thung rac -> ARCHIVE
+    private Boolean isActive; // khi xoa khoi thung rac: isActive = false, chua xoa khoi he thong, tao process xoa sau 30 ngay.
+    private Instant trashedAt; // cap nhat khi status = ARCHIVE
 
     @CreatedDate
     private Instant createdAt;
