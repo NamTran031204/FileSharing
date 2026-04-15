@@ -23,7 +23,7 @@ minio:
 video:
   encoding:
     ffmpeg:
-      path: ${FFMPEG_PATH:E:\DaiCuongBK\Project3\FileSharing\server\filesharing-videocodec\src\main\resources\ffmpeg\ffmpeg.exe}
+      path: ${FFMPEG_PATH:E:\DaiCuongBK\Project3\FileSharing\server\filesharing-videocodec\src\main\resources\ffmpeg\bin\ffmpeg.exe}
       timeout: 3600000
     kafka:
       topic: video_encode_topic
