@@ -1,10 +1,12 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.eclipse.angus.mail.iap.CommandFailedException;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.project.*;
+import org.example.filesharing.entities.dtos.project.ProjectCheckInputDTO;
+import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
+import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
+import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
 import org.example.filesharing.entities.models.core.ProjectEntity;
@@ -65,7 +67,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectCreateUpdateResponseDTO createNewProject(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
+    public ProjectEntity createNewProject(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
         validateCreatePayload(projectCreateUpdateDTO);
 
         String projectCode = projectCreateUpdateDTO.getProjectCode().trim();
@@ -98,11 +100,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .build();
 
         ProjectEntity savedProject = projectRepo.save(project);
-        return mapToResponse(savedProject);
+        return savedProject;
     }
 
     @Override
-    public ProjectCreateUpdateResponseDTO updateProjectDetail(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
+    public ProjectEntity updateProjectDetail(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
         validateUpdatePayload(projectCreateUpdateDTO);
 
         ProjectEntity project = getProjectOrThrow(projectCreateUpdateDTO.getProjectId().trim());
@@ -152,7 +154,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         ProjectEntity savedProject = projectRepo.save(project);
-        return mapToResponse(savedProject);
+        return savedProject;
     }
 
     @Override
@@ -180,9 +182,6 @@ public class ProjectServiceImpl implements ProjectService {
         addScopeCriteria(query, filter);
 
         if (filter != null) {
-            if (StringUtils.isNotNullOrBlank(filter.getCategory())) {
-                query.addCriteria(Criteria.where("category").is(filter.getCategory().trim()));
-            }
 
             if (filter.getStatus() != null) {
                 query.addCriteria(Criteria.where("status").is(filter.getStatus()));
@@ -374,24 +373,5 @@ public class ProjectServiceImpl implements ProjectService {
         }
         String trimmed = input.trim();
         return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private ProjectCreateUpdateResponseDTO mapToResponse(ProjectEntity project) {
-        return ProjectCreateUpdateResponseDTO.builder()
-                .projectId(project.getProjectId())
-                .projectName(project.getProjectName())
-                .projectCode(project.getProjectCode())
-                .description(project.getDescription())
-                .ownerId(project.getOwnerId())
-                .ownerEmail(project.getOwnerEmail())
-                .startDate(project.getStartDate())
-                .endDate(project.getEndDate())
-                .collaborators(project.getCollaborators())
-                .status(project.getStatus())
-                .isActive(project.getIsActive())
-                .trashedAt(project.getTrashedAt())
-                .createdAt(project.getCreatedAt())
-                .updatedAt(project.getUpdatedAt())
-                .build();
     }
 }

@@ -29,6 +29,13 @@ public enum ErrorCode {
     USER_NOT_FOUND("5203", "User not found", HttpStatus.NOT_FOUND),
     USER_EMAIL_NOT_VERIFY("5204", "User email not verified", HttpStatus.BAD_REQUEST),
     USER_NOT_AUTHENTICATED("5205", "User not authenticated", HttpStatus.UNAUTHORIZED),
+
+    PROJECT_NOT_FOUND("5301", "Project not found", HttpStatus.NOT_FOUND),
+    FOLDER_NOT_FOUND("5401", "Folder not found", HttpStatus.NOT_FOUND),
+    FOLDER_ALREADY_EXISTS("5402", "Folder already exists", HttpStatus.BAD_REQUEST),
+    FOLDER_CIRCULAR_REFERENCE("5403", "Circular reference detected in folder structure", HttpStatus.BAD_REQUEST),
+    FOLDER_PARENT_NOT_FOUND("5404", "Parent folder not found", HttpStatus.NOT_FOUND),
+
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),
 

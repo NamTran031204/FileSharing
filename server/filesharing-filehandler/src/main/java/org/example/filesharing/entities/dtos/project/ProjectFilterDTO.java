@@ -12,8 +12,6 @@ public class ProjectFilterDTO {
     private String email;
     private String userId;
 
-    private String category;
-
     // start or/and end
     private Instant startDate; // >= start date
     private Instant endDate; // <= endDate
