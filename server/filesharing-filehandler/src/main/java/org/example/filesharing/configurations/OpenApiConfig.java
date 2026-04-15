@@ -13,6 +13,7 @@ import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.swagger.v3.core.jackson.ModelResolver;
 
 import java.util.List;
 
@@ -21,6 +22,10 @@ public class OpenApiConfig {
 
     @Value("${server.port:8080}")
     private String serverPort;
+
+    static {
+        ModelResolver.enumsAsRef = true;
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
