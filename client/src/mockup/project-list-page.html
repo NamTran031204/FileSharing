@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "surface-variant": "#e0e0ff",
+                        "inverse-surface": "#242969",
+                        "on-primary-container": "#ceccff",
+                        "secondary-container": "#b5b1fe",
+                        "on-surface": "#0d1154",
+                        "surface-container-highest": "#e0e0ff",
+                        "surface-container": "#eeecff",
+                        "on-secondary-fixed-variant": "#423e83",
+                        "on-surface-variant": "#474650",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#130e56",
+                        "on-tertiary-fixed": "#170d56",
+                        "on-background": "#0d1154",
+                        "on-secondary-fixed": "#150d56",
+                        "tertiary": "#3f397e",
+                        "surface": "#fbf8ff",
+                        "tertiary-fixed": "#e4dfff",
+                        "inverse-on-surface": "#f1efff",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "surface-bright": "#fbf8ff",
+                        "inverse-primary": "#c2c1ff",
+                        "outline-variant": "#c8c5d2",
+                        "on-secondary-container": "#444085",
+                        "on-primary": "#ffffff",
+                        "primary": "#3b3a7e",
+                        "tertiary-container": "#565198",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-low": "#f4f2ff",
+                        "surface-container-high": "#e7e6ff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e3dfff",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "background": "#fbf8ff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#d1ccff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#403f83",
+                        "surface-dim": "#d6d7ff",
+                        "secondary": "#5a569c",
+                        "primary-container": "#535297",
+                        "outline": "#777681",
+                        "surface-tint": "#58579c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #fbf8ff; }
+        .glass-header { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fbf8ff]/80 dark:bg-[#0d1154]/80 glass-header shadow-sm shadow-[#3b3a7e]/5 flex justify-between items-center px-6 h-16">
+    <div class="flex items-center gap-4">
+        <span class="text-xl font-bold tracking-tighter text-[#3b3a7e] dark:text-[#fbf8ff]">Ethereal Media</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="hidden md:flex items-center bg-surface-container-high px-3 py-1.5 rounded-full w-64">
+            <span class="material-symbols-outlined text-outline text-lg" data-icon="search">search</span>
+            <input class="bg-transparent border-none focus:ring-0 text-sm w-full font-medium ml-2 placeholder-outline" placeholder="Quick search..." type="text"/>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="p-2 rounded-full hover:bg-[#f4f2ff]/50 transition-colors text-on-surface-variant relative">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+            </button>
+            <div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+                <img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a professional man in his 30s with a clean and neutral studio lighting background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf0ZZrZZ6G9jj7JJdYDbfnpjHlJQVuVkL-aPEF95uXZdMfECpyZEDWxDNmfFo_K68xklHOpFdNIHaGklPJMCENkACbA5sMw3hpUINO1d9tVV_A1aJCkL7zl_eMtLxLzdfN6uRLe9ZyqGqX20HcK_KDNDPLqSAolkATHG0cMig677e56HOnHOa6Vm4rUhjbbXIdtm018cMAQWq0nGEa1ldd2btHuOzroTEzEGjbgZ4U_PRY0Zg4vt5061WxYqwbRX8rqF1xIS0MPas"/>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-[60px] hover:w-[220px] transition-all duration-300 z-40 bg-[#f4f2ff] dark:bg-[#0d1154] flex flex-col py-4 overflow-hidden group">
+    <nav class="flex flex-col gap-2 w-full">
+        <a class="flex items-center h-12 px-[18px] text-[#474650] opacity-70 hover:bg-[#ffffff]/80 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined" data-icon="home">home</span>
+            <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Home</span>
+        </a>
+        <a class="flex items-center h-12 px-[18px] text-[#474650] opacity-70 hover:bg-[#ffffff]/80 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+            <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Assets</span>
+        </a>
+        <a class="flex items-center h-12 px-[18px] text-[#474650] opacity-70 hover:bg-[#ffffff]/80 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
+        </a>
+        <a class="flex items-center h-12 px-[18px] text-[#3b3a7e] font-bold border-r-4 border-[#3b3a7e] bg-[#ffffff]/50 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined" data-icon="description">description</span>
+            <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Projects</span>
+        </a>
+        <div class="mt-auto flex flex-col gap-2">
+            <a class="flex items-center h-12 px-[18px] text-[#474650] opacity-70 hover:bg-[#ffffff]/80 transition-all duration-300" href="#">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
+            </a>
+            <a class="flex items-center h-12 px-[18px] text-[#474650] opacity-70 hover:bg-[#ffffff]/80 transition-all duration-300" href="#">
+                <span class="material-symbols-outlined" data-icon="help">help</span>
+                <span class="ml-6 text-sm font-medium tracking-wide uppercase font-['Inter'] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Help</span>
+            </a>
+        </div>
+    </nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[60px] pt-16 min-h-screen">
+    <div class="max-w-7xl mx-auto px-8 py-10">
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center gap-2 text-xs font-medium text-on-surface-variant/60 uppercase tracking-widest mb-8">
+            <a class="hover:text-primary transition-colors" href="#">Home</a>
+            <span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
+            <a class="hover:text-primary transition-colors" href="#">My Projects</a>
+            <span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
+            <span class="text-on-surface">Project List</span>
+        </nav>
+        <!-- Row 1: Header & Action -->
+        <div class="flex justify-between items-end mb-12">
+            <div class="space-y-1">
+                <h1 class="text-4xl font-extrabold text-on-surface tracking-tighter">Project List</h1>
+                <p class="text-on-surface-variant font-medium">You have <span class="text-primary">24 active projects</span> in your workspace.</p>
+            </div>
+            <button class="bg-gradient-to-br from-primary to-primary-container text-white px-6 py-3 rounded-lg font-bold text-sm shadow-xl shadow-primary/10 flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+                <span class="material-symbols-outlined" data-icon="add">add</span>
+                <span>Add Project</span>
+            </button>
+        </div>
+        <!-- Row 2 & 3: Search, Filters & Chips -->
+        <div class="bg-surface-container-low rounded-2xl p-6 mb-10">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="relative flex-1 w-full">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+                    <input class="w-full bg-surface-container-lowest border-none rounded-xl pl-12 pr-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 placeholder:text-outline-variant" placeholder="Search by project name, code, or description..." type="text"/>
+                </div>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <button class="flex items-center gap-2 bg-surface-container-lowest text-on-surface-variant px-5 py-3 rounded-xl text-sm font-bold hover:bg-surface-bright transition-colors">
+                        <span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+                        <span>Filter</span>
+                    </button>
+                    <button class="flex items-center gap-2 bg-surface-container-lowest text-on-surface-variant px-5 py-3 rounded-xl text-sm font-bold hover:bg-surface-bright transition-colors">
+                        <span class="material-symbols-outlined text-lg" data-icon="sort">sort</span>
+                        <span>Sort</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-6">
+<span class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        Status: Active
+                        <span class="material-symbols-outlined text-[14px] cursor-pointer" data-icon="close">close</span>
+</span>
+                <span class="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        Date: All
+                        <span class="material-symbols-outlined text-[14px] cursor-pointer" data-icon="expand_more">expand_more</span>
+</span>
+                <span class="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        Owner: All
+                    </span>
+                <button class="text-primary text-[10px] font-bold uppercase tracking-widest ml-2 hover:underline">Clear all</button>
+            </div>
+        </div>
+        <!-- Main Project List -->
+        <div class="flex flex-col gap-6">
+            <!-- Project Card 1: Active -->
+            <div class="group relative bg-surface-container-lowest p-6 rounded-2xl flex flex-col lg:flex-row items-start lg:items-center gap-8 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 border border-transparent hover:border-primary/5 cursor-pointer">
+                <!-- Drag Handle (Visual only) -->
+                <div class="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 transition-opacity cursor-grab">
+                    <span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span>
+                </div>
+                <div class="flex-1 space-y-4">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-xl font-bold tracking-tight text-on-surface group-hover:text-primary transition-colors">Quantum Rebrand 2024</h3>
+                                <div class="flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                    Active
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-on-surface-variant/70">
+                                <span class="bg-surface-container-high px-2 py-0.5 rounded">QR-2024-001</span>
+                                <span>Visual Identity</span>
+                                <span>•</span>
+                                <span>sarah.connor@ethereal.com</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-on-surface-variant leading-relaxed max-w-2xl">Full structural overhaul of the Quantum media kit including motion guidelines and 4K asset pipeline updates.</p>
+                </div>
+                <!-- Stats & Meta -->
+                <div class="flex flex-wrap items-center gap-10">
+                    <div class="flex items-center gap-6">
+                        <div class="text-center group/stat">
+                            <span class="material-symbols-outlined text-outline group-hover/stat:text-primary transition-colors" data-icon="folder">folder</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">12</p>
+                        </div>
+                        <div class="text-center group/stat">
+                            <span class="material-symbols-outlined text-outline group-hover/stat:text-primary transition-colors" data-icon="movie">movie</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">84</p>
+                        </div>
+                        <div class="text-center group/stat">
+                            <span class="material-symbols-outlined text-outline group-hover/stat:text-primary transition-colors" data-icon="history">history</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">4</p>
+                        </div>
+                        <div class="text-center group/stat">
+                            <span class="material-symbols-outlined text-error/60 group-hover/stat:text-error transition-colors" data-icon="pending_actions">pending_actions</span>
+                            <p class="text-[10px] font-bold text-error mt-1">3</p>
+                        </div>
+                    </div>
+                    <div class="h-10 w-[1px] bg-outline-variant/20 hidden lg:block"></div>
+                    <div class="flex flex-col gap-2 min-w-[120px]">
+                        <span class="text-[10px] font-bold text-outline uppercase tracking-widest">Timeline</span>
+                        <div class="text-xs font-bold text-on-surface">Jan 12 - Mar 20</div>
+                    </div>
+                    <div class="flex -space-x-2">
+                        <img alt="Sarah" class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Portrait of a smiling woman with glasses, soft natural daylight in a home office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbRvu1IO8qMApi8TO_TDFAcF8kZ_6L2x8rB_qAjWxIhzu_CBsbtd0se88Gi0khH95IPrTXeRA9x99-JJulciWbruU_E278r8tUaSa3hdmwNRtqP9DoLp_IHIW9EGZScnNu0kLckB56SePCUZszV0RiO-DYi5v6mhfjFS2Z-n-g_Ho9Ql8vAW276McshEbleK7eIZ5kXmTLI0yqY4i93KyE3Yxf1msDUejNfvMqd5jTQWxUakL8tbSj-DknLBjK5voETMHw8p_B7m4"/>
+                        <img alt="David" class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Portrait of a professional man in a suit, high-end commercial studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn8goViUDBB6FfXbOcnxmxTDmmG6fUHc4Y6I3zlZAEMTF7jwyvtQd-2Mx6pqyZBzsBE0yEE-2uifVTAR3ffAW8HxJnRn7ExTrTQlONEejQGywft8TdPV_om9SNZ3exAxgJfv_QBOAfawZ-I1gemPZYvazJ0fEDC4sAgySpg_kRruH2B18g-bIab7Natd--F-Ph3kxxx5I4ZOWh0qiOOOFXWBR1r_hKL2F4yIGAfVaykAMh-J4xF9pp24nLVLfukr5UbwXm0TLC1mw"/>
+                        <div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-primary">+5</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-outline uppercase block mb-1">Updated</span>
+                        <span class="text-xs font-medium text-on-surface-variant">2h ago</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Project Card 2: Completed -->
+            <div class="group relative bg-surface-container-lowest p-6 rounded-2xl flex flex-col lg:flex-row items-start lg:items-center gap-8 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 border border-transparent hover:border-primary/5 cursor-pointer">
+                <div class="flex-1 space-y-4">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-xl font-bold tracking-tight text-on-surface group-hover:text-primary transition-colors">Aurora Campaign</h3>
+                                <div class="flex items-center gap-1.5 bg-primary/5 text-primary px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">
+                                    Completed
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-on-surface-variant/70">
+                                <span class="bg-surface-container-high px-2 py-0.5 rounded">AUR-99</span>
+                                <span>Marketing</span>
+                                <span>•</span>
+                                <span>m.chen@ethereal.com</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-on-surface-variant leading-relaxed max-w-2xl">Final deliverables for the Aurora winter collection. Archive ready for Q4 review.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-10 opacity-70">
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-outline" data-icon="folder">folder</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">4</p>
+                        </div>
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-outline" data-icon="movie">movie</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">112</p>
+                        </div>
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-outline" data-icon="history">history</span>
+                            <p class="text-[10px] font-bold text-on-surface-variant mt-1">12</p>
+                        </div>
+                    </div>
+                    <div class="h-10 w-[1px] bg-outline-variant/20 hidden lg:block"></div>
+                    <div class="flex flex-col gap-2 min-w-[120px]">
+                        <span class="text-[10px] font-bold text-outline uppercase tracking-widest">Timeline</span>
+                        <div class="text-xs font-bold text-on-surface">Oct 20 - Dec 15</div>
+                    </div>
+                    <div class="flex -space-x-2">
+                        <img alt="Mike" class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Portrait of a creative professional in a casual setting, warm sunset light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSipoMEEySKAJk5Or4DwiTxQdhRcFBc2JKt2Zh9OfOAPcB4cswuf9o_QIV8tG7wnQSzueiyzc53kY1E6Ruv-uM_6trOZUjv8M3O33ydwF35pDctitKpmADjLs30qdxuxnH4HGKt4XunH3aQM2WpSpPqwILtCULZ6UuHZ69xXYbBG1VxXyBH1Qggrdn2yA2Y34P9IWb9QuaJbASg4e9ATUU0BDQTqIejfwRYCPtZ3O8CmTy0_Buhitx2CWJa8ymTWjg7M2O1zlaLrQ"/>
+                        <div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-primary">+2</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-outline uppercase block mb-1">Updated</span>
+                        <span class="text-xs font-medium text-on-surface-variant">4d ago</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Skeleton Loader State -->
+            <div class="bg-surface-container-low/50 p-6 rounded-2xl flex flex-col lg:flex-row items-center gap-8 animate-pulse">
+                <div class="flex-1 space-y-4 w-full">
+                    <div class="flex items-center gap-3">
+                        <div class="h-6 w-48 bg-surface-variant rounded"></div>
+                        <div class="h-4 w-20 bg-surface-variant rounded-full"></div>
+                    </div>
+                    <div class="h-3 w-64 bg-surface-variant rounded"></div>
+                    <div class="h-3 w-full bg-surface-variant rounded max-w-xl"></div>
+                </div>
+                <div class="flex gap-10 items-center w-full lg:w-auto">
+                    <div class="flex gap-4">
+                        <div class="h-8 w-8 bg-surface-variant rounded-full"></div>
+                        <div class="h-8 w-8 bg-surface-variant rounded-full"></div>
+                    </div>
+                    <div class="h-8 w-24 bg-surface-variant rounded"></div>
+                    <div class="h-8 w-16 bg-surface-variant rounded-full"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Empty State (Hidden) -->
+        <div class="hidden flex-col items-center justify-center py-32 text-center">
+            <div class="w-24 h-24 bg-surface-container-low rounded-full flex items-center justify-center mb-6">
+                <span class="material-symbols-outlined text-4xl text-outline-variant" data-icon="search_off">search_off</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface mb-2">No projects found</h3>
+            <p class="text-on-surface-variant max-w-xs mx-auto">We couldn't find any projects matching your current search or filters.</p>
+            <button class="mt-8 text-primary font-bold uppercase tracking-widest text-[10px] hover:underline">Clear all filters</button>
+        </div>
+    </div>
+</main>
+<!-- Context Menu Overlay (Conceptual for right-click) -->
+<div class="hidden fixed z-[100] bg-surface-container-lowest shadow-2xl rounded-xl border border-outline-variant/10 w-48 py-2 overflow-hidden" id="context-menu">
+    <button class="w-full flex items-center px-4 py-2.5 text-sm font-medium hover:bg-surface-container-low transition-colors text-on-surface">
+        <span class="material-symbols-outlined text-lg mr-3" data-icon="push_pin">push_pin</span> Pin Project
+    </button>
+    <button class="w-full flex items-center px-4 py-2.5 text-sm font-medium hover:bg-surface-container-low transition-colors text-on-surface">
+        <span class="material-symbols-outlined text-lg mr-3" data-icon="edit">edit</span> Rename
+    </button>
+    <button class="w-full flex items-center px-4 py-2.5 text-sm font-medium hover:bg-surface-container-low transition-colors text-on-surface">
+        <span class="material-symbols-outlined text-lg mr-3" data-icon="share">share</span> Share
+    </button>
+    <div class="h-[1px] bg-outline-variant/10 my-1"></div>
+    <button class="w-full flex items-center px-4 py-2.5 text-sm font-medium hover:bg-error/5 text-error transition-colors">
+        <span class="material-symbols-outlined text-lg mr-3" data-icon="archive">archive</span> Archive
+    </button>
+</div>
+</body></html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Lumina Pro - Create Project</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#3f397e",
+                        "secondary": "#5a569c",
+                        "on-background": "#0d1154",
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#242969",
+                        "on-surface-variant": "#474650",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#150d56",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "primary": "#3b3a7e",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#565198",
+                        "secondary-container": "#b5b1fe",
+                        "background": "#fbf8ff",
+                        "surface-tint": "#58579c",
+                        "outline-variant": "#c8c5d2",
+                        "primary-fixed": "#e2dfff",
+                        "on-secondary-container": "#444085",
+                        "surface-variant": "#e0e0ff",
+                        "outline": "#777681",
+                        "secondary-fixed": "#e3dfff",
+                        "inverse-on-surface": "#f1efff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#0d1154",
+                        "on-primary-container": "#ceccff",
+                        "surface-container": "#eeecff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d6d7ff",
+                        "surface-bright": "#fbf8ff",
+                        "on-secondary-fixed-variant": "#423e83",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "on-tertiary-container": "#d1ccff",
+                        "on-primary-fixed-variant": "#403f83",
+                        "inverse-primary": "#c2c1ff",
+                        "surface-container-low": "#f4f2ff",
+                        "on-primary-fixed": "#130e56",
+                        "surface-container-highest": "#e0e0ff",
+                        "surface": "#fbf8ff",
+                        "primary-container": "#535297",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e6ff",
+                        "on-tertiary-fixed": "#170d56",
+                        "tertiary-fixed": "#e4dfff",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-header {
+            background: rgba(251, 248, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- Sidebar Shell (Shared Component) -->
+<aside class="h-screen sticky left-0 top-0 w-20 hover:w-64 transition-all duration-300 ease-in-out overflow-hidden bg-surface-container-low flex flex-col py-6 z-40 group">
+    <div class="px-6 mb-8 flex items-center">
+        <span class="material-symbols-outlined text-primary text-2xl" data-icon="blur_on">blur_on</span>
+        <span class="ml-4 font-black tracking-widest text-primary text-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">MEDIA STUDIO</span>
+    </div>
+    <nav class="flex-1 space-y-2">
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors group/item" href="#">
+            <span class="material-symbols-outlined" data-icon="home_storage">home_storage</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Home</span>
+        </a>
+        <a class="flex items-center px-6 py-3 bg-white/50 text-primary shadow-sm group/item" href="#">
+            <span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Reviews</span>
+        </a>
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors group/item" href="#">
+            <span class="material-symbols-outlined" data-icon="history">history</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Versions</span>
+        </a>
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors group/item" href="#">
+            <span class="material-symbols-outlined" data-icon="group">group</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Team</span>
+        </a>
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors group/item" href="#">
+            <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Archive</span>
+        </a>
+    </nav>
+    <div class="mt-auto space-y-2 border-t border-outline-variant/10 pt-4">
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors" href="#">
+            <span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Help</span>
+        </a>
+        <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white/30 transition-colors" href="#">
+            <span class="material-symbols-outlined" data-icon="logout">logout</span>
+            <span class="ml-4 font-bold uppercase tracking-widest text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">Sign Out</span>
+        </a>
+    </div>
+</aside>
+<div class="flex-1 flex flex-col relative min-w-0">
+    <!-- Top Navigation Bar (Shared Component) -->
+    <header class="fixed top-0 right-0 left-20 z-30 glass-header h-16 flex items-center justify-between px-8">
+        <div class="flex items-center gap-6">
+            <img alt="Lumina Pro" class="h-8 w-auto" data-alt="Corporate logo for Lumina Pro in sleek minimalist typography and a subtle indigo gradient icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3psYlxPgyiep2ylFyFYhwP78x7ojrcu9aTw2WTGlytpFzRDNB5Gr3nD_LgRBLy6Dyu-h3QBy6gkTB6h_xc0JWacDx0RLwEvGgmGJ-fJRXsWAxQvcLYgMIifZF-GdhUSb4-dkvll6ObjT6mjqqY_s2jd9jGfq-_Cp3YmXOrYkpk1GL4gxxVK_KoVBNIZDRvPMgSvMHYz3NUZFO3MvQWg4pjeaDVp4WFse8rmrDOd9Zgl3yf7z-lrwFot4_8MTKotEU2jUo4jAlhdw"/>
+            <nav class="hidden md:flex items-center gap-8 text-[13px] font-medium tracking-tight">
+                <span class="text-on-surface-variant">Dashboard</span>
+                <span class="material-symbols-outlined text-[12px] text-outline" data-icon="chevron_right">chevron_right</span>
+                <span class="text-primary font-semibold">New Project</span>
+            </nav>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant/20">
+                <img alt="User" class="h-full w-full object-cover" data-alt="Professional headshot of a creative director in a bright airy studio environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMpUEhirBdFSVGfdQK7uJTUWhHo5K0I74c02iRO2Otf-hFDolUNE_kby5YThErlTaDnclKN8-ZlXKVXUz0OKjaS1Rlqz1_e4B_AXGAp-E1i3qRmtN09WZodZEAQfQ5JXENC7umP7OqXOLJnp7PQ0C-yirX4nNV3qwzV8Lnuxv5f0E6CZ6VNFKSSW7QjXkJwp6ktxdNiAcYa8F-N2tN7Z5y0leLSceJVQ9ViItyxRalYjdHSHuU_UushZTtw71-2cxqpHh_B6-JwVY"/>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content (Canvas) -->
+    <main class="mt-16 p-12 overflow-y-auto flex-1">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-end mb-12">
+                <div class="space-y-2">
+                    <h1 class="text-4xl font-extrabold tracking-tighter text-on-surface">Projects</h1>
+                    <p class="text-on-surface-variant max-w-md">Manage your editorial workflows and media review pipelines in one centralized hub.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Placeholder Project Cards for Depth -->
+                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col h-64">
+                    <div class="flex justify-between mb-4">
+                        <span class="bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">Campaign</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Summer Launch 2024</h3>
+                    <p class="text-sm text-on-surface-variant flex-1">Product photography and sizzle reel for the global seasonal campaign.</p>
+                    <div class="mt-4 flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full border-2 border-white bg-secondary-container text-[10px] flex items-center justify-center font-bold">JD</div>
+                        <div class="w-8 h-8 rounded-full border-2 border-white bg-primary-container text-[10px] text-white flex items-center justify-center font-bold">AS</div>
+                    </div>
+                </div>
+                <!-- Empty State "New Project" Card -->
+                <div class="bg-surface-container-low border-2 border-dashed border-outline-variant/30 rounded-xl p-8 flex flex-col items-center justify-center h-64 hover:bg-surface-container transition-colors cursor-pointer group">
+                    <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-primary" data-icon="add">add</span>
+                    </div>
+                    <p class="font-bold text-primary tracking-tight">Create New Project</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Modal Overlay -->
+    <div class="fixed inset-0 bg-on-background/20 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+        <!-- Modal Container -->
+        <div class="bg-surface-container-lowest w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <!-- Modal Header -->
+            <div class="px-8 py-6 border-b border-outline-variant/10 flex items-center justify-between">
+                <h2 class="text-2xl font-extrabold tracking-tighter text-on-surface">Create Project</h2>
+                <button class="text-outline hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined" data-icon="close">close</span>
+                </button>
+            </div>
+            <!-- Modal Body - Scrollable -->
+            <div class="flex-1 overflow-y-auto px-8 py-8">
+                <form class="space-y-8">
+                    <!-- Core Project Info (Main Fields) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                        <!-- Project Name -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant flex justify-between">
+                                Project Name <span class="text-error text-xs">*</span>
+                            </label>
+                            <input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm placeholder:text-outline/50" placeholder="e.g. Winter Brand Refresh" type="text"/>
+                            <p class="text-[10px] text-error font-medium">Name must be between 2 and 100 characters.</p>
+                        </div>
+                        <!-- Project Code -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant flex justify-between">
+                                Project Code <span class="text-error text-xs">*</span>
+                            </label>
+                            <input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm placeholder:text-outline/50" placeholder="WBR_2024" type="text"/>
+                            <p class="text-[10px] text-on-surface-variant italic">Alphanumeric and underscores only.</p>
+                        </div>
+                        <!-- Description - Full Width -->
+                        <div class="md:col-span-2 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Description</label>
+                                <span class="text-[10px] text-outline font-medium">0 / 500</span>
+                            </div>
+                            <textarea class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm placeholder:text-outline/50 resize-none" placeholder="Define the creative vision for this project..." rows="3"></textarea>
+                        </div>
+                    </div>
+                    <!-- Advanced Options (Expandable Section) -->
+                    <div class="pt-4">
+                        <details class="group border-t border-outline-variant/10 pt-6">
+                            <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                                <div class="flex items-center gap-2 text-primary-container font-bold text-[13px] tracking-tight hover:opacity-80 transition-opacity">
+                                    <span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                                    <span>Advanced Options</span>
+                                </div>
+                                <span class="material-symbols-outlined text-primary-container transition-transform duration-300 group-open:rotate-180" data-icon="expand_more">expand_more</span>
+                            </summary>
+                            <div class="mt-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                    <!-- Dates -->
+                                    <div class="space-y-2">
+                                        <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Start Date</label>
+                                        <input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm" type="date"/>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">End Date</label>
+                                        <input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm" type="date"/>
+                                    </div>
+                                    <!-- Category Dropdown -->
+                                    <div class="space-y-2">
+                                        <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Category</label>
+                                        <div class="relative">
+                                            <select class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 appearance-none focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm">
+                                                <option value="CAMPAIGN">CAMPAIGN</option>
+                                                <option value="BRANDING">BRANDING</option>
+                                                <option value="PRODUCT">PRODUCT</option>
+                                                <option value="OTHER">OTHER</option>
+                                            </select>
+                                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline" data-icon="expand_more">expand_more</span>
+                                        </div>
+                                    </div>
+                                    <!-- Status Dropdown -->
+                                    <div class="space-y-2">
+                                        <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Project Status</label>
+                                        <div class="relative">
+                                            <select class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 appearance-none focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm">
+                                                <option value="ACTIVE">ACTIVE</option>
+                                                <option value="ARCHIVED">ARCHIVED</option>
+                                                <option value="COMPLETED">COMPLETED</option>
+                                            </select>
+                                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline" data-icon="expand_more">expand_more</span>
+                                        </div>
+                                    </div>
+                                    <!-- Client Name (Search) -->
+                                    <div class="md:col-span-2 space-y-2">
+                                        <label class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Client Name</label>
+                                        <div class="relative">
+                                            <input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-primary/40 transition-all text-on-surface text-sm placeholder:text-outline/50" placeholder="Search for client..." type="text"/>
+                                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+                                        </div>
+                                    </div>
+                                    <!-- Checkbox -->
+                                    <div class="md:col-span-2 flex items-center gap-3 pt-2">
+                                        <div class="relative flex items-center">
+                                            <input checked="" class="w-5 h-5 rounded bg-surface-container-low border-none text-primary focus:ring-primary/40" type="checkbox"/>
+                                        </div>
+                                        <label class="text-sm font-medium text-on-surface">Create default folder structure (Assets, Rough Cuts, Approved)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </form>
+            </div>
+            <!-- Modal Footer - Sticky -->
+            <div class="px-8 py-6 bg-surface-container-low border-t border-outline-variant/10 flex justify-end gap-4">
+                <button class="px-6 py-2.5 text-sm font-bold tracking-tight text-primary hover:bg-white/50 rounded transition-colors">Cancel</button>
+                <button class="px-8 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white text-sm font-bold tracking-tight rounded-lg shadow-sm hover:opacity-90 transition-opacity active:scale-[0.98]">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body></html>
