@@ -60,6 +60,7 @@ This skill transforms static HTML pages and components into well-structured Reac
 - Detect whether input is a full page (header/nav/main) or a partial component
 - Identify layout type, nested elements, and styling patterns
 - Check for existing component patterns (cards, lists, forms)
+- Read `src/index.css` and identify available theme tokens/colors before mapping visual styles
 
 ### Step 2: Plan Component Architecture
 - **Full page**: Use AppHeader + AppSidebar layout, extract content from `<main>`
@@ -70,6 +71,7 @@ This skill transforms static HTML pages and components into well-structured Reac
 - Replace HTML elements with React components
 - Map simple elements (button, input, form) to Ant Design equivalents
 - Preserve Tailwind classes, optimize for React structure
+- Align color-related Tailwind classes with tokens defined in `src/index.css` (e.g. `bg-primary`, `text-foreground`, `border-border`) instead of hardcoded hex/rgb/hsl values
 - Generate TypeScript interfaces for all component props
 
 ### Step 4: Extract Reusable Components
