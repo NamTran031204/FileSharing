@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
-import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateResponseDTO;
-import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
+import org.example.filesharing.entities.dtos.project.*;
 import org.example.filesharing.entities.models.core.ProjectEntity;
 import org.example.filesharing.services.ProjectService;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
 
     private final ProjectService projectService;
+
+    @PostMapping("/check-project")
+    public CommonResponse<ProjectCheckResponseDTO> checkProject(@RequestBody ProjectCheckInputDTO dto) {
+        return CommonResponse.success(projectService.checkProject(dto));
+    }
 
     @PostMapping("/create-new")
     public CommonResponse<ProjectCreateUpdateResponseDTO> createNewProject(@RequestBody ProjectCreateUpdateDTO projectCreateUpdateDTO) {

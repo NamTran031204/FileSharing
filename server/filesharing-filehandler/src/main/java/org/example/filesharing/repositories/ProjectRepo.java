@@ -9,4 +9,10 @@ public interface ProjectRepo extends MongoRepository<ProjectEntity, String> {
     boolean existsByProjectCode(String projectCode);
 
     boolean existsByProjectCodeAndProjectIdNot(String projectCode, String projectId);
+
+    boolean existsByProjectName(String projectName);
+
+    boolean existsByProjectNameAndIsActive(String projectName, boolean isActive);
+
+    boolean existsByProjectCodeAndIsActive(String projectCode, Boolean isActive);
 }

@@ -1,11 +1,10 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.eclipse.angus.mail.iap.CommandFailedException;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
-import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateResponseDTO;
-import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
+import org.example.filesharing.entities.dtos.project.*;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
 import org.example.filesharing.entities.models.core.ProjectEntity;
@@ -13,6 +12,7 @@ import org.example.filesharing.entities.models.core.UserEntity;
 import org.example.filesharing.enums.ProjectCollaboratorRole;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.exceptions.ErrorCode;
+import org.example.filesharing.exceptions.specException.CommonException;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.ProjectRepo;
@@ -36,6 +36,33 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepo userRepo;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
+
+    @Override
+    public ProjectCheckResponseDTO checkProject(ProjectCheckInputDTO inputDTO) {
+        if (inputDTO == null) throw new CommonException(ErrorCode.VALIDATION_ERROR);
+
+        if (inputDTO.getProjectName() != null) {
+            if (projectRepo.existsByProjectName(inputDTO.getProjectName())) {
+                return ProjectCheckResponseDTO.builder()
+                        .isSuccess(false)
+                        .message("Project name already exists")
+                        .build();
+            }
+        }
+
+        if (inputDTO.getProjectCode() != null) {
+            if (projectRepo.existsByProjectCode(inputDTO.getProjectCode())) {
+                return ProjectCheckResponseDTO.builder()
+                        .isSuccess(false)
+                        .message("Project code already exists")
+                        .build();
+            }
+        }
+
+        return ProjectCheckResponseDTO.builder()
+                .isSuccess(true)
+                .build();
+    }
 
     @Override
     public ProjectCreateUpdateResponseDTO createNewProject(ProjectCreateUpdateDTO projectCreateUpdateDTO) {

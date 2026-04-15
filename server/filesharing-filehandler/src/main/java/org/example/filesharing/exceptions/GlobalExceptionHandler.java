@@ -4,6 +4,7 @@ import com.mongodb.*;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.CommonResponse;
+import org.example.filesharing.exceptions.specException.CommonException;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.context.request.WebRequest;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({
+            CommonException.class,
             FileBusinessException.class,
             UserBusinessException.class,
     })
