@@ -36,8 +36,8 @@ import ImageReviewFeedbackItem, {
   type ImageReviewFeedback,
 } from '../components/ImageReviewFeedbackItem';
 import ImageReviewModeButton from '../components/ImageReviewModeButton';
-import useImage from "use-image";
-import {Image as KonvaImage} from "react-konva/ReactKonvaCore";
+// import useImage from "use-image";
+// import {Image as KonvaImage} from "react-konva/ReactKonvaCore";
 
 const { TextArea } = Input;
 
@@ -125,26 +125,26 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 500;
-
-function BackgroundImage({ src }: { src: string }) {
-    // useImage tự động load ảnh và trả về HTMLImageElement
-    const [image, status] = useImage(src);
-
-    // Hiển thị placeholder khi ảnh đang load
-    if (status === "loading") {
-        return null; // Có thể thêm loading indicator nếu muốn
-    }
-
-    return (
-        <KonvaImage
-            image={image}      // HTMLImageElement
-            x={0}              // Góc trái-trên của ảnh
-            y={0}
-            width={CANVAS_WIDTH}   // Stretch full canvas
-            height={CANVAS_HEIGHT}
-        />
-    );
-}
+//
+// function BackgroundImage({ src }: { src: string }) {
+//     // useImage tự động load ảnh và trả về HTMLImageElement
+//     const [image, status] = useImage(src);
+//
+//     // Hiển thị placeholder khi ảnh đang load
+//     if (status === "loading") {
+//         return null; // Có thể thêm loading indicator nếu muốn
+//     }
+//
+//     return (
+//         <KonvaImage
+//             image={image}      // HTMLImageElement
+//             x={0}              // Góc trái-trên của ảnh
+//             y={0}
+//             width={CANVAS_WIDTH}   // Stretch full canvas
+//             height={CANVAS_HEIGHT}
+//         />
+//     );
+// }
 
 const ImageReviewV2 = ({
   imageName = 'Hero_Final.jpg',
@@ -198,29 +198,29 @@ const ImageReviewV2 = ({
   };
 
   return (
-    <div className="bg-[#fbf8ff] text-[#0d1154] min-h-screen overflow-hidden flex flex-col">
+    <div className="bg-background text-foreground min-h-screen overflow-hidden flex flex-col">
       <AppHeader />
 
       <main className="flex flex-1 pt-16 h-screen overflow-hidden">
         <AppSidebar />
 
         <div className="flex-1 h-full flex overflow-hidden">
-          <section className="flex-1 relative bg-[#fbf8ff] flex flex-col overflow-hidden">
-            <div className="px-8 py-4 bg-white/70 backdrop-blur-sm border-b border-[#e7e6ff] flex items-center justify-between gap-6">
-              <div className="flex items-center gap-2 text-sm text-[#474650] min-w-0">
-                <Link to="/dashboard" className="hover:text-[#3b3a7e] transition-colors">
+          <section className="flex-1 relative bg-background flex flex-col overflow-hidden">
+            <div className="px-8 py-4 bg-white/70 backdrop-blur-sm border-b border-border flex items-center justify-between gap-6">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                <Link to="/dashboard" className="hover:text-primary-dark transition-colors">
                   Dashboard
                 </Link>
-                <RightOutlined className="text-[10px] text-[#777681]" />
+                <RightOutlined className="text-[10px] text-muted-foreground" />
                 <span className="truncate">{campaignName}</span>
-                <RightOutlined className="text-[10px] text-[#777681]" />
-                <span className="font-semibold text-[#3b3a7e] truncate">{imageName}</span>
+                <RightOutlined className="text-[10px] text-muted-foreground" />
+                <span className="font-semibold text-primary-dark truncate">{imageName}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Button
                   type="text"
-                  className="!h-9 px-3 rounded-full bg-[#eeecff] text-[#3b3a7e] text-xs font-bold tracking-widest"
+                  className="!h-9 px-3 rounded-full bg-muted text-primary-dark text-xs font-bold tracking-widest"
                 >
                   v4
                   <DownOutlined className="text-[10px]" />
@@ -228,28 +228,28 @@ const ImageReviewV2 = ({
                 <Button
                   type="text"
                   icon={<BellOutlined />}
-                  className="!h-9 !w-9 rounded-full text-[#474650] hover:!bg-[#eeecff]"
+                  className="!h-9 !w-9 rounded-full text-muted-foreground hover:!bg-muted"
                 />
                 <Button
                   type="text"
                   icon={<MessageOutlined />}
-                  className="!h-9 !w-9 rounded-full text-[#474650] hover:!bg-[#eeecff]"
+                  className="!h-9 !w-9 rounded-full text-muted-foreground hover:!bg-muted"
                 />
                 <Avatar
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGOrDfJbWpoHdpY3rrZMrq5TCW_-YUtO2nHfrtDg-m9763x3kK1sMlCDzHeAG-NhOX59Eqc4PYcj1T3yx3-UEHi1R1XwvX8Wz0-AGUFg_fdv9MAYQ7aA9Tic8HGyv4dLsCb3gbgvn3trKyYnSImNjXrVw-xze12Z7Dw8Drk4TTOB41iatYlrFgD6OBAewYeAD_kOiYXVeX2WJxaBNo872uODNJxvAydFNTTa6VMeTI3cFAVgDxK5q55znThl99diHyXG9dVcfYBP4"
                   size={36}
-                  className="border border-[#c8c5d2]"
+                  className="border border-border"
                 />
               </div>
             </div>
 
             <div className="flex-1 relative p-8 flex items-center justify-center overflow-hidden">
-              <div className="absolute left-6 top-6 grid grid-cols-2 gap-2 rounded-2xl bg-white/80 p-2 shadow-sm backdrop-blur-sm border border-[#e7e6ff]">
+              <div className="absolute left-6 top-6 grid grid-cols-2 gap-2 rounded-2xl bg-white/80 p-2 shadow-sm backdrop-blur-sm border border-border">
                 {WORKSPACE_ACTIONS.map((action) => (
                   <Button
                     key={action.key}
                     type="text"
-                    className="!h-auto px-3 py-2 rounded-lg text-xs text-[#474650] hover:!bg-[#f4f2ff] flex items-center justify-start gap-2"
+                    className="!h-auto px-3 py-2 rounded-lg text-xs text-muted-foreground hover:!bg-muted flex items-center justify-start gap-2"
                   >
                     {action.icon}
                     <span>{action.label}</span>
@@ -264,8 +264,8 @@ const ImageReviewV2 = ({
                   className="max-w-full max-h-[760px] object-contain transition-transform duration-200"
                   style={{ transform: `scale(${zoomLevel / 100})` }}
                 />
-                <div className="absolute top-1/4 left-1/3 w-48 h-32 border-2 border-[#3b3a7e] bg-[#3b3a7e]/10 rounded-sm cursor-pointer group-hover:border-white transition-colors flex items-center justify-center">
-                  <div className="bg-[#3b3a7e] text-white text-[10px] font-bold px-1.5 py-0.5 absolute -top-5 left-0 rounded-t-sm">
+                <div className="absolute top-1/4 left-1/3 w-48 h-32 border-2 border-primary-dark bg-primary-dark/10 rounded-sm cursor-pointer group-hover:border-white transition-colors flex items-center justify-center">
+                  <div className="bg-primary-dark text-white text-[10px] font-bold px-1.5 py-0.5 absolute -top-5 left-0 rounded-t-sm">
                     ID: 082
                   </div>
                 </div>
@@ -276,63 +276,63 @@ const ImageReviewV2 = ({
                   type="text"
                   icon={<ZoomInOutlined />}
                   onClick={handleZoomIn}
-                  className="!h-10 !w-10 rounded-xl text-[#3b3a7e] hover:!bg-[#e7e6ff]"
+                  className="!h-10 !w-10 rounded-xl text-primary-dark hover:!bg-muted"
                 />
                 <Button
                   type="text"
                   icon={<ZoomOutOutlined />}
                   onClick={handleZoomOut}
-                  className="!h-10 !w-10 rounded-xl text-[#3b3a7e] hover:!bg-[#e7e6ff]"
+                  className="!h-10 !w-10 rounded-xl text-primary-dark hover:!bg-muted"
                 />
-                <div className="w-px h-6 bg-[#c8c5d2]/50 mx-1" />
+                <div className="w-px h-6 bg-border/50 mx-1" />
                 <Button
                   type="text"
-                  className="!h-10 px-4 text-xs font-bold text-[#3b3a7e] hover:!bg-[#e7e6ff] rounded-xl"
+                  className="!h-10 px-4 text-xs font-bold text-primary-dark hover:!bg-muted rounded-xl"
                   onClick={() => setZoomLevel(100)}
                 >
                   FIT
                 </Button>
                 <Button
                   type="text"
-                  className="!h-10 px-4 text-xs font-bold text-[#3b3a7e] hover:!bg-[#e7e6ff] rounded-xl"
+                  className="!h-10 px-4 text-xs font-bold text-primary-dark hover:!bg-muted rounded-xl"
                   onClick={() => setZoomLevel(100)}
                 >
                   {zoomLevel}%
                 </Button>
-                <div className="w-px h-6 bg-[#c8c5d2]/50 mx-1" />
+                <div className="w-px h-6 bg-border/50 mx-1" />
                 <Button
                   type="text"
                   icon={<FullscreenOutlined />}
-                  className="!h-10 !w-10 rounded-xl text-[#3b3a7e] hover:!bg-[#e7e6ff]"
+                  className="!h-10 !w-10 rounded-xl text-primary-dark hover:!bg-muted"
                 />
                 <Button
                   type="text"
                   icon={<DownloadOutlined />}
-                  className="!h-10 !w-10 rounded-xl text-[#3b3a7e] hover:!bg-[#e7e6ff]"
+                  className="!h-10 !w-10 rounded-xl text-primary-dark hover:!bg-muted"
                 />
               </div>
             </div>
           </section>
 
-          <aside className="w-[380px] h-full flex flex-col bg-[#f4f2ff] border-l border-[#e7e6ff]">
-            <div className="p-6 border-b border-[#e7e6ff] space-y-6">
+          <aside className="w-[380px] h-full flex flex-col bg-muted border-l border-border">
+            <div className="p-6 border-b border-border space-y-6">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-bold text-[#0d1154] tracking-tight">MARKUP TOOLS</h3>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">MARKUP TOOLS</h3>
                 <div className="flex gap-1">
                   <Button
                     type="text"
                     icon={<UndoOutlined className="text-lg" />}
-                    className="!h-9 !w-9 rounded-lg text-[#474650] hover:!text-[#3b3a7e] hover:!bg-white/60"
+                    className="!h-9 !w-9 rounded-lg text-muted-foreground hover:!text-primary-dark hover:!bg-white/60"
                   />
                   <Button
                     type="text"
                     icon={<RedoOutlined className="text-lg" />}
-                    className="!h-9 !w-9 rounded-lg text-[#474650] hover:!text-[#3b3a7e] hover:!bg-white/60"
+                    className="!h-9 !w-9 rounded-lg text-muted-foreground hover:!text-primary-dark hover:!bg-white/60"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 p-1 bg-[#e7e6ff] rounded-xl">
+              <div className="grid grid-cols-3 gap-2 p-1 bg-muted rounded-xl">
                 {MODE_OPTIONS.map((mode) => (
                   <ImageReviewModeButton
                     key={mode.key}
@@ -354,8 +354,8 @@ const ImageReviewV2 = ({
                       onClick={() => setActiveShape(shape.key)}
                       className={`!h-10 !w-10 rounded-xl border-0 transition-all ${
                         activeShape === shape.key
-                          ? 'bg-white text-[#3b3a7e] shadow-sm'
-                          : 'text-[#474650] hover:!bg-white/60'
+                          ? 'bg-white text-primary-dark shadow-sm'
+                          : 'text-muted-foreground hover:!bg-white/60'
                       }`}
                       icon={shape.icon}
                     />
@@ -364,12 +364,12 @@ const ImageReviewV2 = ({
                   <Button
                     type="text"
                     icon={<DeleteOutlined />}
-                    className="!h-10 !w-10 rounded-xl border-0 text-[#ba1a1a] hover:!bg-white/60 ml-auto"
+                    className="!h-10 !w-10 rounded-xl border-0 text-destructive hover:!bg-white/60 ml-auto"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[11px] font-bold text-[#474650] tracking-wider">
+                  <div className="flex justify-between text-[11px] font-bold text-muted-foreground tracking-wider">
                     <span>STROKE SIZE</span>
                     <span>{strokeSize}px</span>
                   </div>
@@ -379,9 +379,9 @@ const ImageReviewV2 = ({
                     value={strokeSize}
                     onChange={setStrokeSize}
                     styles={{
-                      track: { backgroundColor: '#3b3a7e' },
-                      rail: { backgroundColor: '#d6d7ff' },
-                      handle: { borderColor: '#3b3a7e' },
+                      track: { backgroundColor: 'var(--color-primary-dark)' },
+                      rail: { backgroundColor: 'var(--color-muted)' },
+                      handle: { borderColor: 'var(--color-primary-dark)' },
                     }}
                   />
                 </div>
@@ -391,8 +391,8 @@ const ImageReviewV2 = ({
             <div className="flex-1 flex flex-col min-h-0">
               <div className="p-6 pb-2">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-[#0d1154] tracking-tight">FEEDBACK</h3>
-                  <span className="px-2 py-1 bg-[#3b3a7e]/10 text-[#3b3a7e] text-[10px] font-black rounded-md">
+                  <h3 className="text-sm font-bold text-foreground tracking-tight">FEEDBACK</h3>
+                  <span className="px-2 py-1 bg-primary-dark/10 text-primary-dark text-[10px] font-black rounded-md">
                     {openFeedbackCount} ACTIVE
                   </span>
                 </div>
@@ -401,8 +401,8 @@ const ImageReviewV2 = ({
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
                   placeholder="Search comments..."
-                  prefix={<SearchOutlined className="text-[#777681]" />}
-                  className="rounded-xl bg-white border border-[#e7e6ff]"
+                  prefix={<SearchOutlined className="text-muted-foreground" />}
+                  className="rounded-xl bg-white border border-border"
                 />
               </div>
 
@@ -417,13 +417,13 @@ const ImageReviewV2 = ({
                 ))}
 
                 {!filteredFeedback.length ? (
-                  <div className="rounded-2xl bg-white/80 border border-dashed border-[#c8c5d2] px-4 py-6 text-center text-xs text-[#777681]">
+                  <div className="rounded-2xl bg-white/80 border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">
                     No feedback matches your search.
                   </div>
                 ) : null}
               </div>
 
-              <div className="p-6 bg-[#eeecff] border-t border-[#e7e6ff] space-y-3">
+              <div className="p-6 bg-muted border-t border-border space-y-3">
                 <TextArea
                   value={commentDraft}
                   onChange={(event) => setCommentDraft(event.target.value)}
@@ -437,14 +437,14 @@ const ImageReviewV2 = ({
                     type="primary"
                     onClick={handlePostComment}
                     disabled={!commentDraft.trim()}
-                    className="flex-1 !h-10 rounded-xl border-0 bg-gradient-to-tr from-[#3b3a7e] to-[#535297] text-white text-xs font-bold shadow-md hover:!opacity-90"
+                    className="flex-1 !h-10 rounded-xl border-0 bg-gradient-to-tr from-primary-dark to-primary text-white text-xs font-bold shadow-md hover:!opacity-90"
                   >
                     POST COMMENT
                   </Button>
                   <Button
                     type="default"
                     icon={<PaperClipOutlined />}
-                    className="!h-10 !w-10 rounded-xl border border-[#3b3a7e]/10 text-[#3b3a7e] bg-white hover:!bg-[#e7e6ff]"
+                    className="!h-10 !w-10 rounded-xl border border-primary-dark/10 text-primary-dark bg-white hover:!bg-muted"
                   />
                 </div>
               </div>
