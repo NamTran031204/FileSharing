@@ -1,0 +1,46 @@
+package org.example.filesharing.controllers;
+
+import lombok.RequiredArgsConstructor;
+import org.example.filesharing.entities.CommonResponse;
+import org.example.filesharing.entities.PageRequestDto;
+import org.example.filesharing.entities.PageResult;
+import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
+import org.example.filesharing.entities.models.core.FolderEntity;
+import org.example.filesharing.services.FolderService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("api/folder")
+@RequiredArgsConstructor
+public class FolderController {
+
+    private final FolderService folderService;
+
+    @PostMapping("/create-new")
+    public CommonResponse<FolderEntity> createNewFolder(@RequestBody FolderCreateRequestDTO request) {
+        return CommonResponse.success(folderService.createNewFolder(request));
+    }
+
+    @PostMapping("/update-detail")
+    public CommonResponse<FolderEntity> updateFolderDetail(@RequestBody FolderUpdateRequestDTO request) {
+        return CommonResponse.success(folderService.updateFolderDetail(request));
+    }
+
+    @GetMapping("/get-by-id/{folderId}")
+    public CommonResponse<FolderEntity> getFolderById(@PathVariable("folderId") String folderId) {
+        return CommonResponse.success(folderService.getFolderById(folderId));
+    }
+
+    @PostMapping("/get-page")
+    public CommonResponse<PageResult<FolderEntity>> getFolderPage(@RequestBody PageRequestDto<FolderFilterRequestDTO> dto) {
+        return CommonResponse.success(folderService.getFolderPage(dto));
+    }
+
+    @DeleteMapping("/delete/{folderId}")
+    public CommonResponse<String> deleteFolder(@PathVariable("folderId") String folderId) {
+        folderService.deleteFolder(folderId);
+        return CommonResponse.success("Folder deleted successfully");
+    }
+}
