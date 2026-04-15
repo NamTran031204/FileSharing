@@ -16,47 +16,21 @@
 ## 3. Tech stack đề xuất theo lớp
 
 ### 3.1 Frontend
-1. React + TypeScript + Vite (giữ nguyên)
+1. React TypeScript
 2. Video playback:
-- video.js hoặc ReactPlayer + hls.js
+- ReactPlayer + hls.js
 3. Annotation image/video overlay:
 - Konva (react-konva) hoặc Fabric.js
 4. State/query:
-- TanStack Query (nếu chưa có) để quản lý cache request
+- TanStack Query để quản lý cache request
 5. Realtime cập nhật comment:
-- WebSocket hoặc Server-Sent Events (SSE)
+- WebSocket
 
 ### 3.2 Backend Core API
-1. Spring Boot (giữ nguyên)
-2. Spring Security + JWT (giữ nguyên)
-3. Validation:
-- Hibernate Validator
-4. Rate limiting:
-- Bucket4j (in-memory hoặc Redis-backed)
-5. Observability:
-- Micrometer + Prometheus + structured logging
+1. Spring Boot
+2. Rate limiting: Bucket4j (in-memory hoặc Redis-backed)
 
-### 3.3 Media processing
-1. FFmpeg: transcode HLS, thumbnail, poster frame
-2. Worker service:
-- Nhận job từ queue, xử lý, cập nhật trạng thái
-3. Queue:
-- Redis + BullMQ/Resque-like (nếu worker Node)
-- Hoặc Redis + Java queue library (nếu worker Java)
-
-### 3.4 Data và storage
-1. MongoDB collections:
-- media_assets
-- media_versions
-- media_renditions
-- annotations
-- comment_threads
-- review_sessions
-- audit_logs
-2. MinIO bucket layout:
-- /originals/{assetId}/{versionId}/source
-- /renditions/{assetId}/{versionId}/{profile}/index.m3u8
-- /thumbnails/{assetId}/{versionId}/...
+### 3.3 Xử lý media (video): FFmpeg cho transcode HLS -> .ts, thumbnail, poster frame
 
 ## 4. Lựa chọn streaming
 ### Khuyến nghị
@@ -74,10 +48,3 @@ Lý do:
 3. Audit log cho action nhạy cảm (status, permission, version)
 4. Quarantine và scan virus (ClamAV) cho file upload mới
 
-## 6. Trade-off cần chốt
-1. Worker dùng cùng ngôn ngữ Java hay tách Node để tận dụng ecosystem queue
-2. SSE vs WebSocket cho realtime comment
-3. Lưu annotation vector đơn giản hay chuẩn hóa theo schema mở rộng
-
-## 7. Khuyến nghị cuối cùng
-Cho phase 2, nên giữ API ở Spring Boot và tách worker độc lập theo hướng FFmpeg + Redis queue để tránh quá tải API node, đồng thời đảm bảo mở rộng được khi số lượng phiên review tăng.

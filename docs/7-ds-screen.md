@@ -5,7 +5,7 @@
 **Trạng thái**: Draft for Review  
 
 ---
-
+s
 ## Quy Ước Và Ký Hiệu
 
 ### Mức Ưu Tiên
@@ -166,8 +166,6 @@ Cho phép user đặt lại mật khẩu khi quên.
 │    ├─ Project1  │
 │    ├─ Project2  │
 │    └─ + Add     │
-│ ⭐ Favorites    │
-│ 🔍 Search       │
 │ ⚙️ Settings     │
 │ ❓ Help         │
 └─────────────────┘
@@ -248,9 +246,9 @@ Trang chủ hiển thị tổng quan hoạt động, dự án gần đây, thố
 
 ---
 
-### Screen 5: Project List (Sidebar Detail)
+### Screen 5: Project List
 **Mức ưu tiên:** P0  
-**Loại:** Panel/Sidebar  
+**Loại:** Pages 
 **Usecase phục vụ:** UC-A02
 
 #### Mục Đích
@@ -258,7 +256,7 @@ Hiển thị danh sách project user sở hữu hoặc được invite.
 
 #### Chức Năng Chính
 - Xem danh sách project
-- Expand/collapse project
+- Expand/collapse project (view detail)
 - Drag to reorder/pin favorites
 - Right-click context menu
 - Create new project
