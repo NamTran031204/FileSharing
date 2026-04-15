@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Checkbox, Divider, Form, Input, theme } from 'antd';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
-
-interface LoginPageV2Props {
-  onSubmit?: (values: LoginFormValues) => Promise<void> | void;
-}
+import authApiResource from '../api/authApi/authApiResource.ts';
+import logo from '../assets/logo/logo2k.png';
 
 interface LoginFormValues {
   email: string;
@@ -13,30 +11,32 @@ interface LoginFormValues {
   remember?: boolean;
 }
 
-const LoginPageV2 = ({ onSubmit }: LoginPageV2Props) => {
+const LoginPageV2 = () => {
   const { token } = theme.useToken();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const handleFinish = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      if (onSubmit) {
-        await onSubmit(values);
-      } else {
-        // TODO: Implement login API integration.
-        console.info('Login payload:', values);
-      }
+      await authApiResource.login({
+        email: values.email,
+        password: values.password,
+      });
+      setTimeout(() => {
+        navigate('/my-files');
+      }, 2000);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F3F2F7]">
+    <div className="min-h-screen flex flex-col bg-background">
       <main className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-[480px]">
           <div
-            className="bg-white rounded-lg p-10 flex flex-col gap-8 border"
+            className="bg-card rounded-lg p-10 flex flex-col gap-8 border"
             style={{
               borderColor: `${token.colorBorderSecondary}1A`,
               boxShadow: '0 8px 30px rgba(59, 58, 126, 0.06)',
@@ -47,18 +47,18 @@ const LoginPageV2 = ({ onSubmit }: LoginPageV2Props) => {
                 <img
                   className="w-full h-full object-cover"
                   alt="Media Review Platform logo"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHUBxyBHHm0Ty-7dEhq-AdYj8uHXoQvvdfbM7tZOPHkGIBR_EXafE0hWp3dtyojmL8Ef5OqDNCkcuGVXFnjXeatRVxN42fW84Vul3SGZU2glsg4p9Q_rwC39NXFkjowTUarWvregKlzE34VFIpkRhTeUAIDGYfg2FDIwlXE8tmflY7qMSXGX7X6RIFfT6jrvvWvLncHy_g82DGhT8XXju63eA23UUoSBSeZijahMDz3ncbJQu4YwmVmf5cfdrqlQ0OE9-lXm6ufP4"
+                  src={logo}
                 />
               </div>
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight text-[#0d1154]">Media Review Platform</h1>
-                <p className="text-sm text-[#474650] font-medium">Chào mừng bạn quay trở lại</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">ASSETS</h1>
+                <p className="text-sm text-muted-foreground font-medium">Welcome back!</p>
               </div>
             </div>
 
             <Form<LoginFormValues> layout="vertical" onFinish={handleFinish} requiredMark={false} className="space-y-1">
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-[#474650]">Email</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Email</span>}
                 name="email"
                 rules={[
                   { required: true, message: 'Vui lòng nhập email' },
@@ -69,7 +69,7 @@ const LoginPageV2 = ({ onSubmit }: LoginPageV2Props) => {
               </Form.Item>
 
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-[#474650]">Password</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Password</span>}
                 name="password"
                 rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
               >
@@ -97,9 +97,9 @@ const LoginPageV2 = ({ onSubmit }: LoginPageV2Props) => {
               </Form.Item>
             </Form>
 
-            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest !text-[#777681]">hoặc</Divider>
+            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest text-muted-foreground">hoặc</Divider>
 
-            <Button className="!w-full !h-12 !rounded-lg !border-[#c8c5d2] !text-[#474650] !font-semibold">
+            <Button className="!w-full !h-12 !rounded-lg border-border text-muted-foreground !font-semibold">
               <span className="inline-flex items-center gap-3">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -123,36 +123,36 @@ const LoginPageV2 = ({ onSubmit }: LoginPageV2Props) => {
               </span>
             </Button>
 
-            <p className="text-center text-sm text-[#474650]">
+            <p className="text-center text-sm text-muted-foreground">
               Chưa có tài khoản?
-              <Link to="/register" className="font-bold text-[#3b3a7e] hover:underline underline-offset-4 ml-1">
-                Đăng ký tại đây
+              <Link to="/register" className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
+                Đăng ký
               </Link>
             </p>
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#777681] opacity-50">Lumina Pro Elite Suite</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Chuyên trang dành cho người làm media</p>
           </div>
         </div>
       </main>
 
-      <footer className="w-full py-12 bg-[#f4f2ff] flex flex-col md:flex-row justify-between items-center px-12 gap-6 mt-auto">
-        <div className="text-[#535297] text-xs font-medium uppercase tracking-[0.05em]">
-          © 2024 Lumina Pro. Built for the creative elite.
+      <footer className="w-full py-12 bg-muted flex flex-col md:flex-row justify-between items-center px-12 gap-6 mt-auto">
+        <div className="text-primary text-xs font-medium uppercase tracking-[0.05em]">
+          Sản Phẩm của Nam Trần
         </div>
         <nav className="flex flex-wrap justify-center gap-6">
-          <a className="text-xs font-medium uppercase tracking-[0.05em] text-[#474650] hover:text-[#535297] underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Privacy Policy
+          <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
+            Giới thiệu
           </a>
-          <a className="text-xs font-medium uppercase tracking-[0.05em] text-[#474650] hover:text-[#535297] underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Terms of Service
+          <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
+            Github
           </a>
-          <a className="text-xs font-medium uppercase tracking-[0.05em] text-[#474650] hover:text-[#535297] underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Help Center
+          <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
+              Donate tại đây
           </a>
-          <a className="text-xs font-medium uppercase tracking-[0.05em] text-[#474650] hover:text-[#535297] underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Contact
+          <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
+            Mọi thắc mắc liên hệ thông qua đây!
           </a>
         </nav>
       </footer>
