@@ -10,6 +10,7 @@ import AppHeader from '../components/AppHeader';
 import AppSidebar from '../components/AppSidebar';
 import MainPageActionCard, {type MainPageActionTone} from '../components/MainPageActionCard';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
+import CommonLayout from "../layout/CommonLayout.tsx";
 
 interface MainPageProps {
     userName?: string;
@@ -62,12 +63,8 @@ const MainPage = ({
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <AppHeader/>
-
-            <div className="flex min-h-screen pt-16">
-                <AppSidebar/>
-
+        <>
+            <CommonLayout>
                 <main className="relative flex-1 overflow-y-auto p-8 md:p-14 lg:p-20">
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                         <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-accent/20 blur-3xl"/>
@@ -99,15 +96,15 @@ const MainPage = ({
 
                     </div>
                 </main>
-            </div>
-
+            </CommonLayout>
             <CreateProjectModal
                 open={isCreateProjectOpen}
                 confirmLoading={isCreatingProject}
                 onCancel={handleCloseCreateProject}
                 onCreate={handleCreateProject}
             />
-        </div>
+        </>
+
     );
 };
 

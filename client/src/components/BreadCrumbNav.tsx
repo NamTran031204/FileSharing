@@ -9,19 +9,45 @@ interface BreadCrumbNavigateProps {
     className?: string;
 }
 
-interface FlatRouteItem {
+interface BreadcrumbRouteItem {
     path: string;
     name: string;
     redirectTo?: string;
     isShow?: boolean;
 }
 
+interface FlatRouteItem extends BreadcrumbRouteItem {
+    ancestors: BreadcrumbRouteItem[];
+}
+
 const normalizeRoutePath = (path: string) => {
-    if (path.endsWith('/*')) {
-        return path.slice(0, -2) || '/';
+    const trimmedPath = path.trim();
+
+    if (!trimmedPath) {
+        return '/';
     }
 
-    return path;
+    const withLeadingSlash = trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
+    const normalizedPath = withLeadingSlash.replace(/\/{2,}/g, '/');
+    const pathWithoutWildcard = normalizedPath.endsWith('/*') ? normalizedPath.slice(0, -2) || '/' : normalizedPath;
+
+    if (pathWithoutWildcard === '/') {
+        return '/';
+    }
+
+    return pathWithoutWildcard.endsWith('/') ? pathWithoutWildcard.slice(0, -1) : pathWithoutWildcard;
+};
+
+const resolveAbsolutePath = (routePath?: string, parentPath?: string) => {
+    if (!routePath) {
+        return undefined;
+    }
+
+    if (!parentPath || routePath.startsWith('/')) {
+        return normalizeRoutePath(routePath);
+    }
+
+    return normalizeRoutePath(`${parentPath}/${routePath}`);
 };
 
 const getPathDepth = (path: string) => {
@@ -34,48 +60,93 @@ const getPathDepth = (path: string) => {
     return normalizedPath.split('/').filter(Boolean).length;
 };
 
-const resolveRouteTarget = (route: FlatRouteItem) => {
+const resolveRouteTarget = (route: BreadcrumbRouteItem) => {
     if (route.redirectTo) {
-        return route.redirectTo;
+        return normalizeRoutePath(route.redirectTo);
     }
 
     return normalizeRoutePath(route.path);
 };
 
-const flattenRoutes = (routes: AppRoute[]): FlatRouteItem[] => {
+const flattenRoutes = (
+    routes: AppRoute[],
+    parentPath?: string,
+    ancestors: BreadcrumbRouteItem[] = [],
+): FlatRouteItem[] => {
     const routeItems: FlatRouteItem[] = [];
 
     for (const route of routes) {
-        if (route.path && route.name) {
-            routeItems.push({
-                path: route.path,
+        const absolutePath = resolveAbsolutePath(route.path, parentPath);
+        const currentRoute = absolutePath && route.name
+            ? {
+                path: absolutePath,
                 name: route.name,
                 redirectTo: route.redirectTo,
                 isShow: route.isShow,
+            }
+            : undefined;
+
+        if (currentRoute) {
+            routeItems.push({
+                ...currentRoute,
+                ancestors,
             });
         }
 
+        const nextAncestors = currentRoute ? [...ancestors, currentRoute] : ancestors;
+
         if (route.children?.length) {
-            routeItems.push(...flattenRoutes(route.children));
+            routeItems.push(...flattenRoutes(route.children, absolutePath ?? parentPath, nextAncestors));
         }
     }
 
     return routeItems;
 };
 
-const BreadCrumbNav = ({routes}: BreadCrumbNavigateProps) => {
+const findActiveRoute = (routeItems: FlatRouteItem[], pathname: string) => {
+    const matchedRoutes = routeItems.filter((route) => matchPath({path: route.path, end: false}, pathname));
+
+    if (matchedRoutes.length === 0) {
+        return undefined;
+    }
+
+    return matchedRoutes.sort((leftRoute, rightRoute) => {
+        const depthDelta = getPathDepth(rightRoute.path) - getPathDepth(leftRoute.path);
+
+        if (depthDelta !== 0) {
+            return depthDelta;
+        }
+
+        return rightRoute.path.length - leftRoute.path.length;
+    })[0];
+};
+
+const buildBreadcrumbChain = (activeRoute: FlatRouteItem): BreadcrumbRouteItem[] => {
+    const breadcrumbChain = [...activeRoute.ancestors, activeRoute].filter((route) => route.isShow !== false);
+    const deduplicatedRouteKeys = new Set<string>();
+
+    return breadcrumbChain.filter((route) => {
+        if (deduplicatedRouteKeys.has(route.path)) {
+            return false;
+        }
+
+        deduplicatedRouteKeys.add(route.path);
+        return true;
+    });
+};
+
+const BreadCrumbNav = ({routes, className}: BreadCrumbNavigateProps) => {
     const {pathname} = useLocation();
 
     const breadcrumbItems = useMemo<BreadcrumbProps['items']>(() => {
-        const visibleRoutes = flattenRoutes(routes).filter((route) => route.isShow !== false);
+        const routeItems = flattenRoutes(routes);
+        const activeRoute = findActiveRoute(routeItems, pathname);
 
-        const matchedRoutes = visibleRoutes
-            .filter((route) => matchPath({path: route.path, end: false}, pathname))
-            .sort((leftRoute, rightRoute) => getPathDepth(leftRoute.path) - getPathDepth(rightRoute.path));
+        if (!activeRoute || activeRoute.isShow === false) {
+            return [];
+        }
 
-        const deduplicatedRoutes = matchedRoutes.filter(
-            (route, routeIndex, routeList) => routeList.findIndex((item) => item.path === route.path) === routeIndex,
-        );
+        const deduplicatedRoutes = buildBreadcrumbChain(activeRoute);
 
         return deduplicatedRoutes.map((route, routeIndex) => {
             const isLastItem = routeIndex === deduplicatedRoutes.length - 1;
@@ -99,6 +170,7 @@ const BreadCrumbNav = ({routes}: BreadCrumbNavigateProps) => {
 
     return (
         <Breadcrumb
+            className={className}
             separator={<RightOutlined className="text-[10px] text-muted-foreground"/>}
             items={breadcrumbItems}
         />

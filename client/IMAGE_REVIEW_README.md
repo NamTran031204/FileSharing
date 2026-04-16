@@ -20,7 +20,7 @@
   - Tuân thủ: `bg-[hsl(var(--primary-dark))]`, smooth transitions
 
 ### 3. **Layout**
-- ✅ **ReviewLayout** (`src/layout/ReviewLayout.tsx`)
+- ✅ **CommonLayout** (`src/layout/CommonLayout.tsx`)
   - Kết hợp Header + Sidebar + Content area
   - Layout grid theo design system
 
@@ -97,7 +97,7 @@ src/
 │   ├── AppHeader.tsx              # ✨ MỚI - Header chung
 │   └── AppSidebar.tsx             # ✨ MỚI - Sidebar chung
 ├── layout/
-│   └── ReviewLayout.tsx           # ✨ MỚI - Review layout
+│   └── CommonLayout.tsx           # ✨ MỚI - Review layout
 └── page/
     └── ImageReviewPage.tsx        # ✨ MỚI - Image review page
 ```

@@ -19,6 +19,7 @@ import AppHeader from '../components/AppHeader';
 import AppSidebar from '../components/AppSidebar';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
 import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/ProjectOverviewCard';
+import CommonLayout from "../layout/CommonLayout.tsx";
 
 const MOCK_PROJECTS: ProjectOverviewCardProps[] = [
     {
@@ -61,18 +62,6 @@ const ProjectMain = () => {
         });
     }, [searchKeyword]);
 
-    const breadcrumbItems = [
-        {
-            title: <Link className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary" to="/home">Home</Link>,
-        },
-        {
-            title: <Link className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary" to="/my-files">My Projects</Link>,
-        },
-        {
-            title: <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Project List</span>,
-        },
-    ];
-
     const handleCreateProject = async (values: CreateProjectFormValues) => {
         setIsCreatingProject(true);
 
@@ -86,21 +75,10 @@ const ProjectMain = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <AppHeader/>
-
-            <div className="flex min-h-screen pt-16">
-                <AppSidebar/>
-
+        <>
+            <CommonLayout>
                 <main className="flex-1 overflow-y-auto bg-background">
                     <div className="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
-                        <div className="mb-8">
-                            <Breadcrumb
-                                separator={<RightOutlined className="text-[10px] text-muted-foreground"/>}
-                                items={breadcrumbItems}
-                            />
-                        </div>
-
                         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                             <div>
                                 <h1 className="text-4xl font-extrabold tracking-tighter text-foreground">Project List</h1>
@@ -177,31 +155,31 @@ const ProjectMain = () => {
                         </section>
                     </div>
                 </main>
-            </div>
 
-            <CreateProjectModal
-                open={isCreateProjectOpen}
-                confirmLoading={isCreatingProject}
-                onCancel={() => setIsCreateProjectOpen(false)}
-                onCreate={handleCreateProject}
-            />
+                <CreateProjectModal
+                    open={isCreateProjectOpen}
+                    confirmLoading={isCreatingProject}
+                    onCancel={() => setIsCreateProjectOpen(false)}
+                    onCreate={handleCreateProject}
+                />
 
-            <div className="hidden fixed z-100 w-48 overflow-hidden rounded-xl border border-border/30 bg-card py-2 shadow-lg">
-                <Button type="text" icon={<PushpinOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                    Pin Project
-                </Button>
-                <Button type="text" icon={<EditOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                    Rename
-                </Button>
-                <Button type="text" icon={<ShareAltOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                    Share
-                </Button>
-                <div className="my-1 h-px bg-border/40"/>
-                <Button type="text" icon={<InboxOutlined/>} className="w-full justify-start rounded-none px-4 text-left text-destructive hover:text-destructive">
-                    Archive
-                </Button>
-            </div>
-        </div>
+                <div className="hidden fixed z-100 w-48 overflow-hidden rounded-xl border border-border/30 bg-card py-2 shadow-lg">
+                    <Button type="text" icon={<PushpinOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
+                        Pin Project
+                    </Button>
+                    <Button type="text" icon={<EditOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
+                        Rename
+                    </Button>
+                    <Button type="text" icon={<ShareAltOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
+                        Share
+                    </Button>
+                    <div className="my-1 h-px bg-border/40"/>
+                    <Button type="text" icon={<InboxOutlined/>} className="w-full justify-start rounded-none px-4 text-left text-destructive hover:text-destructive">
+                        Archive
+                    </Button>
+                </div>
+            </CommonLayout>
+        </>
     );
 };
 

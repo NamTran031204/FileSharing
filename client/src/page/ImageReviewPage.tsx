@@ -11,7 +11,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import { Button, Input, Tooltip } from 'antd';
-import ReviewLayout from '../layout/ReviewLayout';
+import CommonLayout from '../layout/CommonLayout.tsx';
 
 const { TextArea } = Input;
 
@@ -84,7 +84,7 @@ const ImageReviewPage = () => {
   };
 
   return (
-    <ReviewLayout>
+    <CommonLayout>
       <div className="flex flex-col h-full p-6 gap-6">
         {/* Context Header */}
         <div className="flex justify-between items-end px-2">
@@ -308,7 +308,7 @@ const ImageReviewPage = () => {
           </div>
         </div>
       </aside>
-    </ReviewLayout>
+    </CommonLayout>
   );
 };
 

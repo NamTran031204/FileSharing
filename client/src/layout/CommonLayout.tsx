@@ -5,9 +5,9 @@ interface ReviewLayoutProps {
   children: React.ReactNode;
 }
 
-const ReviewLayout = ({ children }: ReviewLayoutProps) => {
+const CommonLayout = ({ children }: ReviewLayoutProps) => {
   return (
-    <div className="bg-[#fbf8ff] text-[#0d1154] min-h-screen overflow-hidden flex flex-col">
+    <div className="bg-background text-primary-dark min-h-screen overflow-hidden flex flex-col">
       {/* TopNavBar - Fixed Header */}
       <AppHeader />
 
@@ -17,7 +17,7 @@ const ReviewLayout = ({ children }: ReviewLayoutProps) => {
         <AppSidebar />
 
         {/* Tool & Canvas Area */}
-        <section className="flex-1 flex flex-col bg-[#fbf8ff] overflow-hidden">
+        <section className="flex-1 flex flex-col bg-background overflow-hidden">
           {children}
         </section>
       </main>
@@ -25,5 +25,5 @@ const ReviewLayout = ({ children }: ReviewLayoutProps) => {
   );
 };
 
-export default ReviewLayout;
+export default CommonLayout;
 

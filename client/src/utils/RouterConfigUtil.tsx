@@ -55,6 +55,14 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/home',
         name: 'Home',
         element: <MainPage/>,
+        children: [
+            {
+                path: '/projects',
+                name: 'Projects',
+                element: <ProjectMain/>,
+                isShow: true,
+            }
+        ]
     },
     {
         path: '/preview/*',
@@ -103,12 +111,12 @@ export const ROUTER_CONFIG: AppRoute[] = [
         element: <ImageReviewV2/>,
         isShow: false,
     },
-    {
-        path: '/projects',
-        name: 'Projects',
-        element: <ProjectMain/>,
-        isShow: true,
-    },
+    // {
+    //     path: '/projects',
+    //     name: 'Projects',
+    //     element: <ProjectMain/>,
+    //     isShow: true,
+    // },
     {
         path: '/mockup/hls-video',
         name: 'Mockup HLS Video',

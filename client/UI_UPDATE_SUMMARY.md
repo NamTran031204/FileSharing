@@ -6,7 +6,7 @@
 
 1. **`src/components/AppHeader.tsx`** ✨
 2. **`src/components/AppSidebar.tsx`** ✨
-3. **`src/layout/ReviewLayout.tsx`** ✨
+3. **`src/layout/CommonLayout.tsx`** ✨
 4. **`src/page/ImageReviewPage.tsx`** ✨
 
 ---
@@ -68,7 +68,7 @@ className="bg-gradient-to-br from-[#3b3a7e] to-[#535297]"
 
 ---
 
-### 3. **ReviewLayout**
+### 3. **CommonLayout**
 **Trước:**
 - Generic background
 - pt-[10vh] spacing
