@@ -1,0 +1,18 @@
+package org.example.filesharing.entities.dtos.commentthread;
+
+import lombok.Data;
+import org.example.filesharing.entities.models.CommentMessage;
+import org.example.filesharing.enums.ThreadStatus;
+
+import java.util.List;
+
+@Data
+public class CommentThreadCreateUpdateDTO {
+    private String threadId;
+    private String assetId;
+    private String versionId;
+    private List<String> annotations;
+    private CommentMessage rootComment;
+    private List<CommentMessage> replies;
+    private ThreadStatus status;
+}

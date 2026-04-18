@@ -41,6 +41,7 @@ public class CommentThreadEntity {
     private ThreadStatus status;
     private Instant resolvedAt;
     private String resolvedBy;
+    private Boolean isActive;
 
     @CreatedDate
     private Instant createdAt;
