@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class UpdateUserRequestDto {
     @Size(min = 8, message = "Password phải có ít nhất 8 ký tự")
     private String password;
 
-    private List<UserRole> roles;
+    private List<UserGrantedRole> roles;
 
     private Boolean enabled;
 

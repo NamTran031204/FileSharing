@@ -1,7 +1,7 @@
 package org.example.filesharing.configurations;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.filters.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +46,7 @@ public class SecurityConfig {
                                 "/api/auth/**"
                         ).permitAll()
 
-                        .requestMatchers("/api/admin/**").hasAuthority(UserRole.ROLE_ADMIN.toString())
+                        .requestMatchers("/api/admin/**").hasAuthority(UserGrantedRole.ROLE_ADMIN.toString())
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

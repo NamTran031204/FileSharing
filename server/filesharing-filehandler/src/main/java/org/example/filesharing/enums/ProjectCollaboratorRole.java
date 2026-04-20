@@ -1,7 +1,5 @@
 package org.example.filesharing.enums;
 
 public enum ProjectCollaboratorRole {
-    PRODUCER,
-    REVIEWER,
-    VIEWER
+    PRODUCER, EDITOR, DESIGNER, PHOTOGRAPHER, REVIEWER, CUSTOMER, INCOGNITO
 }

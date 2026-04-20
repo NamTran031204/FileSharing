@@ -3,6 +3,7 @@ package org.example.filesharing.entities.models.core;
 import lombok.*;
 import org.example.filesharing.entities.models.AuthProviderInfo;
 import org.example.filesharing.enums.auth.AuthProvider;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.enums.auth.UserRole;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -39,6 +40,8 @@ public class UserEntity implements UserDetails {
     // ten de hien thi ra man hinh, khong dung de dang nhap
     private String publicUserName;
 
+    private List<UserGrantedRole> userGrantedRoles = new ArrayList<>();
+
     private List<UserRole> roles = new ArrayList<>();
 
     private boolean enabled = true;
@@ -69,9 +72,9 @@ public class UserEntity implements UserDetails {
      */
     private Instant lastLoginAt;
 
-    public void addRole(UserRole role) {
-        if (this.roles == null) this.roles = new ArrayList<>();
-        if (!this.roles.contains(role)) this.roles.add(role);
+    public void addRole(UserGrantedRole role) {
+        if (this.userGrantedRoles == null) this.userGrantedRoles = new ArrayList<>();
+        if (!this.userGrantedRoles.contains(role)) this.userGrantedRoles.add(role);
     }
 
     public void addProvider(AuthProvider provider, String providerId) {
@@ -90,7 +93,7 @@ public class UserEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
+        return userGrantedRoles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .collect(Collectors.toList());
     }

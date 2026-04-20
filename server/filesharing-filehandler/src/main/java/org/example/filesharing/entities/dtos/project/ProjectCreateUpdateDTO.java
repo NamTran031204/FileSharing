@@ -18,8 +18,8 @@ public class ProjectCreateUpdateDTO {
     private Instant startDate;
     private Instant endDate;
 
-    // tu email, tim user de cap nhat ProjectCollaborator
-    private List<String> emails;
+    // danh sach user va quyen
+    private List<ProjectCollaboratorDTO> collaborators;
 
     // voi mode create, khong truyen gi mac dinh la ACTIVE
     private ProjectStatus status;

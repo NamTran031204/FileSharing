@@ -16,6 +16,5 @@ public class ProjectFilterDTO {
     private Instant startDate; // >= start date
     private Instant endDate; // <= endDate
 
-    private ProjectStatus status;
-    private Boolean isActive; // lay trong thung rac thi truyen isActive = false
+    private ProjectStatus status; // lay trong thung rac thi status la ARCHIVE
 }

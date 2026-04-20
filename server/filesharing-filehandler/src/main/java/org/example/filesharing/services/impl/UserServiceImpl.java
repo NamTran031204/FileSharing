@@ -12,7 +12,7 @@ import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;
 import org.example.filesharing.entities.models.AuthProviderInfo;
 import org.example.filesharing.entities.models.core.UserEntity;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.UserRepo;
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = UserEntity.builder()
                 .email(input.getEmail())
                 .password(passwordHash)
-                .roles(List.of(UserRole.ROLE_USER))
+                .userGrantedRoles(List.of(UserGrantedRole.ROLE_USER))
                 .enabled(true)
                 .emailVerified(isEmailVerified)
                 .providers(List.of(authProviderInfo))
@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
                 .providers(savedUser.getProviders().parallelStream()
                         .map(AuthProviderInfo::getProvider)
                         .toList())
-                .roles(savedUser.getRoles())
+                .roles(savedUser.getUserGrantedRoles())
                 .enabled(savedUser.isEnabled())
                 .build();
     }
@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (input.getRoles() != null && !input.getRoles().isEmpty()) {
-            user.setRoles(input.getRoles());
+            user.setUserGrantedRoles(input.getRoles());
         }
 
         if (input.getEnabled() != null) {
@@ -198,7 +198,7 @@ public class UserServiceImpl implements UserService {
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .publicUserName(user.getPublicUserName())
-                .roles(user.getRoles())
+                .roles(user.getUserGrantedRoles())
                 .enabled(user.isEnabled())
                 .emailVerified(user.isEmailVerified())
                 .providers(user.getProviders() != null
