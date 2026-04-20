@@ -200,18 +200,18 @@ public class EncodingOrchestrationService {
     }
 
     private void cleanupLocalVideo(String localVideoPath) {
-        if (localVideoPath == null) {
-            return;
-        }
-        
-        try {
-            File videoFile = new File(localVideoPath);
-            if (videoFile.exists() && videoFile.delete()) {
-                log.info("Cleaned up local video file: {}", localVideoPath);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to cleanup local video file {}: {}", localVideoPath, e.getMessage());
-        }
+//        if (localVideoPath == null) {
+//            return;
+//        }
+//
+//        try {
+//            File videoFile = new File(localVideoPath);
+//            if (videoFile.exists() && videoFile.delete()) {
+//                log.info("Cleaned up local video file: {}", localVideoPath);
+//            }
+//        } catch (Exception e) {
+//            log.warn("Failed to cleanup local video file {}: {}", localVideoPath, e.getMessage());
+//        }
     }
 
     private List<EncodingProfile> parseProfiles() {
