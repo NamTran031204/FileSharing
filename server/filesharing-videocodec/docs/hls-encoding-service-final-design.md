@@ -292,9 +292,6 @@ Khi service khởi động (`@EventListener(ApplicationReadyEvent.class)`), qué
 
 ---
 
-```bash
-ffmpeg -i "E:\DaiCuongBK\Project3\FileSharing\server\filesharing-videocodec\temp\ruabat.mp4" -c:v libx264 -preset medium -crf 23 -threads 2 -c:a aac -b:a 128k -f hls -hls_time 3 -hls_playlist_type vod -hls_flags delete_segments+append_list -hls_segment_filename "E:\DaiCuongBK\Project3\FileSharing\server\filesharing-videocodec\temp\dir\seg_%04d.ts" "E:\DaiCuongBK\Project3\FileSharing\server\filesharing-videocodec\temp\dir\master.m3u8"
-```
 
 ## 6. FFmpeg Executor
 
