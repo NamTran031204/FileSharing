@@ -1,26 +1,31 @@
 import {
-  ProjectCreateUpdateDTO,
-  ProjectStatus,
-  CommonResponseProjectEntity,
-  ProjectEntity,
-  ProjectCollaborator,
-  ProjectCollaboratorRole,
-  ProjectStats,
-  PageRequestDtoProjectFilterDTO,
-  ProjectFilterDTO,
-  CommonResponsePageResultProjectEntity,
-  PageResultProjectEntity,
-  CommonResponseString,
-  IList,
-  List,
-  IListResult,
-  ListResultDto,
-  IPagedResult,
-  PagedResultDto,
-  Dictionary,
-  IDictionary,
-  IRequestOptions,
-  IRequestConfig,
+  type ProjectCreateUpdateDTO,
+  type ProjectCollaboratorDTO,
+  type GrantedPermission,
+  type ProjectStatus,
+  type CommonResponseProjectEntity,
+  type ProjectEntity,
+  type ProjectCollaborator,
+  type GrantedVisibility,
+  type ProjectStats,
+  type PageRequestDtoProjectFilterDTO,
+  type ProjectFilterDTO,
+  type CommonResponsePageResultProjectEntity,
+  type PageResultProjectEntity,
+  type ProjectCheckInputDTO,
+  type CommonResponseProjectCheckResponseDTO,
+  type ProjectCheckResponseDTO,
+  type CommonResponseString,
+  type IList,
+  type List,
+  type IListResult,
+  type ListResultDto,
+  type IPagedResult,
+  type PagedResultDto,
+  type Dictionary,
+  type IDictionary,
+  type IRequestOptions,
+  type IRequestConfig,
   getConfigs,
   axios,
   basePath
@@ -49,6 +54,25 @@ export class ProjectControllerService {
       let data = params.body;
 
       configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static moveToProject(
+    params: {
+      /**  */
+      projectId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseProjectEntity> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/project/move-to-project/{projectId}';
+      url = url.replace('{projectId}', params['projectId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });
@@ -87,6 +111,28 @@ export class ProjectControllerService {
   ): Promise<CommonResponseProjectEntity> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/project/create-new';
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      let data = params.body;
+
+      configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static checkProject(
+    params: {
+      /** requestBody */
+      body?: ProjectCheckInputDTO;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseProjectCheckResponseDTO> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/project/check-project';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 

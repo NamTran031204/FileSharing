@@ -1,15 +1,15 @@
 import {
-  type FolderUpdateRequestDTO,
-  type CommonResponseFolderEntity,
-  type FolderEntity,
-  type FolderPermission,
-  type ObjectPermission,
-  type FolderStats,
-  type PageRequestDtoFolderFilterRequestDTO,
-  type FolderFilterRequestDTO,
-  type CommonResponsePageResultFolderEntity,
-  type PageResultFolderEntity,
-  type FolderCreateRequestDTO,
+  type NotificationCreateUpdateDTO,
+  type NotificationType,
+  type NotificationContext,
+  type NotificationDelivery,
+  type DeliveryStatus,
+  type CommonResponseNotificationEntity,
+  type NotificationEntity,
+  type PageRequestDtoNotificationFilterDTO,
+  type NotificationFilterDTO,
+  type CommonResponsePageResultNotificationEntity,
+  type PageResultNotificationEntity,
   type CommonResponseString,
   type IList,
   type List,
@@ -26,7 +26,7 @@ import {
   basePath
 } from './index.defs';
 
-export class FolderControllerService {
+export class NotificationControllerService {
   /** Generate by swagger-axios-codegen */
   // @ts-nocheck
   /* eslint-disable */
@@ -37,12 +37,12 @@ export class FolderControllerService {
   static updateDetail(
     params: {
       /** requestBody */
-      body?: FolderUpdateRequestDTO;
+      body?: NotificationCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseNotificationEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/update-detail';
+      let url = basePath + '/api/notification/update-detail';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -59,12 +59,12 @@ export class FolderControllerService {
   static getPage(
     params: {
       /** requestBody */
-      body?: PageRequestDtoFolderFilterRequestDTO;
+      body?: PageRequestDtoNotificationFilterDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultFolderEntity> {
+  ): Promise<CommonResponsePageResultNotificationEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-page';
+      let url = basePath + '/api/notification/get-page';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -78,15 +78,34 @@ export class FolderControllerService {
   /**
    *
    */
+  static delete(
+    params: {
+      /**  */
+      notificationId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/notification/delete/{notificationId}';
+      url = url.replace('{notificationId}', params['notificationId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
   static createNew(
     params: {
       /** requestBody */
-      body?: FolderCreateRequestDTO;
+      body?: NotificationCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseNotificationEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/create-new';
+      let url = basePath + '/api/notification/create-new';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -103,34 +122,15 @@ export class FolderControllerService {
   static getById(
     params: {
       /**  */
-      folderId: string;
+      notificationId: string;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseNotificationEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-by-id/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
+      let url = basePath + '/api/notification/get-by-id/{notificationId}';
+      url = url.replace('{notificationId}', params['notificationId'] + '');
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
-  static delete(
-    params: {
-      /**  */
-      folderId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseString> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/delete/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('delete', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });

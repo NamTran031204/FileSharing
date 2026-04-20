@@ -1,15 +1,17 @@
 import {
-  type FolderUpdateRequestDTO,
-  type CommonResponseFolderEntity,
-  type FolderEntity,
-  type FolderPermission,
-  type ObjectPermission,
-  type FolderStats,
-  type PageRequestDtoFolderFilterRequestDTO,
-  type FolderFilterRequestDTO,
-  type CommonResponsePageResultFolderEntity,
-  type PageResultFolderEntity,
-  type FolderCreateRequestDTO,
+  type AnnotationsCreateUpdateDTO,
+  type AnnotationType,
+  type AnnotationTimeCode,
+  type AnnotationRegion,
+  type Shape,
+  type AnnotationPoint,
+  type AnnotationStatus,
+  type CommonResponseAnnotationsEntity,
+  type AnnotationsEntity,
+  type PageRequestDtoAnnotationsFilterDTO,
+  type AnnotationsFilterDTO,
+  type CommonResponsePageResultAnnotationsEntity,
+  type PageResultAnnotationsEntity,
   type CommonResponseString,
   type IList,
   type List,
@@ -26,7 +28,7 @@ import {
   basePath
 } from './index.defs';
 
-export class FolderControllerService {
+export class AnnotationsControllerService {
   /** Generate by swagger-axios-codegen */
   // @ts-nocheck
   /* eslint-disable */
@@ -37,12 +39,12 @@ export class FolderControllerService {
   static updateDetail(
     params: {
       /** requestBody */
-      body?: FolderUpdateRequestDTO;
+      body?: AnnotationsCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/update-detail';
+      let url = basePath + '/api/annotations/update-detail';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -59,12 +61,12 @@ export class FolderControllerService {
   static getPage(
     params: {
       /** requestBody */
-      body?: PageRequestDtoFolderFilterRequestDTO;
+      body?: PageRequestDtoAnnotationsFilterDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultFolderEntity> {
+  ): Promise<CommonResponsePageResultAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-page';
+      let url = basePath + '/api/annotations/get-page';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -78,15 +80,34 @@ export class FolderControllerService {
   /**
    *
    */
+  static delete(
+    params: {
+      /**  */
+      annotationId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotations/delete/{annotationId}';
+      url = url.replace('{annotationId}', params['annotationId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
   static createNew(
     params: {
       /** requestBody */
-      body?: FolderCreateRequestDTO;
+      body?: AnnotationsCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/create-new';
+      let url = basePath + '/api/annotations/create-new';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -103,34 +124,15 @@ export class FolderControllerService {
   static getById(
     params: {
       /**  */
-      folderId: string;
+      annotationId: string;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-by-id/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
+      let url = basePath + '/api/annotations/get-by-id/{annotationId}';
+      url = url.replace('{annotationId}', params['annotationId'] + '');
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
-  static delete(
-    params: {
-      /**  */
-      folderId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseString> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/delete/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('delete', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });

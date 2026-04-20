@@ -111,7 +111,7 @@ export interface UpdateUserRequestDto {
   password?: string;
 
   /**  */
-  roles?: UserRole[];
+  roles?: UserGrantedRole[];
 
   /**  */
   enabled?: boolean;
@@ -145,7 +145,7 @@ export interface UserDto {
   publicUserName?: string;
 
   /**  */
-  roles?: UserRole[];
+  roles?: UserGrantedRole[];
 
   /**  */
   enabled?: boolean;
@@ -207,6 +207,14 @@ export interface PageResultUserDto {
   data?: UserDto[];
 }
 
+export interface ProjectCollaboratorDTO {
+  /**  */
+  email?: string;
+
+  /**  */
+  permission?: GrantedPermission;
+}
+
 export interface ProjectCreateUpdateDTO {
   /**  */
   projectName?: string;
@@ -227,7 +235,7 @@ export interface ProjectCreateUpdateDTO {
   endDate?: Date;
 
   /**  */
-  emails?: string[];
+  collaborators?: ProjectCollaboratorDTO[];
 
   /**  */
   status?: ProjectStatus;
@@ -255,7 +263,7 @@ export interface ProjectCollaborator {
   email?: string;
 
   /**  */
-  role?: ProjectCollaboratorRole;
+  permission?: GrantedPermission;
 
   /**  */
   addedAt?: Date;
@@ -291,6 +299,9 @@ export interface ProjectEntity {
 
   /**  */
   collaborators?: ProjectCollaborator[];
+
+  /**  */
+  visibility?: GrantedVisibility;
 
   /**  */
   stats?: ProjectStats;
@@ -354,9 +365,6 @@ export interface ProjectFilterDTO {
 
   /**  */
   status?: ProjectStatus;
-
-  /**  */
-  isActive?: boolean;
 }
 
 export interface CommonResponsePageResultProjectEntity {
@@ -381,6 +389,36 @@ export interface PageResultProjectEntity {
   data?: ProjectEntity[];
 }
 
+export interface ProjectCheckInputDTO {
+  /**  */
+  projectName?: string;
+
+  /**  */
+  projectCode?: string;
+}
+
+export interface CommonResponseProjectCheckResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProjectCheckResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProjectCheckResponseDTO {
+  /**  */
+  isSuccess?: boolean;
+
+  /**  */
+  message?: string;
+}
+
 export interface CommonResponseString {
   /**  */
   isSuccessful?: boolean;
@@ -393,6 +431,212 @@ export interface CommonResponseString {
 
   /**  */
   message?: string;
+}
+
+export interface NotificationContext {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotationId?: string;
+
+  /**  */
+  commentId?: string;
+
+  /**  */
+  reviewSessionId?: string;
+
+  /**  */
+  actorId?: string;
+
+  /**  */
+  actorName?: string;
+}
+
+export interface NotificationCreateUpdateDTO {
+  /**  */
+  notificationId?: string;
+
+  /**  */
+  userId?: string;
+
+  /**  */
+  type?: NotificationType;
+
+  /**  */
+  title?: string;
+
+  /**  */
+  message?: string;
+
+  /**  */
+  link?: string;
+
+  /**  */
+  context?: NotificationContext;
+
+  /**  */
+  isRead?: boolean;
+
+  /**  */
+  deliveryStatus?: NotificationDelivery;
+
+  /**  */
+  expiresAt?: Date;
+}
+
+export interface NotificationDelivery {
+  /**  */
+  inApp?: DeliveryStatus;
+
+  /**  */
+  email?: DeliveryStatus;
+}
+
+export interface CommonResponseNotificationEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: NotificationEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface NotificationEntity {
+  /**  */
+  notificationId?: string;
+
+  /**  */
+  userId?: string;
+
+  /**  */
+  type?: NotificationType;
+
+  /**  */
+  title?: string;
+
+  /**  */
+  message?: string;
+
+  /**  */
+  link?: string;
+
+  /**  */
+  context?: NotificationContext;
+
+  /**  */
+  isRead?: boolean;
+
+  /**  */
+  readAt?: Date;
+
+  /**  */
+  deliveryStatus?: NotificationDelivery;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  expiresAt?: Date;
+}
+
+export interface NotificationFilterDTO {
+  /**  */
+  userId?: string;
+
+  /**  */
+  type?: NotificationType;
+
+  /**  */
+  isRead?: boolean;
+
+  /**  */
+  keyword?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  actorId?: string;
+
+  /**  */
+  inAppStatus?: DeliveryStatus;
+
+  /**  */
+  emailStatus?: DeliveryStatus;
+
+  /**  */
+  fromCreatedAt?: Date;
+
+  /**  */
+  toCreatedAt?: Date;
+}
+
+export interface PageRequestDtoNotificationFilterDTO {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: NotificationFilterDTO;
+}
+
+export interface CommonResponsePageResultNotificationEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultNotificationEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultNotificationEntity {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: NotificationEntity[];
+}
+
+export interface FolderUpdateRequestDTO {
+  /**  */
+  folderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  isActive?: boolean;
 }
 
 export interface CommonResponseFolderEntity {
@@ -472,7 +716,21 @@ export interface FolderStats {
   pendingReviewsCount?: number;
 }
 
-export interface PageRequestDtoMapStringObject {
+export interface FolderFilterRequestDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  isActive?: boolean;
+}
+
+export interface PageRequestDtoFolderFilterRequestDTO {
   /**  */
   maxResultCount?: number;
 
@@ -483,7 +741,7 @@ export interface PageRequestDtoMapStringObject {
   sorting?: string;
 
   /**  */
-  filter?: object;
+  filter?: FolderFilterRequestDTO;
 }
 
 export interface CommonResponsePageResultFolderEntity {
@@ -506,6 +764,20 @@ export interface PageResultFolderEntity {
 
   /**  */
   data?: FolderEntity[];
+}
+
+export interface FolderCreateRequestDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  description?: string;
 }
 
 export interface MetadataUpdateRequestDto {
@@ -849,14 +1121,417 @@ export interface DownloadFileResponseDto {
   mimeType?: string;
 }
 
-export enum UserRole {
+export interface CommentAttachment {
+  /**  */
+  type?: CommentAttachmentType;
+
+  /**  */
+  fileId?: string;
+
+  /**  */
+  fileName?: string;
+
+  /**  */
+  fileSize?: string;
+}
+
+export interface CommentMessage {
+  /**  */
+  commentId?: string;
+
+  /**  */
+  replyToComment?: string;
+
+  /**  */
+  content?: string;
+
+  /**  */
+  mentions?: string[];
+
+  /**  */
+  attachments?: CommentAttachment[];
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  createdByName?: string;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  editedAt?: Date;
+}
+
+export interface CommentThreadCreateUpdateDTO {
+  /**  */
+  threadId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotations?: string[];
+
+  /**  */
+  rootComment?: CommentMessage;
+
+  /**  */
+  replies?: CommentMessage[];
+
+  /**  */
+  status?: ThreadStatus;
+}
+
+export interface CommentThreadEntity {
+  /**  */
+  threadId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotations?: string[];
+
+  /**  */
+  rootComment?: CommentMessage;
+
+  /**  */
+  replies?: CommentMessage[];
+
+  /**  */
+  replyCount?: number;
+
+  /**  */
+  participants?: string[];
+
+  /**  */
+  lastActivityAt?: Date;
+
+  /**  */
+  status?: ThreadStatus;
+
+  /**  */
+  resolvedAt?: Date;
+
+  /**  */
+  resolvedBy?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+}
+
+export interface CommonResponseCommentThreadEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: CommentThreadEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface CommentThreadFilterDTO {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotationId?: string;
+
+  /**  */
+  participant?: string;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  keyword?: string;
+
+  /**  */
+  status?: ThreadStatus;
+
+  /**  */
+  fromLastActivityAt?: Date;
+
+  /**  */
+  toLastActivityAt?: Date;
+}
+
+export interface PageRequestDtoCommentThreadFilterDTO {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: CommentThreadFilterDTO;
+}
+
+export interface CommonResponsePageResultCommentThreadEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultCommentThreadEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultCommentThreadEntity {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: CommentThreadEntity[];
+}
+
+export interface AnnotationPoint {
+  /**  */
+  x?: number;
+
+  /**  */
+  y?: number;
+}
+
+export interface AnnotationRegion {
+  /**  */
+  shape?: Shape;
+
+  /**  */
+  points?: AnnotationPoint[];
+
+  /**  */
+  strokeColor?: string;
+
+  /**  */
+  strokeWidth?: number;
+
+  /**  */
+  fillColor?: string;
+}
+
+export interface AnnotationTimeCode {
+  /**  */
+  startMs?: string;
+
+  /**  */
+  endMs?: string;
+}
+
+export interface AnnotationsCreateUpdateDTO {
+  /**  */
+  annotationId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotationType?: AnnotationType;
+
+  /**  */
+  timeCode?: AnnotationTimeCode;
+
+  /**  */
+  region?: AnnotationRegion;
+
+  /**  */
+  frameNumber?: number;
+
+  /**  */
+  status?: AnnotationStatus;
+
+  /**  */
+  threadId?: string;
+}
+
+export interface AnnotationsEntity {
+  /**  */
+  annotationId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  annotationType?: AnnotationType;
+
+  /**  */
+  timeCode?: AnnotationTimeCode;
+
+  /**  */
+  region?: AnnotationRegion;
+
+  /**  */
+  frameNumber?: number;
+
+  /**  */
+  status?: AnnotationStatus;
+
+  /**  */
+  resolvedAt?: Date;
+
+  /**  */
+  resolvedBy?: string;
+
+  /**  */
+  threadId?: string;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+}
+
+export interface CommonResponseAnnotationsEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AnnotationsEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AnnotationsFilterDTO {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionId?: string;
+
+  /**  */
+  threadId?: string;
+
+  /**  */
+  annotationType?: AnnotationType;
+
+  /**  */
+  status?: AnnotationStatus;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  frameNumber?: number;
+
+  /**  */
+  fromStartMs?: string;
+
+  /**  */
+  toStartMs?: string;
+
+  /**  */
+  fromCreatedAt?: Date;
+
+  /**  */
+  toCreatedAt?: Date;
+}
+
+export interface PageRequestDtoAnnotationsFilterDTO {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: AnnotationsFilterDTO;
+}
+
+export interface CommonResponsePageResultAnnotationsEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultAnnotationsEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultAnnotationsEntity {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: AnnotationsEntity[];
+}
+
+export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
-  'ROLE_ADMIN' = 'ROLE_ADMIN'
+  'ROLE_ADMIN' = 'ROLE_ADMIN',
+  'ROLE_SA' = 'ROLE_SA'
 }
 
 export enum AuthProvider {
   'LOCAL' = 'LOCAL',
   'GOOGLE' = 'GOOGLE'
+}
+
+export enum GrantedPermission {
+  'VIEWER' = 'VIEWER',
+  'CONTRIBUTOR' = 'CONTRIBUTOR',
+  'COLLABORATOR' = 'COLLABORATOR',
+  'OWNER' = 'OWNER'
 }
 
 export enum ProjectStatus {
@@ -865,10 +1540,27 @@ export enum ProjectStatus {
   'COMPLETED' = 'COMPLETED'
 }
 
-export enum ProjectCollaboratorRole {
-  'PRODUCER' = 'PRODUCER',
-  'REVIEWER' = 'REVIEWER',
-  'VIEWER' = 'VIEWER'
+export enum GrantedVisibility {
+  'PUBLIC' = 'PUBLIC',
+  'PRIVATE' = 'PRIVATE'
+}
+
+export enum DeliveryStatus {
+  'PENDING' = 'PENDING',
+  'SENT' = 'SENT',
+  'FAILED' = 'FAILED',
+  'SKIPPED' = 'SKIPPED',
+  'DELIVERED' = 'DELIVERED'
+}
+
+export enum NotificationType {
+  'NEW_COMMENT' = 'NEW_COMMENT',
+  'MENTION' = 'MENTION',
+  'STATUS_CHANGE' = 'STATUS_CHANGE',
+  'NEW_VERSION' = 'NEW_VERSION',
+  'REVIEW_INVITATION' = 'REVIEW_INVITATION',
+  'ANNOTATION_RESOLVED' = 'ANNOTATION_RESOLVED',
+  'DEADLINE_REMINDER' = 'DEADLINE_REMINDER'
 }
 
 export enum ObjectPermission {
@@ -907,4 +1599,32 @@ export enum UploadStatus {
   'UPLOADING' = 'UPLOADING',
   'COMPLETED' = 'COMPLETED',
   'FAILED' = 'FAILED'
+}
+
+export enum CommentAttachmentType {
+  'IMAGE' = 'IMAGE',
+  'FILE' = 'FILE'
+}
+
+export enum ThreadStatus {
+  'OPEN' = 'OPEN',
+  'RESOLVED' = 'RESOLVED'
+}
+
+export enum AnnotationStatus {
+  'OPEN' = 'OPEN',
+  'RESOLVED' = 'RESOLVED'
+}
+
+export enum AnnotationType {
+  'TIMECODE' = 'TIMECODE',
+  'REGION' = 'REGION',
+  'FRAME_REGION' = 'FRAME_REGION'
+}
+
+export enum Shape {
+  'RECTANGLE' = 'RECTANGLE',
+  'CIRCLE' = 'CIRCLE',
+  'POLYGON' = 'POLYGON',
+  'FREEFORM' = 'FREEFORM'
 }

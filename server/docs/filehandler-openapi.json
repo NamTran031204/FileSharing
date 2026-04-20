@@ -318,6 +318,43 @@
         }
       }
     },
+    "/api/project/check-project" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "checkProject",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProjectCheckInputDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectCheckResponseDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/archive/{projectId}" : {
       "post" : {
         "tags" : [ "project-controller" ],
@@ -337,6 +374,152 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/notification/update-detail" : {
+      "post" : {
+        "tags" : [ "notification-controller" ],
+        "operationId" : "updateNotificationDetail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotificationCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseNotificationEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/notification/get-page" : {
+      "post" : {
+        "tags" : [ "notification-controller" ],
+        "operationId" : "getNotificationPage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoNotificationFilterDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultNotificationEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/notification/delete/{notificationId}" : {
+      "post" : {
+        "tags" : [ "notification-controller" ],
+        "operationId" : "deleteNotification",
+        "parameters" : [ {
+          "name" : "notificationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/notification/create-new" : {
+      "post" : {
+        "tags" : [ "notification-controller" ],
+        "operationId" : "createNewNotification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotificationCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseNotificationEntity"
                 }
               }
             }
@@ -846,6 +1029,298 @@
         }
       }
     },
+    "/api/comment-thread/update-detail" : {
+      "post" : {
+        "tags" : [ "comment-thread-controller" ],
+        "operationId" : "updateCommentThreadDetail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommentThreadCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseCommentThreadEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/comment-thread/get-page" : {
+      "post" : {
+        "tags" : [ "comment-thread-controller" ],
+        "operationId" : "getCommentThreadPage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoCommentThreadFilterDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultCommentThreadEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/comment-thread/delete/{threadId}" : {
+      "post" : {
+        "tags" : [ "comment-thread-controller" ],
+        "operationId" : "deleteCommentThread",
+        "parameters" : [ {
+          "name" : "threadId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/comment-thread/create-new" : {
+      "post" : {
+        "tags" : [ "comment-thread-controller" ],
+        "operationId" : "createNewCommentThread",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommentThreadCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseCommentThreadEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/annotations/update-detail" : {
+      "post" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "updateAnnotationDetail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AnnotationsCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAnnotationsEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/annotations/get-page" : {
+      "post" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "getAnnotationPage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoAnnotationsFilterDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAnnotationsEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/annotations/delete/{annotationId}" : {
+      "post" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "deleteAnnotation",
+        "parameters" : [ {
+          "name" : "annotationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/annotations/create-new" : {
+      "post" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "createNewAnnotation",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AnnotationsCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAnnotationsEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/users" : {
       "get" : {
         "tags" : [ "user-controller" ],
@@ -970,6 +1445,41 @@
         }
       }
     },
+    "/api/notification/get-by-id/{notificationId}" : {
+      "get" : {
+        "tags" : [ "notification-controller" ],
+        "operationId" : "getNotificationById",
+        "parameters" : [ {
+          "name" : "notificationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseNotificationEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/folder/get-by-id/{folderId}" : {
       "get" : {
         "tags" : [ "folder-controller" ],
@@ -1024,6 +1534,76 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/comment-thread/get-by-id/{threadId}" : {
+      "get" : {
+        "tags" : [ "comment-thread-controller" ],
+        "operationId" : "getCommentThreadById",
+        "parameters" : [ {
+          "name" : "threadId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseCommentThreadEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/annotations/get-by-id/{annotationId}" : {
+      "get" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "getAnnotationById",
+        "parameters" : [ {
+          "name" : "annotationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAnnotationsEntity"
                 }
               }
             }
@@ -1162,7 +1742,7 @@
           "roles" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/UserRole"
+              "$ref" : "#/components/schemas/UserGrantedRole"
             }
           },
           "enabled" : {
@@ -1173,9 +1753,9 @@
           }
         }
       },
-      "UserRole" : {
+      "UserGrantedRole" : {
         "type" : "string",
-        "enum" : [ "ROLE_USER", "ROLE_ADMIN" ]
+        "enum" : [ "ROLE_USER", "ROLE_ADMIN", "ROLE_SA" ]
       },
       "AuthProvider" : {
         "type" : "string",
@@ -1213,7 +1793,7 @@
           "roles" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/UserRole"
+              "$ref" : "#/components/schemas/UserGrantedRole"
             }
           },
           "enabled" : {
@@ -1301,6 +1881,21 @@
           }
         }
       },
+      "GrantedPermission" : {
+        "type" : "string",
+        "enum" : [ "VIEWER", "CONTRIBUTOR", "COLLABORATOR", "OWNER" ]
+      },
+      "ProjectCollaboratorDTO" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "permission" : {
+            "$ref" : "#/components/schemas/GrantedPermission"
+          }
+        }
+      },
       "ProjectCreateUpdateDTO" : {
         "type" : "object",
         "properties" : {
@@ -1324,10 +1919,10 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "emails" : {
+          "collaborators" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "$ref" : "#/components/schemas/ProjectCollaboratorDTO"
             }
           },
           "status" : {
@@ -1356,6 +1951,10 @@
           }
         }
       },
+      "GrantedVisibility" : {
+        "type" : "string",
+        "enum" : [ "PUBLIC", "PRIVATE" ]
+      },
       "ProjectCollaborator" : {
         "type" : "object",
         "properties" : {
@@ -1365,18 +1964,14 @@
           "email" : {
             "type" : "string"
           },
-          "role" : {
-            "$ref" : "#/components/schemas/ProjectCollaboratorRole"
+          "permission" : {
+            "$ref" : "#/components/schemas/GrantedPermission"
           },
           "addedAt" : {
             "type" : "string",
             "format" : "date-time"
           }
         }
-      },
-      "ProjectCollaboratorRole" : {
-        "type" : "string",
-        "enum" : [ "PRODUCER", "REVIEWER", "VIEWER" ]
       },
       "ProjectEntity" : {
         "type" : "object",
@@ -1415,6 +2010,9 @@
             "items" : {
               "$ref" : "#/components/schemas/ProjectCollaborator"
             }
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/GrantedVisibility"
           },
           "stats" : {
             "$ref" : "#/components/schemas/ProjectStats"
@@ -1498,9 +2096,6 @@
           },
           "status" : {
             "$ref" : "#/components/schemas/ProjectStatus"
-          },
-          "isActive" : {
-            "type" : "boolean"
           }
         }
       },
@@ -1536,6 +2131,45 @@
           }
         }
       },
+      "ProjectCheckInputDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectName" : {
+            "type" : "string"
+          },
+          "projectCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseProjectCheckResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ProjectCheckResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProjectCheckResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccess" : {
+            "type" : "boolean"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
       "CommonResponseString" : {
         "type" : "object",
         "properties" : {
@@ -1550,6 +2184,242 @@
           },
           "message" : {
             "type" : "string"
+          }
+        }
+      },
+      "DeliveryStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "SENT", "FAILED", "SKIPPED", "DELIVERED" ]
+      },
+      "NotificationContext" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "assetName" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotationId" : {
+            "type" : "string"
+          },
+          "commentId" : {
+            "type" : "string"
+          },
+          "reviewSessionId" : {
+            "type" : "string"
+          },
+          "actorId" : {
+            "type" : "string"
+          },
+          "actorName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "NotificationCreateUpdateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "notificationId" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/NotificationType"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "context" : {
+            "$ref" : "#/components/schemas/NotificationContext"
+          },
+          "isRead" : {
+            "type" : "boolean"
+          },
+          "deliveryStatus" : {
+            "$ref" : "#/components/schemas/NotificationDelivery"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "NotificationDelivery" : {
+        "type" : "object",
+        "properties" : {
+          "inApp" : {
+            "$ref" : "#/components/schemas/DeliveryStatus"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/DeliveryStatus"
+          }
+        }
+      },
+      "NotificationType" : {
+        "type" : "string",
+        "enum" : [ "NEW_COMMENT", "MENTION", "STATUS_CHANGE", "NEW_VERSION", "REVIEW_INVITATION", "ANNOTATION_RESOLVED", "DEADLINE_REMINDER" ]
+      },
+      "CommonResponseNotificationEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/NotificationEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "NotificationEntity" : {
+        "type" : "object",
+        "properties" : {
+          "notificationId" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/NotificationType"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "context" : {
+            "$ref" : "#/components/schemas/NotificationContext"
+          },
+          "isRead" : {
+            "type" : "boolean"
+          },
+          "readAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "deliveryStatus" : {
+            "$ref" : "#/components/schemas/NotificationDelivery"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "NotificationFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/NotificationType"
+          },
+          "isRead" : {
+            "type" : "boolean"
+          },
+          "keyword" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "actorId" : {
+            "type" : "string"
+          },
+          "inAppStatus" : {
+            "$ref" : "#/components/schemas/DeliveryStatus"
+          },
+          "emailStatus" : {
+            "$ref" : "#/components/schemas/DeliveryStatus"
+          },
+          "fromCreatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "toCreatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PageRequestDtoNotificationFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/NotificationFilterDTO"
+          }
+        }
+      },
+      "CommonResponsePageResultNotificationEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultNotificationEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultNotificationEntity" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NotificationEntity"
+            }
           }
         }
       },
@@ -2224,6 +3094,539 @@
           },
           "mimeType" : {
             "type" : "string"
+          }
+        }
+      },
+      "CommentAttachment" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/CommentAttachmentType"
+          },
+          "fileId" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "fileSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CommentAttachmentType" : {
+        "type" : "string",
+        "enum" : [ "IMAGE", "FILE" ]
+      },
+      "CommentMessage" : {
+        "type" : "object",
+        "properties" : {
+          "commentId" : {
+            "type" : "string"
+          },
+          "replyToComment" : {
+            "type" : "string"
+          },
+          "content" : {
+            "type" : "string"
+          },
+          "mentions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "attachments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CommentAttachment"
+            }
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "createdByName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "editedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommentThreadCreateUpdateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "threadId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotations" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "rootComment" : {
+            "$ref" : "#/components/schemas/CommentMessage"
+          },
+          "replies" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CommentMessage"
+            }
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ThreadStatus"
+          }
+        }
+      },
+      "ThreadStatus" : {
+        "type" : "string",
+        "enum" : [ "OPEN", "RESOLVED" ]
+      },
+      "CommentThreadEntity" : {
+        "type" : "object",
+        "properties" : {
+          "threadId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotations" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "rootComment" : {
+            "$ref" : "#/components/schemas/CommentMessage"
+          },
+          "replies" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CommentMessage"
+            }
+          },
+          "replyCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "participants" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "lastActivityAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ThreadStatus"
+          },
+          "resolvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resolvedBy" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseCommentThreadEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/CommentThreadEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommentThreadFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotationId" : {
+            "type" : "string"
+          },
+          "participant" : {
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "keyword" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ThreadStatus"
+          },
+          "fromLastActivityAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "toLastActivityAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PageRequestDtoCommentThreadFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/CommentThreadFilterDTO"
+          }
+        }
+      },
+      "CommonResponsePageResultCommentThreadEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultCommentThreadEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultCommentThreadEntity" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CommentThreadEntity"
+            }
+          }
+        }
+      },
+      "AnnotationPoint" : {
+        "type" : "object",
+        "properties" : {
+          "x" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "y" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "AnnotationRegion" : {
+        "type" : "object",
+        "properties" : {
+          "shape" : {
+            "$ref" : "#/components/schemas/Shape"
+          },
+          "points" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AnnotationPoint"
+            }
+          },
+          "strokeColor" : {
+            "type" : "string"
+          },
+          "strokeWidth" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fillColor" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AnnotationStatus" : {
+        "type" : "string",
+        "enum" : [ "OPEN", "RESOLVED" ]
+      },
+      "AnnotationTimeCode" : {
+        "type" : "object",
+        "properties" : {
+          "startMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "endMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "AnnotationType" : {
+        "type" : "string",
+        "enum" : [ "TIMECODE", "REGION", "FRAME_REGION" ]
+      },
+      "AnnotationsCreateUpdateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "annotationId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotationType" : {
+            "$ref" : "#/components/schemas/AnnotationType"
+          },
+          "timeCode" : {
+            "$ref" : "#/components/schemas/AnnotationTimeCode"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/AnnotationRegion"
+          },
+          "frameNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AnnotationStatus"
+          },
+          "threadId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Shape" : {
+        "type" : "string",
+        "enum" : [ "RECTANGLE", "CIRCLE", "POLYGON", "FREEFORM" ]
+      },
+      "AnnotationsEntity" : {
+        "type" : "object",
+        "properties" : {
+          "annotationId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "annotationType" : {
+            "$ref" : "#/components/schemas/AnnotationType"
+          },
+          "timeCode" : {
+            "$ref" : "#/components/schemas/AnnotationTimeCode"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/AnnotationRegion"
+          },
+          "frameNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AnnotationStatus"
+          },
+          "resolvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resolvedBy" : {
+            "type" : "string"
+          },
+          "threadId" : {
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAnnotationsEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AnnotationsEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AnnotationsFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "threadId" : {
+            "type" : "string"
+          },
+          "annotationType" : {
+            "$ref" : "#/components/schemas/AnnotationType"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/AnnotationStatus"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "frameNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fromStartMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toStartMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fromCreatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "toCreatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PageRequestDtoAnnotationsFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/AnnotationsFilterDTO"
+          }
+        }
+      },
+      "CommonResponsePageResultAnnotationsEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAnnotationsEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultAnnotationsEntity" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AnnotationsEntity"
+            }
           }
         }
       }
