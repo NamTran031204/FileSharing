@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 @Configuration
 @Data
@@ -34,43 +35,46 @@ public class FfmpegConfig {
                                           String resolution, String videoBitrate,
                                           String audioBitrate, int segmentDuration) {
         CommandLine cmdLine = new CommandLine(ffmpegPath);
-        
+
         cmdLine.addArgument("-i");
-        cmdLine.addArgument(inputUrl, false);
+        cmdLine.addArgument(inputUrl);
         
+        // codec
         cmdLine.addArgument("-c:v");
         cmdLine.addArgument("libx264");
         
+        // bitrate
         cmdLine.addArgument("-b:v");
         cmdLine.addArgument(videoBitrate);
-        
+
         if (resolution != null) {
             cmdLine.addArgument("-s");
             cmdLine.addArgument(resolution);
         }
         
+        // audio codec
         cmdLine.addArgument("-c:a");
         cmdLine.addArgument("aac");
         
+        // audio bitrate
         cmdLine.addArgument("-b:a");
         cmdLine.addArgument(audioBitrate);
-        
+
         cmdLine.addArgument("-f");
         cmdLine.addArgument("hls");
-        
+
         cmdLine.addArgument("-hls_time");
         cmdLine.addArgument(String.valueOf(segmentDuration));
-        
+
         cmdLine.addArgument("-hls_list_size");
         cmdLine.addArgument("0");
-        
+
         cmdLine.addArgument("-hls_segment_filename");
-        // Fix: Use backslashes for Windows paths
-        String segmentPath = outputDir + "\\segment_%03d.ts";
-        cmdLine.addArgument(segmentPath, false);
-        
-        String m3u8Path = outputDir + "\\master.m3u8";
-        cmdLine.addArgument(m3u8Path, false);
+        String segmentPath = outputDir + File.separator + "segment_%04d.ts";
+        cmdLine.addArgument(segmentPath);
+
+        String m3u8Path = outputDir + File.separator + "master.m3u8";
+        cmdLine.addArgument(m3u8Path);
         
         return cmdLine;
     }
