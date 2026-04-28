@@ -9,6 +9,7 @@ import lombok.ToString;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
 import org.example.filesharing.enums.ProjectStatus;
+import org.example.filesharing.enums.permission.GrantedVisibility;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -40,6 +41,7 @@ public class ProjectEntity {
     private Instant endDate;
 
     private List<ProjectCollaborator> collaborators;
+    private GrantedVisibility visibility;
     private ProjectStats stats;
 
     private ProjectStatus status; // khi cho vao thung rac -> ARCHIVE

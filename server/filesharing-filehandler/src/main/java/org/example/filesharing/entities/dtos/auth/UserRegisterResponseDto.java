@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.filesharing.enums.auth.AuthProvider;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +20,6 @@ public class UserRegisterResponseDto {
     private String userName;
     private Instant createdAt;
     private List<AuthProvider> providers;
-    private List<UserRole> roles;
+    private List<UserGrantedRole> roles;
     private Boolean enabled;
 }

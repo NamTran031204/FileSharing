@@ -3,16 +3,13 @@ package org.example.filesharing.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.project.ProjectCheckInputDTO;
-import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
-import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
-import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
+import org.example.filesharing.entities.dtos.project.*;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
 import org.example.filesharing.entities.models.core.ProjectEntity;
 import org.example.filesharing.entities.models.core.UserEntity;
-import org.example.filesharing.enums.ProjectCollaboratorRole;
 import org.example.filesharing.enums.ProjectStatus;
+import org.example.filesharing.enums.permission.GrantedPermission;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.CommonException;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
@@ -28,7 +25,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -70,13 +70,19 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectEntity createNewProject(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
         validateCreatePayload(projectCreateUpdateDTO);
 
-        String projectCode = projectCreateUpdateDTO.getProjectCode().trim();
-        if (projectRepo.existsByProjectCode(projectCode)) {
-            throw new UserBusinessException(
-                    ErrorCode.BAD_REQUEST,
-                    "projectCode already exists: " + projectCode
-            );
+        String projectCode = "";
+        if (projectCreateUpdateDTO.getProjectCode() != null || projectCreateUpdateDTO.getProjectCode().isBlank()){
+            projectCode = projectCreateUpdateDTO.getProjectCode().trim();
+            if (projectRepo.existsByProjectCode(projectCode)) {
+                throw new UserBusinessException(
+                        ErrorCode.BAD_REQUEST,
+                        "projectCode already exists: " + projectCode
+                );
+            }
+        } else {
+            projectCode = "PRJ_" + UUID.randomUUID();
         }
+
 
         String ownerId = auditService.getCurrentUserId();
         String ownerEmail = auditService.getCurrentUserEmail();
@@ -92,7 +98,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .ownerEmail(ownerEmail)
                 .startDate(projectCreateUpdateDTO.getStartDate())
                 .endDate(projectCreateUpdateDTO.getEndDate())
-                .collaborators(buildCollaborators(projectCreateUpdateDTO.getEmails(), ownerEmail))
+                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), true))
                 .stats(defaultStats())
                 .status(status)
                 .isActive(true)
@@ -140,8 +146,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         validateProjectDateRange(project.getStartDate(), project.getEndDate());
 
-        if (projectCreateUpdateDTO.getEmails() != null) {
-            project.setCollaborators(buildCollaborators(projectCreateUpdateDTO.getEmails(), project.getOwnerEmail()));
+        if (projectCreateUpdateDTO.getCollaborators() != null) {
+            project.setCollaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), false));
         }
 
         if (projectCreateUpdateDTO.getStatus() != null) {
@@ -181,14 +187,12 @@ public class ProjectServiceImpl implements ProjectService {
         Query query = new Query();
         addScopeCriteria(query, filter);
 
+        query.addCriteria(Criteria.where("isActive").is(true));
+
         if (filter != null) {
 
             if (filter.getStatus() != null) {
                 query.addCriteria(Criteria.where("status").is(filter.getStatus()));
-            }
-
-            if (filter.getIsActive() != null) {
-                query.addCriteria(Criteria.where("isActive").is(filter.getIsActive()));
             }
 
             if (filter.getStartDate() != null) {
@@ -262,10 +266,6 @@ public class ProjectServiceImpl implements ProjectService {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectName is required");
         }
 
-        if (StringUtils.isNullOrBlank(payload.getProjectCode())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectCode is required");
-        }
-
         validateProjectDateRange(payload.getStartDate(), payload.getEndDate());
     }
 
@@ -322,38 +322,53 @@ public class ProjectServiceImpl implements ProjectService {
         );
     }
 
-    private List<ProjectCollaborator> buildCollaborators(List<String> emails, String ownerEmail) {
-        if (emails == null) {
-            return List.of();
+    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collab, Boolean isCreate) {
+
+        List<ProjectCollaborator> collaborators = new ArrayList<>();
+        if (isCreate) {
+            String currentUserId = auditService.getCurrentUserId();
+            String currentUserEmail = auditService.getCurrentUserEmail();
+
+            // owner la mot collaborator
+            ProjectCollaborator projectCollaborator = ProjectCollaborator.builder()
+                    .email(currentUserEmail)
+                    .userId(currentUserId)
+                    .permission(GrantedPermission.OWNER)
+                    .addedAt(Instant.now())
+                    .build();
+            collaborators.add(projectCollaborator);
+            if (collab == null || collab.isEmpty()) {
+                return collaborators;
+            }
         }
 
-        String normalizedOwnerEmail = ownerEmail != null ? ownerEmail.trim().toLowerCase() : null;
+        if (collab == null) {
+            return collaborators;
+        }
 
-        return emails.stream()
-                .filter(StringUtils::isNotNullOrBlank)
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .filter(email -> normalizedOwnerEmail == null || !normalizedOwnerEmail.equals(email))
-                .distinct()
-                .map(this::mapEmailToCollaborator)
-                .toList();
+        for (ProjectCollaboratorDTO collaborator: collab) {
+            collaborators.add(mapEmailToCollaborator(collaborator));
+        }
+
+        return collaborators;
+
     }
 
-    private ProjectCollaborator mapEmailToCollaborator(String email) {
-        if (!StringUtils.isEmail(email)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Invalid email: " + email);
+    private ProjectCollaborator mapEmailToCollaborator(ProjectCollaboratorDTO collaboratorDTO) {
+        if (!StringUtils.isEmail(collaboratorDTO.getEmail())) {
+            return null;
         }
 
-        UserEntity user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserBusinessException(
-                        ErrorCode.USER_NOT_FOUND,
-                        "Cannot find user with email: " + email
-                ));
+        Optional<UserEntity> user = userRepo.findByEmail(collaboratorDTO.getEmail());
+        if (user.isEmpty()) {
+            return null;
+        }
+        UserEntity userEntity = user.get();
 
         return ProjectCollaborator.builder()
-                .userId(user.getUserId())
-                .email(user.getEmail())
-                .role(ProjectCollaboratorRole.VIEWER)
+                .userId(userEntity.getUserId())
+                .email(userEntity.getEmail())
+                .permission(collaboratorDTO.getPermission() != null ? collaboratorDTO.getPermission() : GrantedPermission.VIEWER)
                 .addedAt(Instant.now())
                 .build();
     }

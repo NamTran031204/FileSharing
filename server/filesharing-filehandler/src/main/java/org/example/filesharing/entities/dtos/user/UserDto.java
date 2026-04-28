@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.filesharing.enums.auth.AuthProvider;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +18,7 @@ public class UserDto {
     private String userId;
     private String email;
     private String publicUserName;
-    private List<UserRole> roles;
+    private List<UserGrantedRole> roles;
     private boolean enabled;
     private boolean emailVerified;
     private List<AuthProvider> providers;

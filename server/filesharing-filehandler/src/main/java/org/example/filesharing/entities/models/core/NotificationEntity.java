@@ -38,6 +38,7 @@ public class NotificationEntity {
     private Boolean isRead;
     private Instant readAt;
     private NotificationDelivery deliveryStatus;
+    private Boolean isActive;
 
     @CreatedDate
     private Instant createdAt;

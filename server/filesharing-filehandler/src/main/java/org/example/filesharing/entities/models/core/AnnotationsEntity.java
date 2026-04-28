@@ -47,6 +47,7 @@ public class AnnotationsEntity {
 
     private String createdBy;
     private String createdByEmail;
+    private Boolean isActive;
 
     @CreatedDate
     private Instant createdAt;

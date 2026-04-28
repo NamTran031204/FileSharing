@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.auth.UserRole;
+import org.example.filesharing.enums.auth.UserGrantedRole;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class CreateUserRequestDto {
 
     private String publicUserName;
 
-    private List<UserRole> roles;
+    private List<UserGrantedRole> roles;
 
     private boolean enabled = true;
 
