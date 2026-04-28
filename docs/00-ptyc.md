@@ -472,13 +472,15 @@ PRODUCER | REVIEWER | VIEWER
 
 Còn owner lấy từ `ownerId`.
 
+Guest/Viewer qua share link là vãng lai, không nằm trong collaborators và không có quyền `COMMENT`.
+
 ---
 
 ## Create Collaborator
 
 ### Mục tiêu
 
-Owner mời người khác vào project.
+Owner/Producer mời người khác vào project.
 
 ### Input
 
@@ -490,10 +492,10 @@ role: PRODUCER | REVIEWER | VIEWER
 ### Luồng
 
 ```text
-1. Owner mở Project Settings.
+1. Owner/Producer mở Project Settings.
 2. Nhập email.
 3. Chọn role.
-4. Backend kiểm tra currentUser là owner của project.
+4. Backend kiểm tra currentUser là owner hoặc producer của project.
 5. Backend tìm user theo email.
 6. Nếu user tồn tại:
    - add vào projects.collaborators
@@ -508,7 +510,7 @@ role: PRODUCER | REVIEWER | VIEWER
 ### Rule
 
 ```text
-COLLAB_CREATE_01: Chỉ Owner được thêm collaborator.
+COLLAB_CREATE_01: Chỉ Owner/Producer được thêm collaborator.
 COLLAB_CREATE_02: Không thêm trùng email trong cùng project.
 COLLAB_CREATE_03: Không thêm chính owner như collaborator thường.
 COLLAB_CREATE_04: Role phải thuộc VIEWER / REVIEWER / PRODUCER.
@@ -548,9 +550,9 @@ COLLAB_READ_02: Guest qua share link không được xem full collaborators.
 ### Luồng
 
 ```text
-1. Owner chọn collaborator.
+1. Owner/Producer chọn collaborator.
 2. Đổi role.
-3. Backend kiểm tra quyền OWNER.
+3. Backend kiểm tra user là owner hoặc producer.
 4. Backend update projects.collaborators.$.role.
 5. Ghi audit log PERMISSION_CHANGE.
 6. Gửi notification nếu cần.
@@ -559,7 +561,7 @@ COLLAB_READ_02: Guest qua share link không được xem full collaborators.
 ### Rule
 
 ```text
-COLLAB_UPDATE_01: Chỉ owner được đổi role.
+COLLAB_UPDATE_01: Chỉ owner/producer được đổi role.
 COLLAB_UPDATE_02: Không dùng API này để đổi owner.
 COLLAB_UPDATE_03: Nếu user đang trong active review session, đổi quyền chỉ ảnh hưởng các request sau đó.
 ```
@@ -571,8 +573,8 @@ COLLAB_UPDATE_03: Nếu user đang trong active review session, đổi quyền c
 ### Luồng
 
 ```text
-1. Owner bấm Remove collaborator.
-2. Backend kiểm tra quyền OWNER.
+1. Owner/Producer bấm Remove collaborator.
+2. Backend kiểm tra user là owner hoặc producer.
 3. Xóa collaborator khỏi projects.collaborators.
 4. Có thể xóa/giữ permission override ở folder/metadata tùy policy.
 5. Ghi audit log PERMISSION_CHANGE.
@@ -581,7 +583,7 @@ COLLAB_UPDATE_03: Nếu user đang trong active review session, đổi quyền c
 ### Rule
 
 ```text
-COLLAB_DELETE_01: Chỉ owner được remove collaborator.
+COLLAB_DELETE_01: Chỉ owner/producer được remove collaborator.
 COLLAB_DELETE_02: Remove collaborator không xóa comment/annotation cũ của user.
 COLLAB_DELETE_03: Sau khi bị remove, user không còn READ project.
 ```
@@ -688,7 +690,7 @@ FOLDER_READ_02: Nếu folder có permission override, ưu tiên check override.
 - Rename folder
 - Đổi description
 - Move folder sang parent khác
-- Update permissions override
+- Update permissions override (OWNER)
 ```
 
 ### Luồng rename
@@ -706,9 +708,10 @@ FOLDER_READ_02: Nếu folder có permission override, ưu tiên check override.
 ### Rule
 
 ```text
-FOLDER_UPDATE_01: User phải có MODIFY.
+FOLDER_UPDATE_01: User phải có MODIFY với rename/description/move.
 FOLDER_UPDATE_02: Không được move folder vào chính nó hoặc folder con của nó.
 FOLDER_UPDATE_03: Move folder phải cập nhật folderPath và level của toàn bộ subtree.
+FOLDER_UPDATE_04: Update permissions override chỉ Owner được làm.
 ```
 
 ---
@@ -1838,7 +1841,7 @@ reviewers[]
 REVIEW_CREATE_01: Một review session gắn với một versionId.
 REVIEW_CREATE_02: User phải có MODIFY để tạo review session.
 REVIEW_CREATE_03: Reviewer phải là collaborator hoặc được mời hợp lệ.
-REVIEW_CREATE_04: APPROVER mới có quyền approve.
+REVIEW_CREATE_04: Reviewer/Producer/Owner có quyền approve.
 ```
 
 ---
@@ -1950,8 +1953,8 @@ APPROVED -> IN_REVIEW nếu reopen
 ### Luồng Approve
 
 ```text
-1. Approver bấm Approve.
-2. Backend kiểm tra role trong reviewers là APPROVER hoặc user là Owner.
+1. Reviewer/Producer/Owner bấm Approve.
+2. Backend kiểm tra user có role Reviewer/Producer/Owner trong project.
 3. Update review_session.status = APPROVED.
 4. Set completedAt = now.
 5. Push statusHistory.
@@ -1965,7 +1968,7 @@ APPROVED -> IN_REVIEW nếu reopen
 ```text
 REVIEW_STATUS_01: Status change phải ghi statusHistory.
 REVIEW_STATUS_02: Status change phải ghi audit log.
-REVIEW_STATUS_03: Chỉ APPROVER/OWNER được APPROVED.
+REVIEW_STATUS_03: Chỉ Reviewer/Producer/Owner được APPROVED.
 REVIEW_STATUS_04: REQUEST_CHANGES nên có note nếu không còn annotation OPEN.
 REVIEW_STATUS_05: APPROVED nên yêu cầu không còn OPEN annotation? 
 ```
@@ -2040,7 +2043,7 @@ Owner
 
 ```text
 assetId
-permission: READ | COMMENT
+permission: READ
 expiry optional
 ```
 
@@ -2062,7 +2065,7 @@ expiry optional
 
 ```text
 SHARE_CREATE_01: Chỉ Owner được tạo share link.
-SHARE_CREATE_02: MVP chỉ cho READ hoặc COMMENT.
+SHARE_CREATE_02: MVP được chọn quyền, mặc định là READ.
 SHARE_CREATE_03: Không cho MODIFY qua share link.
 SHARE_CREATE_04: Token phải random, không đoán được.
 ```
@@ -2086,11 +2089,8 @@ SHARE_CREATE_04: Token phải random, không đoán được.
 
 ```text
 SHARE_READ_01: Share link hết hạn thì từ chối.
-SHARE_READ_02: Share link READ chỉ xem, không comment.
-SHARE_READ_03: Share link COMMENT được comment nếu hệ thống hỗ trợ guest identity.
+SHARE_READ_02: Share link chỉ READ + select flow, không comment.
 ```
-
-Gợi ý: nếu cho guest comment, nên yêu cầu nhập tên/email hoặc login.
 
 ---
 
@@ -2099,7 +2099,6 @@ Gợi ý: nếu cho guest comment, nên yêu cầu nhập tên/email hoặc logi
 ### Hành động
 
 ```text
-- Đổi permission READ/COMMENT
 - Đổi expiry
 - Regenerate token
 ```

@@ -74,17 +74,23 @@ Hệ thống có 3 persona chính:
 | Reviewer / Client             | Comment chính xác theo timeline/vùng ảnh, duyệt nhanh |
 | Project Manager / Coordinator | Theo dõi trạng thái duyệt, version, SLA phản hồi      |
 
-Ngoài ra, về mặt hệ thống có thể chia role kỹ thuật:
+Ngoài ra, về mặt hệ thống (System level) có các role:
 
-| Role     | Ý nghĩa                                           |
-| -------- | ------------------------------------------------- |
-| Guest    | Người truy cập qua share link hoặc chưa đăng nhập |
-| User     | Người dùng đã đăng nhập                           |
-| Admin    | Người quản trị hệ thống                           |
-| Owner    | Chủ sở hữu project/asset                          |
-| Producer | Người upload và sửa media                         |
-| Reviewer | Người review, comment, approve/request changes    |
-| Viewer   | Người chỉ xem                                     |
+| Role  | Ý nghĩa                                                             |
+| ----- | ------------------------------------------------------------------- |
+| SA    | Quản trị toàn nền tảng, có thể override mọi project khi cần          |
+| ADMIN | Quản trị trong tenant, có thể override trong phạm vi tenant khi cần  |
+| USER  | Người dùng đã đăng nhập thuộc tenant                                |
+
+Ở cấp dự án (Project level) có các role:
+
+| Role     | Ý nghĩa                                                                 |
+| -------- | ----------------------------------------------------------------------- |
+| Owner    | Chủ sở hữu project/asset                                                |
+| Producer | Người upload và quản lý nội dung, có thể mời thành viên                |
+| Reviewer | Người review và đưa quyết định approve/request changes                 |
+| Guest    | Vãng lai có định danh qua share link, chỉ `READ` + select flow          |
+| Viewer   | Vãng lai ẩn danh, chỉ `READ`                                            |
 
 ---
 
@@ -101,21 +107,22 @@ OWNER
 
 ## 2.3. Permission Matrix đơn giản
 
-| Hành động           |        Viewer / READ |   Reviewer / COMMENT |     Producer / MODIFY | Owner |
-| ------------------- | -------------------: | -------------------: | --------------------: | ----: |
-| Xem project         |                   Có |                   Có |                    Có |    Có |
-| Xem media           |                   Có |                   Có |                    Có |    Có |
-| Xem version history |                   Có |                   Có |                    Có |    Có |
-| Playback video      |                   Có |                   Có |                    Có |    Có |
-| Download media      | Có nếu được cho phép | Có nếu được cho phép |                    Có |    Có |
-| Tạo comment         |                Không |                   Có |                    Có |    Có |
-| Reply comment       |                Không |                   Có |                    Có |    Có |
-| Resolve comment     |                Không |                   Có |                    Có |    Có |
-| Tạo annotation      |                Không |                   Có |                    Có |    Có |
-| Upload new version  |                Không |                Không |                    Có |    Có |
-| Đổi review status   |                Không |   Có nếu là Approver |                    Có |    Có |
-| Quản lý permission  |                Không |                Không |                 Không |    Có |
-| Xóa asset           |                Không |                Không | Có nếu là owner asset |    Có |
+| Hành động / Tính năng            | Owner | Producer | Reviewer | Guest | Viewer |
+| ------------------------------- | :---: | :------: | :------: | :---: | :----: |
+| Cập nhật thông tin project      | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Xóa project                     | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Thêm/Xóa thành viên (Invite)    | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Cấp quyền Owner cho người khác  | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Upload ảnh/video                | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Xóa/Sắp xếp ảnh/video            | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Tạo Folder/Version              | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Xem nội dung (View)             | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Download (nếu được phép)        | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Comment & Reply                 | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Thả cảm xúc (Reaction)          | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Approve/Reject Asset            | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Chọn nhiều ảnh (Multi-select)   | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Gửi danh sách ảnh đã chọn       | ✅ | ✅ | ✅ | ✅ | ❌ |
 
 ---
 
@@ -225,7 +232,7 @@ Yêu cầu nghiệp vụ:
 
 * Producer tạo review session.
 * Khi bắt đầu review, trạng thái là `IN_REVIEW`.
-* Reviewer/Approver có thể chuyển sang `REQUEST_CHANGES` hoặc `APPROVED`.
+* Reviewer/Producer/Owner có thể chuyển sang `REQUEST_CHANGES` hoặc `APPROVED`.
 * Khi chuyển trạng thái phải ghi vào `statusHistory`.
 * Khi `APPROVED`, phiên review có `completedAt`.
 
@@ -247,14 +254,14 @@ Yêu cầu nghiệp vụ:
 
 ### F09. Share Link
 
-Owner hoặc người có quyền phù hợp có thể tạo share link cho asset/project.
+Chỉ Owner và Producer có thể tạo share link cho asset/project.
 
 Yêu cầu nghiệp vụ:
 
 * Share link có thể hết hạn bằng `shareExpiry`.
 * Share link gắn với asset thay vì từng version.
-* Người truy cập share link chỉ có quyền theo cấu hình public/share permission.
-* Không mặc định cho phép modify qua share link.
+* Người truy cập share link nếu chưa đăng nhập thì chỉ có quyền `READ` và thao tác select flow (không `COMMENT`/`MODIFY`).
+* Không cho phép modify qua share link.
 
 ---
 
@@ -473,8 +480,8 @@ APPROVED
 | Trạng thái hiện tại | Hành động          | Trạng thái tiếp theo | Ai được làm               |
 | ------------------- | ------------------ | -------------------- | ------------------------- |
 | DRAFT               | Start review       | IN_REVIEW            | Producer, Owner           |
-| IN_REVIEW           | Request changes    | REQUEST_CHANGES      | Reviewer, Approver, Owner |
-| IN_REVIEW           | Approve            | APPROVED             | Approver, Owner           |
+| IN_REVIEW           | Request changes    | REQUEST_CHANGES      | Reviewer, Producer, Owner |
+| IN_REVIEW           | Approve            | APPROVED             | Reviewer, Producer, Owner |
 | REQUEST_CHANGES     | Upload new version | DRAFT hoặc IN_REVIEW | Producer, Owner           |
 | REQUEST_CHANGES     | Re-submit review   | IN_REVIEW            | Producer, Owner           |
 | APPROVED            | Reopen review      | IN_REVIEW            | Owner                     |
@@ -491,8 +498,8 @@ Gợi ý đơn giản cho MVP:
 | Trạng thái hiện tại | Hành động            | Trạng thái tiếp theo |
 | ------------------- | -------------------- | -------------------- |
 | DRAFT               | Gửi review           | IN_REVIEW            |
-| IN_REVIEW           | Reviewer yêu cầu sửa | REQUEST_CHANGES      |
-| IN_REVIEW           | Reviewer duyệt       | APPROVED             |
+| IN_REVIEW           | Reviewer/Producer yêu cầu sửa | REQUEST_CHANGES      |
+| IN_REVIEW           | Reviewer/Producer duyệt       | APPROVED             |
 | REQUEST_CHANGES     | Upload version mới   | DRAFT hoặc IN_REVIEW |
 | APPROVED            | Upload version mới   | DRAFT                |
 
@@ -590,15 +597,16 @@ Owner tạo không gian làm việc để chứa media asset.
 
 ### Mục tiêu
 
-Owner thêm Producer/Reviewer/Viewer vào project.
+Owner/Producer thêm Producer/Reviewer/Viewer vào project.
 
 ### Actor
 
 * Owner
+* Producer
 
 ### Luồng chính
 
-1. Owner mở project settings.
+1. Owner/Producer mở project settings.
 2. Nhập email collaborator.
 3. Chọn role: `PRODUCER`, `REVIEWER`, `VIEWER`.
 4. Hệ thống thêm vào `collaborators`.
@@ -606,7 +614,7 @@ Owner thêm Producer/Reviewer/Viewer vào project.
 
 ### Rule
 
-* Chỉ Owner được thêm/xóa collaborator.
+* Chỉ Owner/Producer được thêm/xóa collaborator.
 * Không thêm trùng cùng email vào project.
 * Role project sẽ map sang permission thực tế.
 
@@ -849,12 +857,12 @@ User xem lại các bản cũ và feedback tương ứng.
 
 ### Mục tiêu
 
-Reviewer/Approver cập nhật trạng thái review.
+Reviewer/Producer/Owner cập nhật trạng thái review.
 
 ### Actor
 
 * Reviewer
-* Approver
+* Producer
 * Owner
 
 ### Luồng chính
@@ -869,8 +877,8 @@ Reviewer/Approver cập nhật trạng thái review.
 
 ### Rule
 
-* Chỉ Approver/Owner được chuyển sang `APPROVED`.
-* Reviewer thường có thể `REQUEST_CHANGES`.
+* Reviewer/Producer/Owner được chuyển sang `APPROVED`.
+* Reviewer/Producer có thể `REQUEST_CHANGES`.
 * Khi `APPROVED`, set `completedAt`.
 
 ---
@@ -889,14 +897,14 @@ Owner chia sẻ asset cho khách hàng ngoài hệ thống.
 
 1. Owner mở asset settings.
 2. Bật share link.
-3. Chọn quyền public: `READ` hoặc `COMMENT`.
+3. Share link mặc định `READ` (không `COMMENT`).
 4. Chọn ngày hết hạn nếu cần.
 5. Hệ thống tạo `shareToken`.
-6. Người nhận link truy cập theo quyền được cấp.
+6. Người nhận link truy cập với quyền `READ` + select flow.
 
 ### Rule
 
-* Share link không nên có `MODIFY` trong MVP.
+* Share link không có `COMMENT`/`MODIFY` trong MVP.
 * Share link hết hạn thì không truy cập được.
 * Có thể revoke share link.
 
@@ -911,8 +919,8 @@ BR-PERM-01: User phải có READ để xem project/asset/version.
 BR-PERM-02: User phải có COMMENT để tạo annotation/comment/reply.
 BR-PERM-03: User phải có MODIFY để upload new version.
 BR-PERM-04: User phải có OWNER để chỉnh permission/share link.
-BR-PERM-05: Admin có thể xem dữ liệu phục vụ vận hành, nhưng không nên mặc định can thiệp nội dung nếu không cần.
-BR-PERM-06: Share link chỉ cấp quyền theo publicPermission/sharePermission.
+BR-PERM-05: ADMIN có thể override trong tenant để vận hành; SA có override toàn nền tảng, nhưng không mặc định can thiệp nội dung nếu không cần.
+BR-PERM-06: Share link chỉ cấp quyền `READ` + select flow, không `COMMENT`/`MODIFY`.
 ```
 
 ---
@@ -1126,7 +1134,7 @@ Hiển thị tổng quan project và review cần xử lý.
 * Tạo folder.
 * Upload media.
 * Mở asset.
-* Quản lý collaborator nếu là Owner.
+* Quản lý collaborator nếu là Owner/Producer.
 
 ---
 
@@ -1246,7 +1254,7 @@ Hiển thị tổng quan project và review cần xử lý.
 ### Dữ liệu hiển thị
 
 * Share link hiện tại.
-* Permission của link.
+* Quyền `READ` + select flow (cố định).
 * Expiry time.
 * Trạng thái enabled/disabled.
 
@@ -1255,7 +1263,6 @@ Hiển thị tổng quan project và review cần xử lý.
 * Generate link.
 * Copy link.
 * Revoke link.
-* Đổi permission.
 * Đổi expiry.
 
 ---
@@ -1342,7 +1349,7 @@ Validation gợi ý:
 Validation:
 
 ```text
-- APPROVED chỉ cho Approver/Owner.
+- APPROVED chỉ cho Reviewer/Producer/Owner.
 - REQUEST_CHANGES cần có note? 
 ```
 
@@ -1873,8 +1880,8 @@ TC-VERSION-05: User không có MODIFY upload new version -> PERMISSION_DENIED.
 ```text
 TC-REVIEW-01: Producer start review -> DRAFT sang IN_REVIEW.
 TC-REVIEW-02: Reviewer request changes -> IN_REVIEW sang REQUEST_CHANGES.
-TC-REVIEW-03: Approver approve -> IN_REVIEW sang APPROVED.
-TC-REVIEW-04: Reviewer thường approve nếu không có quyền -> PERMISSION_DENIED.
+TC-REVIEW-03: Reviewer/Producer approve -> IN_REVIEW sang APPROVED.
+TC-REVIEW-04: Viewer/Guest approve -> PERMISSION_DENIED.
 TC-REVIEW-05: Status change tạo statusHistory và audit log.
 ```
 
@@ -1884,7 +1891,7 @@ TC-REVIEW-05: Status change tạo statusHistory và audit log.
 
 ```text
 TC-SHARE-01: Owner tạo share link READ -> guest xem được asset.
-TC-SHARE-02: Share link COMMENT -> guest/commenter comment được nếu cho phép.
+TC-SHARE-02: Guest qua share link chỉ READ + select flow, comment -> PERMISSION_DENIED.
 TC-SHARE-03: Share link hết hạn -> SHARE_LINK_EXPIRED.
 TC-SHARE-04: Revoke share link -> link cũ không truy cập được.
 TC-SHARE-05: Share link không được upload new version.
@@ -1961,8 +1968,8 @@ Lý do: phần **version-centric** nên được làm sớm, vì annotation/comm
 [ ] Đã quyết định upload video/image support định dạng nào
 [ ] Đã quyết định version mới có copy feedback cũ hay không
 [ ] Đã quyết định review session mới có tạo sau mỗi version hay không
-[ ] Đã quyết định ai được APPROVED
-[ ] Đã quyết định share link có cho comment không
+[ ] Đã quyết định ai được APPROVED (Reviewer/Producer/Owner)
+[ ] Đã quyết định share link chỉ READ + select flow (không comment)
 [ ] Đã quyết định thread resolved có cho reply không
 [ ] Đã chuẩn hóa error code
 [ ] Đã chuẩn hóa state transition
@@ -2012,8 +2019,8 @@ Lý do: tránh phức tạp. Version mới nên là một vòng review mới.
 Gợi ý:
 
 ```text
-MVP hỗ trợ READ và COMMENT.
-Không hỗ trợ MODIFY qua share link.
+MVP chỉ hỗ trợ READ + select flow.
+Không hỗ trợ COMMENT/MODIFY qua share link.
 ```
 
 ## 23.5. Ai được approve?
@@ -2021,8 +2028,7 @@ Không hỗ trợ MODIFY qua share link.
 Gợi ý:
 
 ```text
-Owner và Reviewer có role APPROVER trong review session.
-Reviewer thường chỉ request changes/comment.
+Owner/Producer/Reviewer đều có thể approve trong review session.
 ```
 
 ---
@@ -2036,11 +2042,13 @@ Reviewer thường chỉ request changes/comment.
 Nền tảng review video/image giúp creative agency và freelancer studio nhận feedback chính xác theo timecode/vùng ảnh, quản lý version và trạng thái duyệt.
 
 ## Users
+- SA
+- Admin
 - Owner
 - Producer
 - Reviewer
+- Guest
 - Viewer
-- Admin
 
 ## Permissions
 - READ: xem project/asset/version
