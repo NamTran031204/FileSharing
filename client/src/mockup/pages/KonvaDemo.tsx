@@ -1,169 +1,258 @@
-import { useState } from "react";
-import { Stage, Layer, Image as KonvaImage, Circle, Rect } from "react-konva";
-import useImage from "use-image";
-import type { KonvaEventObject } from "konva/lib/Node";
-import type { Shape, ToolType } from "../types/shapes";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Circle, Image as KonvaImage, Layer, Rect, Stage } from 'react-konva';
+import type { KonvaEventObject } from 'konva/lib/Node';
+import CommonLayout from '../../layout/CommonLayout';
 
-// Import ảnh tĩnh từ src/assets
-// Nếu ảnh nằm trong public/, dùng: const IMAGE_URL = "/sample.jpg"
-import sampleImage from "../assets/banner.png";
+type ToolType = 'select' | 'circle' | 'rect';
 
-// Kích thước canvas cố định
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 500;
+type ShapeType = 'circle' | 'rect';
 
-// =================================================================
-// SUB-COMPONENT: Render ảnh nền
-// =================================================================
-// Tách ra component riêng vì useImage phải gọi ở cấp component
-function BackgroundImage({ src }: { src: string }) {
-    // useImage tự động load ảnh và trả về HTMLImageElement
-    const [image, status] = useImage(src);
+interface Point {
+  x: number;
+  y: number;
+}
 
-    // Hiển thị placeholder khi ảnh đang load
-    if (status === "loading") {
-        return null; // Có thể thêm loading indicator nếu muốn
+interface BaseShape {
+  id: string;
+  type: ShapeType;
+}
+
+interface CircleShape extends BaseShape {
+  type: 'circle';
+  x: number;
+  y: number;
+  radius: number;
+}
+
+interface RectShape extends BaseShape {
+  type: 'rect';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+type Shape = CircleShape | RectShape;
+
+const useImage = (url: string) => {
+  const [image, setImage] = useState<HTMLImageElement>();
+
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = url;
+    img.onload = () => setImage(img);
+  }, [url]);
+
+  return image;
+};
+
+const COLOR_PRIMARY = 'hsl(var(--primary))';
+const COLOR_ACCENT = 'hsl(var(--accent))';
+
+const getButtonClassName = (isActive: boolean) =>
+  [
+    'w-full rounded-md px-4 py-2 text-left text-sm font-semibold transition-colors',
+    isActive
+      ? 'bg-primary text-white border border-primary'
+      : 'bg-card text-foreground border border-border hover:border-secondary hover:text-primary',
+  ].join(' ');
+
+const KonvaDemo = () => {
+  const [selectedTool, setSelectedTool] = useState<ToolType>('select');
+  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState<Point | null>(null);
+  const [currentPoint, setCurrentPoint] = useState<Point | null>(null);
+
+  const bgImage = useImage('/image.jpg');
+
+  const generateId = () => Math.random().toString(36).slice(2, 9);
+
+  const getCircleProps = (p1: Point, p2: Point) => ({
+    x: p1.x,
+    y: p1.y,
+    radius: Math.hypot(p2.x - p1.x, p2.y - p1.y),
+  });
+
+  const getRectProps = (p1: Point, p2: Point) => ({
+    x: Math.min(p1.x, p2.x),
+    y: Math.min(p1.y, p2.y),
+    width: Math.abs(p2.x - p1.x),
+    height: Math.abs(p2.y - p1.y),
+  });
+
+  const handleStageMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+    if (selectedTool === 'select') {
+      return;
     }
 
-    return (
-        <KonvaImage
-            image={image}      // HTMLImageElement
-            x={0}              // Góc trái-trên của ảnh
-            y={0}
-            width={CANVAS_WIDTH}   // Stretch full canvas
-            height={CANVAS_HEIGHT}
-        />
-    );
-}
+    const stage = e.target.getStage();
+    const pointerPosition = stage?.getPointerPosition();
+    if (!pointerPosition) {
+      return;
+    }
 
-// =================================================================
-// COMPONENT CHÍNH
-// =================================================================
-export default function LocalImageCanvas() {
-    const [tool, setTool] = useState<ToolType>("circle");
-    const [shapes, setShapes] = useState<Shape[]>([]);
+    if (!isDrawing) {
+      setIsDrawing(true);
+      setStartPoint(pointerPosition);
+      setCurrentPoint(pointerPosition);
+      return;
+    }
 
-    const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
-        // Chỉ vẽ khi click trực tiếp vào Stage hoặc Image
-        // (không vẽ khi click vào shape đã có)
-        const clickedOnEmpty = e.target === e.target.getStage()
-            || e.target.getClassName() === "Image";
-        if (!clickedOnEmpty) return;
+    if (startPoint && currentPoint) {
+      let newShape: Shape | null = null;
 
-        const stage = e.target.getStage();
-        const pos = stage?.getPointerPosition();
-        if (!pos) return;
+      if (selectedTool === 'circle') {
+        const { x, y, radius } = getCircleProps(startPoint, currentPoint);
+        if (radius > 2) {
+          newShape = { id: generateId(), type: 'circle', x, y, radius };
+        }
+      }
 
-        const newShape: Shape = {
-            id: Date.now().toString(),
-            type: tool,
-            x: pos.x,
-            y: pos.y,
-            fill: tool === "circle"
-                ? "rgba(59, 130, 246, 0.6)"   // Màu xanh semi-transparent
-                : "rgba(16, 185, 129, 0.6)",  // Màu xanh lá semi-transparent
-            stroke: tool === "circle" ? "#1D4ED8" : "#065F46",
-        };
+      if (selectedTool === 'rect') {
+        const { x, y, width, height } = getRectProps(startPoint, currentPoint);
+        if (width > 2 && height > 2) {
+          newShape = { id: generateId(), type: 'rect', x, y, width, height };
+        }
+      }
 
+      if (newShape) {
         setShapes((prev) => [...prev, newShape]);
-    };
+      }
+    }
 
-    return (
-        <div className="flex h-screen bg-gray-100">
-            {/* ===== SIDEBAR TOOLBAR ===== */}
-            <aside className="w-48 bg-white shadow-md p-4 flex flex-col gap-3">
-                <h2 className="font-bold text-lg text-gray-700 mb-2">
-                    Công cụ
-                </h2>
+    setIsDrawing(false);
+    setStartPoint(null);
+    setCurrentPoint(null);
+  };
 
-                {/* Nút Circle */}
-                <button
-                    onClick={() => setTool("circle")}
-                    className={`
-                        flex items-center gap-2 px-3 py-2 rounded-lg font-medium
-                        transition-colors duration-200
-                        ${tool === "circle"
-                                    ? "bg-blue-600 text-white shadow-md"
-                                    : "bg-gray-100 text-gray-700 hover:bg-blue-50"
-                                }
-                        `}
-                >
-                    <span>⭕</span> Hình tròn
-                </button>
+  const handleStageMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    if (!isDrawing || selectedTool === 'select') {
+      return;
+    }
 
-                {/* Nút Rectangle */}
-                <button
-                    onClick={() => setTool("rect")}
-                    className={`
-                        flex items-center gap-2 px-3 py-2 rounded-lg font-medium
-                        transition-colors duration-200
-                        ${tool === "rect"
-                                    ? "bg-green-600 text-white shadow-md"
-                                    : "bg-gray-100 text-gray-700 hover:bg-green-50"
-                                }
-                      `}
-                >
-                    <span>🟩</span> Hình vuông
-                </button>
+    const stage = e.target.getStage();
+    const pointerPosition = stage?.getPointerPosition();
 
-                <hr className='my-2' />
+    if (pointerPosition) {
+      setCurrentPoint(pointerPosition);
+    }
+  };
 
-                {/* Nút Clear */}
-                <button
-                    onClick={() => setShapes([])}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg
-                        bg-red-50 text-red-600 hover:bg-red-100 font-medium"
-                >
-                    <span>🗑️</span> Xoá hết
-                </button>
-
-                <p className="text-sm text-gray-400 mt-auto">
-                    Shapes: {shapes.length}
-                </p>
-            </aside>
-
-            {/* ===== CANVAS AREA ===== */}
-            <main className="flex-1 flex items-center justify-center p-6">
-                <Stage
-                    width={CANVAS_WIDTH}
-                    height={CANVAS_HEIGHT}
-                    onClick={handleStageClick}
-                    className="rounded-lg shadow-xl cursor-crosshair"
-                >
-                    {/* Layer 1: Ảnh nền - chỉ render 1 lần */}
-                    <Layer>
-                        <BackgroundImage src={sampleImage} />
-                    </Layer>
-
-                    {/* Layer 2: Shapes annotation */}
-                    <Layer>
-                        {shapes.map((shape) =>
-                            shape.type === "circle" ? (
-                                <Circle
-                                    key={shape.id}
-                                    x={shape.x}
-                                    y={shape.y}
-                                    radius={40}
-                                    fill={shape.fill}
-                                    stroke={shape.stroke}
-                                    strokeWidth={2}
-                                />
-                            ) : (
-                                <Rect
-                                    key={shape.id}
-                                    x={shape.x - 40}
-                                    y={shape.y - 30}
-                                    width={80}
-                                    height={60}
-                                    fill={shape.fill}
-                                    stroke={shape.stroke}
-                                    strokeWidth={2}
-                                />
-                            )
-                        )}
-                    </Layer>
-                </Stage>
-            </main>
-        </div>
+  const handleDragEnd = useCallback((id: string, e: KonvaEventObject<DragEvent>) => {
+    setShapes((prevShapes) =>
+      prevShapes.map((shape) =>
+        shape.id === id
+          ? {
+              ...shape,
+              x: e.target.x(),
+              y: e.target.y(),
+            }
+          : shape,
+      ),
     );
-}
+  }, []);
+
+  const stageWidth = bgImage?.width ?? 800;
+  const stageHeight = bgImage?.height ?? 600;
+  const stageStyle = useMemo(
+    () => ({ cursor: selectedTool === 'select' ? 'default' : 'crosshair' }),
+    [selectedTool],
+  );
+
+  return (
+    <CommonLayout>
+      <div className="flex h-full overflow-hidden">
+
+
+        <section className="flex-1 bg-background p-4 overflow-auto">
+          <div className="inline-block rounded-lg border border-border bg-card canvas-shadow">
+            <Stage
+              width={stageWidth}
+              height={stageHeight}
+              onMouseDown={handleStageMouseDown}
+              onMouseMove={handleStageMouseMove}
+              style={stageStyle}
+            >
+              <Layer>
+                {bgImage && <KonvaImage image={bgImage} x={0} y={0} />}
+
+                {shapes.map((shape) => {
+                  const isDraggable = selectedTool === 'select';
+
+                  if (shape.type === 'circle') {
+                    return (
+                      <Circle
+                        key={shape.id}
+                        x={shape.x}
+                        y={shape.y}
+                        radius={shape.radius}
+                        stroke={COLOR_PRIMARY}
+                        strokeWidth={3}
+                        draggable={isDraggable}
+                        onDragEnd={(e) => handleDragEnd(shape.id, e)}
+                      />
+                    );
+                  }
+
+                  return (
+                    <Rect
+                      key={shape.id}
+                      x={shape.x}
+                      y={shape.y}
+                      width={shape.width}
+                      height={shape.height}
+                      stroke={COLOR_ACCENT}
+                      strokeWidth={3}
+                      draggable={isDraggable}
+                      onDragEnd={(e) => handleDragEnd(shape.id, e)}
+                    />
+                  );
+                })}
+
+                {isDrawing && startPoint && currentPoint && (
+                  <>
+                    {selectedTool === 'circle' && (
+                      <Circle
+                        {...getCircleProps(startPoint, currentPoint)}
+                        stroke={COLOR_PRIMARY}
+                        strokeWidth={2}
+                        dash={[5, 5]}
+                        opacity={0.7}
+                      />
+                    )}
+                    {selectedTool === 'rect' && (
+                      <Rect
+                        {...getRectProps(startPoint, currentPoint)}
+                        stroke={COLOR_ACCENT}
+                        strokeWidth={2}
+                        dash={[5, 5]}
+                        opacity={0.7}
+                      />
+                    )}
+                  </>
+                )}
+              </Layer>
+            </Stage>
+          </div>
+        </section>
+
+          <aside className="w-64 shrink-0 bg-card border-r border-border p-5 flex flex-col gap-3">
+              <h2 className="text-xl font-semibold text-foreground">Công cụ vẽ</h2>
+
+              <button onClick={() => setSelectedTool('select')} className={getButtonClassName(selectedTool === 'select')}>
+                  move
+              </button>
+              <button onClick={() => setSelectedTool('circle')} className={getButtonClassName(selectedTool === 'circle')}>
+                  circle
+              </button>
+              <button onClick={() => setSelectedTool('rect')} className={getButtonClassName(selectedTool === 'rect')}>
+                  rect
+              </button>
+          </aside>
+      </div>
+    </CommonLayout>
+  );
+};
+
+export default KonvaDemo;

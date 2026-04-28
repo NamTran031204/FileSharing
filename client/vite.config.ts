@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // su dung cho mockup phat video
 const FIXED_HLS_DIR = 'E:/DaiCuongBK/Project3/FileSharing/server/filesharing-videocodec/temp/dir'
+// const FIXED_HLS_DIR = 'C:/Users/ADMIN/AppData/Local/Temp/video-encoding/40c9926c-da6a-4668-8443-4fcefcf811c4/original'
 
 const hlsLocalPlugin = () => ({
     name: 'hls-local-static-route',

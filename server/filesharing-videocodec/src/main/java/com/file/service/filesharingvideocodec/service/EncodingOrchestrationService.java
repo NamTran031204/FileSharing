@@ -148,28 +148,17 @@ public class EncodingOrchestrationService {
                 log.info("Video downloaded successfully to: {}", localVideoPath);
 
                 File outputDir = videoEncodingService.encodeVideoToHLS(localVideoPath, profile, jobId);
-
-                List<String> uploadedUrls = videoUploadService.uploadEncodedSegments(jobId, outputDir, profile);
-                
-                String m3u8Url = uploadedUrls.stream()
-                    .filter(url -> url.endsWith(".m3u8"))
-                    .findFirst()
-                    .orElse(null);
-                
-                List<String> tsUrls = uploadedUrls.stream()
-                    .filter(url -> url.endsWith(".ts"))
-                    .toList();
                 
                 long duration = System.currentTimeMillis() - startTime;
-                encodingLogger.logProfileComplete(jobId, profile.getName(), duration, m3u8Url);
+                encodingLogger.logProfileComplete(jobId, profile.getName(), duration, outputDir.toString());
                 
                 // Cleanup downloaded file
                 cleanupLocalVideo(localVideoPath);
                 
                 return ProfileResult.builder()
                     .profile(profile)
-                    .m3u8Url(m3u8Url)
-                    .tsFileUrls(tsUrls)
+                    .m3u8Url(outputDir.toString())
+                    .tsFileUrls(List.of(outputDir.toString()))
                     .durationMs(duration)
                     .status("SUCCESS")
                     .build();

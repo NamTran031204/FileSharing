@@ -1,74 +1,207 @@
 import {
-    CloseOutlined,
-    DownOutlined,
+    EditOutlined,
     FileSearchOutlined,
     FilterOutlined,
+    InboxOutlined,
     PlusOutlined,
-    RightOutlined,
+    PushpinOutlined,
     SearchOutlined,
     ShareAltOutlined,
     SortAscendingOutlined,
-    PushpinOutlined,
-    EditOutlined,
-    InboxOutlined,
 } from '@ant-design/icons';
-import {Breadcrumb, Button, Empty, Input, Skeleton, Space, Tag} from 'antd';
-import {useMemo, useState} from 'react';
-import {Link} from 'react-router-dom';
-import AppHeader from '../components/AppHeader';
-import AppSidebar from '../components/AppSidebar';
+import {Button, Empty, Input, Skeleton, Space, message} from 'antd';
+import axios from 'axios';
+import {useEffect, useMemo, useState} from 'react';
+import {API_BASE, tokenManager} from '../api/baseApi';
+import {ProjectControllerService} from '../api/api/ProjectControllerService';
+import {type ProjectEntity, type ProjectStatus, serviceOptions} from '../api/api/index.defs';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
 import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/ProjectOverviewCard';
 import CommonLayout from "../layout/CommonLayout.tsx";
 
-const MOCK_PROJECTS: ProjectOverviewCardProps[] = [
-    {
-        title: 'Project title',
-        code: 'Nam001',
-        ownerEmail: 'namtest1@gmail.com',
-        description:
-            'Project của Nam',
-        status: 'ACTIVE',
-        folderCount: 12,
-        videoCount: 84,
-        revisionCount: 4,
-        pendingCount: 3,
-        timeline: 'Jan 12 - Mar 20',
-        updatedAt: '2h ago',
-        members: [],
-        extraMembers: 5,
+const PAGE_SIZE = 24;
+
+const ensureProjectApiClient = () => {
+    if (serviceOptions.axios) {
+        return;
     }
-];
+
+    const baseUrl = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : API_BASE;
+
+    const instance = axios.create({
+        baseURL: baseUrl,
+    });
+
+    instance.interceptors.request.use((config) => {
+        const token = tokenManager.getAccessToken();
+        if (token) {
+            config.headers = config.headers ?? {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    });
+
+    instance.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (error?.response?.status === 401) {
+                tokenManager.clearTokens();
+                window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+            }
+
+            return Promise.reject(error);
+        },
+    );
+
+    serviceOptions.axios = instance;
+    serviceOptions.loading = false;
+    serviceOptions.showError = false;
+};
+
+const formatProjectDate = (value?: Date) => {
+    if (!value) {
+        return '';
+    }
+
+    return new Date(value).toLocaleDateString();
+};
+
+const toCardStatus = (status?: ProjectStatus): 'ACTIVE' | 'COMPLETED' => {
+    return status === 'ACTIVE' ? 'ACTIVE' : 'COMPLETED';
+};
+
+const toMemberInitials = (email?: string) => {
+    if (!email) {
+        return 'NA';
+    }
+
+    const [namePart = ''] = email.split('@');
+    const cleaned = namePart.replace(/[^a-zA-Z]/g, ' ').trim();
+    const pieces = cleaned.split(/\s+/).filter(Boolean);
+
+    if (!pieces.length) {
+        return namePart.slice(0, 2).toUpperCase() || 'NA';
+    }
+
+    if (pieces.length === 1) {
+        return pieces[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${pieces[0][0] ?? ''}${pieces[1][0] ?? ''}`.toUpperCase();
+};
+
+const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
+    const collaborators = project.collaborators ?? [];
+    const members = collaborators.slice(0, 3).map((member, index) => ({
+        id: member.userId || `${project.projectId || project.projectCode || 'project'}-${index}`,
+        initials: toMemberInitials(member.email),
+    }));
+
+    const startDate = formatProjectDate(project.startDate);
+    const endDate = formatProjectDate(project.endDate);
+    const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || 'N/A';
+
+    return {
+        title: project.projectName || 'Untitled Project',
+        code: project.projectCode || project.projectId || 'N/A',
+        category: project.category,
+        ownerEmail: project.ownerEmail || 'unknown@domain.local',
+        description: project.description || 'No description',
+        status: toCardStatus(project.status),
+        folderCount: project.stats?.folderCount ?? 0,
+        videoCount: project.stats?.assetCount ?? 0,
+        revisionCount: project.stats?.totalVersions ?? 0,
+        pendingCount: project.stats?.pendingReviews ?? 0,
+        timeline,
+        updatedAt: formatProjectDate(project.updatedAt) || 'N/A',
+        members,
+        extraMembers: Math.max(0, collaborators.length - members.length),
+    };
+};
 
 const ProjectMain = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
-    const [isLoadingMock] = useState(false);
+    const [projects, setProjects] = useState<ProjectOverviewCardProps[]>([]);
+    const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+
+    const loadProjects = async () => {
+        try {
+            setIsLoadingProjects(true);
+            ensureProjectApiClient();
+
+            const response = await ProjectControllerService.getPage({
+                body: {
+                    maxResultCount: PAGE_SIZE,
+                    skipCount: 0,
+                    sorting: 'updatedAt desc',
+                    filter: {},
+                },
+            });
+
+            if (!response?.isSuccessful) {
+                throw new Error(response?.message || 'Cannot load projects');
+            }
+
+            const items = response.data?.data ?? [];
+            setProjects(items.map(mapProjectToCard));
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+            message.error('Không thể tải danh sách project');
+            setProjects([]);
+        } finally {
+            setIsLoadingProjects(false);
+        }
+    };
+
+    useEffect(() => {
+        void loadProjects();
+    }, []);
 
     const filteredProjects = useMemo(() => {
         const normalizedKeyword = searchKeyword.trim().toLowerCase();
 
         if (!normalizedKeyword) {
-            return MOCK_PROJECTS;
+            return projects;
         }
 
-        return MOCK_PROJECTS.filter((project) => {
+        return projects.filter((project) => {
             const searchableText = [project.title, project.code, project.description, project.ownerEmail]
                 .join(' ')
                 .toLowerCase();
 
             return searchableText.includes(normalizedKeyword);
         });
-    }, [searchKeyword]);
+    }, [projects, searchKeyword]);
 
     const handleCreateProject = async (values: CreateProjectFormValues) => {
         setIsCreatingProject(true);
 
         try {
-            // TODO: Integrate create project API and refresh project list from backend.
-            console.info('Create project payload:', values);
+            ensureProjectApiClient();
+
+            const response = await ProjectControllerService.createNew({
+                body: {
+                    projectName: values.projectName,
+                    projectCode: values.projectCode,
+                    description: values.description,
+                    startDate: values.startDate?.toDate(),
+                    endDate: values.endDate?.toDate(),
+                    status: values.projectStatus as ProjectStatus | undefined,
+                },
+            });
+
+            if (!response?.isSuccessful) {
+                throw new Error(response?.message || 'Create project failed');
+            }
+
+            message.success('Tạo project thành công');
             setIsCreateProjectOpen(false);
+            await loadProjects();
+        } catch (error) {
+            console.error('Create project failed:', error);
+            message.error('Tạo project thất bại');
         } finally {
             setIsCreatingProject(false);
         }
@@ -83,7 +216,7 @@ const ProjectMain = () => {
                             <div>
                                 <h1 className="text-4xl font-extrabold tracking-tighter text-foreground">Project List</h1>
                                 <p className="mt-1 text-sm font-medium text-muted-foreground">
-                                    You have <span className="font-semibold text-primary">24 active projects</span> in your workspace.
+                                    You have <span className="font-semibold text-primary">{projects.length} active projects</span> in your workspace.
                                 </p>
                             </div>
 
@@ -118,7 +251,7 @@ const ProjectMain = () => {
                         </section>
 
                         <section className="space-y-5">
-                            {!isLoadingMock &&
+                            {!isLoadingProjects &&
                                 filteredProjects.map((project) => (
                                     <ProjectOverviewCard
                                         key={project.code}
@@ -130,13 +263,13 @@ const ProjectMain = () => {
                                     />
                                 ))}
 
-                            {isLoadingMock && (
+                            {isLoadingProjects && (
                                 <div className="rounded-2xl border border-border/30 bg-card p-6">
                                     <Skeleton active paragraph={{rows: 3}}/>
                                 </div>
                             )}
 
-                            {!isLoadingMock && filteredProjects.length === 0 && (
+                            {!isLoadingProjects && filteredProjects.length === 0 && (
                                 <div className="rounded-2xl border border-border/30 bg-card px-6 py-16">
                                     <Empty
                                         image={<FileSearchOutlined className="text-5xl text-muted-foreground"/>}
@@ -146,7 +279,7 @@ const ProjectMain = () => {
                                             </span>
                                         }
                                     >
-                                        <Button type="link" className="font-semibold">
+                                        <Button type="link" className="font-semibold" onClick={() => setSearchKeyword('')}>
                                             Clear all filters
                                         </Button>
                                     </Empty>

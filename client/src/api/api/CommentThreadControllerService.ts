@@ -1,15 +1,15 @@
 import {
-  type FolderUpdateRequestDTO,
-  type CommonResponseFolderEntity,
-  type FolderEntity,
-  type FolderPermission,
-  type ObjectPermission,
-  type FolderStats,
-  type PageRequestDtoFolderFilterRequestDTO,
-  type FolderFilterRequestDTO,
-  type CommonResponsePageResultFolderEntity,
-  type PageResultFolderEntity,
-  type FolderCreateRequestDTO,
+  type CommentThreadCreateUpdateDTO,
+  type CommentMessage,
+  type CommentAttachment,
+  type CommentAttachmentType,
+  type ThreadStatus,
+  type CommonResponseCommentThreadEntity,
+  type CommentThreadEntity,
+  type PageRequestDtoCommentThreadFilterDTO,
+  type CommentThreadFilterDTO,
+  type CommonResponsePageResultCommentThreadEntity,
+  type PageResultCommentThreadEntity,
   type CommonResponseString,
   type IList,
   type List,
@@ -26,7 +26,7 @@ import {
   basePath
 } from './index.defs';
 
-export class FolderControllerService {
+export class CommentThreadControllerService {
   /** Generate by swagger-axios-codegen */
   // @ts-nocheck
   /* eslint-disable */
@@ -37,12 +37,12 @@ export class FolderControllerService {
   static updateDetail(
     params: {
       /** requestBody */
-      body?: FolderUpdateRequestDTO;
+      body?: CommentThreadCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseCommentThreadEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/update-detail';
+      let url = basePath + '/api/comment-thread/update-detail';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -59,12 +59,12 @@ export class FolderControllerService {
   static getPage(
     params: {
       /** requestBody */
-      body?: PageRequestDtoFolderFilterRequestDTO;
+      body?: PageRequestDtoCommentThreadFilterDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultFolderEntity> {
+  ): Promise<CommonResponsePageResultCommentThreadEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-page';
+      let url = basePath + '/api/comment-thread/get-page';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -78,15 +78,34 @@ export class FolderControllerService {
   /**
    *
    */
+  static delete(
+    params: {
+      /**  */
+      threadId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/comment-thread/delete/{threadId}';
+      url = url.replace('{threadId}', params['threadId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
   static createNew(
     params: {
       /** requestBody */
-      body?: FolderCreateRequestDTO;
+      body?: CommentThreadCreateUpdateDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseCommentThreadEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/create-new';
+      let url = basePath + '/api/comment-thread/create-new';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -103,34 +122,15 @@ export class FolderControllerService {
   static getById(
     params: {
       /**  */
-      folderId: string;
+      threadId: string;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseCommentThreadEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/get-by-id/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
+      let url = basePath + '/api/comment-thread/get-by-id/{threadId}';
+      url = url.replace('{threadId}', params['threadId'] + '');
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
-  static delete(
-    params: {
-      /**  */
-      folderId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseString> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/delete/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('delete', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });
