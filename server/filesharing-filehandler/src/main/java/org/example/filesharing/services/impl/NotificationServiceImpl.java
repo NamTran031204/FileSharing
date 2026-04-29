@@ -15,6 +15,7 @@ import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.NotificationRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.NotificationService;
+import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,7 +31,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationServiceImpl extends BaseAuditService<NotificationEntity> implements NotificationService {
 
     private final NotificationRepo notificationRepo;
     private final MongoTemplate mongoTemplate;
@@ -53,10 +54,10 @@ public class NotificationServiceImpl implements NotificationService {
                 .isRead(Boolean.TRUE.equals(dto.getIsRead()))
                 .readAt(Boolean.TRUE.equals(dto.getIsRead()) ? now : null)
                 .deliveryStatus(normalizeDeliveryStatus(dto.getDeliveryStatus()))
-                .isActive(true)
                 .expiresAt(dto.getExpiresAt())
                 .build();
 
+        buildAudit(entity, true);
         return notificationRepo.save(entity);
     }
 
@@ -109,6 +110,8 @@ public class NotificationServiceImpl implements NotificationService {
         if (dto.getExpiresAt() != null) {
             entity.setExpiresAt(dto.getExpiresAt());
         }
+
+        buildAudit(entity, false);
 
         return notificationRepo.save(entity);
     }

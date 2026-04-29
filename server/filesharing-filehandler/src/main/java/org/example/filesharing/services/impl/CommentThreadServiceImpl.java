@@ -15,6 +15,7 @@ import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.CommentThreadRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.CommentThreadService;
+import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,7 +35,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-public class CommentThreadServiceImpl implements CommentThreadService {
+public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEntity> implements CommentThreadService {
 
     private final CommentThreadRepo commentThreadRepo;
     private final MongoTemplate mongoTemplate;
@@ -64,9 +65,9 @@ public class CommentThreadServiceImpl implements CommentThreadService {
                 .status(status)
                 .resolvedAt(status == ThreadStatus.RESOLVED ? now : null)
                 .resolvedBy(status == ThreadStatus.RESOLVED ? currentUser.getUserId() : null)
-                .isActive(true)
                 .build();
 
+        buildAudit(entity, true);
         return commentThreadRepo.save(entity);
     }
 
@@ -120,6 +121,7 @@ public class CommentThreadServiceImpl implements CommentThreadService {
         entity.setParticipants(buildParticipants(entity.getRootComment(), entity.getReplies()));
         entity.setLastActivityAt(calculateLastActivityAt(entity.getRootComment(), entity.getReplies(), now));
 
+        buildAudit(entity, false);
         return commentThreadRepo.save(entity);
     }
 

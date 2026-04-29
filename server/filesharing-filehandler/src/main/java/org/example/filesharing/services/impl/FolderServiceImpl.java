@@ -13,6 +13,7 @@ import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.services.FolderService;
+import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,7 +26,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class FolderServiceImpl implements FolderService {
+public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements FolderService {
 
     private final FolderRepo folderRepo;
     private final ProjectRepo projectRepo;
@@ -62,9 +63,9 @@ public class FolderServiceImpl implements FolderService {
                 .description(request.getDescription())
                 .folderPath(folderPath)
                 .level(level)
-                .isActive(true)
                 .build();
 
+        buildAudit(folder, true);
         return folderRepo.save(folder);
     }
 
@@ -101,6 +102,8 @@ public class FolderServiceImpl implements FolderService {
         if (request.getIsActive() != null) {
             folder.setIsActive(request.getIsActive());
         }
+
+        buildAudit(folder, false);
 
         return folderRepo.save(folder);
     }

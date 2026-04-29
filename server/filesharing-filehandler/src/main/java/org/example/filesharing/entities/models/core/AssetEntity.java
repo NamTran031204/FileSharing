@@ -36,10 +36,4 @@ public class AssetEntity extends EntityAuditBase {
 
     private String shareToken;
     private Instant shareExpiry;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 }

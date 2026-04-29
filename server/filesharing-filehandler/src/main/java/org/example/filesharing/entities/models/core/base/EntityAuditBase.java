@@ -1,5 +1,6 @@
 package org.example.filesharing.entities.models.core.base;
 
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -10,6 +11,8 @@ import java.time.Instant;
 public class EntityAuditBase {
     private String createdBy;
     private String createdByEmail;
+    private String updateBy;
+    private String updateByEmail;
     private Boolean isActive;
 
     @CreatedDate

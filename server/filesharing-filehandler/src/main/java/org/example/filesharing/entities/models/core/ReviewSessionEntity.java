@@ -36,8 +36,5 @@ public class ReviewSessionEntity extends EntityAuditBase {
     private List<ReviewerInfo> reviewers;
     private ReviewMetrics metrics;
 
-    private String createdBy;
-    private String createdByEmail;
-
     private Instant completedAt;
 }

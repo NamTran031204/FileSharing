@@ -18,6 +18,7 @@ import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.ProjectService;
+import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -32,7 +33,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ProjectServiceImpl implements ProjectService {
+public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implements ProjectService {
 
     private final ProjectRepo projectRepo;
     private final UserRepo userRepo;
@@ -101,10 +102,10 @@ public class ProjectServiceImpl implements ProjectService {
                 .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), true))
                 .stats(defaultStats())
                 .status(status)
-                .isActive(true)
                 .trashedAt(status == ProjectStatus.ARCHIVED ? Instant.now() : null)
                 .build();
 
+        buildAudit(project, true);
         ProjectEntity savedProject = projectRepo.save(project);
         return savedProject;
     }
@@ -159,6 +160,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        buildAudit(project, false);
         ProjectEntity savedProject = projectRepo.save(project);
         return savedProject;
     }
@@ -174,6 +176,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         project.setStatus(ProjectStatus.ARCHIVED);
         project.setTrashedAt(Instant.now());
+
+        buildAudit(project, false);
         projectRepo.save(project);
 
         return "Project archived successfully";
