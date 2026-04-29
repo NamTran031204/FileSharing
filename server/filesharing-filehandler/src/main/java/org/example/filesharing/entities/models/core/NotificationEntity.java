@@ -1,15 +1,10 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.NotificationContext;
 import org.example.filesharing.entities.models.NotificationDelivery;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.NotificationType;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -22,7 +17,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @ToString
-public class NotificationEntity {
+public class NotificationEntity extends EntityAuditBase {
     @Id
     private String notificationId;
 
@@ -38,10 +33,6 @@ public class NotificationEntity {
     private Boolean isRead;
     private Instant readAt;
     private NotificationDelivery deliveryStatus;
-    private Boolean isActive;
-
-    @CreatedDate
-    private Instant createdAt;
 
     private Instant expiresAt;
 }

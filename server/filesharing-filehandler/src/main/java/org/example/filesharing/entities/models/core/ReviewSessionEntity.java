@@ -1,18 +1,12 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.ReviewMetrics;
 import org.example.filesharing.entities.models.ReviewStatusHistory;
 import org.example.filesharing.entities.models.ReviewerInfo;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.ReviewSessionStatus;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -25,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @ToString
-public class ReviewSessionEntity {
+public class ReviewSessionEntity extends EntityAuditBase {
     @Id
     private String reviewSessionId;
 
@@ -44,12 +38,6 @@ public class ReviewSessionEntity {
 
     private String createdBy;
     private String createdByEmail;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 
     private Instant completedAt;
 }

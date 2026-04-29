@@ -2,12 +2,11 @@ package org.example.filesharing.entities.models.core;
 
 import lombok.*;
 import org.example.filesharing.entities.models.AuthProviderInfo;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.auth.AuthProvider;
 import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.enums.auth.UserRole;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 @ToString
-public class UserEntity implements UserDetails {
+public class UserEntity extends EntityAuditBase implements UserDetails {
     @Id
     private String userId;
 
@@ -60,12 +59,6 @@ public class UserEntity implements UserDetails {
      * Optional metadata (avatar, locale, device info...), có thể lưu JSON
      */
     private Map<String, Object> metadata = new HashMap<>();
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 
     /**
      * Last successful login time (useful for audits)

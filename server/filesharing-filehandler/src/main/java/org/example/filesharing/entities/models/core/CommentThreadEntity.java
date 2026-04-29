@@ -1,16 +1,10 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.CommentMessage;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.ThreadStatus;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -23,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @ToString
-public class CommentThreadEntity {
+public class CommentThreadEntity extends EntityAuditBase {
     @Id
     private String threadId;
 
@@ -41,11 +35,4 @@ public class CommentThreadEntity {
     private ThreadStatus status;
     private Instant resolvedAt;
     private String resolvedBy;
-    private Boolean isActive;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 }

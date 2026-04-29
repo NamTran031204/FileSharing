@@ -1,11 +1,7 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.AssetStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -21,7 +17,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @ToString
-public class AssetEntity {
+public class AssetEntity extends EntityAuditBase {
     @Id
     private String assetId;
 

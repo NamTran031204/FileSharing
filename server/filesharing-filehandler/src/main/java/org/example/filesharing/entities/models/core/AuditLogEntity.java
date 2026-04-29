@@ -1,13 +1,9 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.AuditChanges;
 import org.example.filesharing.entities.models.AuditRequestInfo;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.AuditAction;
 import org.example.filesharing.enums.AuditActorType;
 import org.example.filesharing.enums.AuditTargetType;
@@ -23,7 +19,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @ToString
-public class AuditLogEntity {
+public class AuditLogEntity extends EntityAuditBase {
     @Id
     private String logId;
 

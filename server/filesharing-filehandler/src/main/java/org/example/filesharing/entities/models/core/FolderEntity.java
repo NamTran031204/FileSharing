@@ -1,16 +1,10 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.FolderPermission;
 import org.example.filesharing.entities.models.FolderStats;
-import org.springframework.data.annotation.CreatedDate;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -23,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @ToString
-public class FolderEntity {
+public class FolderEntity extends EntityAuditBase {
     @Id
     private String folderId;
 
@@ -39,12 +33,6 @@ public class FolderEntity {
     private List<FolderPermission> permissions;
     private FolderStats stats;
 
-    private Boolean isActive;
-    private String createdBy;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
+    private String shareToken;
+    private Instant shareExpiry;
 }

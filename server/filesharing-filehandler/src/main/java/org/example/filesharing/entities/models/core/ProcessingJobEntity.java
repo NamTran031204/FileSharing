@@ -1,19 +1,13 @@
 package org.example.filesharing.entities.models.core;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.example.filesharing.entities.models.ProcessingJobConfig;
 import org.example.filesharing.entities.models.ProcessingJobProgress;
 import org.example.filesharing.entities.models.ProcessingJobResult;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.ProcessingJobStatus;
 import org.example.filesharing.enums.ProcessingJobType;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -25,7 +19,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @ToString
-public class ProcessingJobEntity {
+public class ProcessingJobEntity extends EntityAuditBase {
     @Id
     private String jobId;
 
@@ -51,10 +45,4 @@ public class ProcessingJobEntity {
 
     private String workerId;
     private Instant workerHeartbeat;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 }
