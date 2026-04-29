@@ -64,6 +64,9 @@ Implement đầy đủ tại controller tương ứng theo pattern codebase:
 2. Tạo bộ câu hỏi quyết định cho user ngay trong giao diện chat.
 3. Chỉ tiếp tục code sau khi user trả lời xong các câu hỏi xung đột.
 
+**Sau khi có câu trả lời:**
+- Nếu user chọn phương án lệch với flow nghiệp vụ được cung cấp, thực hiện thay đổi cả docs bao gồm 2 file `/docs/00-ptyc.md` và `/docs/0-product-analyst.md` với module tương ứng để phù hợp với quyết định mới và codebase.
+
 ## Cách tạo bộ câu hỏi xung đột
 Khi có xung đột/điểm mơ hồ, dùng `ask_user` để hỏi theo nguyên tắc:
 - Hỏi **một câu mỗi lần**.
