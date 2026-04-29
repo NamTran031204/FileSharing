@@ -1,6 +1,8 @@
 package org.example.filesharing.enums;
 
 public enum AuditTargetType {
+    PROJECT,
+    FOLDER,
     FILE,
     ASSET,
     ANNOTATION,

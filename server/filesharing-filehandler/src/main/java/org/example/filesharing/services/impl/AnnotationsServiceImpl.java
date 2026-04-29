@@ -16,6 +16,7 @@ import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AnnotationsRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.AnnotationsService;
+import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,7 +31,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class AnnotationsServiceImpl implements AnnotationsService {
+public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> implements AnnotationsService {
 
     private final AnnotationsRepo annotationsRepo;
     private final MongoTemplate mongoTemplate;
@@ -65,10 +66,9 @@ public class AnnotationsServiceImpl implements AnnotationsService {
                 .resolvedAt(status == AnnotationStatus.RESOLVED ? now : null)
                 .resolvedBy(status == AnnotationStatus.RESOLVED ? currentUserId : null)
                 .threadId(trimToNull(dto.getThreadId()))
-                .createdBy(currentUserId)
-                .createdByEmail(currentUserEmail)
-                .isActive(true)
                 .build();
+
+        buildAudit(entity, true);
 
         return annotationsRepo.save(entity);
     }
@@ -123,6 +123,7 @@ public class AnnotationsServiceImpl implements AnnotationsService {
         normalizeEntityByType(entity);
         validateByType(entity.getAnnotationType(), entity.getTimeCode(), entity.getRegion(), entity.getFrameNumber());
 
+        buildAudit(entity, false);
         return annotationsRepo.save(entity);
     }
 
@@ -228,6 +229,7 @@ public class AnnotationsServiceImpl implements AnnotationsService {
         }
 
         AnnotationsEntity entity = getActiveAnnotationOrThrow(annotationId.trim());
+        buildAudit(entity, false);
         entity.setIsActive(false);
         annotationsRepo.save(entity);
 

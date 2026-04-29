@@ -3,26 +3,48 @@ package org.example.filesharing.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
+import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
+import org.example.filesharing.entities.models.AuditChanges;
+import org.example.filesharing.entities.models.FolderPermission;
+import org.example.filesharing.entities.models.FolderStats;
+import org.example.filesharing.entities.models.ProjectCollaborator;
+import org.example.filesharing.entities.models.ProjectStats;
+import org.example.filesharing.entities.models.core.AssetEntity;
 import org.example.filesharing.entities.models.core.FolderEntity;
+import org.example.filesharing.entities.models.core.ProjectEntity;
+import org.example.filesharing.entities.models.core.UserEntity;
+import org.example.filesharing.entities.models.core.base.EntityAuditBase;
+import org.example.filesharing.enums.AuditAction;
+import org.example.filesharing.enums.AuditTargetType;
+import org.example.filesharing.enums.ProjectStatus;
+import org.example.filesharing.enums.auth.UserGrantedRole;
+import org.example.filesharing.enums.objectPermission.ObjectPermission;
+import org.example.filesharing.enums.permission.GrantedPermission;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
+import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.ProjectRepo;
+import org.example.filesharing.services.AuditLogService;
+import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.FolderService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
-import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -32,110 +54,224 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
     private final ProjectRepo projectRepo;
     private final AssetRepo assetRepo;
     private final MongoTemplate mongoTemplate;
+    private final AuditService auditService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
     public FolderEntity createNewFolder(FolderCreateRequestDTO request) {
-        if (!projectRepo.existsById(request.getProjectId())) {
-            throw new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        validateCreatePayload(request);
+
+        String projectId = request.getProjectId().trim();
+        ProjectEntity project = getProjectOrThrow(projectId);
+        ensureProjectWritable(project);
+
+        String folderName = requireNormalized(request.getFolderName(), "folderName is required");
+        String parentFolderId = trimToNull(request.getParentFolderId());
+
+        FolderEntity parentFolder = null;
+        if (parentFolderId != null) {
+            parentFolder = getActiveFolderOrThrow(parentFolderId);
+            ensureFolderInProject(parentFolder, project);
+            ensureFolderPermission(parentFolder, project, ObjectPermission.MODIFY);
+        } else {
+            ensureProjectModify(project, auditService.getCurrentUser());
         }
 
-        folderRepo.findByProjectIdAndParentFolderIdAndFolderName(
-                request.getProjectId(), request.getParentFolderId(), request.getFolderName())
-                .ifPresent(f -> {
-                    throw new FileBusinessException(ErrorCode.FOLDER_ALREADY_EXISTS);
-                });
+        ensureFolderNameUnique(projectId, parentFolderId, folderName, null);
 
-        String folderPath = "/";
-        int level = 0;
-
-        if (!StringUtils.isNullOrEmpty(request.getParentFolderId())) {
-            FolderEntity parent = folderRepo.findById(request.getParentFolderId())
-                    .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_PARENT_NOT_FOUND));
-            folderPath = parent.getFolderPath() + parent.getFolderName() + "/";
-            level = parent.getLevel() + 1;
-        }
+        String folderPath = buildFolderPath(parentFolder, folderName);
+        int level = parentFolder != null ? safeLevel(parentFolder.getLevel()) + 1 : 1;
 
         FolderEntity folder = FolderEntity.builder()
-                .projectId(request.getProjectId())
-                .parentFolderId(request.getParentFolderId())
-                .folderName(request.getFolderName())
-                .description(request.getDescription())
+                .projectId(projectId)
+                .parentFolderId(parentFolderId)
+                .folderName(folderName)
+                .description(trimToNull(request.getDescription()))
                 .folderPath(folderPath)
                 .level(level)
+                .stats(defaultFolderStats())
                 .build();
 
         buildAudit(folder, true);
-        return folderRepo.save(folder);
+        FolderEntity savedFolder = folderRepo.save(folder);
+
+        incrementProjectFolderCount(project, 1);
+        if (parentFolder != null) {
+            incrementParentSubfolderCount(parentFolder, 1);
+        }
+
+        writeFolderAuditLog(savedFolder, AuditAction.CREATE, null);
+        return savedFolder;
     }
 
     @Override
     @Transactional
     public FolderEntity updateFolderDetail(FolderUpdateRequestDTO request) {
-        FolderEntity folder = folderRepo.findById(request.getFolderId())
-                .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
+        validateUpdatePayload(request);
 
-        if (!StringUtils.isNullOrEmpty(request.getFolderName()) && !request.getFolderName().equals(folder.getFolderName())) {
-            folderRepo.findByProjectIdAndParentFolderIdAndFolderName(
-                    folder.getProjectId(), folder.getParentFolderId(), request.getFolderName())
-                    .ifPresent(f -> {
-                        throw new FileBusinessException(ErrorCode.FOLDER_ALREADY_EXISTS);
-                    });
+        FolderEntity folder = getActiveFolderOrThrow(request.getFolderId().trim());
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureProjectWritable(project);
 
-            String oldPathWithSelf = folder.getFolderPath() + folder.getFolderName() + "/";
-            String newPathWithSelf = folder.getFolderPath() + request.getFolderName() + "/";
+        UserEntity currentUser = auditService.getCurrentUser();
+        ensureFolderPermission(folder, project, ObjectPermission.MODIFY);
 
-            List<FolderEntity> children = folderRepo.findByFolderPathStartingWith(oldPathWithSelf);
-            for (FolderEntity child : children) {
-                String updatedPath = child.getFolderPath().replaceFirst(oldPathWithSelf, newPathWithSelf);
-                child.setFolderPath(updatedPath);
+        String updatedName = folder.getFolderName();
+        if (request.getFolderName() != null) {
+            updatedName = requireNormalized(request.getFolderName(), "folderName cannot be blank");
+        }
+
+        String updatedParentId = folder.getParentFolderId();
+        if (request.getParentFolderId() != null) {
+            updatedParentId = trimToNull(request.getParentFolderId());
+        }
+
+        String oldParentId = folder.getParentFolderId();
+        boolean nameChanged = !Objects.equals(updatedName, folder.getFolderName());
+        boolean parentChanged = !Objects.equals(updatedParentId, folder.getParentFolderId());
+
+        FolderEntity targetParent = null;
+        if (updatedParentId != null) {
+            targetParent = getActiveFolderOrThrow(updatedParentId);
+            ensureFolderInProject(targetParent, project);
+
+            if (targetParent.getFolderId().equals(folder.getFolderId())) {
+                throw new FileBusinessException(ErrorCode.FOLDER_CIRCULAR_REFERENCE);
             }
-            folderRepo.saveAll(children);
-            
-            folder.setFolderName(request.getFolderName());
+
+            if (isDescendantFolder(targetParent, folder)) {
+                throw new FileBusinessException(ErrorCode.FOLDER_CIRCULAR_REFERENCE);
+            }
+
+            ensureFolderPermission(targetParent, project, ObjectPermission.MODIFY);
+        } else if (parentChanged) {
+            ensureProjectModify(project, currentUser);
+        }
+
+        if (nameChanged || parentChanged) {
+            ensureFolderNameUnique(project.getProjectId(), updatedParentId, updatedName, folder.getFolderId());
+
+                    String existingPath = folder.getFolderPath();
+                    String oldPath = StringUtils.isNullOrBlank(existingPath) || "/".equals(existingPath)
+                        ? folder.getFolderName()
+                        : existingPath;
+                String newPath = buildFolderPath(targetParent, updatedName);
+            int oldLevel = safeLevel(folder.getLevel());
+            int newLevel = targetParent != null ? safeLevel(targetParent.getLevel()) + 1 : 1;
+            int levelDelta = newLevel - oldLevel;
+
+            if (StringUtils.isNotNullOrBlank(oldPath) && !Objects.equals(oldPath, newPath)) {
+                List<FolderEntity> descendants = folderRepo.findByFolderPathStartingWith(oldPath + "/");
+                for (FolderEntity child : descendants) {
+                    String updatedPath = newPath + child.getFolderPath().substring(oldPath.length());
+                    child.setFolderPath(updatedPath);
+                    if (levelDelta != 0) {
+                        child.setLevel(safeLevel(child.getLevel()) + levelDelta);
+                    }
+                }
+                folderRepo.saveAll(descendants);
+            }
+
+            folder.setFolderName(updatedName);
+            folder.setParentFolderId(updatedParentId);
+            folder.setFolderPath(newPath);
+            folder.setLevel(newLevel);
+
+            if (parentChanged) {
+                adjustParentSubfolderCounts(oldParentId, updatedParentId);
+            }
         }
 
         if (request.getDescription() != null) {
-            folder.setDescription(request.getDescription());
+            folder.setDescription(trimToNull(request.getDescription()));
         }
-        
-        if (request.getIsActive() != null) {
-            folder.setIsActive(request.getIsActive());
+
+        AuditChanges permissionChanges = null;
+        if (request.getPermissions() != null) {
+            ensureProjectOwner(project, currentUser);
+            Map<String, Object> before = new HashMap<>();
+            Map<String, Object> after = new HashMap<>();
+            before.put("permissions", folder.getPermissions());
+            after.put("permissions", request.getPermissions());
+            permissionChanges = AuditChanges.builder()
+                    .before(before)
+                    .after(after)
+                    .build();
+            folder.setPermissions(request.getPermissions());
         }
 
         buildAudit(folder, false);
+        FolderEntity savedFolder = folderRepo.save(folder);
 
-        return folderRepo.save(folder);
+        if (nameChanged || parentChanged || request.getDescription() != null) {
+            writeFolderAuditLog(savedFolder, AuditAction.UPDATE, null);
+        }
+
+        if (permissionChanges != null) {
+            writeFolderAuditLog(savedFolder, AuditAction.PERMISSION_CHANGE, permissionChanges);
+        }
+
+        return savedFolder;
     }
 
     @Override
     public FolderEntity getFolderById(String folderId) {
-        return folderRepo.findById(folderId)
+        if (StringUtils.isNullOrBlank(folderId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+
+        FolderEntity folder = folderRepo.findById(folderId.trim())
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
+
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (Boolean.FALSE.equals(folder.getIsActive()) && !isAdmin(currentUser)) {
+            throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
+        }
+
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureFolderPermission(folder, project, ObjectPermission.READ);
+        return folder;
     }
 
     @Override
     public PageResult<FolderEntity> getFolderPage(PageRequestDto<FolderFilterRequestDTO> dto) {
+        PageRequestDto<FolderFilterRequestDTO> pageRequest = dto != null ? dto : new PageRequestDto<>();
+        FolderFilterRequestDTO filter = pageRequest.getFilter();
+
+        if (filter == null || StringUtils.isNullOrBlank(filter.getProjectId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        ProjectEntity project = getProjectOrThrow(filter.getProjectId().trim());
+        ensureProjectRead(project, auditService.getCurrentUser());
+
+        String parentFolderId = trimToNull(filter.getParentFolderId());
+        if (parentFolderId != null) {
+            FolderEntity parent = getActiveFolderOrThrow(parentFolderId);
+            ensureFolderInProject(parent, project);
+            ensureFolderPermission(parent, project, ObjectPermission.READ);
+        }
+
         Query query = new Query();
-        FolderFilterRequestDTO filter = dto.getFilter();
-        
-        if (filter != null) {
-            if (!StringUtils.isNullOrEmpty(filter.getProjectId())) {
-                query.addCriteria(Criteria.where("projectId").is(filter.getProjectId()));
-            }
-            if (filter.getParentFolderId() != null) {
-                query.addCriteria(Criteria.where("parentFolderId").is(filter.getParentFolderId()));
-            }
-            if (!StringUtils.isNullOrEmpty(filter.getFolderName())) {
-                query.addCriteria(Criteria.where("folderName").regex(filter.getFolderName(), "i"));
-            }
-            if (filter.getIsActive() != null) {
-                query.addCriteria(Criteria.where("isActive").is(filter.getIsActive()));
-            }
+        query.addCriteria(Criteria.where("projectId").is(project.getProjectId()));
+
+        if (parentFolderId != null) {
+            query.addCriteria(Criteria.where("parentFolderId").is(parentFolderId));
+        }
+
+        if (StringUtils.isNotNullOrBlank(filter.getFolderName())) {
+            query.addCriteria(Criteria.where("folderName").regex(filter.getFolderName().trim(), "i"));
+        }
+
+        if (filter.getIsActive() != null) {
+            query.addCriteria(Criteria.where("isActive").is(filter.getIsActive()));
+        } else {
+            query.addCriteria(Criteria.where("isActive").is(true));
         }
 
         long total = mongoTemplate.count(query, FolderEntity.class);
-        query.with(dto.getPageRequest());
+        query.with(pageRequest.getPageRequest());
         List<FolderEntity> data = mongoTemplate.find(query, FolderEntity.class);
 
         return PageResult.<FolderEntity>builder()
@@ -147,13 +283,367 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
     @Override
     @Transactional
     public void deleteFolder(String folderId) {
+        if (StringUtils.isNullOrBlank(folderId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+
+        FolderEntity folder = getActiveFolderOrThrow(folderId.trim());
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureProjectWritable(project);
+        ensureFolderPermission(folder, project, ObjectPermission.MODIFY);
+
+        String currentPath = folder.getFolderPath();
+        String pathWithSelf = StringUtils.isNullOrBlank(currentPath) || "/".equals(currentPath)
+            ? folder.getFolderName() + "/"
+            : currentPath + "/";
+        List<FolderEntity> descendants = folderRepo.findByFolderPathStartingWith(pathWithSelf);
+
+        List<FolderEntity> toDeactivate = new ArrayList<>(descendants.size() + 1);
+        toDeactivate.add(folder);
+        toDeactivate.addAll(descendants);
+
+        List<String> folderIds = toDeactivate.stream()
+                .map(FolderEntity::getFolderId)
+                .filter(StringUtils::isNotNullOrBlank)
+                .toList();
+
+        List<AssetEntity> assetsToDeactivate = assetRepo.findByFolderIdInAndIsActiveTrue(folderIds);
+        for (AssetEntity asset : assetsToDeactivate) {
+            asset.setIsActive(false);
+            applyUpdateAudit(asset);
+        }
+        if (!assetsToDeactivate.isEmpty()) {
+            assetRepo.saveAll(assetsToDeactivate);
+        }
+
+        for (FolderEntity item : toDeactivate) {
+            item.setIsActive(false);
+            applyUpdateAudit(item);
+        }
+        folderRepo.saveAll(toDeactivate);
+
+        incrementProjectFolderCount(project, -toDeactivate.size());
+        incrementProjectAssetCount(project, -assetsToDeactivate.size());
+
+        if (StringUtils.isNotNullOrBlank(folder.getParentFolderId())) {
+            FolderEntity parent = folderRepo.findById(folder.getParentFolderId())
+                    .orElse(null);
+            if (parent != null) {
+                incrementParentSubfolderCount(parent, -1);
+            }
+        }
+
+        writeFolderAuditLog(folder, AuditAction.DELETE, null);
+    }
+
+    private void validateCreatePayload(FolderCreateRequestDTO request) {
+        if (request == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
+        }
+
+        if (StringUtils.isNullOrBlank(request.getProjectId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        requireNormalized(request.getFolderName(), "folderName is required");
+    }
+
+    private void validateUpdatePayload(FolderUpdateRequestDTO request) {
+        if (request == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
+        }
+
+        if (StringUtils.isNullOrBlank(request.getFolderId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+    }
+
+    private String requireNormalized(String value, String message) {
+        String normalized = trimToNull(value);
+        if (normalized == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
+        }
+        return normalized;
+    }
+
+    private String trimToNull(String input) {
+        if (input == null) {
+            return null;
+        }
+        String trimmed = input.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String buildFolderPath(FolderEntity parent, String folderName) {
+        if (parent == null) {
+            return folderName;
+        }
+        String parentPath = parent.getFolderPath();
+        if (StringUtils.isNullOrBlank(parentPath)) {
+            return folderName;
+        }
+        if ("/".equals(parentPath)) {
+            parentPath = parent.getFolderName();
+        }
+        if (parentPath.endsWith("/")) {
+            parentPath = parentPath.substring(0, parentPath.length() - 1);
+        }
+        return parentPath + "/" + folderName;
+    }
+
+    private int safeLevel(Integer level) {
+        return level != null ? level : 0;
+    }
+
+    private void ensureFolderNameUnique(String projectId, String parentFolderId, String folderName, String excludeFolderId) {
+        folderRepo.findByProjectIdAndParentFolderIdAndFolderName(projectId, parentFolderId, folderName)
+                .ifPresent(existing -> {
+                    if (excludeFolderId == null || !excludeFolderId.equals(existing.getFolderId())) {
+                        throw new FileBusinessException(ErrorCode.FOLDER_ALREADY_EXISTS);
+                    }
+                });
+    }
+
+    private ProjectEntity getProjectOrThrow(String projectId) {
+        ProjectEntity project = projectRepo.findById(projectId)
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        if (Boolean.FALSE.equals(project.getIsActive())) {
+            throw new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
+        return project;
+    }
+
+    private FolderEntity getActiveFolderOrThrow(String folderId) {
         FolderEntity folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
+        if (Boolean.FALSE.equals(folder.getIsActive())) {
+            throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
+        }
+        return folder;
+    }
 
-        String pathWithSelf = folder.getFolderPath() + folder.getFolderName() + "/";
-        List<FolderEntity> subFolders = folderRepo.findByFolderPathStartingWith(pathWithSelf);
-        folderRepo.deleteAll(subFolders);
+    private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {
+        if (!Objects.equals(folder.getProjectId(), project.getProjectId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Folder does not belong to project");
+        }
+    }
 
-        folderRepo.delete(folder);
+    private void ensureProjectWritable(ProjectEntity project) {
+        if (project.getStatus() == ProjectStatus.ARCHIVED || project.getStatus() == ProjectStatus.COMPLETED) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Project is not editable");
+        }
+    }
+
+    private void ensureProjectRead(ProjectEntity project, UserEntity user) {
+        if (isAdmin(user)) {
+            return;
+        }
+
+        GrantedPermission permission = resolveProjectPermission(project, user);
+        if (permission == null) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
+
+    private void ensureProjectModify(ProjectEntity project, UserEntity user) {
+        if (isAdmin(user)) {
+            return;
+        }
+
+        GrantedPermission permission = resolveProjectPermission(project, user);
+        if (permission != GrantedPermission.OWNER && permission != GrantedPermission.PRODUCER) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
+
+    private void ensureProjectOwner(ProjectEntity project, UserEntity user) {
+        if (isAdmin(user)) {
+            return;
+        }
+
+        if (!Objects.equals(project.getOwnerId(), user.getUserId())) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
+
+    private GrantedPermission resolveProjectPermission(ProjectEntity project, UserEntity user) {
+        if (user == null) {
+            return null;
+        }
+
+        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
+            return GrantedPermission.OWNER;
+        }
+
+        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
+            return null;
+        }
+
+        String currentUserId = user.getUserId();
+        String currentEmail = user.getEmail();
+
+        for (ProjectCollaborator collaborator : project.getCollaborators()) {
+            boolean matchUserId = collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId);
+            boolean matchEmail = collaborator.getEmail() != null && collaborator.getEmail().equalsIgnoreCase(currentEmail);
+            if (matchUserId || matchEmail) {
+                return collaborator.getPermission();
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isAdmin(UserEntity user) {
+        if (user == null || user.getUserGrantedRoles() == null) {
+            return false;
+        }
+        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
+                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
+    }
+
+    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, ObjectPermission required) {
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
+            return;
+        }
+
+        if (folder.getPermissions() != null && !folder.getPermissions().isEmpty()) {
+            FolderPermission permission = folder.getPermissions().stream()
+                    .filter(p -> Objects.equals(p.getUserId(), currentUser.getUserId()))
+                    .findFirst()
+                    .orElse(null);
+            if (permission == null || !hasRequiredPermission(permission.getPermissions(), required)) {
+                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            }
+            return;
+        }
+
+        if (required == ObjectPermission.MODIFY) {
+            ensureProjectModify(project, currentUser);
+        } else {
+            ensureProjectRead(project, currentUser);
+        }
+    }
+
+    private boolean hasRequiredPermission(List<ObjectPermission> permissions, ObjectPermission required) {
+        if (permissions == null || permissions.isEmpty()) {
+            return false;
+        }
+
+        int requiredRank = permissionRank(required);
+        for (ObjectPermission permission : permissions) {
+            if (permissionRank(permission) >= requiredRank) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int permissionRank(ObjectPermission permission) {
+        return switch (permission) {
+            case READ -> 1;
+            case COMMENT -> 2;
+            case MODIFY -> 3;
+        };
+    }
+
+    private void adjustParentSubfolderCounts(String oldParentId, String newParentId) {
+        if (Objects.equals(oldParentId, newParentId)) {
+            return;
+        }
+
+        if (StringUtils.isNotNullOrBlank(oldParentId)) {
+            folderRepo.findById(oldParentId)
+                    .ifPresent(parent -> incrementParentSubfolderCount(parent, -1));
+        }
+
+        if (StringUtils.isNotNullOrBlank(newParentId)) {
+            folderRepo.findById(newParentId)
+                    .ifPresent(parent -> incrementParentSubfolderCount(parent, 1));
+        }
+    }
+
+    private void incrementParentSubfolderCount(FolderEntity parent, int delta) {
+        FolderStats stats = ensureFolderStats(parent);
+        int current = stats.getSubfoldersCount() != null ? stats.getSubfoldersCount() : 0;
+        stats.setSubfoldersCount(Math.max(0, current + delta));
+        parent.setStats(stats);
+        applyUpdateAudit(parent);
+        folderRepo.save(parent);
+    }
+
+    private void incrementProjectFolderCount(ProjectEntity project, int delta) {
+        ProjectStats stats = ensureProjectStats(project);
+        int current = stats.getFolderCount() != null ? stats.getFolderCount() : 0;
+        stats.setFolderCount(Math.max(0, current + delta));
+        project.setStats(stats);
+        projectRepo.save(project);
+    }
+
+    private void incrementProjectAssetCount(ProjectEntity project, int delta) {
+        ProjectStats stats = ensureProjectStats(project);
+        int current = stats.getAssetCount() != null ? stats.getAssetCount() : 0;
+        stats.setAssetCount(Math.max(0, current + delta));
+        project.setStats(stats);
+        projectRepo.save(project);
+    }
+
+    private FolderStats defaultFolderStats() {
+        return FolderStats.builder()
+                .assetCount(0)
+                .subfoldersCount(0)
+                .pendingReviewsCount(0)
+                .build();
+    }
+
+    private ProjectStats ensureProjectStats(ProjectEntity project) {
+        if (project.getStats() == null) {
+            project.setStats(ProjectStats.builder()
+                    .folderCount(0)
+                    .assetCount(0)
+                    .totalVersions(0)
+                    .pendingReviews(0)
+                    .build());
+        }
+        return project.getStats();
+    }
+
+    private FolderStats ensureFolderStats(FolderEntity folder) {
+        if (folder.getStats() == null) {
+            folder.setStats(defaultFolderStats());
+        }
+        return folder.getStats();
+    }
+
+    private void applyUpdateAudit(EntityAuditBase entity) {
+        entity.setUpdateBy(auditService.getCurrentUserId());
+        entity.setUpdateByEmail(auditService.getCurrentUserEmail());
+    }
+
+    private void writeFolderAuditLog(FolderEntity folder, AuditAction action, AuditChanges changes) {
+        if (folder == null || StringUtils.isNullOrBlank(folder.getFolderId())) {
+            return;
+        }
+
+        AuditLogCreateDTO dto = new AuditLogCreateDTO();
+        dto.setAction(action);
+        dto.setTargetType(AuditTargetType.FOLDER);
+        dto.setTargetId(folder.getFolderId());
+        dto.setTargetName(folder.getFolderName());
+        if (changes != null) {
+            dto.setChanges(changes);
+        }
+
+        auditLogService.createAuditLog(dto);
+    }
+
+    private boolean isDescendantFolder(FolderEntity candidateParent, FolderEntity targetFolder) {
+        if (candidateParent.getFolderPath() == null || targetFolder.getFolderPath() == null) {
+            return false;
+        }
+
+        String parentPath = candidateParent.getFolderPath();
+        String targetPath = targetFolder.getFolderPath();
+        return parentPath.startsWith(targetPath + "/");
     }
 }

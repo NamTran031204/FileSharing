@@ -3,11 +3,14 @@ package org.example.filesharing.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
+import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.project.*;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
 import org.example.filesharing.entities.models.core.ProjectEntity;
 import org.example.filesharing.entities.models.core.UserEntity;
+import org.example.filesharing.enums.AuditAction;
+import org.example.filesharing.enums.AuditTargetType;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.enums.permission.GrantedPermission;
 import org.example.filesharing.exceptions.ErrorCode;
@@ -16,6 +19,7 @@ import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.ProjectService;
 import org.example.filesharing.services.baseService.BaseAuditService;
@@ -39,6 +43,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     private final UserRepo userRepo;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
+    private final AuditLogService auditLogService;
 
     @Override
     public ProjectCheckResponseDTO checkProject(ProjectCheckInputDTO inputDTO) {
@@ -71,8 +76,8 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     public ProjectEntity createNewProject(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
         validateCreatePayload(projectCreateUpdateDTO);
 
-        String projectCode = "";
-        if (projectCreateUpdateDTO.getProjectCode() != null || projectCreateUpdateDTO.getProjectCode().isBlank()){
+        String projectCode;
+        if (StringUtils.isNotNullOrBlank(projectCreateUpdateDTO.getProjectCode())) {
             projectCode = projectCreateUpdateDTO.getProjectCode().trim();
             if (projectRepo.existsByProjectCode(projectCode)) {
                 throw new UserBusinessException(
@@ -107,6 +112,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         buildAudit(project, true);
         ProjectEntity savedProject = projectRepo.save(project);
+        writeCreateProjectAuditLog(savedProject);
         return savedProject;
     }
 
@@ -392,5 +398,19 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
         String trimmed = input.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void writeCreateProjectAuditLog(ProjectEntity project) {
+        if (project == null || StringUtils.isNullOrBlank(project.getProjectId())) {
+            return;
+        }
+
+        AuditLogCreateDTO dto = new AuditLogCreateDTO();
+        dto.setAction(AuditAction.CREATE);
+        dto.setTargetType(AuditTargetType.PROJECT);
+        dto.setTargetId(project.getProjectId());
+        dto.setTargetName(project.getProjectName());
+
+        auditLogService.createAuditLog(dto);
     }
 }

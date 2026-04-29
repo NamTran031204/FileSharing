@@ -10,5 +10,6 @@ public enum AuditAction {
     LOGOUT,
     SHARE,
     DOWNLOAD,
-    UPLOAD_COMPLETE
+    UPLOAD_COMPLETE,
+    UPLOAD_NEW_VERSION
 }
