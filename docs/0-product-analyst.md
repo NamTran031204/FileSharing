@@ -331,22 +331,22 @@ OWNER
 
 ## 2.3. Permission Matrix đơn giản
 
-| Hành động / Tính năng            | Owner | Producer | Reviewer | Guest | Viewer |
-| ------------------------------- | :---: | :------: | :------: | :---: | :----: |
-| Cập nhật thông tin project      | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Xóa project                     | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Thêm/Xóa thành viên (Invite)    | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Cấp quyền Owner cho người khác  | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Upload ảnh/video                | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Xóa/Sắp xếp ảnh/video            | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Tạo Folder/Version              | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Xem nội dung (View)             | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Download (nếu được phép)        | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Comment & Reply                 | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Thả cảm xúc (Reaction)          | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Approve/Reject Asset            | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Chọn nhiều ảnh (Multi-select)   | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Gửi danh sách ảnh đã chọn       | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Hành động / Tính năng          | Owner | Producer | Reviewer | Guest | Viewer |
+|--------------------------------|:-----:|:--------:|:--------:|:-----:|:------:|
+| Cập nhật thông tin project     |   ✅   |    ❌     |    ❌     |   ❌   |   ❌    |
+| Xóa project                    |   ✅   |    ❌     |    ❌     |   ❌   |   ❌    |
+| Thêm/Xóa thành viên (Invite)   |   ✅   |    ✅     |    ❌     |   ❌   |   ❌    |
+| Cấp quyền Owner cho người khác |   ✅   |    ❌     |    ❌     |   ❌   |   ❌    |
+| Upload ảnh/video               |   ✅   |    ✅     |    ❌     |   ❌   |   ❌    |
+| Xóa/Sắp xếp ảnh/video          |   ✅   |    ✅     |    ❌     |   ❌   |   ❌    |
+| Tạo Folder/Version             |   ✅   |    ✅     |    ❌     |   ❌   |   ❌    |
+| Xem nội dung (View)            |   ✅   |    ✅     |    ✅     |   ✅   |   ✅    |
+| Download (nếu được phép)       |   ✅   |    ✅     |    ✅     |   ❌   |   ❌    |
+| Comment & Reply                |   ✅   |    ✅     |    ✅     |   ❌   |   ❌    |
+| Thả cảm xúc (Reaction)         |   ✅   |    ✅     |    ✅     |   ❌   |   ❌    |
+| Approve/Reject Asset           |   ✅   |    ✅     |    ✅     |   ❌   |   ❌    |
+| Chọn nhiều ảnh (Multi-select)  |   ✅   |    ✅     |    ✅     |   ✅   |   ❌    |
+| Gửi danh sách ảnh đã chọn      |   ✅   |    ✅     |    ✅     |   ✅   |   ❌    |
 
 ---
 

@@ -4,11 +4,11 @@
 
 Ở cấp độ này, chúng ta quản lý quyền hạn trên toàn bộ nền tảng hoặc trên từng tenant (tổ chức/công ty).
 
-| Role | Phạm vi quản lý | Quyền hạn cốt lõi |
-| :--- | :--- | :--- |
-| **SA (System Admin)** | Toàn bộ nền tảng (Global) | - Quản lý tất cả tenant (tổ chức/công ty).<br>- Tạo/Xóa tài khoản ADMIN.<br>- Can thiệp vào mọi dự án khi cần thiết (Override). |
-| **ADMIN** | Một tổ chức cụ thể (Tenant) | - Đăng ký/Quản lý tên miền công ty.<br>- Quản lý danh sách USER thuộc tổ chức.<br>- Phân bổ tài nguyên (storage, số lượng project) cho tổ chức. |
-| **USER** | Một tổ chức cụ thể (Tenant) | - Tạo dự án mới (Tự động trở thành Owner của dự án đó).<br>- Tham gia vào các dự án khác nếu được mời. |
+| Role                  | Phạm vi quản lý             | Quyền hạn cốt lõi                                                                                                                               |
+|:----------------------|:----------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| **SA (System Admin)** | Toàn bộ nền tảng (Global)   | - Quản lý tất cả tenant (tổ chức/công ty).<br>- Tạo/Xóa tài khoản ADMIN.<br>- Can thiệp vào mọi dự án khi cần thiết (Override).                 |
+| **ADMIN**             | Một tổ chức cụ thể (Tenant) | - Đăng ký/Quản lý tên miền công ty.<br>- Quản lý danh sách USER thuộc tổ chức.<br>- Phân bổ tài nguyên (storage, số lượng project) cho tổ chức. |
+| **USER**              | Một tổ chức cụ thể (Tenant) | - Tạo dự án mới (Tự động trở thành Owner của dự án đó).<br>- Tham gia vào các dự án khác nếu được mời.                                          |
 
 ---
 
@@ -18,27 +18,27 @@
 
 **Ma trận Phân quyền cấp Dự án (Project RBAC Matrix)**
 
-| Hành động / Tính năng | Owner | Producer | Reviewer |  Guest | Viewer |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Trạng thái tài khoản** | Đã Đăng nhập | Đã Đăng nhập | Đã Đăng nhập | Vãng lai (Nhập tên) | Vãng lai (Ẩn danh) |
-| **Quản lý Dự án** | | | | | |
-| Cập nhật thông tin Project | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Xóa Project | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Thêm/Xóa thành viên (Invite) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Cấp quyền Owner cho người khác | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Quản lý Nội dung (Assets)** | | | | | |
-| Upload ảnh/video | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Xóa/Sắp xếp ảnh/video | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Tạo Folder/Version | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Tương tác (Collaboration)** | | | | | |
-| Xem nội dung (View) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Download (Nếu được phép) | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Comment & Reply | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Thả cảm xúc (Reaction) | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Approve/Reject Asset | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Luồng chọn ảnh (Select Flow)**| | | | | |
-| Chọn nhiều ảnh (Multi-select) | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Gửi danh sách ảnh đã chọn | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Hành động / Tính năng            |    Owner     |   Producer   |   Reviewer   |        Guest        |       Viewer       |
+|:---------------------------------|:------------:|:------------:|:------------:|:-------------------:|:------------------:|
+| **Trạng thái tài khoản**         | Đã Đăng nhập | Đã Đăng nhập | Đã Đăng nhập | Vãng lai (Nhập tên) | Vãng lai (Ẩn danh) |
+| **Quản lý Dự án**                |              |              |              |                     |                    |
+| Cập nhật thông tin Project       |      ✅       |      ❌       |      ❌       |          ❌          |         ❌          |
+| Xóa Project                      |      ✅       |      ❌       |      ❌       |          ❌          |         ❌          |
+| Thêm/Xóa thành viên (Invite)     |      ✅       |      ✅       |      ❌       |          ❌          |         ❌          |
+| Cấp quyền Owner cho người khác   |      ✅       |      ❌       |      ❌       |          ❌          |         ❌          |
+| **Quản lý Nội dung (Assets)**    |              |              |              |                     |                    |
+| Upload ảnh/video                 |      ✅       |      ✅       |      ❌       |          ❌          |         ❌          |
+| Xóa/Sắp xếp ảnh/video            |      ✅       |      ✅       |      ❌       |          ❌          |         ❌          |
+| Tạo Folder/Version               |      ✅       |      ✅       |      ❌       |          ❌          |         ❌          |
+| **Tương tác (Collaboration)**    |              |              |              |                     |                    |
+| Xem nội dung (View)              |      ✅       |      ✅       |      ✅       |          ✅          |         ✅          |
+| Download (Nếu được phép)         |      ✅       |      ✅       |      ✅       |          ❌          |         ❌          |
+| Comment & Reply                  |      ✅       |      ✅       |      ✅       |          ❌          |         ❌          |
+| Thả cảm xúc (Reaction)           |      ✅       |      ✅       |      ✅       |          ❌          |         ❌          |
+| Approve/Reject Asset             |      ✅       |      ✅       |      ✅       |          ❌          |         ❌          |
+| **Luồng chọn ảnh (Select Flow)** |              |              |              |                     |                    |
+| Chọn nhiều ảnh (Multi-select)    |      ✅       |      ✅       |      ✅       |          ✅          |         ❌          |
+| Gửi danh sách ảnh đã chọn        |      ✅       |      ✅       |      ✅       |          ✅          |         ❌          |
 
 ---
 
