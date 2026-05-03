@@ -39,6 +39,8 @@ public class MetadataEntity {
 
     private MediaType mediaType;
 
+    private String changeNote;
+
     private String mimeType;
     private Double fileSize;
     private String compressionAlgo;
@@ -78,7 +80,7 @@ public class MetadataEntity {
     private Instant modificationTimestamp;
 
     @Data
-    static class MediaInfo {
+    public static class MediaInfo {
         private Integer durationMs;
         private Integer width;
         private Integer height;

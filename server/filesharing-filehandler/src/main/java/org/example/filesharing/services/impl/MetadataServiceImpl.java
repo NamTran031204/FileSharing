@@ -93,6 +93,11 @@ public class MetadataServiceImpl implements MetadataService {
         }
 
         entity.setStatus(UploadStatus.COMPLETED);
+        if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
+            entity.setProcessingStatus(org.example.filesharing.enums.ProcessingStatus.PENDING);
+        } else if (entity.getMediaType() != null) {
+            entity.setProcessingStatus(org.example.filesharing.enums.ProcessingStatus.READY);
+        }
         metadataRepo.save(entity);
 
         try {
