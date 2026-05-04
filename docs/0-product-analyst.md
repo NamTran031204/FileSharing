@@ -1662,8 +1662,9 @@ GET /assets/:assetId/versions/:versionId/download
 ## 11.6. Playback / Renditions
 
 ```text
-GET /versions/:versionId/playback
-GET /versions/:versionId/renditions
+GET /api/versions/:versionId/playback
+GET /api/versions/:versionId/renditions
+GET /api/processing/version/:versionId
 ```
 
 ---
@@ -1990,6 +1991,8 @@ DO-06: User chỉ đổi permission nếu là OWNER.
 | GENERATE_POSTER     | Tạo poster image                |
 | GENERATE_WAVEFORM   | Tạo waveform nếu cần            |
 | VIRUS_SCAN          | Quét file upload nếu triển khai |
+
+MVP note: chỉ triển khai TRANSCODE_HLS; các job thumbnail/sprite/poster/waveform để sau.
 
 ## 17.2. Processing Flow
 

@@ -36,6 +36,7 @@ public class VideoEncodingConfig {
     @Data
     public static class KafkaConfig {
         private String topic;
+        private String resultTopic;
     }
 
     @Data

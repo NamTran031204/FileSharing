@@ -1,0 +1,21 @@
+package org.example.filesharing.entities.dtos.processing;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.example.filesharing.entities.models.ProcessingJobProgress;
+import org.example.filesharing.enums.ProcessingJobStatus;
+import org.example.filesharing.enums.ProcessingStatus;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProcessingStatusResponseDto {
+    private String versionId;
+    private ProcessingStatus processingStatus;
+    private ProcessingJobStatus jobStatus;
+    private ProcessingJobProgress progress;
+    private String errorMessage;
+}

@@ -54,6 +54,7 @@ kafka:
   topics:
     notification_email_sender: notification_email_sender
     video_encode_topic: video_encode_topic
+    video_encode_result_topic: video_encode_result_topic
   authen: ${KAFKA_AUTH:false}
   username: ${KAFKA_USER:admin}
   password: ${KAFKA_PASS:adminKafka123}

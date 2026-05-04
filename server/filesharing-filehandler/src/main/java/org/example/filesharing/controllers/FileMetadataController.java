@@ -11,13 +11,12 @@ import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
+import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.utils.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,10 +31,7 @@ public class FileMetadataController {
     private final MetadataService metadataService;
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;
-    private final KafkaTemplate<String, String> videoEncodeKafkaTemplate;
-
-    @Value(value = "${kafka.topics.video_encode_topic:video_encode_topic}")
-    private String videoEncodeTopic;
+    private final VideoEncodeProducer videoEncodeProducer;
 
     @PostMapping("/upload-metadata")
     public CommonResponse<InitiateUploadResponseDto> startUpload(@RequestBody MetadataDTO metadataDTO) {
@@ -119,8 +115,19 @@ public class FileMetadataController {
 
     @PostMapping(value = "/process-encode")
     public CommonResponse<String> processEncode(@RequestBody String objectName) {
-        videoEncodeKafkaTemplate.send(videoEncodeTopic, objectName);
-        return CommonResponse.success();
+        if (objectName == null || objectName.isBlank()) {
+            return CommonResponse.fail(ErrorCode.BAD_REQUEST, "objectName is required");
+        }
+
+        MetadataEntity entity = metadataRepo.findByObjectName(objectName.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid object name: " + objectName));
+
+        if (entity.getMediaType() != org.example.filesharing.enums.MediaType.VIDEO) {
+            return CommonResponse.fail(ErrorCode.BAD_REQUEST, "Only video can be encoded");
+        }
+
+        videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
+        return CommonResponse.success("queued");
     }
 
     private String detectCompressionAlgo(String fileName, String mimeType) {

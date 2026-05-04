@@ -101,10 +101,9 @@ public class MetadataServiceImpl implements MetadataService {
         metadataRepo.save(entity);
 
         try {
-            DownloadFileRequestDto input = new DownloadFileRequestDto();
-            input.setObjectName(entity.getObjectName());
-            String presignedDownloadUrl = minIoService.getPresignedDownloadUrl(input, entity.getFileSize());
-            videoEncodeProducer.sendPreSignedUrlViaKafka(presignedDownloadUrl);
+            if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
+                videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

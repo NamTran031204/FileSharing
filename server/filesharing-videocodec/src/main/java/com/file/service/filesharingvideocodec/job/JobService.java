@@ -5,6 +5,8 @@ import com.file.service.filesharingvideocodec.consumer.dto.EncodeRequestMessage;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobStatus;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobType;
 import com.file.service.filesharingvideocodec.job.queue.JobQueue;
+import com.file.service.filesharingvideocodec.kafka.EncodeResultProducer;
+import com.file.service.filesharingvideocodec.kafka.dto.EncodeResultMessage;
 import com.file.service.filesharingvideocodec.model.ProcessingJobConfig;
 import com.file.service.filesharingvideocodec.model.ProcessingJobEntity;
 import com.file.service.filesharingvideocodec.model.ProcessingJobProgress;
@@ -27,6 +29,7 @@ public class JobService {
     private final JobRepository jobRepository;
     private final JobQueue jobQueue;
     private final VideoEncodingConfig encodingConfig;
+    private final EncodeResultProducer encodeResultProducer;
 
     /**
      * Create a new job if it doesn't already exist (idempotency).
@@ -77,6 +80,12 @@ public class JobService {
             job.setWorkerHeartbeat(Instant.now());
             jobRepository.save(job);
             log.info("Job {} marked as PROCESSING", jobId);
+
+            encodeResultProducer.sendResult(EncodeResultMessage.builder()
+                    .jobId(jobId)
+                    .status(ProcessingJobStatus.PROCESSING.name())
+                    .startedAt(job.getStartedAt())
+                    .build());
         });
     }
 
@@ -105,6 +114,14 @@ public class JobService {
                     .build());
             jobRepository.save(job);
             log.info("Job {} marked as COMPLETED. Playlist: {}", jobId, playlistUrl);
+
+                encodeResultProducer.sendResult(EncodeResultMessage.builder()
+                    .jobId(jobId)
+                    .status(ProcessingJobStatus.COMPLETED.name())
+                    .playlistKey(playlistUrl)
+                    .outputKeys(outputKeys)
+                    .completedAt(job.getCompletedAt())
+                    .build());
         });
     }
 
@@ -144,6 +161,13 @@ public class JobService {
                         .build());
                 jobRepository.save(job);
                 log.error("Job {} permanently FAILED after {} attempts: {}", jobId, maxRetries, error);
+
+                encodeResultProducer.sendResult(EncodeResultMessage.builder()
+                    .jobId(jobId)
+                    .status(ProcessingJobStatus.FAILED.name())
+                    .errorMessage(error)
+                    .completedAt(job.getCompletedAt())
+                    .build());
             }
         });
     }

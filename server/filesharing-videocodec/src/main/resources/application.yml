@@ -6,6 +6,9 @@ spring:
       uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
   kafka:
     bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: video-encoding-service
       auto-offset-reset: earliest
@@ -38,6 +41,7 @@ video:
       preset: medium
     kafka:
       topic: video_encode_topic
+      result-topic: video_encode_result_topic
     segment:
       duration: 6
       audio-bitrate: 128k

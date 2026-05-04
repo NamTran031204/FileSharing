@@ -77,6 +77,7 @@ public class KafkaProducerConfig {
     public ProducerFactory<String, String> videoEncodeProducerFactory() {
         Map<String, Object> props = initConfig();
         props = specConfigProducer(props);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(props);
     }
 
