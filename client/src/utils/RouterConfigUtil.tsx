@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type {ReactNode} from 'react';
 import type {RouteObject} from "react-router-dom";
 import LoginPage from '../page/Phase1/auth/LoginPage';
 import RegisterPage from '../page/Phase1/auth/RegisterPage';
@@ -7,7 +7,6 @@ import UploadPage from '../page/Phase1/uploadPage';
 import UserProfilePage from '../page/Phase1/UserProfilePage/UserProfilePage.tsx';
 import TrashPage from '../page/Phase1/trashPage';
 import FilePreviewPage from '../page/Phase1/filePreviewPage';
-import ImageReviewPage from '../page/ImageReviewPage';
 import ImageReviewV2 from '../page/ImageReviewV2';
 import LoginPageV2 from '../page/LoginPageV2.tsx';
 import MainPage from '../page/MainPage';
@@ -15,7 +14,7 @@ import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
 
-export interface AppRoute extends Omit<RouteObject, 'children'>{
+export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
     name?: string;
     redirectTo?: string; // không truyền gì mặc định = path
@@ -83,12 +82,6 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/trash',
         name: 'Trash',
         element: <TrashPage/>,
-        isProtected: true,
-    },
-    {
-        path: '/review/image',
-        name: 'Image Review',
-        element: <ImageReviewPage/>,
         isProtected: true,
     },
     {

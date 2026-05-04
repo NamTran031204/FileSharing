@@ -18,10 +18,10 @@ const ImageReviewModeButton = ({
     <Button
       type="text"
       onClick={onClick}
-      className={`h-auto w-full border-0 py-3 px-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
+      className={`!h-auto w-full border-0 py-3 px-2 rounded-lg flex flex-col items-center gap-1 transition-all duration-300 ease-in-out ${
         active
-          ? 'bg-white text-[#3b3a7e] shadow-sm'
-          : 'text-[#474650] hover:!bg-white/60'
+          ? 'bg-primary text-white shadow-sm'
+          : 'text-muted-foreground hover:!bg-white/60 hover:text-primary'
       }`}
     >
       <span className="text-base leading-none">{icon}</span>
