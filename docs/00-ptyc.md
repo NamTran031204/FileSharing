@@ -1412,9 +1412,9 @@ audit_logs
 
 ```text
 1. Upload video complete.
-2. Backend tạo job TRANSCODE_HLS.
-3. Backend tạo job GENERATE_THUMBNAILS.
-4. Backend tạo job GENERATE_POSTER.
+2. Backend tạo job TRANSCODE_HLS (MVP).
+3. (MVP sau) Backend tạo job GENERATE_THUMBNAILS.
+4. (MVP sau) Backend tạo job GENERATE_POSTER.
 5. metadata.processingStatus = PENDING.
 ```
 
