@@ -1,46 +1,68 @@
 spring:
   application:
     name: filesharing-videocodec
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: video-encoding-consumer-group
+      group-id: video-encoding-service
       auto-offset-reset: earliest
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        max.poll.records: 1
+        max.poll.interval.ms: 600000
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 10000
     listener:
-      ack-mode: manual
+      ack-mode: MANUAL_IMMEDIATE
+      concurrency: 1
 
 minio:
   endpoint: http://localhost:9000
   access-key: 20YG284ICBVC7BL4I4LA
   secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
   bucket-name: file-sharing
-#  access-key: 5UVTKA00N1U9060FMZW0
-#  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
 video:
   encoding:
+    is-test: true
     ffmpeg:
       path: ${FFMPEG_PATH:E:/DaiCuongBK/Project3/FileSharing/server/filesharing-videocodec/src/main/resources/ffmpeg/bin/ffmpeg.exe}
       timeout: 3600000
+      threads-per-process: 2
+      crf: 23
+      preset: medium
     kafka:
       topic: video_encode_topic
     segment:
-      duration: 5
+      duration: 6
       audio-bitrate: 128k
     profiles:
       - ORIGINAL
       - PROFILE_720P
+    bulkhead:
+      max-concurrent: 2
+    queue:
+      max-capacity: 300
     retry:
       max-attempts: 3
-      delay-ms: 1000
-    thread-pool:
-      core-size: 3
-      max-size: 5
-      queue-capacity: 100
-      thread-name-prefix: video-encoder-
-    temp-dir: ${java.io.tmpdir}/video-encoding
+      initial-delay-seconds: 5
+      multiplier: 2.0
+    upload:
+      batch-size: 15
+    temp:
+      base-dir: ${java.io.tmpdir}/encode
+      cleanup-age-hours: 24
     output:
       bucket: videos
+
+resilience4j:
+  bulkhead:
+    instances:
+      ffmpeg-encoder:
+        maxConcurrentCalls: 2
+        maxWaitDuration: 0ms

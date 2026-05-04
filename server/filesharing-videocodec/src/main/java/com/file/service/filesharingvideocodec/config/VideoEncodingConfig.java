@@ -2,39 +2,35 @@ package com.file.service.filesharingvideocodec.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @ConfigurationProperties(prefix = "video.encoding")
 @Data
 public class VideoEncodingConfig {
-    
+
+    private boolean isTest;
+
+    private FfmpegConfig ffmpeg;
     private KafkaConfig kafka;
     private SegmentConfig segment;
     private List<String> profiles;
+    private BulkheadConfig bulkhead;
+    private QueueConfig queue;
     private RetryConfig retry;
-    private ThreadPoolConfig threadPool;
-    private String tempDir;
+    private UploadConfig upload;
+    private TempConfig temp;
     private OutputConfig output;
 
-    @Bean(name = "videoEncodingExecutor")
-    public Executor videoEncodingExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(threadPool.getCoreSize());
-        executor.setMaxPoolSize(threadPool.getMaxSize());
-        executor.setQueueCapacity(threadPool.getQueueCapacity());
-        executor.setThreadNamePrefix(threadPool.getThreadNamePrefix());
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(60);
-        executor.initialize();
-        return executor;
+    @Data
+    public static class FfmpegConfig {
+        private String path;
+        private long timeout;
+        private int threadsPerProcess;
+        private int crf;
+        private String preset;
     }
 
     @Data
@@ -49,17 +45,31 @@ public class VideoEncodingConfig {
     }
 
     @Data
-    public static class RetryConfig {
-        private int maxAttempts;
-        private long delayMs;
+    public static class BulkheadConfig {
+        private int maxConcurrent;
     }
 
     @Data
-    public static class ThreadPoolConfig {
-        private int coreSize;
-        private int maxSize;
-        private int queueCapacity;
-        private String threadNamePrefix;
+    public static class QueueConfig {
+        private int maxCapacity;
+    }
+
+    @Data
+    public static class RetryConfig {
+        private int maxAttempts;
+        private int initialDelaySeconds;
+        private double multiplier;
+    }
+
+    @Data
+    public static class UploadConfig {
+        private int batchSize;
+    }
+
+    @Data
+    public static class TempConfig {
+        private String baseDir;
+        private int cleanupAgeHours;
     }
 
     @Data

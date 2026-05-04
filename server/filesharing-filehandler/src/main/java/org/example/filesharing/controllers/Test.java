@@ -2,11 +2,12 @@ package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
-import org.example.filesharing.services.MinIoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/test")
@@ -15,20 +16,33 @@ import org.springframework.web.bind.annotation.*;
 public class Test {
 
     private final VideoEncodeProducer videoEncodeProducer;
-    private final MinIoService minIoService;
 
-    private static final String urlTest = "http://localhost:9000/file-sharing/42d4dde3-66df-4215-a618-33978c3c1b3e_ruabat.mp4?response-content-disposition=attachment%3B%20filename%3D%22null%22&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=20YG284ICBVC7BL4I4LA%2F20260406%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260406T232947Z&X-Amz-Expires=2400&X-Amz-SignedHeaders=host&X-Amz-Signature=c225655e9b0cbfd1399800057ef92ea71c3da515d7db8799923a68bf8d2f1fba";
-
+    /**
+     * Test endpoint to trigger video encoding.
+     * Sends a JSON encode request to Kafka with a random jobId.
+     * In test mode (is-test: true), the videocodec service ignores inputKey
+     * and uses hardcoded local file path instead.
+     */
     @GetMapping(value = "/encode-video")
-    public ResponseEntity encodeVideo() {
-        DownloadFileRequestDto requestDto = new DownloadFileRequestDto();
-        requestDto.setObjectName("42d4dde3-66df-4215-a618-33978c3c1b3e_ruabat.mp4");
+    public ResponseEntity<Map<String, String>> encodeVideo() {
+        String jobId = UUID.randomUUID().toString();
+        String inputKey = "test/activity.mp4";  // Ignored in test mode
+
         try {
-            String url = minIoService.getPresignedDownloadUrl(requestDto, Double.valueOf(30));
-            videoEncodeProducer.sendPreSignedUrlViaKafka(url);
+            videoEncodeProducer.sendEncodeRequest(jobId, inputKey);
+            log.info("Test encode request sent: jobId={}", jobId);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "SENT",
+                    "jobId", jobId,
+                    "message", "Encode request published to Kafka"
+            ));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("Failed to send test encode request: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "ERROR",
+                    "message", e.getMessage()
+            ));
         }
-        return ResponseEntity.ok().build();
     }
 }
