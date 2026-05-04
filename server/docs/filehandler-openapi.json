@@ -1175,6 +1175,335 @@
         }
       }
     },
+    "/api/asset/version/update-detail" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "updateVersion",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionUpdateRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/version/get-page" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "getVersionPage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoVersionFilterRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/version/delete/{versionId}" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "deleteVersion",
+        "parameters" : [ {
+          "name" : "versionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/version/create-new" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "createVersion",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionCreateRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseVersionCreateResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/update-detail" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "updateAsset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssetUpdateRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAssetEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/move" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "moveAsset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssetMoveRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAssetEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/get-page" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "getAssetPage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoAssetFilterRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAssetSummaryDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/delete/{assetId}" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "deleteAsset",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/create-new" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "createAsset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssetCreateRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAssetCreateResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/annotations/update-detail" : {
       "post" : {
         "tags" : [ "annotations-controller" ],
@@ -1585,6 +1914,111 @@
         }
       }
     },
+    "/api/asset/version/get-by-id/{versionId}" : {
+      "get" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "getVersionById",
+        "parameters" : [ {
+          "name" : "versionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/get-latest-version/{assetId}" : {
+      "get" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "getLatestVersion",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/get-by-id/{assetId}" : {
+      "get" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "getAssetById",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAssetDetailResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/annotations/get-by-id/{annotationId}" : {
       "get" : {
         "tags" : [ "annotations-controller" ],
@@ -1883,7 +2317,7 @@
       },
       "GrantedPermission" : {
         "type" : "string",
-        "enum" : [ "VIEWER", "CONTRIBUTOR", "COLLABORATOR", "OWNER" ]
+        "enum" : [ "OWNER", "REVIEWER", "PRODUCER", "GUEST", "VIEWER" ]
       },
       "ProjectCollaboratorDTO" : {
         "type" : "object",
@@ -1976,6 +2410,29 @@
       "ProjectEntity" : {
         "type" : "object",
         "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "projectId" : {
             "type" : "string"
           },
@@ -2020,18 +2477,14 @@
           "status" : {
             "$ref" : "#/components/schemas/ProjectStatus"
           },
-          "isActive" : {
-            "type" : "boolean"
-          },
           "trashedAt" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "shareToken" : {
+            "type" : "string"
           },
-          "updatedAt" : {
+          "shareExpiry" : {
             "type" : "string",
             "format" : "date-time"
           }
@@ -2291,6 +2744,29 @@
       "NotificationEntity" : {
         "type" : "object",
         "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "notificationId" : {
             "type" : "string"
           },
@@ -2321,13 +2797,6 @@
           },
           "deliveryStatus" : {
             "$ref" : "#/components/schemas/NotificationDelivery"
-          },
-          "isActive" : {
-            "type" : "boolean"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
           },
           "expiresAt" : {
             "type" : "string",
@@ -2423,6 +2892,24 @@
           }
         }
       },
+      "FolderPermission" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ObjectPermission"
+            }
+          },
+          "grantedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "FolderUpdateRequestDTO" : {
         "type" : "object",
         "properties" : {
@@ -2440,8 +2927,18 @@
           },
           "isActive" : {
             "type" : "boolean"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderPermission"
+            }
           }
         }
+      },
+      "ObjectPermission" : {
+        "type" : "string",
+        "enum" : [ "READ", "COMMENT", "MODIFY" ]
       },
       "CommonResponseFolderEntity" : {
         "type" : "object",
@@ -2463,6 +2960,29 @@
       "FolderEntity" : {
         "type" : "object",
         "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "folderId" : {
             "type" : "string"
           },
@@ -2494,35 +3014,10 @@
           "stats" : {
             "$ref" : "#/components/schemas/FolderStats"
           },
-          "isActive" : {
-            "type" : "boolean"
-          },
-          "createdBy" : {
+          "shareToken" : {
             "type" : "string"
           },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "updatedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "FolderPermission" : {
-        "type" : "object",
-        "properties" : {
-          "userId" : {
-            "type" : "string"
-          },
-          "permissions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ObjectPermission"
-            }
-          },
-          "grantedAt" : {
+          "shareExpiry" : {
             "type" : "string",
             "format" : "date-time"
           }
@@ -2544,10 +3039,6 @@
             "format" : "int32"
           }
         }
-      },
-      "ObjectPermission" : {
-        "type" : "string",
-        "enum" : [ "READ", "COMMENT", "MODIFY" ]
       },
       "FolderFilterRequestDTO" : {
         "type" : "object",
@@ -2761,6 +3252,9 @@
           },
           "mediaType" : {
             "$ref" : "#/components/schemas/MediaType"
+          },
+          "changeNote" : {
+            "type" : "string"
           },
           "mimeType" : {
             "type" : "string"
@@ -3201,6 +3695,29 @@
       "CommentThreadEntity" : {
         "type" : "object",
         "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "threadId" : {
             "type" : "string"
           },
@@ -3248,17 +3765,6 @@
           },
           "resolvedBy" : {
             "type" : "string"
-          },
-          "isActive" : {
-            "type" : "boolean"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "updatedAt" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         }
       },
@@ -3364,6 +3870,435 @@
           }
         }
       },
+      "MediaInfoDto" : {
+        "type" : "object",
+        "properties" : {
+          "durationMs" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "width" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "height" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "frameRate" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "codec" : {
+            "type" : "string"
+          },
+          "colorSpace" : {
+            "type" : "string"
+          },
+          "hasAlpha" : {
+            "type" : "string"
+          }
+        }
+      },
+      "VersionUpdateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "versionId" : {
+            "type" : "string"
+          },
+          "downloadFileName" : {
+            "type" : "string"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/ObjectVisibility"
+          },
+          "publicPermission" : {
+            "$ref" : "#/components/schemas/ObjectPermission"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          },
+          "processingError" : {
+            "type" : "string"
+          },
+          "mediaInfo" : {
+            "$ref" : "#/components/schemas/MediaInfoDto"
+          }
+        }
+      },
+      "PageRequestDtoVersionFilterRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/VersionFilterRequestDto"
+          }
+        }
+      },
+      "VersionFilterRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "includeTrash" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/UploadStatus"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          }
+        }
+      },
+      "AssetStatus" : {
+        "type" : "string",
+        "enum" : [ "DRAFT", "IN_REVIEW", "APPROVED", "REQUEST_CHANGES" ]
+      },
+      "VersionCreateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "fileSize" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "mediaType" : {
+            "$ref" : "#/components/schemas/MediaType"
+          },
+          "compressionAlgo" : {
+            "type" : "string"
+          },
+          "timeToLive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "changeNote" : {
+            "type" : "string"
+          },
+          "assetStatus" : {
+            "$ref" : "#/components/schemas/AssetStatus"
+          }
+        }
+      },
+      "CommonResponseVersionCreateResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/VersionCreateResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "VersionCreateResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "$ref" : "#/components/schemas/MetadataEntity"
+          },
+          "upload" : {
+            "$ref" : "#/components/schemas/InitiateUploadResponseDto"
+          }
+        }
+      },
+      "AssetUpdateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "assetName" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "shareExpiry" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "regenerateShareToken" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "AssetEntity" : {
+        "type" : "object",
+        "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "assetName" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "folderId" : {
+            "type" : "string"
+          },
+          "ownerId" : {
+            "type" : "string"
+          },
+          "ownerEmail" : {
+            "type" : "string"
+          },
+          "versionCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "assetStatus" : {
+            "$ref" : "#/components/schemas/AssetStatus"
+          },
+          "latestReviewSessionId" : {
+            "type" : "string"
+          },
+          "shareToken" : {
+            "type" : "string"
+          },
+          "shareExpiry" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAssetEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AssetEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AssetMoveRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "targetFolderId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AssetFilterRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "folderId" : {
+            "type" : "string"
+          },
+          "mediaType" : {
+            "$ref" : "#/components/schemas/MediaType"
+          },
+          "assetStatus" : {
+            "$ref" : "#/components/schemas/AssetStatus"
+          },
+          "ownerId" : {
+            "type" : "string"
+          },
+          "keyword" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "PageRequestDtoAssetFilterRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/AssetFilterRequestDto"
+          }
+        }
+      },
+      "AssetSummaryDto" : {
+        "type" : "object",
+        "properties" : {
+          "asset" : {
+            "$ref" : "#/components/schemas/AssetEntity"
+          },
+          "latestVersion" : {
+            "$ref" : "#/components/schemas/MetadataEntity"
+          }
+        }
+      },
+      "CommonResponsePageResultAssetSummaryDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAssetSummaryDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultAssetSummaryDto" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AssetSummaryDto"
+            }
+          }
+        }
+      },
+      "AssetCreateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "folderId" : {
+            "type" : "string"
+          },
+          "assetName" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "fileSize" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "mediaType" : {
+            "$ref" : "#/components/schemas/MediaType"
+          },
+          "compressionAlgo" : {
+            "type" : "string"
+          },
+          "timeToLive" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "AssetCreateResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "asset" : {
+            "$ref" : "#/components/schemas/AssetEntity"
+          },
+          "version" : {
+            "$ref" : "#/components/schemas/MetadataEntity"
+          },
+          "upload" : {
+            "$ref" : "#/components/schemas/InitiateUploadResponseDto"
+          }
+        }
+      },
+      "CommonResponseAssetCreateResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AssetCreateResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
       "AnnotationPoint" : {
         "type" : "object",
         "properties" : {
@@ -3462,6 +4397,29 @@
       "AnnotationsEntity" : {
         "type" : "object",
         "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "annotationId" : {
             "type" : "string"
           },
@@ -3496,23 +4454,6 @@
           },
           "threadId" : {
             "type" : "string"
-          },
-          "createdBy" : {
-            "type" : "string"
-          },
-          "createdByEmail" : {
-            "type" : "string"
-          },
-          "isActive" : {
-            "type" : "boolean"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "updatedAt" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         }
       },
@@ -3627,6 +4568,34 @@
             "items" : {
               "$ref" : "#/components/schemas/AnnotationsEntity"
             }
+          }
+        }
+      },
+      "AssetDetailResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "asset" : {
+            "$ref" : "#/components/schemas/AssetEntity"
+          },
+          "latestVersion" : {
+            "$ref" : "#/components/schemas/MetadataEntity"
+          }
+        }
+      },
+      "CommonResponseAssetDetailResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AssetDetailResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
           }
         }
       }
