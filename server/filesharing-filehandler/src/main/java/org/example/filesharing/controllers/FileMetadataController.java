@@ -32,7 +32,7 @@ public class FileMetadataController {
     private final MetadataService metadataService;
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;
-    private final KafkaTemplate<String, String> videoEncodeKafkaTemplate;
+    private final KafkaTemplate<String, Object> videoEncodeKafkaTemplate;
 
     @Value(value = "${kafka.topics.video_encode_topic:video_encode_topic}")
     private String videoEncodeTopic;

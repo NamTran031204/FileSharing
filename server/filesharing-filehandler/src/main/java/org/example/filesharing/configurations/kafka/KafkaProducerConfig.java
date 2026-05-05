@@ -74,14 +74,14 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> videoEncodeProducerFactory() {
+    public ProducerFactory<String, Object> videoEncodeProducerFactory() {
         Map<String, Object> props = initConfig();
         props = specConfigProducer(props);
         return new DefaultKafkaProducerFactory<>(props);
     }
 
     @Bean
-    public KafkaTemplate<String, String> videoEncodeKafkaTemplate() {
+    public KafkaTemplate<String, Object> videoEncodeKafkaTemplate() {
         return new KafkaTemplate<>(videoEncodeProducerFactory());
     }
 
