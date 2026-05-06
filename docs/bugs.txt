@@ -1,0 +1,12 @@
+# Bugs
+
+## Bugs client:
+
+### ProjectMain:
+
+- tạo project xong thì không reset modal
+
+- thiếu nút chỉnh sửa thông tin
+
+- không thể bấm vào để mở danh sách file bên trong
+
