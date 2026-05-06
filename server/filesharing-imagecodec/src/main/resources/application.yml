@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: filesharing-imagecodec
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: image-processing-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        max.poll.records: 5
+        max.poll.interval.ms: 60000
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 10000
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+      concurrency: 1
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: 20YG284ICBVC7BL4I4LA
+  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
+  bucket-name: file-sharing
+
+image:
+  processing:
+    is-test: true
+    kafka:
+      topic: image_process_topic
+    vips:
+      large-image-threshold-mb: 50
+      processing-timeout-seconds: 30
+    output:
+      webp-quality: 82
+      strip-metadata: true
+      bucket: processed-images
+    queue:
+      max-capacity: 500
+    retry:
+      max-attempts: 3
+      initial-delay-seconds: 2
+      multiplier: 2.0
+    temp:
+      base-dir: ${java.io.tmpdir}/vips-input
+      cleanup-age-hours: 2
+
+resilience4j:
+  bulkhead:
+    instances:
+      image-processor:
+        maxConcurrentCalls: 3
+        maxWaitDuration: 0ms
