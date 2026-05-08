@@ -6,6 +6,10 @@ import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeMappingDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeNodeDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
 import org.example.filesharing.entities.models.AuditChanges;
 import org.example.filesharing.entities.models.FolderPermission;
@@ -41,10 +45,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -103,6 +109,163 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         writeFolderAuditLog(savedFolder, AuditAction.CREATE, null);
         return savedFolder;
+    }
+
+    @Override
+    @Transactional
+    public FolderTreeCreateResponseDTO createFolderTree(FolderTreeCreateRequestDTO request) {
+        validateCreateTreePayload(request);
+
+        String projectId = requireNormalized(request.getProjectId(), "projectId is required");
+        ProjectEntity project = getProjectOrThrow(projectId);
+        ensureProjectWritable(project);
+
+        UserEntity currentUser = auditService.getCurrentUser();
+        ensureProjectModify(project, currentUser);
+
+        String parentFolderId = trimToNull(request.getParentFolderId());
+        FolderEntity parentFolder = null;
+        if (parentFolderId != null) {
+            parentFolder = getActiveFolderOrThrow(parentFolderId);
+            ensureFolderInProject(parentFolder, project);
+            ensureFolderPermission(parentFolder, project, ObjectPermission.MODIFY);
+        }
+
+        String baseFolderPath = normalizeBaseFolderPath(parentFolder, request.getBaseFolderPath());
+        String rootFolderName = normalizeRelativeFolderPath(request.getRootFolderName(), "rootFolderName is required");
+
+        List<FolderTreeNodeDTO> nodes = request.getFolders();
+        Map<String, FolderTreeNodeDTO> normalizedNodes = new HashMap<>();
+
+        for (FolderTreeNodeDTO node : nodes) {
+            if (node == null) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folders contains empty item");
+            }
+
+            String clientFolderKey = requireNormalized(node.getClientFolderKey(), "clientFolderKey is required");
+            String folderName = requireNormalized(node.getFolderName(), "folderName is required");
+            String relativePath = normalizeRelativeFolderPath(node.getRelativeFolderPath());
+            String parentRelativePath = trimToNull(node.getParentRelativeFolderPath());
+            if (parentRelativePath != null) {
+                parentRelativePath = normalizeRelativeFolderPath(parentRelativePath, "parentRelativeFolderPath is required");
+            }
+
+            Integer level = node.getLevel();
+            int pathLevel = countPathSegments(relativePath);
+            if (level == null || level != pathLevel) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "level does not match relativeFolderPath");
+            }
+
+            String lastSegment = getLastPathSegment(relativePath);
+            if (!Objects.equals(lastSegment, folderName)) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderName does not match relativeFolderPath");
+            }
+
+            if (normalizedNodes.containsKey(relativePath)) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "duplicate relativeFolderPath");
+            }
+
+            FolderTreeNodeDTO normalized = FolderTreeNodeDTO.builder()
+                    .clientFolderKey(clientFolderKey)
+                    .folderName(folderName)
+                    .relativeFolderPath(relativePath)
+                    .parentRelativeFolderPath(parentRelativePath)
+                    .level(level)
+                    .build();
+            normalizedNodes.put(relativePath, normalized);
+        }
+
+        for (FolderTreeNodeDTO node : normalizedNodes.values()) {
+            String parentRelativePath = trimToNull(node.getParentRelativeFolderPath());
+            if (parentRelativePath != null && !normalizedNodes.containsKey(parentRelativePath)) {
+                throw new FileBusinessException(ErrorCode.FOLDER_PARENT_NOT_FOUND);
+            }
+        }
+
+        if (!normalizedNodes.containsKey(rootFolderName)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "rootFolderName not found in folders");
+        }
+
+        List<FolderTreeNodeDTO> sortedNodes = new ArrayList<>(normalizedNodes.values());
+        sortedNodes.sort(Comparator.comparing(FolderTreeNodeDTO::getLevel)
+                .thenComparing(node -> composeFolderPath(baseFolderPath, node.getRelativeFolderPath())));
+
+        Map<String, String> relativeToFolderId = new HashMap<>();
+        List<FolderTreeMappingDTO> folderMappings = new ArrayList<>();
+        List<FolderTreeMappingDTO> createdFolders = new ArrayList<>();
+        List<FolderTreeMappingDTO> existingFolders = new ArrayList<>();
+        int createdCount = 0;
+
+        for (FolderTreeNodeDTO node : sortedNodes) {
+            String parentRelativePath = trimToNull(node.getParentRelativeFolderPath());
+            String parentId = parentRelativePath != null
+                    ? relativeToFolderId.get(parentRelativePath)
+                    : parentFolderId;
+
+            if (parentRelativePath != null && parentId == null) {
+                throw new FileBusinessException(ErrorCode.FOLDER_PARENT_NOT_FOUND);
+            }
+
+            String folderPath = composeFolderPath(baseFolderPath, node.getRelativeFolderPath());
+            FolderEntity existingFolder = folderRepo.findByProjectIdAndFolderPath(projectId, folderPath)
+                    .orElse(null);
+
+            if (existingFolder != null) {
+                ensureFolderPermission(existingFolder, project, ObjectPermission.MODIFY);
+
+                String folderId = existingFolder.getFolderId();
+                relativeToFolderId.put(node.getRelativeFolderPath(), folderId);
+
+                FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, folderPath, folderId,
+                        existingFolder.getParentFolderId(), "EXISTING");
+                folderMappings.add(mapping);
+                existingFolders.add(mapping);
+                continue;
+            }
+
+            FolderEntity folder = FolderEntity.builder()
+                    .projectId(projectId)
+                    .parentFolderId(parentId)
+                    .folderName(node.getFolderName())
+                    .folderPath(folderPath)
+                    .level(node.getLevel())
+                    .stats(defaultFolderStats())
+                    .build();
+
+            buildAudit(folder, true);
+            FolderEntity saved = folderRepo.save(folder);
+
+            relativeToFolderId.put(node.getRelativeFolderPath(), saved.getFolderId());
+
+            FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, folderPath, saved.getFolderId(),
+                    parentId, "CREATED");
+            folderMappings.add(mapping);
+            createdFolders.add(mapping);
+            createdCount++;
+
+            if (parentId != null) {
+                folderRepo.findById(parentId)
+                        .ifPresent(parent -> incrementParentSubfolderCount(parent, 1));
+            }
+
+            writeFolderAuditLog(saved, AuditAction.CREATE, null);
+        }
+
+        if (createdCount != 0) {
+            incrementProjectFolderCount(project, createdCount);
+        }
+
+        String rootFolderId = relativeToFolderId.get(rootFolderName);
+        String folderUploadSessionId = generateFolderUploadSessionId(baseFolderPath, rootFolderName);
+
+        return FolderTreeCreateResponseDTO.builder()
+                .folderUploadSessionId(folderUploadSessionId)
+                .projectId(projectId)
+                .rootFolderId(rootFolderId)
+                .createdFolders(createdFolders)
+                .existingFolders(existingFolders)
+                .folderMappings(folderMappings)
+                .build();
     }
 
     @Override
@@ -348,6 +511,28 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         requireNormalized(request.getFolderName(), "folderName is required");
     }
 
+    private void validateCreateTreePayload(FolderTreeCreateRequestDTO request) {
+        if (request == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
+        }
+
+        if (StringUtils.isNullOrBlank(request.getProjectId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        if (StringUtils.isNullOrBlank(request.getRootFolderName())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "rootFolderName is required");
+        }
+
+        if (StringUtils.isNullOrBlank(request.getCreatedBy())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "createdBy is required");
+        }
+
+        if (request.getFolders() == null || request.getFolders().isEmpty()) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folders is required");
+        }
+    }
+
     private void validateUpdatePayload(FolderUpdateRequestDTO request) {
         if (request == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
@@ -372,6 +557,101 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
         String trimmed = input.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeBaseFolderPath(FolderEntity parentFolder, String baseFolderPath) {
+        String normalizedBase = trimToNull(baseFolderPath);
+        if (parentFolder == null) {
+            if (normalizedBase != null) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                        "baseFolderPath must be empty when parentFolderId is null");
+            }
+            return null;
+        }
+
+        String parentPath = normalizeParentFolderPath(parentFolder);
+        if (normalizedBase != null && !Objects.equals(normalizedBase, parentPath)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "baseFolderPath does not match parent folder");
+        }
+        return parentPath;
+    }
+
+    private String normalizeParentFolderPath(FolderEntity parentFolder) {
+        String parentPath = parentFolder.getFolderPath();
+        if (StringUtils.isNullOrBlank(parentPath) || "/".equals(parentPath)) {
+            return parentFolder.getFolderName();
+        }
+        if (parentPath.endsWith("/")) {
+            parentPath = parentPath.substring(0, parentPath.length() - 1);
+        }
+        return parentPath;
+    }
+
+    private String normalizeRelativeFolderPath(String relativePath) {
+        return normalizeRelativeFolderPath(relativePath, "relativeFolderPath is required");
+    }
+
+    private String normalizeRelativeFolderPath(String relativePath, String message) {
+        String normalized = requireNormalized(relativePath, message);
+        if (normalized.startsWith("/") || normalized.endsWith("/")) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                    "relativeFolderPath must not start or end with '/'");
+        }
+        if (normalized.contains("\\")) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                    "relativeFolderPath contains invalid separator");
+        }
+        String[] segments = normalized.split("/");
+        for (String segment : segments) {
+            if (segment.isEmpty()) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                        "relativeFolderPath contains empty segment");
+            }
+            if (".".equals(segment) || "..".equals(segment)) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                        "relativeFolderPath contains traversal segment");
+            }
+        }
+        return normalized;
+    }
+
+    private int countPathSegments(String relativePath) {
+        return relativePath.split("/").length;
+    }
+
+    private String getLastPathSegment(String relativePath) {
+        int index = relativePath.lastIndexOf('/');
+        return index >= 0 ? relativePath.substring(index + 1) : relativePath;
+    }
+
+    private String composeFolderPath(String baseFolderPath, String relativePath) {
+        if (StringUtils.isNullOrBlank(baseFolderPath)) {
+            return relativePath;
+        }
+        String normalizedBase = baseFolderPath;
+        if (normalizedBase.endsWith("/")) {
+            normalizedBase = normalizedBase.substring(0, normalizedBase.length() - 1);
+        }
+        return normalizedBase + "/" + relativePath;
+    }
+
+    private FolderTreeMappingDTO buildFolderTreeMapping(FolderTreeNodeDTO node, String folderPath,
+                                                        String folderId, String parentFolderId, String status) {
+        return FolderTreeMappingDTO.builder()
+                .clientFolderKey(node.getClientFolderKey())
+                .relativeFolderPath(node.getRelativeFolderPath())
+                .folderPath(folderPath)
+                .folderId(folderId)
+                .parentFolderId(parentFolderId)
+                .status(status)
+                .build();
+    }
+
+    private String generateFolderUploadSessionId(String baseFolderPath, String rootFolderName) {
+        String prefix = StringUtils.isNullOrBlank(baseFolderPath)
+                ? rootFolderName
+                : baseFolderPath + "/" + rootFolderName;
+        return prefix + "-" + UUID.randomUUID();
     }
 
     private String buildFolderPath(FolderEntity parent, String folderName) {

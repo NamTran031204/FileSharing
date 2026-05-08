@@ -10,5 +10,6 @@ public interface FolderRepo extends MongoRepository<FolderEntity, String> {
     List<FolderEntity> findByProjectId(String projectId);
     List<FolderEntity> findByParentFolderId(String parentFolderId);
     Optional<FolderEntity> findByProjectIdAndParentFolderIdAndFolderName(String projectId, String parentFolderId, String folderName);
+    Optional<FolderEntity> findByProjectIdAndFolderPath(String projectId, String folderPath);
     List<FolderEntity> findByFolderPathStartingWith(String folderPath);
 }
