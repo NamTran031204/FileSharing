@@ -85,6 +85,18 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(videoEncodeProducerFactory());
     }
 
+    @Bean
+    public ProducerFactory<String, Object> imageProcessProducerFactory() {
+        Map<String, Object> props = initConfig();
+        props = specConfigProducer(props);
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<String, Object> imageProcessKafkaTemplate() {
+        return new KafkaTemplate<>(imageProcessProducerFactory());
+    }
+
     public Map<String, Object> initConfig() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);

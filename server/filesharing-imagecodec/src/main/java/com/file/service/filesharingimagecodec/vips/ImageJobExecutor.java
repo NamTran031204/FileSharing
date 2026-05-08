@@ -31,7 +31,7 @@ import java.util.concurrent.TimeoutException;
 public class ImageJobExecutor {
 
     private static final String TEST_INPUT_PATH =
-            "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-imagecodec\\temp\\test-image.jpg";
+            "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-imagecodec\\temp\\test-image.png";
     private static final String TEST_OUTPUT_BASE =
             "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-imagecodec\\temp\\output";
 
