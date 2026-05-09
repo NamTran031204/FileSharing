@@ -10,53 +10,14 @@ import {
     SortAscendingOutlined,
 } from '@ant-design/icons';
 import {Button, Empty, Input, Skeleton, Space, message} from 'antd';
-import axios from 'axios';
 import {useEffect, useMemo, useState} from 'react';
-import {API_BASE, tokenManager} from '../api/baseApi';
 import {ProjectControllerService} from '../api/api/ProjectControllerService';
-import {type ProjectEntity, type ProjectStatus, serviceOptions} from '../api/api/index.defs';
+import {type ProjectEntity, type ProjectStatus} from '../api/api/index.defs';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
 import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/ProjectOverviewCard';
 import CommonLayout from "../layout/CommonLayout.tsx";
 
 const PAGE_SIZE = 24;
-
-const ensureProjectApiClient = () => {
-    if (serviceOptions.axios) {
-        return;
-    }
-
-    const baseUrl = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : API_BASE;
-
-    const instance = axios.create({
-        baseURL: baseUrl,
-    });
-
-    instance.interceptors.request.use((config) => {
-        const token = tokenManager.getAccessToken();
-        if (token) {
-            config.headers = config.headers ?? {};
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    });
-
-    instance.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            if (error?.response?.status === 401) {
-                tokenManager.clearTokens();
-                window.dispatchEvent(new CustomEvent('auth:unauthorized'));
-            }
-
-            return Promise.reject(error);
-        },
-    );
-
-    serviceOptions.axios = instance;
-    serviceOptions.loading = false;
-    serviceOptions.showError = false;
-};
 
 const formatProjectDate = (value?: Date) => {
     if (!value) {
@@ -129,7 +90,6 @@ const ProjectMain = () => {
     const loadProjects = async () => {
         try {
             setIsLoadingProjects(true);
-            ensureProjectApiClient();
 
             const response = await ProjectControllerService.getPage({
                 body: {
@@ -179,8 +139,6 @@ const ProjectMain = () => {
         setIsCreatingProject(true);
 
         try {
-            ensureProjectApiClient();
-
             const response = await ProjectControllerService.createNew({
                 body: {
                     projectName: values.projectName,
