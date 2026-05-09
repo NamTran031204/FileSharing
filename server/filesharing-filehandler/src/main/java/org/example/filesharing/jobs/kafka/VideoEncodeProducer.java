@@ -32,19 +32,14 @@ public class VideoEncodeProducer {
      * @param inputKey MinIO object key of the source video
      */
     public void sendEncodeRequest(String jobId, String inputKey) {
-        try {
-            Map<String, Object> message = new HashMap<>();
-            message.put("jobId", jobId);
-            message.put("inputKey", inputKey);
-            message.put("callbackUrl", null);
-            message.put("submittedAt", Instant.now());
+        Map<String, Object> message = new HashMap<>();
+        message.put("jobId", jobId);
+        message.put("inputKey", inputKey);
+        message.put("callbackUrl", null);
+        message.put("submittedAt", Instant.now());
 
-            videoEncodeKafkaTemplate.send(topic, jobId, message);
-            log.info("Sent encode request to Kafka: jobId={}, inputKey={}", jobId, inputKey);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize encode request: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to serialize encode request", e);
-        }
+        videoEncodeKafkaTemplate.send(topic, jobId, message);
+        log.info("Sent encode request to Kafka: jobId={}, inputKey={}", jobId, inputKey);
     }
 
     /**

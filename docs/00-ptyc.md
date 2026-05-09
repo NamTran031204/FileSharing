@@ -1807,14 +1807,6 @@ Video timecode comment
 Image region comment
 ```
 
-### Trường hợp 2: General comment
-
-Có thể để sau MVP:
-
-```text
-Comment chung cho cả version, không gắn annotation.
-```
-
 ### Luồng
 
 ```text
