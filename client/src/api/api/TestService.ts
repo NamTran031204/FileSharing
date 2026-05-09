@@ -22,7 +22,19 @@ export class TestService {
   /**
    *
    */
-  static encodeVideo(options: IRequestOptions = {}): Promise<string> {
+  static imageProcess(options: IRequestOptions = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/test/image-process';
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static encodeVideo(options: IRequestOptions = {}): Promise<any> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/test/encode-video';
 

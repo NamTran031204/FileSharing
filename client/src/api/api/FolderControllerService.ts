@@ -1,14 +1,19 @@
 import {
   type FolderUpdateRequestDTO,
-  type CommonResponseFolderEntity,
-  type FolderEntity,
   type FolderPermission,
   type ObjectPermission,
+  type CommonResponseFolderEntity,
+  type FolderEntity,
   type FolderStats,
   type PageRequestDtoFolderFilterRequestDTO,
   type FolderFilterRequestDTO,
   type CommonResponsePageResultFolderEntity,
   type PageResultFolderEntity,
+  type FolderTreeCreateRequestDTO,
+  type FolderTreeNodeDTO,
+  type CommonResponseFolderTreeCreateResponseDTO,
+  type FolderTreeCreateResponseDTO,
+  type FolderTreeMappingDTO,
   type FolderCreateRequestDTO,
   type CommonResponseString,
   type IList,
@@ -65,6 +70,28 @@ export class FolderControllerService {
   ): Promise<CommonResponsePageResultFolderEntity> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/folder/get-page';
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      let data = params.body;
+
+      configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static createTree(
+    params: {
+      /** requestBody */
+      body?: FolderTreeCreateRequestDTO;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseFolderTreeCreateResponseDTO> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/folder/create-tree';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 

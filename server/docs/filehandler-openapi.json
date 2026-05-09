@@ -610,6 +610,43 @@
         }
       }
     },
+    "/api/folder/create-tree" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "createFolderTree",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FolderTreeCreateRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderTreeCreateResponseDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/folder/create-new" : {
       "post" : {
         "tags" : [ "folder-controller" ],
@@ -1696,6 +1733,36 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseUserDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/test/image-process" : {
+      "get" : {
+        "tags" : [ "test" ],
+        "operationId" : "imageProcess",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "string"
+                  }
                 }
               }
             }
@@ -3108,6 +3175,125 @@
             "items" : {
               "$ref" : "#/components/schemas/FolderEntity"
             }
+          }
+        }
+      },
+      "FolderTreeCreateRequestDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "parentFolderId" : {
+            "type" : "string"
+          },
+          "baseFolderPath" : {
+            "type" : "string"
+          },
+          "rootFolderName" : {
+            "type" : "string"
+          },
+          "folders" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderTreeNodeDTO"
+            }
+          },
+          "createdBy" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FolderTreeNodeDTO" : {
+        "type" : "object",
+        "properties" : {
+          "clientFolderKey" : {
+            "type" : "string"
+          },
+          "folderName" : {
+            "type" : "string"
+          },
+          "relativeFolderPath" : {
+            "type" : "string"
+          },
+          "parentRelativeFolderPath" : {
+            "type" : "string"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "CommonResponseFolderTreeCreateResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FolderTreeCreateResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FolderTreeCreateResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "folderUploadSessionId" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "rootFolderId" : {
+            "type" : "string"
+          },
+          "createdFolders" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderTreeMappingDTO"
+            }
+          },
+          "existingFolders" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderTreeMappingDTO"
+            }
+          },
+          "folderMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderTreeMappingDTO"
+            }
+          }
+        }
+      },
+      "FolderTreeMappingDTO" : {
+        "type" : "object",
+        "properties" : {
+          "clientFolderKey" : {
+            "type" : "string"
+          },
+          "relativeFolderPath" : {
+            "type" : "string"
+          },
+          "folderPath" : {
+            "type" : "string"
+          },
+          "folderId" : {
+            "type" : "string"
+          },
+          "parentFolderId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
           }
         }
       },
