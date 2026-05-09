@@ -2,6 +2,7 @@ package org.example.filesharing.jobs.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import java.util.Map;
 @Component
 public class ImageEncodeProducer {
 
+    @Autowired
     KafkaTemplate<String, Object> imageProcessKafkaTemplate;
 
     @Value(value = "${kafka.topics.image_process_topic}")
