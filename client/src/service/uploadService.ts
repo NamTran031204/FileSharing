@@ -23,6 +23,12 @@ export interface UploadProgress {
     maxThreads: number;
 }
 
+export interface UploadSession {
+    uploadId: string;
+    objectName: string;
+    partUrls: Map<number, string>;
+}
+
 class Semaphore {
     private permits: number;
     private maxPermits: number;
@@ -433,6 +439,128 @@ export class UploadService {
             this.semaphore = null;
             this.uploadPromises = [];
         }
+    }
+
+    private async runMultipartUpload(
+        file: File,
+        session: UploadSession,
+        onProgress?: (progress: UploadProgress) => void
+    ): Promise<string> {
+        this.abortController = this.abortController ?? new AbortController();
+        this.uploadedBytes = 0;
+        this.bandwidthManager.reset();
+
+        this.completedParts = [];
+        this.uploadPromises = [];
+        this.totalChunksCreated = session.partUrls.size;
+        const initialThreads = this.bandwidthManager.getCurrentThreads();
+        this.semaphore = new Semaphore(initialThreads);
+        console.log(`so luong thread ban dau: ${initialThreads}`);
+
+        this.partUrls = session.partUrls;
+
+        try {
+            let offset = 0;
+            let partNumber = 1;
+
+            while (offset < file.size) {
+                const chunkSize = Math.min(
+                    this.bandwidthManager.getCurrentChunkSize(),
+                    file.size - offset
+                );
+
+                const chunk = file.slice(offset, offset + chunkSize);
+
+                const currentPartNumber = partNumber;
+                const currentOffset = offset;
+
+                const presignedUrl = this.partUrls.get(currentPartNumber);
+                if (!presignedUrl) {
+                    throw new Error(`Missing presigned url for part ${currentPartNumber}`);
+                }
+
+                console.log(`part ${partNumber}: ${this.formatBytes(chunkSize)} (offset: ${this.formatBytes(offset)})`);
+
+                console.log(`dang cho thread san sang... (dang chay: ${this.semaphore.getActivePermits()}/${this.semaphore.getMaxPermits()})`);
+                await this.semaphore.acquire();
+                console.log(`da lay thread cho part ${partNumber} (dang chay: ${this.semaphore.getActivePermits()}/${this.semaphore.getMaxPermits()})`);
+
+                const uploadPromise = this.uploadChunkInThread(
+                    file,
+                    chunk,
+                    chunkSize,
+                    currentOffset,
+                    currentPartNumber,
+                    presignedUrl,
+                    onProgress
+                ).catch((error) => {
+                    console.error(`[thread ${currentPartNumber}] that bai:`, error);
+                    throw error;
+                });
+
+                const remainingBytes = file.size - offset - chunkSize;
+                console.log("remainingBytes: " + remainingBytes);
+                this.uploadPromises.push(uploadPromise);
+
+                offset += chunkSize;
+                partNumber++;
+            }
+
+            console.log(`dang cho tat ca ${this.uploadPromises.length} chunk hoan thanh...`);
+            await Promise.all(this.uploadPromises);
+            console.log(`tat ca cac chunk da upload thanh cong`);
+
+            this.completedParts.sort((a, b) => a.partNumber - b.partNumber);
+
+            console.log('dang hoan thanh multipart upload...');
+            await fileApiResource.completeUpload(
+                {
+                    uploadId: session.uploadId,
+                    objectName: session.objectName,
+                    parts: this.completedParts,
+                },
+                this.abortController.signal
+            );
+
+            console.log('upload hoan thanh thanh cong!');
+
+            return session.objectName;
+        } catch (error) {
+            const isUserCancelled = error instanceof Error &&
+                (error.name === 'AbortError' || error.name === 'CanceledError');
+
+            if (isUserCancelled) {
+                console.log('upload da bi huy boi nguoi dung');
+            } else {
+                console.error('upload that bai:', error);
+            }
+
+            if (session.uploadId && session.objectName) {
+                console.log('dang don dep upload chua hoan thanh...');
+                try {
+                    await fileApiResource.abortUpload({uploadId: session.uploadId, objectName: session.objectName});
+                } catch (abortError) {
+                    console.error('khong the huy upload:', abortError);
+                }
+            }
+
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error(`Upload failed: ${error}`);
+        } finally {
+            this.abortController = null;
+            this.semaphore = null;
+            this.uploadPromises = [];
+        }
+    }
+
+    async uploadFileWithSession(
+        file: File,
+        session: UploadSession,
+        onProgress?: (progress: UploadProgress) => void
+    ): Promise<string> {
+        return this.runMultipartUpload(file, session, onProgress);
     }
 
     // huy upload dang thuc hien
