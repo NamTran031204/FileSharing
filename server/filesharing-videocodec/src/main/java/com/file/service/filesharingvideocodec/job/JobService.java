@@ -5,6 +5,7 @@ import com.file.service.filesharingvideocodec.consumer.dto.EncodeRequestMessage;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobStatus;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobType;
 import com.file.service.filesharingvideocodec.job.queue.JobQueue;
+import com.file.service.filesharingvideocodec.kafka.EncodeResultProducer;
 import com.file.service.filesharingvideocodec.kafka.dto.EncodeResultMessage;
 import com.file.service.filesharingvideocodec.model.ProcessingJobConfig;
 import com.file.service.filesharingvideocodec.model.ProcessingJobEntity;
