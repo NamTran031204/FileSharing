@@ -50,7 +50,7 @@ UploadFolderButton
  v
 Build Folder Manifest
  |
- | POST /projects/{projectId}/folders/create-tree
+ | POST api/folder/create-tree
  v
 Server
  |
@@ -117,261 +117,9 @@ Component upload folder sẽ chịu trách nhiệm:
 
 ---
 
-# 4. API mới: `create-folder-tree`
+# 4. Client build folder manifest
 
-## 4.1 Endpoint
-
-```txt
-POST /api/folder/create-tree
-```
-
-## 4.2 Mục đích API
-
-API này nhận toàn bộ cây thư mục từ client và tạo các bản ghi trong collection `folder`.
-
-API này **không upload file** và **không tạo asset**.
-
-Nhiệm vụ duy nhất:
-
-```txt
-Tạo folder tree trong project và trả về folderId mapping.
-```
-
----
-
-# 5. Request của API `create-folder-tree`
-
-## 5.1 Request cần có
-
-```txt
-projectId
-parentFolderId
-baseFolderPath
-rootFolderName
-folders[]
-createdBy
-```
-
-Trong đó:
-
-| Field                   | Bắt buộc | Ý nghĩa                                                               |
-| ----------------------- | -------: | --------------------------------------------------------------------- |
-| `projectId`             |       Có | Project mà folder được upload vào                                     |
-| `parentFolderId`        |    Không | Folder hiện tại mà user đang đứng; `null` nếu upload vào root project |
-| `baseFolderPath`        |    Không | Path của folder hiện tại trong project                                |
-| `rootFolderName`        |       Có | Tên folder gốc user chọn                                              |
-| `folders[]`             |       Có | Danh sách folder đã parse từ client                                   |
-| `createdBy`             |       Có | User tạo folder                                                       |
-
----
-
-## 5.2 Mỗi item trong `folders[]`
-
-Mỗi folder node client gửi lên nên có:
-
-```txt
-clientFolderKey
-folderName
-relativeFolderPath
-parentRelativeFolderPath
-level
-```
-
-Ý nghĩa:
-
-| Field                      | Ví dụ                 | Ý nghĩa                           |
-| -------------------------- | --------------------- | --------------------------------- |
-| `clientFolderKey`          | `CampaignA/video/raw` | Key tạm phía client               |
-| `folderName`               | `raw`                 | Tên folder                        |
-| `relativeFolderPath`       | `CampaignA/video/raw` | Path tính từ folder user chọn     |
-| `parentRelativeFolderPath` | `CampaignA/video`     | Path cha tính từ folder user chọn |
-| `level`                    | `3`                   | Cấp folder trong cây upload       |
-
-Ví dụ user upload folder:
-
-```txt
-CampaignA/
-  banner.png
-  video/
-    intro.mp4
-    raw/
-      source.mp4
-```
-
-Client gửi folder manifest:
-
-```txt
-folders:
-- CampaignA
-- CampaignA/video
-- CampaignA/video/raw
-```
-
----
-
-# 6. Response của API `create-folder-tree`
-
-## 6.1 Response cần trả về
-
-API cần trả về mapping đủ để client upload file vào đúng folder:
-
-```txt
-folderUploadSessionId
-projectId
-rootFolderId
-createdFolders[]
-existingFolders[]
-folderMappings[]
-```
-
-Trong đó 
-* `folderMappings[]` là quan trọng nhất.
-* `folderUploadSessionId` là id của một session upload để client lưu lại phục vụ resume upload, được tạo bằng cách lấy đường dẫn tuyệt đối của folder user chọn cộng với chuỗi uuid ngẫu nhiên đằng sau.
-
-Mỗi item trong `folderMappings[]`:
-
-```txt
-clientFolderKey
-relativeFolderPath
-folderPath
-folderId
-parentFolderId
-status
-```
-
-Ý nghĩa:
-
-| Field                | Ý nghĩa                         |
-| -------------------- | ------------------------------- |
-| `clientFolderKey`    | Key client dùng để map lại file |
-| `relativeFolderPath` | Path tính từ folder user chọn   |
-| `folderPath`         | Path thật được lưu trong DB     |
-| `folderId`           | Id folder trong database        |
-| `parentFolderId`     | Id folder cha                   |
-| `status`             | `CREATED` hoặc `EXISTING`       |
-
-Ví dụ response:
-
-```txt
-folderMappings:
-- clientFolderKey: CampaignA
-  folderPath: CampaignA
-  folderId: f001
-  status: CREATED
-
-- clientFolderKey: CampaignA/video
-  folderPath: CampaignA/video
-  folderId: f002
-  status: CREATED
-
-- clientFolderKey: CampaignA/video/raw
-  folderPath: CampaignA/video/raw
-  folderId: f003
-  status: CREATED
-```
-
----
-
-# 7. Xử lý phía server cho `create-folder-tree`
-
-## 7.1 Server validate request
-
-Server cần validate:
-
-```txt
-1. projectId tồn tại.
-2. User có quyền MODIFY/PRODUCER trong project.
-3. folders[] không rỗng.
-4. Không có relativeFolderPath duplicate.
-5. Không có path chứa ký tự nguy hiểm.
-6. Không có path traversal như ../
-7. Folder cha phải tồn tại trong manifest hoặc là parentFolderId truyền vào.
-8. level phải khớp với số segment của path.
-```
-
-## 7.2 Server normalize path
-
-Server không nên tin hoàn toàn vào `folderPath` client gửi.
-
-Server nên tự tính `folderPath` thật bằng:
-
-```txt
-folderPath = baseFolderPath + "/" + relativeFolderPath
-```
-
-Nếu upload vào root project:
-
-```txt
-folderPath = relativeFolderPath
-```
-
-Nếu user đang đứng trong folder:
-
-```txt
-baseFolderPath = Assets/2026
-relativeFolderPath = CampaignA/video
-folderPath = Assets/2026/CampaignA/video
-```
-
-## 7.3 Server tạo folder theo level
-
-Server sort folders theo:
-
-```txt
-level ASC
-folderPath ASC
-```
-
-Sau đó xử lý:
-
-```txt
-For each folderNode:
-    Nếu parentRelativeFolderPath null:
-        parentFolderId = request.parentFolderId
-    Nếu có parentRelativeFolderPath:
-        parentFolderId = createdFolderMap[parentRelativeFolderPath]
-
-    Kiểm tra folderPath đã tồn tại trong project chưa.
-
-    Nếu chưa tồn tại:
-        insert folder
-
-    Nếu đã tồn tại:
-        dùng folderId hiện có
-
-    Lưu mapping relativeFolderPath -> folderId
-```
-
-## 7.4 Transaction
-
-Nên xử lý trong transaction:
-
-```txt
-BEGIN TRANSACTION
-
-validate project
-validate permission
-validate folder tree
-create folders
-update project.stats.folderCount
-update parent folder stats.subfoldersCount
-
-COMMIT
-```
-
-Nếu lỗi:
-
-```txt
-ROLLBACK
-```
-
-Vì MongoDB có thể dùng transaction khi chạy replica set, nên nếu môi trường dev hiện tại chưa bật replica set thì version đầu có thể xử lý best-effort, nhưng thiết kế nghiệp vụ vẫn nên đặt theo transaction.
-
----
-
-# 9. Client build folder manifest
-
-## 9.1 Input folder
+## 4.1 Input folder
 
 Component cần cho user chọn folder.
 
@@ -403,7 +151,7 @@ folderRelativePath = CampaignA/video/raw
 depth = 3
 ```
 
-## 9.2 Build folders[]
+## 4.2 Build folders[]
 
 Client duyệt từng file, lấy path folder cha của file, rồi sinh ra toàn bộ folder segment.
 
@@ -435,12 +183,12 @@ totalFolders
 
 ---
 
-# 10. Client gọi `create-folder-tree`
+# 5. Client gọi `create-folder-tree`
 
 Sau khi build manifest, client gọi:
 
 ```txt
-POST /projects/{projectId}/folders/create-tree
+POST api/folder/create-tree
 ```
 
 Nếu API thành công, client nhận:
@@ -467,7 +215,7 @@ Lưu ý: client nên map bằng `relativeFolderPath` hoặc `clientFolderKey`, k
 
 ---
 
-# 11. Build upload queue sau khi có folderId
+# 6. Build upload queue sau khi có folderId
 
 Sau khi `create-folder-tree` thành công, client mới build queue upload asset.
 
@@ -502,7 +250,7 @@ Nếu không tìm thấy `folderId`, file không được upload và phải báo
 
 ---
 
-# 12. Thứ tự upload file
+# 7. Thứ tự upload file
 
 Yêu cầu của bạn là:
 
@@ -531,95 +279,135 @@ upload tuần tự từng file, không upload song song nhiều file 1 lúc. vì
 
 ---
 
-# 13. Điều chỉnh `uploadService.uploadFile`
+# 8. Upload từng file: Quy trình 3 bước
 
-Hiện tại `uploadFile` chỉ nhận metadata:
+`uploadService.uploadFile` **không thay đổi** — nó chỉ upload binary lên object storage và trả về `objectName`. Asset/metadata được tạo bằng các API có sẵn trong `AssetController`.
 
-```txt
-ownerId
-timeToLive
-compressionAlgo
-```
+Mỗi file trong queue được xử lý tuần tự theo 3 bước:
 
-Để upload folder hoạt động đúng, cần mở rộng metadata truyền vào upload file.
-
-## 13.1 Metadata cần truyền thêm
+## 8.1 Bước 1 — Tạo Asset
 
 ```txt
-projectId
-folderId
-folderUploadSessionId
-relativePath
-folderPath
-uploadSource
-assetName
-mediaType
-mimeType
-fileSize
+POST api/asset/create-new
 ```
 
-Ý nghĩa:
+Request:
 
-| Field                   | Bắt buộc | Mục đích                           |
-| ----------------------- | -------: | ---------------------------------- |
-| `projectId`             |       Có | Asset thuộc project nào            |
-| `folderId`              |       Có | Asset nằm trong folder nào         |
-| `folderUploadSessionId` |   Nên có | Gom nhóm một lần upload folder     |
-| `relativePath`          |       Có | Path file trong folder user chọn   |
-| `folderPath`            |       Có | Path folder thật trong DB          |
-| `uploadSource`          |       Có | `SINGLE_FILE` hoặc `FOLDER_UPLOAD` |
-| `assetName`             |       Có | Tên asset ban đầu                  |
-| `mediaType`             |       Có | `VIDEO`, `IMAGE`, `DESIGN`         |
-| `mimeType`              |       Có | Loại file                          |
-| `fileSize`              |       Có | Validate và hiển thị               |
+```txt
+assetName  = fileName
+projectId  = projectId hiện tại
+folderId   = folderId lấy từ folderPathToFolderId
+ownerId    = currentUser.id
+ownerEmail = currentUser.email
+```
+
+Response trả về `assetId`. Lưu `assetId` vào file item trong queue.
+
+## 8.2 Bước 2 — Upload binary file
+
+```txt
+uploadService.uploadFile(file, { ownerId, timeToLive })
+```
+
+`uploadService` được dùng nguyên bản, không sửa. Nó xử lý:
+- File nhỏ (< 5MB): direct upload.
+- File lớn: multipart upload với adaptive chunking.
+
+Response trả về `objectName`. Lưu `objectName` vào file item trong queue.
+
+## 8.3 Bước 3 — Tạo Version (Metadata)
+
+```txt
+POST api/asset/version/create-new
+```
+
+Request:
+
+```txt
+assetId     = assetId từ bước 1
+objectName  = objectName từ bước 2
+fileName    = tên file gốc
+mimeType    = loại file
+fileSize    = kích thước file
+mediaType   = VIDEO / IMAGE / DESIGN
+ownerId     = currentUser.id
+ownerEmail  = currentUser.email
+timeToLive  = giá trị mặc định
+```
+
+Server tạo `MetadataEntity` với `assetId` và `objectName`, kết nối đúng asset trong đúng folder.
+
+## 8.4 Xử lý lỗi từng bước
+
+```txt
+Bước 1 lỗi → đánh dấu file FAILED, bỏ qua bước 2 và 3, tiếp tục file tiếp theo
+Bước 2 lỗi → đánh dấu file FAILED (asset đã tạo sẽ orphan tạm thời)
+Bước 3 lỗi → đánh dấu file FAILED (objectName đã upload nhưng chưa link vào asset)
+```
+
+Retry sẽ thực hiện lại cả 3 bước cho file FAILED.
+
+## 8.5 Cập nhật trace file sau khi file upload thành công
+
+Chỉ sau khi bước 3 (`create-version`) thành công mới cập nhật trace file:
+
+```txt
+Bước 1 (create-asset) OK
+  ↓
+Bước 2 (upload binary) OK
+  ↓
+Bước 3 (create-version) OK
+  ↓
+Ghi thêm entry vào trace file:
+  {
+    relativePath,
+    assetId,
+    fileId (metadataId),
+    objectName,
+    folderId
+  }
+```
+
+Nếu một trong 3 bước chưa hoàn thành thì không được ghi vào trace file.
 
 ---
 
-# 14. Cách tạo asset và metadata
+# 9. Cách tạo asset và metadata — tóm tắt luồng đầy đủ
 
-Sau khi có `folderId`, mỗi file upload cần tạo asset/metadata đúng chỗ.
-
-## 14.1 Phương án khuyên dùng
-
-Nên để API upload file hoặc API initiate upload tạo asset + metadata ở trạng thái ban đầu.
-
-Luồng cho từng file:
+Luồng hoàn chỉnh cho từng file:
 
 ```txt
-Client gọi uploadService.uploadFile(file, metadata)
-  ↓
-Server initiate upload
-  ↓
-Server tạo asset với projectId + folderId
-  ↓
-Server tạo metadata với status = UPLOADING
-  ↓
-Client upload binary/chunk
-  ↓
-Server complete upload
-  ↓
-Server update metadata.status = COMPLETED
+Client
+  |
+  | 1. POST api/asset/create-new
+  |    { assetName, projectId, folderId, ownerId }
+  v
+Server → tạo AssetEntity → trả assetId
+  |
+  | 2. uploadService.uploadFile(file, { ownerId, timeToLive })
+  |    upload binary → initiate → upload chunks → complete
+  v
+Object Storage + Server → trả objectName
+  |
+  | 3. POST api/asset/version/create-new
+  |    { assetId, objectName, fileName, mimeType, fileSize, mediaType }
+  v
+Server → tạo MetadataEntity (status=COMPLETED) → trả fileId
 ```
 
-Với file lỗi:
+Với file video cần xử lý sau upload:
 
 ```txt
-metadata.status = FAILED
+processingStatus = PENDING (server tự set khi nhận media type = VIDEO)
 ```
 
-Với file video cần xử lý thêm:
-
-```txt
-processingStatus = PENDING
-```
-
-Collection `metadata` hiện đã có `status`, `processingStatus`, `uploadId`, `objectName`, `fileSize`, `mimeType`, còn collection `asset` đã có `projectId` và `folderId`, nên rất phù hợp với luồng này. 
+Collection `asset` đã có `projectId` và `folderId`; `metadata` đã có `assetId`, `objectName`, `status`, `processingStatus` — không cần thay đổi schema.
 
 ---
 
-# 15. State cần có trong `UploadFolderButton`
+# 10. State cần có trong `UploadFolderButton`
 
-## 15.1 State chọn folder
+## 10.1 State chọn folder
 
 ```txt
 selectedRootFolderName
@@ -629,7 +417,7 @@ fileItems
 totalBytes
 ```
 
-## 15.2 State tạo folder tree
+## 10.2 State tạo folder tree
 
 ```txt
 isCreatingFolderTree
@@ -646,7 +434,7 @@ Trong đó quan trọng nhất:
 folderPathToFolderId
 ```
 
-## 15.3 State upload file
+## 10.3 State upload file
 
 ```txt
 isUploadingFiles
@@ -664,7 +452,7 @@ uploadErrors
 
 ---
 
-# 16. Các bước implement chi tiết
+# 11. Các bước implement chi tiết
 
 ## Phase 1 — Tạo parser cho folder upload
 
@@ -704,9 +492,10 @@ folderApiResource.createFolderTree(...)
 Nhiệm vụ:
 
 ```txt
-Gọi POST /projects/{projectId}/folders/create-tree
-Nhận folderMappings
-Trả về mapping cho service
+Gọi POST api/folder/create-tree
+Nhận folderMappings[]
+Build folderPathToFolderId Map
+Trả về Map cho folderUploadService
 ```
 
 ---
@@ -733,8 +522,10 @@ Nhiệm vụ:
 Service này được phép gọi:
 
 ```txt
-folderApiResource.createFolderTree
-uploadService.uploadFile
+folderApiResource.createFolderTree   → POST api/folder/create-tree
+assetApiResource.createAsset         → POST api/asset/create-new
+uploadService.uploadFile             → upload binary (không thay đổi)
+assetApiResource.createVersion       → POST api/asset/version/create-new
 ```
 
 Không nên nhét orchestration upload folder vào `uploadService`, vì `uploadService` hiện đang làm tốt vai trò upload một file. 
@@ -769,9 +560,9 @@ onAssetUploaded
 
 ---
 
-# 17. UI cần hiển thị
+# 12. UI cần hiển thị
 
-## 17.1 Sau khi chọn folder
+## 12.1 Sau khi chọn folder
 
 ```txt
 Selected folder: CampaignA
@@ -783,7 +574,7 @@ Total size: 4.7 GB
 [Start Upload]
 ```
 
-## 17.2 Khi đang tạo folder tree
+## 12.2 Khi đang tạo folder tree
 
 ```txt
 Creating folder tree...
@@ -797,7 +588,7 @@ Vì API `create-folder-tree` xử lý một lần, UI không nhất thiết có 
 PREPARING_FOLDER_TREE
 ```
 
-## 17.3 Khi bắt đầu upload file
+## 12.3 Khi bắt đầu upload file
 
 ```txt
 Folder tree created successfully
@@ -806,7 +597,7 @@ Current file: CampaignA/video/raw/source.mp4
 File: 3 / 80
 ```
 
-## 17.4 Progress nên có 2 lớp
+## 12.4 Progress nên có 2 lớp
 
 ### Progress tổng folder
 
@@ -832,9 +623,9 @@ ETA: 45s
 
 ---
 
-# 18. Trạng thái nghiệp vụ
+# 13. Trạng thái nghiệp vụ
 
-## 18.1 Trạng thái tổng upload folder
+## 13.1 Trạng thái tổng upload folder
 
 ```txt
 IDLE
@@ -849,7 +640,7 @@ FAILED
 CANCELLED
 ```
 
-## 18.2 Trạng thái từng file
+## 13.2 Trạng thái từng file
 
 ```txt
 PENDING
@@ -860,7 +651,7 @@ CANCELLED
 SKIPPED
 ```
 
-## 18.3 Trạng thái metadata phía server
+## 13.3 Trạng thái metadata phía server
 
 Dùng theo thiết kế hiện tại:
 
@@ -883,91 +674,242 @@ Các trạng thái này đã phù hợp với collection `metadata` hiện tại
 
 ---
 
-# 19. Cancel flow
+# 14. Cancel flow
 
-## 19.1 Cancel trước khi tạo folder tree
+## 14.1 Cancel trước khi tạo folder tree
 
 ```txt
 Client reset state
 Không gọi API
-Không có dữ liệu nào được tạo
+Xoá trace file nếu đã tạo
+Không có dữ liệu nào được tạo trên server
 ```
 
-## 19.2 Cancel khi đang gọi `create-folder-tree`
+## 14.2 Cancel khi đang gọi `create-folder-tree`
 
-Vì đây là một API tạo cây folder, nếu request đã tới server thì nên để server xử lý transaction.
-
-Có 2 khả năng:
+Việc cancel API `create-folder-tree` phụ thuộc vào trạng thái server:
 
 ```txt
-1. Request chưa hoàn tất: client abort request.
-2. Request đã hoàn tất phía server: folder tree có thể đã được tạo.
+1. Request chưa tới server: client abort, không có dữ liệu nào được tạo.
+2. Server đang xử lý (transaction chưa commit): ROLLBACK tự động, không có folder nào được tạo.
+3. Server đã commit: folder tree đã tồn tại trong DB.
 ```
 
-Nếu server dùng transaction, kết quả sẽ rõ ràng:
+Trong trường hợp 3, client cần rollback folder tree bằng cách gọi:
 
 ```txt
-Tạo thành công toàn bộ hoặc không tạo gì.
+DELETE api/folder/delete/{folderId}
+  → lần lượt từng folder trong folderMappings[]
+  → ưu tiên xóa folder con trước (level DESC)
 ```
 
-## 19.3 Cancel khi đang upload file
+## 14.3 Cancel khi đang upload file — Rollback toàn bộ
+
+Khi user bấm cancel trong giai đoạn upload, **phải rollback toàn bộ**, bao gồm cả những file đã upload thành công trước đó.
+
+### Bước 1 — Dừng upload hiện tại
 
 ```txt
-1. Gọi uploadService.cancelUpload()
-2. Dừng upload file hiện tại
-3. Dừng queue
-4. File đã upload thành công giữ COMPLETED
-5. File hiện tại chuyển CANCELLED hoặc FAILED
-6. File chưa upload giữ PENDING
+goi uploadService.cancelUpload()
+  → abort multipart upload đang chạy
+  → server sẽ hủy các part chưa complete trên MinIO
 ```
 
-`uploadService` hiện đã có `cancelUpload()` dựa trên `AbortController`, nên component upload folder có thể gọi lại trực tiếp. 
+### Bước 2 — Xóa metadata (version) của các file đã upload thành công
+
+```txt
+For each file in uploadedFiles[]:
+  POST api/asset/version/delete/{fileId}
+    → server xóa MetadataEntity khỏi DB
+    → server xóa object khỏi MinIO (objectName)
+```
+
+### Bước 3 — Xóa asset của các file đã upload thành công
+
+```txt
+For each file in uploadedFiles[]:
+  POST api/asset/delete/{assetId}
+    → server xóa AssetEntity khỏi DB
+```
+
+### Bước 4 — Xóa folder tree đã tạo
+
+```txt
+For each folder in folderMappings[] (level DESC — xóa folder con trước):
+  DELETE api/folder/delete/{folderId}
+    → server xóa FolderEntity khỏi DB
+```
+
+### Bước 5 — Xóa trace file local
+
+```txt
+Xóa file .upload-trace.json trong folder người dùng đang upload
+```
+
+### Danh sách file đã upload (để rollback)
+
+Client lấy danh sách từ:
+
+```txt
+uploadedFiles[] — mảng trong state, được đằy vào sau mỗi file COMPLETED
+```
+
+Mỗi entry trong `uploadedFiles[]` chứa:
+
+```txt
+relativePath
+assetId
+fileId (metadataId)
+objectName
+folderId
+```
+
+### Lưu ý về rollback
+
+```txt
+- Rollback tuần tự, không song song.
+- Nếu một bước rollback lỗi, vẫn tiếp tục rollback các item còn lại.
+- Ghi log các item rollback thất bại để user có thể manual cleanup.
+- Hiển thị dialog xác nhận trước khi rollback (vì thao tác không hoàn tác được).
+```
 
 ---
 
-# 20. Retry flow
+# 15. Resume flow với trace file local
 
-## 20.1 Retry sau khi tạo folder tree lỗi
+Khi upload folder bị ngắt giữa chừng (mất điện, đóng tab, crash), client có thể tiếp tục từ điểm dừng nhờ trace file lưu cứng tại máy người dùng.
 
-Nếu `create-folder-tree` lỗi:
+## 15.1 Trace file là gì
 
-```txt
-User bấm Retry Create Folder Tree
-Client gửi lại cùng manifest
-Server xử lý idempotent theo projectId + folderPath
-```
-
-Điều kiện quan trọng:
+Trace file được lưu ngay trong folder mà người dùng chọn để upload:
 
 ```txt
-create-folder-tree nên idempotent
+<folderUserĐãChọn>/.upload-trace.json
 ```
 
-Tức là folder đã tồn tại thì trả về `status = EXISTING`, không báo lỗi cứng.
-
-## 20.2 Retry file upload lỗi
-
-Nếu một số file upload lỗi:
+Ví dụ:
 
 ```txt
-Retry failed files
+CampaignA/.upload-trace.json
 ```
 
-Client không gọi lại `create-folder-tree`.
+## 15.2 Cấu trúc trace file
 
-Chỉ cần dùng lại:
+```json
+{
+  "sessionId": "uuid-đả-tạo-khi-create-folder-tree",
+  "projectId": "proj-001",
+  "rootFolderName": "CampaignA",
+  "localFolderPath": "/Users/nam/Desktop/CampaignA",
+  "parentFolderId": "folder-id-hiện-tại",
+  "baseFolderPath": "Assets/2026",
+  "folderTreeCreated": true,
+  "folderMappings": [
+    {
+      "clientFolderKey": "CampaignA",
+      "folderId": "f001",
+      "relativeFolderPath": "CampaignA"
+    }
+  ],
+  "totalFiles": 80,
+  "uploadedFiles": [
+    {
+      "relativePath": "CampaignA/banner.png",
+      "assetId": "asset-001",
+      "fileId": "meta-001",
+      "objectName": "uuid_banner.png",
+      "folderId": "f001"
+    }
+  ],
+  "createdAt": "2026-05-09T10:30:00Z",
+  "updatedAt": "2026-05-09T10:45:00Z"
+}
+```
+
+## 15.3 Quy tắc ghi trace file
 
 ```txt
-folderPathToFolderId
+Trace file được TẠO sau khi create-folder-tree thành công.
+Trace file được CẬP NHẬT sau khi một file hoàn thành đủ 3 bước (create-asset, upload-binary, create-version).
+Trace file được XÓA sau khi:
+  - Toàn bộ file upload thành công (COMPLETED).
+  - Hoặc user chủ động cancel và rollback xong.
 ```
 
-và upload lại các file có status `FAILED`.
+**Không bao giờ** ghi vào trace file nếu file chưa hoàn thành bước 3.
+
+## 15.4 Cách viết trace file từ browser
+
+Browser không thể ghi file trực tiếp vào đường dẫn hệ thống. Phương án khả thi:
+
+```txt
+Dùng File System Access API (trình duyệt hỗ trợ Chromium-based).
+
+User chọn folder bằng:
+  window.showDirectoryPicker()
+    → nhận FileSystemDirectoryHandle
+
+Client tạo/ghi file:
+  dirHandle.getFileHandle('.upload-trace.json', { create: true })
+    → FileSystemFileHandle
+  fileHandle.createWritable()
+    → ghi JSON vào file
+```
+
+File System Access API cho phép đọc/ghi file trực tiếp vào thư mục mà user đã cấp quyền, không cần backend.
+
+> **Lưu ý**: Với `<input type="file" webkitdirectory>` truyền thống, browser chỉ cho đọc file chứ không ghi được. Cần switch sang `showDirectoryPicker()` để hỗ trợ trace file.
+
+## 15.5 Luồng resume khi mở lại
+
+```txt
+User mở lại trang / component upload
+  |
+  | User chọn folder (showDirectoryPicker)
+  v
+Client kiểm tra tồn tại .upload-trace.json trong folder
+  |
+  Nếu có trace file:
+    → Đọc trace file
+    → Hiển thị dialog: "Tìm thấy phiên upload dở. Tiếp tục?"
+    → Nếu user đồng ý:
+        - Nạp lại folderMappings, uploadedFiles từ trace file
+        - Build lại upload queue, bỏ qua file có trong uploadedFiles[]
+        - Tiếp tục upload từ file chưa upload
+    → Nếu user từ chối:
+        - Xóa trace file
+        - Bắt đầu lại từ đầu
+  |
+  Nếu không có trace file:
+    → Upload mới hoàn toàn
+```
+
+## 15.6 Xác định file đã upload khi resume
+
+Client so sánh `relativePath` của từng file trong FileList với `uploadedFiles[].relativePath` trong trace file:
+
+```txt
+Nếu relativePath có trong uploadedFiles[] → bỏ qua (COMPLETED)
+Nếu relativePath không có → thêm vào queue upload
+```
+
+Không cần gọi lại `create-folder-tree` vì `folderMappings` đã có trong trace file.
+
+## 15.7 Trường hợp resume thất bại
+
+Nếu trace file bị hỏng hoặc thiếu dữ liệu:
+
+```txt
+Xóa trace file
+Bắt đầu lại từ đầu
+Các file đã upload trước đó vẫn còn trong DB (không bị xóa tự động).
+```
 
 ---
 
-# 21. Edge cases cần xử lý
+# 16. Edge cases cần xử lý
 
-## 21.1 Folder đã tồn tại
+## 16.1 Folder đã tồn tại
 
 Nếu user upload folder có path đã tồn tại trong project:
 
@@ -978,7 +920,7 @@ status = EXISTING
 
 Không nên coi đây là lỗi.
 
-## 21.2 File trùng relativePath
+## 16.2 File trùng relativePath
 
 Client cần validate trước khi gọi `create-folder-tree`:
 
@@ -986,7 +928,7 @@ Client cần validate trước khi gọi `create-folder-tree`:
 Không cho 2 file cùng relativePath trong một lần upload.
 ```
 
-## 21.3 Empty folder
+## 16.3 Empty folder
 
 Với input file thông thường, browser thường chỉ trả về file, không trả về folder rỗng.
 
@@ -999,7 +941,7 @@ Folder rỗng không được upload.
 
 Nếu muốn upload cả folder rỗng, cần dùng thêm API đọc directory entries khi drag/drop folder.
 
-## 21.4 User đang đứng trong folder con
+## 16.4 User đang đứng trong folder con
 
 Nếu user đang đứng ở:
 
@@ -1034,9 +976,9 @@ baseFolderPath
 
 ---
 
-# 22. Các trường bắt buộc cần lưu
+# 17. Các trường bắt buộc cần lưu
 
-## 22.1 Collection `folder`
+## 17.1 Collection `folder`
 
 Bắt buộc:
 
@@ -1055,7 +997,7 @@ stats.assetCount
 stats.subfoldersCount
 ```
 
-## 22.2 Collection `asset`
+## 17.2 Collection `asset`
 
 Bắt buộc:
 
@@ -1072,7 +1014,7 @@ createdAt
 updatedAt
 ```
 
-## 22.3 Collection `metadata`
+## 17.3 Collection `metadata`
 
 Bắt buộc:
 
@@ -1098,29 +1040,9 @@ createdAt
 updatedAt
 ```
 
-## 22.4 Nên bổ sung cho upload folder
-
-Nên bổ sung vào `metadata` hoặc `asset`:
-
-```txt
-relativePath
-folderPath
-uploadSource
-folderUploadSessionId
-```
-
-Trong đó:
-
-| Field                   | Mục đích                                           |
-| ----------------------- | -------------------------------------------------- |
-| `relativePath`          | Biết file gốc nằm ở đâu trong folder user chọn     |
-| `folderPath`            | Debug và query nhanh                               |
-| `uploadSource`          | Phân biệt `SINGLE_FILE` và `FOLDER_UPLOAD`         |
-| `folderUploadSessionId` | Gom nhóm các file trong cùng một lần upload folder |
-
 ---
 
-# 23. Sơ đồ pipeline cuối cùng
+# 18. Sơ đồ pipeline cuối cùng
 
 ```txt
 Browser / UploadFolderButton
@@ -1129,46 +1051,48 @@ Browser / UploadFolderButton
  v
 FileList + relativePath
  |
- | 2. Parse folder tree
+ | 2. Parse folder tree (folderUploadParser)
  v
-Folder Manifest
+Folder Manifest (folderNodes[], fileItems[])
  |
- | 3. POST /projects/{projectId}/folders/create-tree
+ | 3. POST api/folder/create-tree
+ |    { projectId, parentFolderId, baseFolderPath, rootFolderName, folders[] }
  v
-Backend Folder Service
+Backend FolderService
  |
  | validate project permission
  | validate tree
  | normalize folderPath
- | transaction create folders
+ | create folders
  v
 MongoDB - folder collection
  |
- | 4. Return folderMappings
+ | 4. Return folderMappings[]
  v
 Client folderPathToFolderId Map
  |
- | 5. Build upload queue
+ | 5. Build upload queue (sort depth ASC)
  v
-Upload Queue
+Upload Queue (tuần tự từng file)
  |
- | sort depth ASC
- | upload từng file tuần tự
+ | [Mỗi file — 3 bước]
+ |
+ | 5a. POST api/asset/create-new
+ |     { assetName, projectId, folderId, ownerId }
+ |     → nhận assetId
+ |
+ | 5b. uploadService.uploadFile(file, { ownerId, timeToLive })
+ |     initiate → upload chunks → complete
+ |     → nhận objectName
+ |
+ | 5c. POST api/asset/version/create-new
+ |     { assetId, objectName, fileName, mimeType, fileSize, mediaType }
+ |     → nhận fileId (metadata)
  v
-uploadService.uploadFile
+MongoDB - asset + metadata collection
  |
- | initiate upload
- | upload chunks/direct file
- | complete upload
- v
-Object Storage + Backend Upload API
- |
- | create/update asset
- | create/update metadata
- v
-MongoDB - asset + metadata
- |
- | 6. Refresh project tree and asset list
+ | 6. onAssetUploaded() → refresh asset list
+ | 7. onCompleted()    → refresh folder tree
  v
 UI hiển thị folder + media đúng cây thư mục
 ```
