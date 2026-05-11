@@ -1329,7 +1329,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/VersionCreateRequestDto"
+                "$ref" : "#/components/schemas/AssetCreateRequestDto"
               }
             }
           },
@@ -1341,7 +1341,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseVersionCreateResponseDto"
+                  "$ref" : "#/components/schemas/CommonResponseAssetCreateResponseDto"
                 }
               }
             }
@@ -1687,6 +1687,111 @@
         }
       }
     },
+    "/api/admin/processing/job/cancel/{jobId}" : {
+      "post" : {
+        "tags" : [ "admin-processing-controller" ],
+        "operationId" : "cancelJob",
+        "parameters" : [ {
+          "name" : "jobId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProcessingJobEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/versions/{versionId}/renditions" : {
+      "get" : {
+        "tags" : [ "playback-controller" ],
+        "operationId" : "getRenditions",
+        "parameters" : [ {
+          "name" : "versionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListMediaRenditionEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/versions/{versionId}/playback" : {
+      "get" : {
+        "tags" : [ "playback-controller" ],
+        "operationId" : "getPlaybackData",
+        "parameters" : [ {
+          "name" : "versionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePlaybackDataResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/users" : {
       "get" : {
         "tags" : [ "user-controller" ],
@@ -1828,6 +1933,41 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/processing/version/{versionId}" : {
+      "get" : {
+        "tags" : [ "processing-controller" ],
+        "operationId" : "getProcessingStatus",
+        "parameters" : [ {
+          "name" : "versionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProcessingStatusResponseDto"
                 }
               }
             }
@@ -2108,6 +2248,41 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseAnnotationsEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/processing/job/{jobId}" : {
+      "get" : {
+        "tags" : [ "admin-processing-controller" ],
+        "operationId" : "getJob",
+        "parameters" : [ {
+          "name" : "jobId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProcessingJobEntity"
                 }
               }
             }
@@ -4151,14 +4326,16 @@
           }
         }
       },
-      "AssetStatus" : {
-        "type" : "string",
-        "enum" : [ "DRAFT", "IN_REVIEW", "APPROVED", "REQUEST_CHANGES" ]
-      },
-      "VersionCreateRequestDto" : {
+      "AssetCreateRequestDto" : {
         "type" : "object",
         "properties" : {
-          "assetId" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "folderId" : {
+            "type" : "string"
+          },
+          "description" : {
             "type" : "string"
           },
           "fileName" : {
@@ -4181,6 +4358,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "assetId" : {
+            "type" : "string"
+          },
           "changeNote" : {
             "type" : "string"
           },
@@ -4189,52 +4369,21 @@
           }
         }
       },
-      "CommonResponseVersionCreateResponseDto" : {
-        "type" : "object",
-        "properties" : {
-          "isSuccessful" : {
-            "type" : "boolean"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/VersionCreateResponseDto"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          }
-        }
+      "AssetStatus" : {
+        "type" : "string",
+        "enum" : [ "DRAFT", "IN_REVIEW", "APPROVED", "REQUEST_CHANGES" ]
       },
-      "VersionCreateResponseDto" : {
+      "AssetCreateResponseDto" : {
         "type" : "object",
         "properties" : {
+          "asset" : {
+            "$ref" : "#/components/schemas/AssetEntity"
+          },
           "version" : {
             "$ref" : "#/components/schemas/MetadataEntity"
           },
           "upload" : {
             "$ref" : "#/components/schemas/InitiateUploadResponseDto"
-          }
-        }
-      },
-      "AssetUpdateRequestDto" : {
-        "type" : "object",
-        "properties" : {
-          "assetId" : {
-            "type" : "string"
-          },
-          "assetName" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "shareExpiry" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "regenerateShareToken" : {
-            "type" : "boolean"
           }
         }
       },
@@ -4301,6 +4450,44 @@
           "shareExpiry" : {
             "type" : "string",
             "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAssetCreateResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AssetCreateResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AssetUpdateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "assetName" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "shareExpiry" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "regenerateShareToken" : {
+            "type" : "boolean"
           }
         }
       },
@@ -4417,74 +4604,6 @@
             "items" : {
               "$ref" : "#/components/schemas/AssetSummaryDto"
             }
-          }
-        }
-      },
-      "AssetCreateRequestDto" : {
-        "type" : "object",
-        "properties" : {
-          "projectId" : {
-            "type" : "string"
-          },
-          "folderId" : {
-            "type" : "string"
-          },
-          "assetName" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "fileName" : {
-            "type" : "string"
-          },
-          "mimeType" : {
-            "type" : "string"
-          },
-          "fileSize" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "mediaType" : {
-            "$ref" : "#/components/schemas/MediaType"
-          },
-          "compressionAlgo" : {
-            "type" : "string"
-          },
-          "timeToLive" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "AssetCreateResponseDto" : {
-        "type" : "object",
-        "properties" : {
-          "asset" : {
-            "$ref" : "#/components/schemas/AssetEntity"
-          },
-          "version" : {
-            "$ref" : "#/components/schemas/MetadataEntity"
-          },
-          "upload" : {
-            "$ref" : "#/components/schemas/InitiateUploadResponseDto"
-          }
-        }
-      },
-      "CommonResponseAssetCreateResponseDto" : {
-        "type" : "object",
-        "properties" : {
-          "isSuccessful" : {
-            "type" : "boolean"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/AssetCreateResponseDto"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
           }
         }
       },
@@ -4757,6 +4876,386 @@
             "items" : {
               "$ref" : "#/components/schemas/AnnotationsEntity"
             }
+          }
+        }
+      },
+      "CommonResponseProcessingJobEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ProcessingJobEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProcessingJobConfig" : {
+        "type" : "object",
+        "properties" : {
+          "profiles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "intervalSeconds" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxThumbnails" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scanEngine" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProcessingJobEntity" : {
+        "type" : "object",
+        "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "jobId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "jobType" : {
+            "$ref" : "#/components/schemas/ProcessingJobType"
+          },
+          "config" : {
+            "$ref" : "#/components/schemas/ProcessingJobConfig"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProcessingJobStatus"
+          },
+          "priority" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "progress" : {
+            "$ref" : "#/components/schemas/ProcessingJobProgress"
+          },
+          "result" : {
+            "$ref" : "#/components/schemas/ProcessingJobResult"
+          },
+          "scheduledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "completedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "retryCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxRetries" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lastError" : {
+            "type" : "string"
+          },
+          "workerId" : {
+            "type" : "string"
+          },
+          "workerHeartbeat" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ProcessingJobProgress" : {
+        "type" : "object",
+        "properties" : {
+          "percent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "currentStep" : {
+            "type" : "string"
+          },
+          "estimatedTimeRemainingMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ProcessingJobResult" : {
+        "type" : "object",
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          },
+          "outputKeys" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "errorMessage" : {
+            "type" : "string"
+          },
+          "errorDetails" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object"
+            }
+          }
+        }
+      },
+      "ProcessingJobStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED" ]
+      },
+      "ProcessingJobType" : {
+        "type" : "string",
+        "enum" : [ "TRANSCODE_HLS", "GENERATE_THUMBNAILS", "GENERATE_SPRITE", "GENERATE_POSTER", "GENERATE_WAVEFORM", "VIRUS_SCAN" ]
+      },
+      "CommonResponseListMediaRenditionEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MediaRenditionEntity"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "MediaRenditionEntity" : {
+        "type" : "object",
+        "properties" : {
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "renditionId" : {
+            "type" : "string"
+          },
+          "versionId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "renditionType" : {
+            "$ref" : "#/components/schemas/RenditionType"
+          },
+          "profile" : {
+            "type" : "string"
+          },
+          "manifestKey" : {
+            "type" : "string"
+          },
+          "segmentPathPrefix" : {
+            "type" : "string"
+          },
+          "bandwidth" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "resolution" : {
+            "$ref" : "#/components/schemas/RenditionResolution"
+          },
+          "thumbnailCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "intervalMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "spriteKey" : {
+            "type" : "string"
+          },
+          "spriteMetadataKey" : {
+            "type" : "string"
+          },
+          "posterKey" : {
+            "type" : "string"
+          },
+          "posterTimestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fileSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/RenditionStatus"
+          }
+        }
+      },
+      "RenditionResolution" : {
+        "type" : "object",
+        "properties" : {
+          "width" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "height" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "RenditionStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "PROCESSING", "READY", "FAILED" ]
+      },
+      "RenditionType" : {
+        "type" : "string",
+        "enum" : [ "HLS", "THUMBNAIL", "SPRITE", "WAVEFORM", "POSTER" ]
+      },
+      "CommonResponsePlaybackDataResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PlaybackDataResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PlaybackDataResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "versionId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          },
+          "manifestKey" : {
+            "type" : "string"
+          },
+          "posterKey" : {
+            "type" : "string"
+          },
+          "spriteKey" : {
+            "type" : "string"
+          },
+          "spriteMetadataKey" : {
+            "type" : "string"
+          },
+          "imageUrl" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseProcessingStatusResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ProcessingStatusResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProcessingStatusResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "versionId" : {
+            "type" : "string"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          },
+          "jobStatus" : {
+            "$ref" : "#/components/schemas/ProcessingJobStatus"
+          },
+          "progress" : {
+            "$ref" : "#/components/schemas/ProcessingJobProgress"
+          },
+          "errorMessage" : {
+            "type" : "string"
           }
         }
       },
