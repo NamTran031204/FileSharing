@@ -29,13 +29,13 @@ public class JobService {
     private final ImageProcessingConfig config;
 
     /**
-     * Create a new job if it doesn't already exist (idempotency).
-     * @return true if new job was created, false if already exists.
+     * tạo một job mới nếu nó chưa tồn tại (tính luỹ đẳng).
+     * @return true nếu job mới được tạo, false nếu đã tồn tại.
      */
     public boolean createJobIfAbsent(ImageJobMessage message) {
         Optional<ProcessingJobEntity> existing = jobRepository.findById(message.getJobId());
         if (existing.isPresent()) {
-            log.info("Job {} already exists with status {}, skipping duplicate",
+            log.info("job {} da ton tai voi trang thai {}, bo qua trung lap",
                     message.getJobId(), existing.get().getStatus());
             return false;
         }
@@ -60,7 +60,7 @@ public class JobService {
         job.setIsActive(true);
 
         jobRepository.save(job);
-        log.info("Created new image job: {}", message.getJobId());
+        log.info("da tao job anh moi: {}", message.getJobId());
         return true;
     }
 
@@ -75,7 +75,7 @@ public class JobService {
             job.setWorkerId(getWorkerId());
             job.setWorkerHeartbeat(Instant.now());
             jobRepository.save(job);
-            log.info("Job {} marked as PROCESSING", jobId);
+            log.info("job {} duoc danh dau la PROCESSING", jobId);
         });
     }
 
@@ -103,13 +103,13 @@ public class JobService {
                     .outputKeys(outputKeys)
                     .build());
             jobRepository.save(job);
-            log.info("Job {} marked as COMPLETED. Output: {}", jobId, primaryOutput);
+            log.info("job {} duoc danh dau la COMPLETED. dau ra: {}", jobId, primaryOutput);
         });
     }
 
     /**
-     * Mark job failed with retry logic.
-     * If retries remain, re-enqueue. Otherwise, permanent failure.
+     * đánh dấu job thất bại với logic thử lại.
+     * nếu còn số lần thử lại, đưa vào hàng đợi lại. nếu không, thất bại vĩnh viễn.
      */
     public void markFailed(String jobId, String error) {
         jobRepository.findById(jobId).ifPresent(job -> {
@@ -126,7 +126,7 @@ public class JobService {
                         .build());
                 jobRepository.save(job);
                 jobQueue.offer(jobId);
-                log.warn("Job {} failed (attempt {}/{}), re-queued: {}",
+                log.warn("job {} that bai (lan thu {}/{}), duoc dua vao hang doi lai: {}",
                         jobId, currentRetry + 1, maxRetries, error);
             } else {
                 markFailedPermanently(jobId, error);
@@ -135,8 +135,8 @@ public class JobService {
     }
 
     /**
-     * Mark job as permanently failed (no retry).
-     * Used for corrupt input or deterministic errors.
+     * đánh dấu job thất bại vĩnh viễn (không thử lại).
+     * được sử dụng cho đầu vào bị hỏng hoặc các lỗi xác định.
      */
     public void markFailedPermanently(String jobId, String error) {
         jobRepository.findById(jobId).ifPresent(job -> {
@@ -153,7 +153,7 @@ public class JobService {
                     .errorMessage(error)
                     .build());
             jobRepository.save(job);
-            log.error("Job {} permanently FAILED: {}", jobId, error);
+            log.error("job {} that bai vinh vien: {}", jobId, error);
         });
     }
 
@@ -162,17 +162,17 @@ public class JobService {
     }
 
     /**
-     * Recovery on startup: reset all PROCESSING jobs back to PENDING.
+     * khôi phục khi khởi động: đặt lại tất cả các job PROCESSING về PENDING.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void recoverRunningJobs() {
         List<ProcessingJobEntity> stuckJobs = jobRepository.findAllByStatus(ProcessingJobStatus.PROCESSING);
         if (stuckJobs.isEmpty()) {
-            log.info("No stuck jobs found during startup recovery");
+            log.info("khong tim thay job nao bi mac ket trong qua trinh khoi phuc khi khoi dong");
             return;
         }
 
-        log.warn("Found {} stuck PROCESSING jobs, resetting to PENDING", stuckJobs.size());
+        log.warn("tim thay {} job PROCESSING bi mac ket, dat lai thanh PENDING", stuckJobs.size());
         for (ProcessingJobEntity job : stuckJobs) {
             job.setStatus(ProcessingJobStatus.PENDING);
             job.setProgress(ProcessingJobProgress.builder()
@@ -181,7 +181,7 @@ public class JobService {
                     .build());
             jobRepository.save(job);
             jobQueue.offer(job.getJobId());
-            log.info("Recovered job {} → PENDING, re-enqueued", job.getJobId());
+            log.info("da khoi phuc job {} → PENDING, da dua vao hang doi lai", job.getJobId());
         }
     }
 

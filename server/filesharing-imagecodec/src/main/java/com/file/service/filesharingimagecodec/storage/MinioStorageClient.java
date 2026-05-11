@@ -16,10 +16,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-/**
- * MinIO storage client for image processing.
- * Handles download (byte[] or file), upload (byte[]), and presigned URL generation.
- */
+
 @Component
 @Slf4j
 public class MinioStorageClient {
@@ -38,9 +35,7 @@ public class MinioStorageClient {
         this.largeImageThresholdBytes = config.getVips().getLargeImageThresholdMb() * 1024L * 1024L;
     }
 
-    /**
-     * Check the size of an object in MinIO.
-     */
+
     public long getObjectSize(String objectKey) throws Exception {
         StatObjectResponse stat = minioClient.statObject(
                 StatObjectArgs.builder()
@@ -51,16 +46,11 @@ public class MinioStorageClient {
         return stat.size();
     }
 
-    /**
-     * Check if image is "large" (≥ threshold).
-     */
+
     public boolean isLargeImage(String objectKey) throws Exception {
         return getObjectSize(objectKey) >= largeImageThresholdBytes;
     }
 
-    /**
-     * Download object to byte array (for images < 50MB).
-     */
     public byte[] downloadToBytes(String objectKey) throws Exception {
         try (InputStream is = minioClient.getObject(
                 GetObjectArgs.builder()
@@ -72,9 +62,6 @@ public class MinioStorageClient {
         }
     }
 
-    /**
-     * Download object to a local file (for images ≥ 50MB).
-     */
     public void downloadToFile(String objectKey, Path destination) throws Exception {
         try (InputStream is = minioClient.getObject(
                 GetObjectArgs.builder()
@@ -84,12 +71,9 @@ public class MinioStorageClient {
         ); FileOutputStream fos = new FileOutputStream(destination.toFile())) {
             is.transferTo(fos);
         }
-        log.info("Downloaded {} to file: {}", objectKey, destination);
+        log.info("da tai xuong {} den tep: {}", objectKey, destination);
     }
 
-    /**
-     * Upload byte array to MinIO.
-     */
     public void upload(String objectKey, byte[] data, String contentType) throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
             minioClient.putObject(
@@ -101,12 +85,11 @@ public class MinioStorageClient {
                             .build()
             );
         }
-        log.debug("Uploaded {} ({} bytes) to {}/{}", objectKey, data.length, outputBucket, objectKey);
+        log.debug("da tai len {} ({} bytes) den {}/{}", objectKey, data.length, outputBucket, objectKey);
     }
 
     /**
-     * Upload multiple results in parallel using Virtual Threads.
-     * As specified in plan Section 4.4.
+     * tải lên nhiều kết quả song song bằng Virtual Threads.
      */
     public void uploadAllParallel(String prefix, List<UploadItem> items) throws Exception {
         List<CompletableFuture<Void>> futures = items.stream()
@@ -128,11 +111,11 @@ public class MinioStorageClient {
                 .orTimeout(30, TimeUnit.SECONDS)
                 .join();
 
-        log.info("Uploaded {} files to prefix {}", items.size(), prefix);
+        log.info("da tai len {} tep den tien to {}", items.size(), prefix);
     }
 
     /**
-     * Rollback: delete uploaded objects.
+     * khôi phục: xoá các đối tượng đã tải lên.
      */
     public void rollback(List<String> objectKeys) {
         try {
@@ -146,16 +129,16 @@ public class MinioStorageClient {
                             .build()
             ).forEach(result -> {
                 try { result.get(); } catch (Exception e) {
-                    log.warn("Rollback delete failed: {}", e.getMessage());
+                    log.warn("xoa khoi phuc that bai: {}", e.getMessage());
                 }
             });
         } catch (Exception e) {
-            log.error("Rollback failed: {}", e.getMessage());
+            log.error("khoi phuc that bai: {}", e.getMessage());
         }
     }
 
     /**
-     * Generate presigned URL for FFmpeg/external tools to read from MinIO.
+     * tạo presigned URL cho FFmpeg/các công cụ bên ngoài để đọc từ MinIO.
      */
     public String generatePresignedUrl(String objectKey, int ttlHours) throws Exception {
         return minioClient.getPresignedObjectUrl(
@@ -169,7 +152,7 @@ public class MinioStorageClient {
     }
 
     /**
-     * Simple record for parallel upload items.
+     * bản ghi đơn giản cho các mục tải lên song song.
      */
     public record UploadItem(String fileName, byte[] data, String contentType) {}
 }

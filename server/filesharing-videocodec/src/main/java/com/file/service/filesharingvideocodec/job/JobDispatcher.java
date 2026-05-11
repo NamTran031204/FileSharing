@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Polls the JobQueue every 500ms and dispatches jobs to FfmpegExecutor
- * when a Bulkhead slot is available. Jobs run on Virtual Threads.
+ * thăm dò JobQueue mỗi 500ms và phân phối các job tới FfmpegExecutor
+ * khi có một khe Bulkhead trống. các job chạy trên Virtual Threads.
  */
 @Component
 @Slf4j
@@ -30,7 +30,7 @@ public class JobDispatcher {
 
     @Scheduled(fixedDelay = 500)
     public void dispatch() {
-        // Check if there are available slots
+        // kiểm tra xem có khe trống nào không
         int availableSlots = bulkhead.getMetrics().getAvailableConcurrentCalls();
         if (availableSlots <= 0) {
             return;
@@ -38,27 +38,27 @@ public class JobDispatcher {
 
         String jobId = jobQueue.poll();
         if (jobId == null) {
-            return;  // Queue is empty
+            return;  // hàng đợi trống
         }
 
-        // Try to acquire a Bulkhead permit
+        // cố gắng lấy giấy phép Bulkhead
         boolean permitted = bulkhead.tryAcquirePermission();
         if (!permitted) {
-            // Bulkhead full — put job back at head of queue
+            // Bulkhead đầy — đưa job trở lại đầu hàng đợi
             jobQueue.putFirst(jobId);
-            log.debug("Bulkhead full, returning job {} to queue head", jobId);
+            log.debug("Bulkhead da day, tra job {} ve dau hang doi", jobId);
             return;
         }
 
-        // Spawn Virtual Thread for the encoding job
+        // tạo Virtual Thread cho job mã hoá
         Thread.ofVirtual()
                 .name("encoder-" + jobId)
                 .start(() -> {
                     try {
-                        log.info("Dispatching job {} to FFmpeg executor", jobId);
+                        log.info("dang phan phoi job {} cho trinh thuc thi FFmpeg", jobId);
                         ffmpegExecutor.execute(jobId);
                     } catch (Exception e) {
-                        log.error("Unhandled error executing job {}: {}", jobId, e.getMessage(), e);
+                        log.error("loi khong duoc xu ly khi thuc thi job {}: {}", jobId, e.getMessage(), e);
                     } finally {
                         bulkhead.releasePermission();
                     }

@@ -16,21 +16,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Image processor that generates thumbnail and preview WebP images.
+ * bộ xử lý ảnh tạo ra ảnh thu nhỏ và ảnh xem trước định dạng WebP.
  *
- * <p>Since jvips requires native libvips binaries and JNI setup that may not be
- * available on all development environments, this implementation uses Java's
- * built-in ImageIO as a portable fallback. The processing logic follows the
- * same contract as the jvips plan:
+ * <p>vì jvips yêu cầu các tệp nhị phân libvips gốc và thiết lập JNI có thể không
+ * khả dụng trên tất cả các môi trường phát triển, việc triển khai này sử dụng
+ * ImageIO tích hợp sẵn của Java như một giải pháp thay thế linh hoạt. logic xử lý tuân theo
+ * cùng một hợp đồng như kế hoạch jvips:
  * <ul>
- *   <li>thumb.webp — resize to thumbnailWidth, maintain aspect ratio</li>
- *   <li>preview.webp — keep original resolution, convert format</li>
- *   <li>Alpha channel handling — flatten to white background</li>
+ *   <li>thumb.webp — thay đổi kích thước thành thumbnailWidth, duy trì tỷ lệ khung hình</li>
+ *   <li>preview.webp — giữ nguyên độ phân giải gốc, chuyển đổi định dạng</li>
+ *   <li>xử lý kênh alpha — làm phẳng thành nền trắng</li>
  * </ul>
  *
- * <p>When jvips is available on the target VM, replace the internal processing
- * calls with VipsImage.thumbnail() and VipsImage.newFromBuffer() as documented
- * in the plan (Section 4.2).
+ * <p>khi jvips khả dụng trên máy ảo đích, hãy thay thế các lệnh gọi xử lý nội bộ
+ * bằng VipsImage.thumbnail() và VipsImage.newFromBuffer() như được ghi chú
+ * trong kế hoạch (Phần 4.2).
  */
 @Component
 @Slf4j
@@ -40,14 +40,14 @@ public class VipsProcessor {
     private final ImageProcessingConfig config;
 
     /**
-     * Process image bytes into thumbnail + preview.
+     * xử lý byte ảnh thành ảnh thu nhỏ + ảnh xem trước.
      *
-     * @param inputBytes  raw image data (JPEG/PNG/WebP)
-     * @param options     processing options (width, quality, strip)
-     * @return list of 2 VipsResults: [thumb, preview]
+     * @param inputBytes  dữ liệu ảnh thô (JPEG/PNG/WebP)
+     * @param options     các tuỳ chọn xử lý (chiều rộng, chất lượng, loại bỏ)
+     * @return danh sách gồm 2 VipsResult: [thumb, preview]
      */
     public List<VipsResult> processFromBytes(byte[] inputBytes, VipsOptions options) throws IOException {
-        log.info("Processing image from bytes: {} bytes, thumbnailWidth={}", inputBytes.length, options.getThumbnailWidth());
+        log.info("xu ly anh tu bytes: {} bytes, thumbnailWidth={}", inputBytes.length, options.getThumbnailWidth());
 
         BufferedImage original = ImageIO.read(new ByteArrayInputStream(inputBytes));
         if (original == null) {
@@ -56,7 +56,7 @@ public class VipsProcessor {
 
         List<VipsResult> results = new ArrayList<>(2);
 
-        // 1. Generate thumbnail
+        // 1. tạo ảnh thu nhỏ
         BufferedImage thumb = createThumbnail(original, options.getThumbnailWidth());
         thumb = flattenAlpha(thumb);
         byte[] thumbBytes = encodeToFormat(thumb, "png", options.getQuality());
@@ -66,7 +66,7 @@ public class VipsProcessor {
                 .contentType("image/webp")
                 .build());
 
-        // 2. Generate preview (full resolution, format conversion)
+        // 2. tạo ảnh xem trước (độ phân giải đầy đủ, chuyển đổi định dạng)
         BufferedImage preview = flattenAlpha(original);
         byte[] previewBytes = encodeToFormat(preview, "png", options.getQuality());
         results.add(VipsResult.builder()
@@ -75,19 +75,19 @@ public class VipsProcessor {
                 .contentType("image/webp")
                 .build());
 
-        log.info("Processing complete: thumb={}B, preview={}B", thumbBytes.length, previewBytes.length);
+        log.info("xu ly hoan tat: thumb={}B, preview={}B", thumbBytes.length, previewBytes.length);
         return results;
     }
 
     /**
-     * Process image from a local file path (for large images ≥ 50MB).
+     * xử lý ảnh từ một đường dẫn tệp cục bộ (cho ảnh lớn ≥ 50MB).
      *
-     * @param filePath  path to the temporary input file
-     * @param options   processing options
-     * @return list of 2 VipsResults: [thumb, preview]
+     * @param filePath  đường dẫn đến tệp đầu vào tạm thời
+     * @param options   các tuỳ chọn xử lý
+     * @return danh sách gồm 2 VipsResult: [thumb, preview]
      */
     public List<VipsResult> processFromFile(String filePath, VipsOptions options) throws IOException {
-        log.info("Processing image from file: {}, thumbnailWidth={}", filePath, options.getThumbnailWidth());
+        log.info("xu ly anh tu tep: {}, thumbnailWidth={}", filePath, options.getThumbnailWidth());
 
         BufferedImage original = ImageIO.read(new File(filePath));
         if (original == null) {
@@ -113,20 +113,20 @@ public class VipsProcessor {
                 .contentType("image/webp")
                 .build());
 
-        log.info("Processing complete: thumb={}B, preview={}B", thumbBytes.length, previewBytes.length);
+        log.info("xu ly hoan tat: thumb={}B, preview={}B", thumbBytes.length, previewBytes.length);
         return results;
     }
 
     /**
-     * Resize image to targetWidth maintaining aspect ratio.
-     * Only downsizes (SIZE.DOWN behavior) — if image is smaller, return as-is.
+     * thay đổi kích thước ảnh theo chiều rộng đích trong khi duy trì tỷ lệ khung hình.
+     * chỉ thu nhỏ (hành vi SIZE.DOWN) — nếu ảnh nhỏ hơn, trả về nguyên bản.
      */
     private BufferedImage createThumbnail(BufferedImage original, int targetWidth) {
         int origWidth = original.getWidth();
         int origHeight = original.getHeight();
 
         if (origWidth <= targetWidth) {
-            return original;  // Don't upscale
+            return original;  // không phóng to
         }
 
         double ratio = (double) targetWidth / origWidth;
@@ -144,8 +144,8 @@ public class VipsProcessor {
     }
 
     /**
-     * Flatten alpha channel to white background.
-     * Equivalent to VipsImage.flatten(bg=[255,255,255]).
+     * làm phẳng kênh alpha thành nền trắng.
+     * tương đương với VipsImage.flatten(bg=[255,255,255]).
      */
     private BufferedImage flattenAlpha(BufferedImage image) {
         if (!image.getColorModel().hasAlpha()) {
@@ -163,10 +163,10 @@ public class VipsProcessor {
     }
 
     /**
-     * Encode image to byte array.
-     * Note: Java's built-in ImageIO does not support WebP natively.
-     * Output is PNG as a portable fallback. When jvips is available,
-     * use VipsImage.writeToArray(WebP, Q=quality) instead.
+     * mã hoá ảnh thành mảng byte.
+     * lưu ý: ImageIO tích hợp sẵn của Java không hỗ trợ WebP một cách tự nhiên.
+     * đầu ra là PNG như một giải pháp thay thế linh hoạt. khi jvips khả dụng,
+     * hãy sử dụng VipsImage.writeToArray(WebP, Q=quality) để thay thế.
      */
     private byte[] encodeToFormat(BufferedImage image, String format, int quality) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

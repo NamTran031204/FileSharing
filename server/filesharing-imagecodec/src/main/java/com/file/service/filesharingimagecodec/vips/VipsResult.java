@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Result of a single image processing operation (thumbnail or preview).
+ * kết quả của một hoạt động xử lý ảnh đơn lẻ (ảnh thu nhỏ hoặc ảnh xem trước).
  */
 @Data
 @NoArgsConstructor

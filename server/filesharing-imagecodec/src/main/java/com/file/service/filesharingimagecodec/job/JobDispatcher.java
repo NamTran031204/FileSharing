@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Polls the JobQueue every 500ms and dispatches jobs to ImageJobExecutor
- * when a Bulkhead slot is available. Jobs run on Virtual Threads.
+ * thăm dò JobQueue mỗi 500ms và phân phối các job tới ImageJobExecutor
+ * khi có một khe Bulkhead trống. các job chạy trên Virtual Threads.
  */
 @Component
 @Slf4j
@@ -43,7 +43,7 @@ public class JobDispatcher {
         boolean permitted = bulkhead.tryAcquirePermission();
         if (!permitted) {
             jobQueue.putFirst(jobId);
-            log.debug("Bulkhead full, returning job {} to queue head", jobId);
+            log.debug("Bulkhead da day, tra job {} ve dau hang doi", jobId);
             return;
         }
 
@@ -51,10 +51,10 @@ public class JobDispatcher {
                 .name("image-proc-" + jobId)
                 .start(() -> {
                     try {
-                        log.info("Dispatching image job {} to executor", jobId);
+                        log.info("dang phan phoi job anh {} cho trinh thuc thi", jobId);
                         imageJobExecutor.execute(jobId);
                     } catch (Exception e) {
-                        log.error("Unhandled error executing image job {}: {}", jobId, e.getMessage(), e);
+                        log.error("loi khong duoc xu ly khi thuc thi job anh {}: {}", jobId, e.getMessage(), e);
                     } finally {
                         bulkhead.releasePermission();
                     }

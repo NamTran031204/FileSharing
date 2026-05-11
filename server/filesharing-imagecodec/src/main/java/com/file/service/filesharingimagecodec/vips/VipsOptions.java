@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Options for VipsProcessor operations.
+ * các tuỳ chọn cho các hoạt động của VipsProcessor.
  */
 @Data
 @NoArgsConstructor

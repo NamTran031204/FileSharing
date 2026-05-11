@@ -1,32 +1,32 @@
 package com.file.service.filesharingimagecodec.job.queue;
 
 /**
- * Abstraction over the internal job queue.
- * Phase 1: InMemoryJobQueue (LinkedBlockingDeque).
- * Phase 2: Can be swapped to RedisStreamJobQueue without touching JobDispatcher.
+ * sự trừu tượng hoá trên hàng đợi job nội bộ.
+ * Giai đoạn 1: InMemoryJobQueue (LinkedBlockingDeque).
+ * Giai đoạn 2: có thể được hoán đổi thành RedisStreamJobQueue mà không cần chạm vào JobDispatcher.
  */
 public interface JobQueue {
 
     /**
-     * Add a job to the queue.
-     * @return false if the queue is full (back-pressure signal).
+     * thêm một job vào hàng đợi.
+     * @return false nếu hàng đợi đầy (tín hiệu áp lực ngược).
      */
     boolean offer(String jobId);
 
     /**
-     * Retrieve and remove the next job (non-blocking, FIFO).
-     * @return jobId or null if queue is empty.
+     * lấy và xoá job tiếp theo (không chặn, FIFO).
+     * @return jobId hoặc null nếu hàng đợi trống.
      */
     String poll();
 
     /**
-     * Put a job back at the head of the queue.
-     * Used when Bulkhead is full and the job cannot be processed yet.
+     * đưa một job trở lại đầu hàng đợi.
+     * được sử dụng khi Bulkhead đầy và job chưa thể được xử lý.
      */
     void putFirst(String jobId);
 
     /**
-     * Current number of jobs in the queue. Used for metrics.
+     * số lượng job hiện tại trong hàng đợi. được sử dụng cho các số liệu.
      */
     int size();
 }

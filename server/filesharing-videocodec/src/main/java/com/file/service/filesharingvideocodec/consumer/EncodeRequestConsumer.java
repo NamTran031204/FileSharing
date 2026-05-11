@@ -11,9 +11,9 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 /**
- * Kafka consumer for video encoding requests.
- * Receives JSON message, persists job to MongoDB, enqueues for processing.
- * Only commits offset after successful persist + enqueue.
+ * consumer Kafka cho các yêu cầu mã hoá video.
+ * nhận thông báo JSON, lưu trữ job vào MongoDB, đưa vào hàng đợi để xử lý.
+ * chỉ commit offset sau khi lưu trữ + đưa vào hàng đợi thành công.
  */
 @Component
 @Slf4j
@@ -30,43 +30,43 @@ public class EncodeRequestConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void onMessage(String message, Acknowledgment acknowledgment) {
-        log.info("Received encode request from Kafka: {}",
+        log.info("da nhan yeu cau ma hoa tu Kafka: {}",
                 message.length() > 100 ? message.substring(0, 100) + "..." : message);
 
         try {
-            // Deserialize JSON message
+            // giải mã thông báo JSON
             EncodeRequestMessage request = objectMapper.readValue(message, EncodeRequestMessage.class);
 
             if (request.getJobId() == null || request.getJobId().isBlank()) {
-                log.warn("Received message with null/empty jobId, skipping");
+                log.warn("da nhan thong bao co jobId null/trong, bo qua");
                 acknowledgment.acknowledge();
                 return;
             }
 
-            // Idempotency check + persist
+            // kiểm tra tính luỹ đẳng + lưu trữ
             boolean isNew = jobService.createJobIfAbsent(request);
             if (!isNew) {
-                // Job already exists — commit offset and skip
-                log.info("Duplicate job {}, acknowledging and skipping", request.getJobId());
+                // job đã tồn tại — commit offset và bỏ qua
+                log.info("job trung lap {}, xac nhan va bo qua", request.getJobId());
                 acknowledgment.acknowledge();
                 return;
             }
 
-            // Enqueue for processing
+            // đưa vào hàng đợi để xử lý
             boolean enqueued = jobQueue.offer(request.getJobId());
             if (!enqueued) {
-                // Queue full — do NOT commit offset → Kafka back-pressure
-                log.warn("JobQueue full, NOT acknowledging message for job {}", request.getJobId());
+                // hàng đợi đầy — KHÔNG commit offset → áp lực ngược Kafka
+                log.warn("JobQueue da day, khong xac nhan thong bao cho job {}", request.getJobId());
                 return;
             }
 
-            // All good — commit offset
+            // tất cả đều ổn — commit offset
             acknowledgment.acknowledge();
-            log.info("Job {} persisted and enqueued successfully", request.getJobId());
+            log.info("job {} duoc luu tru va dua vao hang doi thanh cong", request.getJobId());
 
         } catch (Exception e) {
-            log.error("Failed to process encode request: {}", e.getMessage(), e);
-            // Do NOT acknowledge — let Kafka redeliver
+            log.error("khong the xu ly yeu cau ma hoa: {}", e.getMessage(), e);
+            // KHÔNG xác nhận — để Kafka gửi lại
         }
     }
 }

@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builds the FFmpeg command line for HLS encoding.
- * Adapts flags based on whether the input is an HTTP URL or local file.
+ * xây dựng dòng lệnh FFmpeg để mã hoá HLS.
+ * điều chỉnh các cờ dựa trên việc đầu vào là URL HTTP hay tệp cục bộ.
  */
 @Component
 @Slf4j
@@ -21,11 +21,11 @@ public class FfmpegCommandBuilder {
     private final VideoEncodingConfig encodingConfig;
 
     /**
-     * Build the complete FFmpeg command for HLS encoding.
+     * xây dựng lệnh FFmpeg hoàn chỉnh để mã hoá HLS.
      *
-     * @param inputPath   Pre-signed URL (production) or local file path (test)
-     * @param outputDir   Directory where .m3u8 and .ts files will be written
-     * @return list of command arguments for ProcessBuilder
+     * @param inputPath   URL presigned (production) hoặc đường dẫn tệp cục bộ (test)
+     * @param outputDir   thư mục nơi các tệp .m3u8 và .ts sẽ được ghi
+     * @return danh sách các đối số dòng lệnh cho ProcessBuilder
      */
     public List<String> buildCommand(String inputPath, String outputDir) {
         VideoEncodingConfig.FfmpegConfig ffmpeg = encodingConfig.getFfmpeg();
@@ -34,10 +34,10 @@ public class FfmpegCommandBuilder {
         List<String> cmd = new ArrayList<>();
         cmd.add(ffmpeg.getPath());
 
-        // Overwrite output without asking
+        // ghi đè đầu ra mà không hỏi
         cmd.add("-y");
 
-        // Reconnect flags — only for HTTP URLs (production mode)
+        // các cờ kết nối lại — chỉ dành cho các URL HTTP (chế độ production)
         if (inputPath.startsWith("http://") || inputPath.startsWith("https://")) {
             cmd.add("-reconnect");
             cmd.add("1");
@@ -49,58 +49,58 @@ public class FfmpegCommandBuilder {
             cmd.add("5");
         }
 
-        // Input
+        // đầu vào
         cmd.add("-i");
         cmd.add(inputPath);
 
-        // Video codec
+        // video codec
         cmd.add("-c:v");
         cmd.add("libx264");
 
-        // Preset
+        // cài đặt trước (preset)
         cmd.add("-preset");
         cmd.add(ffmpeg.getPreset());
 
-        // CRF (constant rate factor)
+        // CRF (hệ số tỷ lệ không đổi)
         cmd.add("-crf");
         cmd.add(String.valueOf(ffmpeg.getCrf()));
 
-        // Threads (placed after input = limits encoder)
+        // các luồng (được đặt sau đầu vào = giới hạn bộ mã hoá)
         cmd.add("-threads");
         cmd.add(String.valueOf(ffmpeg.getThreadsPerProcess()));
 
-        // Audio codec
+        // audio codec
         cmd.add("-c:a");
         cmd.add("aac");
 
-        // Audio bitrate
+        // tốc độ bit âm thanh (audio bitrate)
         cmd.add("-b:a");
         cmd.add(segment.getAudioBitrate());
 
-        // HLS output format
+        // định dạng đầu ra HLS
         cmd.add("-f");
         cmd.add("hls");
 
-        // Segment duration
+        // thời lượng phân đoạn
         cmd.add("-hls_time");
         cmd.add(String.valueOf(segment.getDuration()));
 
-        // VOD playlist type (adds #EXT-X-ENDLIST)
+        // loại playlist VOD (thêm #EXT-X-ENDLIST)
         cmd.add("-hls_playlist_type");
         cmd.add("vod");
 
-        // Keep all segments in playlist
+        // giữ tất cả các phân đoạn trong playlist
         cmd.add("-hls_list_size");
         cmd.add("0");
 
-        // Segment filename pattern
+        // mẫu tên tệp phân đoạn
         cmd.add("-hls_segment_filename");
         cmd.add(outputDir + File.separator + "seg_%04d.ts");
 
-        // Output playlist
+        // playlist đầu ra
         cmd.add(outputDir + File.separator + "index.m3u8");
 
-        log.info("Built FFmpeg command: {}", String.join(" ", cmd));
+        log.info("da xay dung lenh FFmpeg: {}", String.join(" ", cmd));
         return cmd;
     }
 }

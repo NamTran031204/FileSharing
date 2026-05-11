@@ -18,12 +18,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Core image processing executor. Manages the full lifecycle:
- * Download → VipsProcessor → Upload → Cleanup.
+ * trình thực thi xử lý ảnh cốt lõi. quản lý toàn bộ vòng đời:
+ * tải xuống → VipsProcessor → tải lên → dọn dẹp.
  *
- * Supports two modes controlled by image.processing.is-test:
- * - Production: downloads from MinIO, uploads results to MinIO
- * - Test: uses hardcoded local image, skips MinIO download/upload
+ * hỗ trợ hai chế độ được điều khiển bởi image.processing.is-test:
+ * - Production: tải xuống từ MinIO, tải kết quả lên MinIO
+ * - Test: sử dụng ảnh cục bộ được mã hoá cứng, bỏ qua tải xuống/tải lên MinIO
  */
 @Component
 @Slf4j
@@ -42,8 +42,8 @@ public class ImageJobExecutor {
     private final TempFileManager tempFileManager;
 
     /**
-     * Execute the full image processing pipeline for a given jobId.
-     * This method runs on a Virtual Thread dispatched by JobDispatcher.
+     * execute toàn bộ quy trình  cho một jobId.
+     * method chạy trên một Virtual Thread do JobDispatcher phân phối.
      */
     public void execute(String jobId) {
         boolean isTest = config.isTest();
@@ -65,17 +65,17 @@ public class ImageJobExecutor {
             Throwable cause = unwrapCause(ex);
 
             if (cause instanceof TimeoutException) {
-                log.error("Job {} timed out after {}s", jobId, timeoutSeconds);
+                log.error("job {} da het thoi gian cho sau {}s", jobId, timeoutSeconds);
                 jobService.markFailed(jobId, "Processing timed out after " + timeoutSeconds + "s");
             } else if (isCorruptInput(cause)) {
-                log.error("Job {} failed — corrupt input: {}", jobId, cause.getMessage());
+                log.error("job {} that bai — dau vao bi hong: {}", jobId, cause.getMessage());
                 jobService.markFailedPermanently(jobId, cause.getMessage());
             } else {
-                log.error("Job {} failed: {}", jobId, cause.getMessage(), cause);
+                log.error("job {} that bai: {}", jobId, cause.getMessage(), cause);
                 jobService.markFailed(jobId, cause.getMessage());
             }
 
-            // Cleanup temp file on failure (production only)
+            // dọn dẹp tệp tạm thời khi thất bại (chỉ dành cho production)
             if (!isTest) {
                 try { tempFileManager.deleteJobDir(jobId); } catch (Exception ignored) {}
             }
@@ -83,17 +83,17 @@ public class ImageJobExecutor {
     }
 
     private List<VipsResult> doProcess(String jobId, boolean isTest) throws Exception {
-        // 1. Mark job as PROCESSING
+        // 1. đánh dấu job là PROCESSING
         jobService.markRunning(jobId);
 
-        // 2. Get job details for processing options
+        // 2. lấy chi tiết job cho các tuỳ chọn xử lý
         ProcessingJobEntity job = jobService.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
 
-        int thumbnailWidth = 200;  // Default
+        int thumbnailWidth = 200;  // mặc định
         int quality = config.getOutput().getWebpQuality();
 
-        // Extract from job config if available
+        // trích xuất từ cấu hình job nếu có
         if (job.getConfig() != null) {
             if (job.getConfig().getMaxThumbnails() != null && job.getConfig().getMaxThumbnails() > 0) {
                 thumbnailWidth = job.getConfig().getMaxThumbnails();
@@ -109,13 +109,11 @@ public class ImageJobExecutor {
         List<VipsResult> results;
 
         if (isTest) {
-            // TEST MODE: process from hardcoded local file
-            log.info("[TEST] Job {}: processing from {}", jobId, TEST_INPUT_PATH);
+            log.info("[test] job {}: xu ly tu {}", jobId, TEST_INPUT_PATH);
             jobService.updateProgress(jobId, 10, "DOWNLOADING (test-local)");
             results = vipsProcessor.processFromFile(TEST_INPUT_PATH, options);
             jobService.updateProgress(jobId, 80, "PROCESSED");
 
-            // Save output locally instead of uploading
             String outputDir = TEST_OUTPUT_BASE + "/" + jobId;
             java.nio.file.Files.createDirectories(Path.of(outputDir));
             List<String> outputKeys = new ArrayList<>();
@@ -126,25 +124,24 @@ public class ImageJobExecutor {
             }
 
             jobService.markCompleted(jobId, outputKeys, outputDir);
-            log.info("[TEST] Job {} completed. Output at: {}", jobId, outputDir);
+            log.info("[test] job {} hoan tat. dau ra tai: {}", jobId, outputDir);
 
         } else {
-            // PRODUCTION MODE: download from MinIO, process, upload
             String inputKey = job.getAssetId();
-            log.info("[PROD] Job {}: inputKey={}", jobId, inputKey);
+            log.info("[prod] job {}: inputKey={}", jobId, inputKey);
             jobService.updateProgress(jobId, 5, "DOWNLOADING");
 
             boolean isLarge = storageClient.isLargeImage(inputKey);
 
             if (isLarge) {
-                // Large image: download to temp file
+                // ảnh lớn: tải xuống tệp tạm thời
                 String ext = extractExtension(inputKey);
                 Path tempPath = Path.of(tempFileManager.createJobDir(jobId), "input." + ext);
                 storageClient.downloadToFile(inputKey, tempPath);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from file)");
                 results = vipsProcessor.processFromFile(tempPath.toString(), options);
             } else {
-                // Small image: download to byte[]
+                // ảnh nhỏ: tải xuống byte[]
                 byte[] inputBytes = storageClient.downloadToBytes(inputKey);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from memory)");
                 results = vipsProcessor.processFromBytes(inputBytes, options);
@@ -152,7 +149,7 @@ public class ImageJobExecutor {
 
             jobService.updateProgress(jobId, 80, "UPLOADING");
 
-            // Upload results in parallel
+            // tải lên kết quả song song
             String outputPrefix = "processed/" + jobId;
             List<MinioStorageClient.UploadItem> uploadItems = results.stream()
                     .map(r -> new MinioStorageClient.UploadItem(r.getFileName(), r.getData(), r.getContentType()))
@@ -164,9 +161,9 @@ public class ImageJobExecutor {
                     .toList();
 
             jobService.markCompleted(jobId, outputKeys, outputPrefix + "/thumb.webp");
-            log.info("[PROD] Job {} completed. Output prefix: {}", jobId, outputPrefix);
+            log.info("[prod] job {} hoan tat. tien to dau ra: {}", jobId, outputPrefix);
 
-            // Cleanup temp dir if used
+            // dọn dẹp temp dir
             tempFileManager.deleteJobDir(jobId);
         }
 
