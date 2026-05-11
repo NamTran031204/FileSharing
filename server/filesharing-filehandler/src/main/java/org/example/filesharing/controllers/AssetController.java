@@ -53,7 +53,7 @@ public class AssetController {
 	}
 
 	@PostMapping("/version/create-new")
-	public CommonResponse<VersionCreateResponseDto> createVersion(@RequestBody VersionCreateRequestDto request) {
+	public CommonResponse<AssetCreateResponseDto> createVersion(@RequestBody AssetCreateRequestDto request) {
 		return CommonResponse.success(assetService.createVersion(request));
 	}
 

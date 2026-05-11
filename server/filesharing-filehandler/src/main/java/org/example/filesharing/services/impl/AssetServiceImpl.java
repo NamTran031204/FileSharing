@@ -10,11 +10,7 @@ import org.example.filesharing.entities.models.FolderPermission;
 import org.example.filesharing.entities.models.FolderStats;
 import org.example.filesharing.entities.models.ProjectCollaborator;
 import org.example.filesharing.entities.models.ProjectStats;
-import org.example.filesharing.entities.models.core.AssetEntity;
-import org.example.filesharing.entities.models.core.FolderEntity;
-import org.example.filesharing.entities.models.core.MetadataEntity;
-import org.example.filesharing.entities.models.core.ProjectEntity;
-import org.example.filesharing.entities.models.core.UserEntity;
+import org.example.filesharing.entities.models.core.*;
 import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.*;
 import org.example.filesharing.enums.auth.UserGrantedRole;
@@ -79,15 +75,18 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         String fileName = requireNormalized(request.getFileName(), "fileName is required");
-        String assetName = StringUtils.isNotNullOrBlank(request.getAssetName())
-                ? request.getAssetName().trim()
-                : fileName;
+        Optional<AssetEntity> asset = folderId != null
+                ? assetRepo.findByAssetNameAndFolderIdAndProjectIdAndIsActiveTrue(fileName, folderId, projectId)
+                : assetRepo.findByAssetNameAndProjectIdAndIsActiveTrue(fileName, projectId);
+        if (asset.isPresent()) {
+            return createNewVersion(request, asset.get());
+        }
 
         String currentUserId = auditService.getCurrentUserId();
         String currentUserEmail = auditService.getCurrentUserEmail();
 
-        AssetEntity asset = AssetEntity.builder()
-                .assetName(assetName)
+        AssetEntity newAsset = AssetEntity.builder()
+                .assetName(fileName)
                 .description(trimToNull(request.getDescription()))
                 .projectId(projectId)
                 .folderId(folderId)
@@ -97,8 +96,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .assetStatus(AssetStatus.DRAFT)
                 .build();
 
-        buildAudit(asset, true);
-        AssetEntity savedAsset = assetRepo.save(asset);
+        buildAudit(newAsset, true);
+        AssetEntity savedAsset = assetRepo.save(newAsset);
 
         String objectName = generateObjectName(fileName);
         InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
@@ -310,12 +309,16 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
     @Override
     @Transactional
-    public VersionCreateResponseDto createVersion(VersionCreateRequestDto request) {
+    public AssetCreateResponseDto createVersion(AssetCreateRequestDto request) {
         validateCreateVersionRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
         ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        return createNewVersion(request, asset);
 
+    }
+
+    AssetCreateResponseDto createNewVersion(AssetCreateRequestDto request, AssetEntity asset) {
         MediaType mediaType = request.getMediaType();
         MetadataEntity firstVersion = metadataRepo.findFirstByAssetIdOrderByVersionNumberAsc(asset.getAssetId())
                 .orElse(null);
@@ -345,8 +348,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
         writeVersionAuditLog(asset.getAssetId(), version.getFileId(), AuditAction.UPLOAD_NEW_VERSION);
 
-        return VersionCreateResponseDto.builder()
+        return AssetCreateResponseDto.builder()
                 .version(version)
+                .asset(asset)
                 .upload(upload)
                 .build();
     }
@@ -519,7 +523,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
     }
 
-    private void validateCreateVersionRequest(VersionCreateRequestDto request) {
+    private void validateCreateVersionRequest(AssetCreateRequestDto request) {
         if (request == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
         }
@@ -583,40 +587,6 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .assetId(assetId)
                 .versionNumber(versionNumber)
                 .mediaType(request.getMediaType())
-                .isActive(true)
-                .isTrash(false)
-                .build();
-
-        if (request.getTimeToLive() == null) {
-            metadata.setTimeToLive(Integer.MAX_VALUE);
-        } else {
-            metadata.setTimeToLive(request.getTimeToLive());
-        }
-
-        metadata.setShareToken(passwordEncoder.encode(UUID.randomUUID().toString()));
-        return metadata;
-    }
-
-    private MetadataEntity buildMetadataVersion(VersionCreateRequestDto request, String assetId, int versionNumber, String objectName, String uploadId) {
-        String currentUserId = auditService.getCurrentUserId();
-        String currentUserEmail = auditService.getCurrentUserEmail();
-
-        MetadataEntity metadata = MetadataEntity.builder()
-                .fileName(request.getFileName())
-                .downloadFileName(request.getFileName())
-                .objectName(objectName)
-                .mimeType(request.getMimeType())
-                .fileSize(request.getFileSize())
-                .compressionAlgo(request.getCompressionAlgo())
-                .ownerId(currentUserId)
-                .ownerEmail(currentUserEmail)
-                .uploadId(uploadId)
-                .status(UploadStatus.UPLOADING)
-                .processingStatus(defaultProcessingStatus(request.getMediaType()))
-                .assetId(assetId)
-                .versionNumber(versionNumber)
-                .mediaType(request.getMediaType())
-                .changeNote(trimToNull(request.getChangeNote()))
                 .isActive(true)
                 .isTrash(false)
                 .build();

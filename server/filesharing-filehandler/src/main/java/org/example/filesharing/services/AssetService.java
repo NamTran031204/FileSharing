@@ -19,7 +19,7 @@ public interface AssetService {
 
     void deleteAsset(String assetId);
 
-    VersionCreateResponseDto createVersion(VersionCreateRequestDto request);
+    AssetCreateResponseDto createVersion(AssetCreateRequestDto request);
 
     MetadataEntity updateVersion(VersionUpdateRequestDto request);
 
