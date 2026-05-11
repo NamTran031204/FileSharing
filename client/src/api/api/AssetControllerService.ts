@@ -122,12 +122,12 @@ export class AssetControllerService {
    *
    */
   static createNew(
-    params: {
-      /** requestBody */
-      body?: VersionCreateRequestDto;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseVersionCreateResponseDto> {
+      params: {
+          /** requestBody */
+          body?: AssetCreateRequestDto;
+      } = {} as any,
+      options: IRequestOptions = {}
+  ): Promise<CommonResponseAssetCreateResponseDto> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/asset/version/create-new';
 
