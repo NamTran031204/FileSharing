@@ -42,9 +42,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     public AnnotationsEntity createNewAnnotation(AnnotationsCreateUpdateDTO dto) {
         validateCreatePayload(dto);
 
-        String currentUserId = auditService.getCurrentUserId();
-        String currentUserEmail = auditService.getCurrentUserEmail();
-        Instant now = Instant.now();
+        // todo: check quyền tạo annotation
 
         AnnotationType annotationType = dto.getAnnotationType();
         AnnotationTimeCode normalizedTimeCode = normalizeTimeCode(dto.getTimeCode());
@@ -63,8 +61,6 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 .region(annotationType == AnnotationType.TIMECODE ? null : normalizedRegion)
                 .frameNumber(annotationType == AnnotationType.FRAME_REGION ? frameNumber : null)
                 .status(status)
-                .resolvedAt(status == AnnotationStatus.RESOLVED ? now : null)
-                .resolvedBy(status == AnnotationStatus.RESOLVED ? currentUserId : null)
                 .threadId(trimToNull(dto.getThreadId()))
                 .build();
 

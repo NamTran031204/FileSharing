@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.filesharing.enums.AssetStatus;
 import org.example.filesharing.enums.MediaType;
 
 @Data
@@ -13,7 +14,6 @@ import org.example.filesharing.enums.MediaType;
 public class AssetCreateRequestDto {
     private String projectId;
     private String folderId;
-    private String assetName;
     private String description;
 
     private String fileName;
@@ -22,4 +22,9 @@ public class AssetCreateRequestDto {
     private MediaType mediaType;
     private String compressionAlgo;
     private Integer timeToLive;
+
+    // danh cho api upload new version
+    private String assetId;
+    private String changeNote;
+    private AssetStatus assetStatus;
 }

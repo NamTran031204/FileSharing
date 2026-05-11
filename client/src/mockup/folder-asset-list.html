@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Folder and Asset Library</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c8c5d2",
+                        "on-tertiary-fixed-variant": "#433e83",
+                        "surface-bright": "#fbf8ff",
+                        "background": "#fbf8ff",
+                        "secondary-fixed": "#e3dfff",
+                        "on-error-container": "#93000a",
+                        "outline": "#777681",
+                        "on-secondary-fixed": "#150d56",
+                        "on-secondary-fixed-variant": "#423e83",
+                        "on-primary-fixed": "#130e56",
+                        "surface-tint": "#58579c",
+                        "primary-fixed-dim": "#c2c1ff",
+                        "inverse-surface": "#242969",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#403f83",
+                        "on-surface": "#0d1154",
+                        "inverse-primary": "#c2c1ff",
+                        "surface-dim": "#d6d7ff",
+                        "surface-container-high": "#e7e6ff",
+                        "on-tertiary-fixed": "#170d56",
+                        "primary-fixed": "#e2dfff",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#535297",
+                        "tertiary-container": "#565198",
+                        "secondary-container": "#b5b1fe",
+                        "surface-container-low": "#f4f2ff",
+                        "on-tertiary-container": "#d1ccff",
+                        "on-secondary-container": "#444085",
+                        "on-primary-container": "#ceccff",
+                        "tertiary-fixed-dim": "#c5c0ff",
+                        "secondary-fixed-dim": "#c4c0ff",
+                        "on-surface-variant": "#474650",
+                        "surface-container": "#eeecff",
+                        "primary": "#3b3a7e",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e0e0ff",
+                        "on-background": "#0d1154",
+                        "surface": "#fbf8ff",
+                        "tertiary": "#3f397e",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f1efff",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e0e0ff",
+                        "secondary": "#5a569c",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#e4dfff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": [
+                            "Inter"
+                        ],
+                        "display": [
+                            "Inter"
+                        ],
+                        "body": [
+                            "Inter"
+                        ],
+                        "label": [
+                            "Inter"
+                        ]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body antialiased min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="bg-[#f4f2ff] dark:bg-slate-950 text-[#3b3a7e] dark:text-[#b5b1fe] font-['Inter'] text-sm font-medium tracking-wide uppercase text-xl font-black text-[#3b3a7e] dark:text-white h-screen fixed left-0 top-0 w-20 hover:w-64 transition-all duration-500 ease-in-out z-40 no-border bg-[#f4f2ff] dark:bg-slate-900 shadow-none transition-all duration-500 ease-in-out flex flex-col pt-20 pb-8 px-4 hidden md:flex overflow-hidden group">
+    <div class="mb-10 pl-2">
+        <span class="text-xl font-black text-[#3b3a7e] dark:text-white truncate block opacity-0 group-hover:opacity-100 transition-opacity duration-300">Assets</span>
+        <span class="text-[10px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity duration-300">Creative Hub</span>
+    </div>
+    <nav class="flex-1 space-y-2">
+        <a class="flex items-center space-x-4 p-3 text-[#474650] dark:text-slate-400 hover:text-[#3b3a7e] hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-full group-hover:rounded-l-full transition-all duration-300" href="#">
+            <span class="material-symbols-outlined shrink-0" data-icon="home">home</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Home</span>
+        </a>
+        <a class="flex items-center space-x-4 p-3 text-[#474650] dark:text-slate-400 hover:text-[#3b3a7e] hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-full group-hover:rounded-l-full transition-all duration-300" href="#">
+            <span class="material-symbols-outlined shrink-0" data-icon="dashboard">dashboard</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
+        </a>
+        <a class="flex items-center space-x-4 p-3 bg-white dark:bg-slate-800 text-[#3b3a7e] rounded-full group-hover:rounded-l-full ml-0 group-hover:ml-2 transition-all duration-300 shadow-[0_4px_30px_rgba(59,58,126,0.04)]" href="#">
+            <span class="material-symbols-outlined shrink-0" data-icon="folder_special" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder_special</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Projects</span>
+        </a>
+        <a class="flex items-center space-x-4 p-3 text-[#474650] dark:text-slate-400 hover:text-[#3b3a7e] hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-full group-hover:rounded-l-full transition-all duration-300" href="#">
+            <span class="material-symbols-outlined shrink-0" data-icon="settings">settings</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Settings</span>
+        </a>
+        <a class="flex items-center space-x-4 p-3 text-[#474650] dark:text-slate-400 hover:text-[#3b3a7e] hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-full group-hover:rounded-l-full transition-all duration-300" href="#">
+            <span class="material-symbols-outlined shrink-0" data-icon="help">help</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Help</span>
+        </a>
+    </nav>
+</aside>
+<!-- TopNavBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl text-[#3b3a7e] dark:text-[#b5b1fe] font-['Inter'] antialiased tracking-tight text-2xl font-bold tracking-tighter text-[#0d1154] dark:text-white fixed top-0 w-full z-50 no-border shadow-sm shadow-indigo-100/20 shadow-[0_4px_30px_rgba(59,58,126,0.04)] flex justify-between items-center h-16 px-6 w-full max-w-full mx-auto md:pl-[5.5rem]">
+    <div class="flex items-center space-x-4">
+        <span class="text-2xl font-bold tracking-tighter text-[#0d1154] md:hidden">Assets</span>
+    </div>
+    <div class="flex-1 max-w-xl mx-4 relative hidden md:block">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+        </div>
+        <input class="block w-full pl-10 pr-3 py-2 border-none rounded-full leading-5 bg-surface-container-low text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-surface-bright sm:text-sm transition-all duration-300" placeholder="Search in Projects..." type="text"/>
+    </div>
+    <div class="flex items-center space-x-4">
+        <button class="p-2 text-[#474650] hover:bg-[#f4f2ff] rounded-full transition-all duration-300 focus:outline-none">
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        </button>
+        <div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high shrink-0 border border-outline-variant/15 cursor-pointer">
+            <img alt="Professional avatar" class="w-full h-full object-cover" data-alt="A highly detailed close up portrait of a young professional in a softly lit, modern light-mode studio environment. The color palette revolves around sophisticated indigos and deep blacks, contrasting with pristine white background elements. The mood is confident, calm, and approachable. Soft, ambient lighting creates gentle tonal shifts across the face, reinforcing a high-end editorial feel without harsh shadows or lines." src="https://lh3.googleusercontent.com/aida/ADBb0ujvmyah5hjpy9lLVZPQgzOkbQThC307PGr3MpnKvk1jLkhswVVzMfLx34nLDWmLSl3Ue7jBDGwrD-eb_9NavrJOJaqz69tyKVhk0AFYqzGZv30adrw67z9cD5AIwUa0tUACCSDzD6XdpA-3RWyxHzxf0eSInCeUO8eC6F_5j-OTkprUq_0w_vZsvobK2AHK78XQVjogqFLc90dCZdsbBnZbwQGO3_cxMbUBXyPrZeBzNqmbmIMPGMl6kIc"/>
+        </div>
+    </div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-16 md:ml-20 p-6 md:p-10 transition-all duration-500 ease-in-out">
+    <!-- Header Section: Breadcrumbs & Action Bar -->
+    <div class="max-w-7xl mx-auto mb-10">
+        <!-- Breadcrumbs -->
+        <nav aria-label="Breadcrumb" class="flex text-sm text-on-surface-variant font-medium mb-6">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center hover:text-primary transition-colors cursor-pointer">
+                    Home
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined text-lg mx-1" data-icon="chevron_right">chevron_right</span>
+                        <span class="hover:text-primary transition-colors cursor-pointer">Projects</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined text-lg mx-1" data-icon="chevron_right">chevron_right</span>
+                        <span class="hover:text-primary transition-colors cursor-pointer">Project Q3 Launch</span>
+                    </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined text-lg mx-1" data-icon="chevron_right">chevron_right</span>
+                        <span class="text-on-surface font-semibold tracking-tight">Campaign Assets</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+        <!-- Action Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <button class="flex items-center space-x-2 bg-gradient-to-br from-primary to-primary-container text-white px-5 py-2.5 rounded-full font-medium text-sm hover:opacity-90 transition-opacity shadow-[0_8px_32px_rgba(59,58,126,0.15)] focus:outline-none active:scale-[0.99]">
+                    <span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+                    <span>New</span>
+                </button>
+            </div>
+            <div class="flex items-center space-x-2 bg-surface-container-low p-1 rounded-lg">
+                <button aria-label="Grid View" class="p-2 rounded bg-surface-container-lowest shadow-sm text-primary transition-all focus:outline-none">
+                    <span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+                </button>
+                <button aria-label="List View" class="p-2 rounded text-on-surface-variant hover:text-primary transition-all focus:outline-none">
+                    <span class="material-symbols-outlined" data-icon="list">list</span>
+                </button>
+                <div class="w-px h-6 bg-outline-variant/30 mx-2"></div>
+                <button class="flex items-center space-x-1 p-2 rounded text-on-surface-variant hover:text-primary transition-all focus:outline-none text-sm font-medium">
+                    <span class="material-symbols-outlined text-lg" data-icon="sort">sort</span>
+                    <span>Last modified</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Content Area -->
+    <div class="max-w-7xl mx-auto space-y-12">
+        <!-- Folders Section -->
+        <section>
+            <h2 class="text-lg font-semibold text-on-surface mb-6 tracking-tight flex items-center">
+                Folders <span class="ml-3 text-sm font-normal text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">4</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Folder Card 1 -->
+                <div class="bg-surface-container-lowest rounded-xl p-5 flex items-center space-x-4 cursor-pointer group shadow-[0_4px_30px_rgba(59,58,126,0.03)] hover:shadow-[0_8px_40px_rgba(59,58,126,0.08)] transition-all duration-300 border border-outline-variant/10 hover:border-primary/20">
+                    <div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined" data-icon="folder" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Raw Footage</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">12 items</p>
+                    </div>
+                </div>
+                <!-- Folder Card 2 -->
+                <div class="bg-surface-container-lowest rounded-xl p-5 flex items-center space-x-4 cursor-pointer group shadow-[0_4px_30px_rgba(59,58,126,0.03)] hover:shadow-[0_8px_40px_rgba(59,58,126,0.08)] transition-all duration-300 border border-outline-variant/10 hover:border-primary/20">
+                    <div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined" data-icon="folder" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Approved Graphics</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">45 items</p>
+                    </div>
+                </div>
+                <!-- Folder Card 3 -->
+                <div class="bg-surface-container-lowest rounded-xl p-5 flex items-center space-x-4 cursor-pointer group shadow-[0_4px_30px_rgba(59,58,126,0.03)] hover:shadow-[0_8px_40px_rgba(59,58,126,0.08)] transition-all duration-300 border border-outline-variant/10 hover:border-primary/20">
+                    <div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined" data-icon="folder" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Audio Stems</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">8 items</p>
+                    </div>
+                </div>
+                <!-- Folder Card 4 -->
+                <div class="bg-surface-container-lowest rounded-xl p-5 flex items-center space-x-4 cursor-pointer group shadow-[0_4px_30px_rgba(59,58,126,0.03)] hover:shadow-[0_8px_40px_rgba(59,58,126,0.08)] transition-all duration-300 border border-outline-variant/10 hover:border-primary/20">
+                    <div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined" data-icon="folder" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Drafts</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">3 items</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Files Section -->
+        <section>
+            <h2 class="text-lg font-semibold text-on-surface mb-6 tracking-tight flex items-center">
+                Files <span class="ml-3 text-sm font-normal text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">6</span>
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <!-- Asset Card 1 -->
+                <div class="group relative bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_30px_rgba(59,58,126,0.04)] hover:shadow-[0_12px_48px_rgba(59,58,126,0.12)] transition-all duration-400 border border-outline-variant/10 cursor-pointer flex flex-col h-[280px]">
+                    <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button class="bg-white/90 backdrop-blur text-on-surface p-1.5 rounded-md shadow-sm hover:bg-surface-container-low focus:outline-none">
+                            <span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-48 w-full bg-surface-container-low relative overflow-hidden shrink-0">
+                        <img alt="Hero Image Asset" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by subtle indigo accents. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida/ADBb0uhNMwHP2Hpu9tJX8OuKtSW_YQAADx16-NH4bCZCInONY3Wtq54dFUkmtYg53rezBJAoD1e1slsr4eaWhTKK5GtLcYlvA7Lz0Ozi1ZZgZ_1vhBwjM7w5LAPyKCh7zl3-Oalez1j9GFQo_zDcBTODZZA4GCnvYuwQy89F57N_vIgC-eCpXR3d4hi_wJuAudr1ZylOBkumH9vAbTFHuT-rVg5oGt_tBnBK5PxQbBuJCAdUynkRtVNFMcf9jRm7FO0mhg58RPW4lfGosw"/>
+                        <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded tracking-wide uppercase">
+                            IMG
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-on-surface truncate group-hover:text-primary transition-colors">Hero_Banner_Final.png</h3>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-on-surface-variant">2.4 MB</span>
+                            <span class="bg-tertiary-container/10 text-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">v3.1</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Asset Card 2 -->
+                <div class="group relative bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_30px_rgba(59,58,126,0.04)] hover:shadow-[0_12px_48px_rgba(59,58,126,0.12)] transition-all duration-400 border border-outline-variant/10 cursor-pointer flex flex-col h-[280px]">
+                    <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button class="bg-white/90 backdrop-blur text-on-surface p-1.5 rounded-md shadow-sm hover:bg-surface-container-low focus:outline-none">
+                            <span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-48 w-full bg-surface-container-low relative overflow-hidden shrink-0">
+                        <img alt="Video Asset Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A cinematic, softly lit frame from a corporate branding video, showing a diverse team collaborating in an expansive, sunlit modern office. The image has an ethereal, high-end editorial feel with a toned color palette heavily relying on soft lavenders, indigos, and crisp whites. Depth is achieved through intentional blurring of the background, keeping the foreground subjects sharp and prominent." src="https://lh3.googleusercontent.com/aida/ADBb0ug8eA1erg6k67BxHk_98oRnpNEvfGvd10whOy1CRTZzdNryF3V3nHpXj_TLd9hDFEQennSMmxbC1LxToGse8vzpEZGuxaG5zpEs5RvPc-oiU7VhBxx6X7PcmQdXawMJGzoB-w5LeXPGpEl9KpgdZkBfW0mxVyHUEZ_Dns0T9Pbv6U5z8fi8Mxht9NMAGY9C6HhNBQDUKYqKYcx-pWMLc2mMULTGFzyHiBdTPM9neYiBfQENpI1waYn26g"/>
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-primary shadow-lg">
+                                <span class="material-symbols-outlined text-2xl" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded tracking-wide uppercase flex items-center space-x-1">
+                            <span class="material-symbols-outlined text-[12px]" data-icon="videocam">videocam</span>
+                            <span>0:45</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-on-surface truncate group-hover:text-primary transition-colors">Promo_Sequence_02.mp4</h3>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-on-surface-variant">145 MB</span>
+                            <span class="bg-tertiary-container/10 text-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">v1.0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Asset Card 3 -->
+                <div class="group relative bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_30px_rgba(59,58,126,0.04)] hover:shadow-[0_12px_48px_rgba(59,58,126,0.12)] transition-all duration-400 border border-outline-variant/10 cursor-pointer flex flex-col h-[280px]">
+                    <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button class="bg-white/90 backdrop-blur text-on-surface p-1.5 rounded-md shadow-sm hover:bg-surface-container-low focus:outline-none">
+                            <span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-48 w-full bg-surface-container-low relative overflow-hidden shrink-0 flex items-center justify-center">
+                        <div class="w-20 h-20 rounded-2xl bg-white shadow-[0_8px_32px_rgba(59,58,126,0.06)] flex items-center justify-center group-hover:-translate-y-2 transition-transform duration-500">
+                            <span class="material-symbols-outlined text-4xl text-secondary" data-icon="description">description</span>
+                        </div>
+                        <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded tracking-wide uppercase">
+                            DOC
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-on-surface truncate group-hover:text-primary transition-colors">Copy_Deck_Final.pdf</h3>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-on-surface-variant">1.2 MB</span>
+                            <span class="bg-tertiary-container/10 text-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">v4.2</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Asset Card 4 -->
+                <div class="group relative bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_30px_rgba(59,58,126,0.04)] hover:shadow-[0_12px_48px_rgba(59,58,126,0.12)] transition-all duration-400 border border-outline-variant/10 cursor-pointer flex flex-col h-[280px]">
+                    <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button class="bg-white/90 backdrop-blur text-on-surface p-1.5 rounded-md shadow-sm hover:bg-surface-container-low focus:outline-none">
+                            <span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-48 w-full bg-surface-container-low relative overflow-hidden shrink-0">
+                        <img alt="Graphic Asset" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A curated graphic design layout displaying an asymmetrical composition of typography and abstract shapes. The design uses expansive white space and tonal depth, relying on a sophisticated indigo and lavender color palette. It feels like a high-end editorial spread printed on fine paper, lit by natural, diffused light to enhance the subtle color shifts and elegant spacing." src="https://lh3.googleusercontent.com/aida/ADBb0uh8VWOWjDhCGx9M5ddEoYUT3GtlrVRfH_77MHswA6gB9toRgO-u-vWfNOivWUM_d1uf-tEqbcboS6xDTLwjIBOWFMDpMNB6ofkZO_qdXu7yrJlgfyqshp5WFZg1jztSx9a39Jbz1VNTWhZXZ8BKcYQD5yqCs-g-PsUeotkICfZeV8D3xm0TmMyYw3ln8ihpLuE6VUh-CVvMuX_j3S3ecxY2tPk49-4xRAVZDgu4IWimj7NLXz9RwdPKQTwZhz1-UsCdFaUaLt5RXg"/>
+                        <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded tracking-wide uppercase">
+                            SVG
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-on-surface truncate group-hover:text-primary transition-colors">Logo_Mark_Dark.svg</h3>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-on-surface-variant">45 KB</span>
+                            <span class="bg-tertiary-container/10 text-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">v1.1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+</body></html>

@@ -74,7 +74,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> videoEncodeProducerFactory() {
+    public ProducerFactory<String, Object> videoEncodeProducerFactory() {
         Map<String, Object> props = initConfig();
         props = specConfigProducer(props);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -82,8 +82,20 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, String> videoEncodeKafkaTemplate() {
+    public KafkaTemplate<String, Object> videoEncodeKafkaTemplate() {
         return new KafkaTemplate<>(videoEncodeProducerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, Object> imageProcessProducerFactory() {
+        Map<String, Object> props = initConfig();
+        props = specConfigProducer(props);
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<String, Object> imageProcessKafkaTemplate() {
+        return new KafkaTemplate<>(imageProcessProducerFactory());
     }
 
     public Map<String, Object> initConfig() {

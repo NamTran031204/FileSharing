@@ -271,6 +271,27 @@ export interface ProjectCollaborator {
 
 export interface ProjectEntity {
   /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
   projectId?: string;
 
   /**  */
@@ -310,16 +331,13 @@ export interface ProjectEntity {
   status?: ProjectStatus;
 
   /**  */
-  isActive?: boolean;
-
-  /**  */
   trashedAt?: Date;
 
   /**  */
-  createdAt?: Date;
+  shareToken?: string;
 
   /**  */
-  updatedAt?: Date;
+  shareExpiry?: Date;
 }
 
 export interface ProjectStats {
@@ -515,6 +533,27 @@ export interface CommonResponseNotificationEntity {
 
 export interface NotificationEntity {
   /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
   notificationId?: string;
 
   /**  */
@@ -543,12 +582,6 @@ export interface NotificationEntity {
 
   /**  */
   deliveryStatus?: NotificationDelivery;
-
-  /**  */
-  isActive?: boolean;
-
-  /**  */
-  createdAt?: Date;
 
   /**  */
   expiresAt?: Date;
@@ -622,6 +655,17 @@ export interface PageResultNotificationEntity {
   data?: NotificationEntity[];
 }
 
+export interface FolderPermission {
+  /**  */
+  userId?: string;
+
+  /**  */
+  permissions?: ObjectPermission[];
+
+  /**  */
+  grantedAt?: Date;
+}
+
 export interface FolderUpdateRequestDTO {
   /**  */
   folderId?: string;
@@ -637,6 +681,9 @@ export interface FolderUpdateRequestDTO {
 
   /**  */
   isActive?: boolean;
+
+  /**  */
+  permissions?: FolderPermission[];
 }
 
 export interface CommonResponseFolderEntity {
@@ -654,6 +701,27 @@ export interface CommonResponseFolderEntity {
 }
 
 export interface FolderEntity {
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
   /**  */
   folderId?: string;
 
@@ -682,27 +750,10 @@ export interface FolderEntity {
   stats?: FolderStats;
 
   /**  */
-  isActive?: boolean;
+  shareToken?: string;
 
   /**  */
-  createdBy?: string;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  updatedAt?: Date;
-}
-
-export interface FolderPermission {
-  /**  */
-  userId?: string;
-
-  /**  */
-  permissions?: ObjectPermission[];
-
-  /**  */
-  grantedAt?: Date;
+  shareExpiry?: Date;
 }
 
 export interface FolderStats {
@@ -764,6 +815,97 @@ export interface PageResultFolderEntity {
 
   /**  */
   data?: FolderEntity[];
+}
+
+export interface FolderTreeCreateRequestDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  baseFolderPath?: string;
+
+  /**  */
+  rootFolderName?: string;
+
+  /**  */
+  folders?: FolderTreeNodeDTO[];
+
+  /**  */
+  createdBy?: string;
+}
+
+export interface FolderTreeNodeDTO {
+  /**  */
+  clientFolderKey?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  relativeFolderPath?: string;
+
+  /**  */
+  parentRelativeFolderPath?: string;
+
+  /**  */
+  level?: number;
+}
+
+export interface CommonResponseFolderTreeCreateResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: FolderTreeCreateResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface FolderTreeCreateResponseDTO {
+  /**  */
+  folderUploadSessionId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  rootFolderId?: string;
+
+  /**  */
+  createdFolders?: FolderTreeMappingDTO[];
+
+  /**  */
+  existingFolders?: FolderTreeMappingDTO[];
+
+  /**  */
+  folderMappings?: FolderTreeMappingDTO[];
+}
+
+export interface FolderTreeMappingDTO {
+  /**  */
+  clientFolderKey?: string;
+
+  /**  */
+  relativeFolderPath?: string;
+
+  /**  */
+  folderPath?: string;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  status?: string;
 }
 
 export interface FolderCreateRequestDTO {
@@ -869,6 +1011,9 @@ export interface MetadataEntity {
 
   /**  */
   mediaType?: MediaType;
+
+  /**  */
+  changeNote?: string;
 
   /**  */
   mimeType?: string;
@@ -1192,6 +1337,27 @@ export interface CommentThreadCreateUpdateDTO {
 
 export interface CommentThreadEntity {
   /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
   threadId?: string;
 
   /**  */
@@ -1226,15 +1392,6 @@ export interface CommentThreadEntity {
 
   /**  */
   resolvedBy?: string;
-
-  /**  */
-  isActive?: boolean;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  updatedAt?: Date;
 }
 
 export interface CommonResponseCommentThreadEntity {
@@ -1316,6 +1473,353 @@ export interface PageResultCommentThreadEntity {
   data?: CommentThreadEntity[];
 }
 
+export interface MediaInfoDto {
+  /**  */
+  durationMs?: number;
+
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+
+  /**  */
+  frameRate?: number;
+
+  /**  */
+  codec?: string;
+
+  /**  */
+  colorSpace?: string;
+
+  /**  */
+  hasAlpha?: string;
+}
+
+export interface VersionUpdateRequestDto {
+  /**  */
+  versionId?: string;
+
+  /**  */
+  downloadFileName?: string;
+
+  /**  */
+  visibility?: ObjectVisibility;
+
+  /**  */
+  publicPermission?: ObjectPermission;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+
+  /**  */
+  processingError?: string;
+
+  /**  */
+  mediaInfo?: MediaInfoDto;
+}
+
+export interface PageRequestDtoVersionFilterRequestDto {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: VersionFilterRequestDto;
+}
+
+export interface VersionFilterRequestDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  includeTrash?: boolean;
+
+  /**  */
+  status?: UploadStatus;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+}
+
+export interface VersionCreateRequestDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  fileName?: string;
+
+  /**  */
+  mimeType?: string;
+
+  /**  */
+  fileSize?: number;
+
+  /**  */
+  mediaType?: MediaType;
+
+  /**  */
+  compressionAlgo?: string;
+
+  /**  */
+  timeToLive?: number;
+
+  /**  */
+  changeNote?: string;
+
+  /**  */
+  assetStatus?: AssetStatus;
+}
+
+export interface CommonResponseVersionCreateResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: VersionCreateResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface VersionCreateResponseDto {
+  /**  */
+  version?: MetadataEntity;
+
+  /**  */
+  upload?: InitiateUploadResponseDto;
+}
+
+export interface AssetUpdateRequestDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  shareExpiry?: Date;
+
+  /**  */
+  regenerateShareToken?: boolean;
+}
+
+export interface AssetEntity {
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  ownerId?: string;
+
+  /**  */
+  ownerEmail?: string;
+
+  /**  */
+  versionCount?: number;
+
+  /**  */
+  assetStatus?: AssetStatus;
+
+  /**  */
+  latestReviewSessionId?: string;
+
+  /**  */
+  shareToken?: string;
+
+  /**  */
+  shareExpiry?: Date;
+}
+
+export interface CommonResponseAssetEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AssetEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AssetMoveRequestDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  targetFolderId?: string;
+}
+
+export interface AssetFilterRequestDto {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  mediaType?: MediaType;
+
+  /**  */
+  assetStatus?: AssetStatus;
+
+  /**  */
+  ownerId?: string;
+
+  /**  */
+  keyword?: string;
+
+  /**  */
+  isActive?: boolean;
+}
+
+export interface PageRequestDtoAssetFilterRequestDto {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: AssetFilterRequestDto;
+}
+
+export interface AssetSummaryDto {
+  /**  */
+  asset?: AssetEntity;
+
+  /**  */
+  latestVersion?: MetadataEntity;
+}
+
+export interface CommonResponsePageResultAssetSummaryDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultAssetSummaryDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultAssetSummaryDto {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: AssetSummaryDto[];
+}
+
+export interface AssetCreateRequestDto {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  fileName?: string;
+
+  /**  */
+  mimeType?: string;
+
+  /**  */
+  fileSize?: number;
+
+  /**  */
+  mediaType?: MediaType;
+
+  /**  */
+  compressionAlgo?: string;
+
+  /**  */
+  timeToLive?: number;
+}
+
+export interface AssetCreateResponseDto {
+  /**  */
+  asset?: AssetEntity;
+
+  /**  */
+  version?: MetadataEntity;
+
+  /**  */
+  upload?: InitiateUploadResponseDto;
+}
+
+export interface CommonResponseAssetCreateResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AssetCreateResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export interface AnnotationPoint {
   /**  */
   x?: number;
@@ -1380,6 +1884,27 @@ export interface AnnotationsCreateUpdateDTO {
 
 export interface AnnotationsEntity {
   /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
   annotationId?: string;
 
   /**  */
@@ -1411,21 +1936,6 @@ export interface AnnotationsEntity {
 
   /**  */
   threadId?: string;
-
-  /**  */
-  createdBy?: string;
-
-  /**  */
-  createdByEmail?: string;
-
-  /**  */
-  isActive?: boolean;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  updatedAt?: Date;
 }
 
 export interface CommonResponseAnnotationsEntity {
@@ -1516,6 +2026,28 @@ export interface PageResultAnnotationsEntity {
   data?: AnnotationsEntity[];
 }
 
+export interface AssetDetailResponseDto {
+  /**  */
+  asset?: AssetEntity;
+
+  /**  */
+  latestVersion?: MetadataEntity;
+}
+
+export interface CommonResponseAssetDetailResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AssetDetailResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
   'ROLE_ADMIN' = 'ROLE_ADMIN',
@@ -1528,10 +2060,11 @@ export enum AuthProvider {
 }
 
 export enum GrantedPermission {
-  'VIEWER' = 'VIEWER',
-  'CONTRIBUTOR' = 'CONTRIBUTOR',
-  'COLLABORATOR' = 'COLLABORATOR',
-  'OWNER' = 'OWNER'
+  'OWNER' = 'OWNER',
+  'REVIEWER' = 'REVIEWER',
+  'PRODUCER' = 'PRODUCER',
+  'GUEST' = 'GUEST',
+  'VIEWER' = 'VIEWER'
 }
 
 export enum ProjectStatus {
@@ -1609,6 +2142,13 @@ export enum CommentAttachmentType {
 export enum ThreadStatus {
   'OPEN' = 'OPEN',
   'RESOLVED' = 'RESOLVED'
+}
+
+export enum AssetStatus {
+  'DRAFT' = 'DRAFT',
+  'IN_REVIEW' = 'IN_REVIEW',
+  'APPROVED' = 'APPROVED',
+  'REQUEST_CHANGES' = 'REQUEST_CHANGES'
 }
 
 export enum AnnotationStatus {

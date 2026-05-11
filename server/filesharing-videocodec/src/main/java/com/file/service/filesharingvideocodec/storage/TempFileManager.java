@@ -15,8 +15,8 @@ import java.time.Instant;
 import java.util.stream.Stream;
 
 /**
- * Manages temporary directories for FFmpeg output.
- * Creates per-job directories and handles cleanup (including a nightly fallback cron).
+ * quản lý các thư mục tạm thời cho đầu ra FFmpeg.
+ * tạo các thư mục cho từng job và xử lý việc dọn dẹp (bao gồm cả cron dự phòng hàng đêm).
  */
 @Component
 @Slf4j
@@ -31,18 +31,18 @@ public class TempFileManager {
     }
 
     /**
-     * Create a job-specific temp directory.
-     * @return absolute path to the created directory
+     * tạo một thư mục tạm thời riêng cho job.
+     * @return đường dẫn tuyệt đối đến thư mục đã tạo
      */
     public String createJobDir(String jobId) throws IOException {
         Path jobDir = Paths.get(baseDir, jobId);
         Files.createDirectories(jobDir);
-        log.info("Created temp directory: {}", jobDir);
+        log.info("da tao thu muc tam: {}", jobDir);
         return jobDir.toAbsolutePath().toString();
     }
 
     /**
-     * Delete a job's temp directory and all its contents.
+     * xoá thư mục tạm thời của một job và tất cả nội dung bên trong.
      */
     public void deleteJobDir(String jobId) {
         Path jobDir = Paths.get(baseDir, jobId);
@@ -51,15 +51,15 @@ public class TempFileManager {
         }
         try {
             deleteDirectoryRecursive(jobDir);
-            log.info("Deleted temp directory: {}", jobDir);
+            log.info("da xoa thu muc tam: {}", jobDir);
         } catch (IOException e) {
-            log.warn("Failed to delete temp directory {}: {}", jobDir, e.getMessage());
+            log.warn("khong the xoa thu muc tam {}: {}", jobDir, e.getMessage());
         }
     }
 
     /**
-     * Fallback cleanup cron: runs at 3 AM daily, removes temp dirs older than cleanupAgeHours.
-     * Catches orphaned directories from JVM crashes where finally blocks didn't execute.
+     * cron dọn dẹp dự phòng: chạy lúc 3 giờ sáng mỗi ngày, xoá các thư mục tạm cũ hơn cleanupAgeHours.
+     * xử lý các thư mục mồ côi từ các sự cố JVM khi khối finally không được thực thi.
      */
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanupStaleDirectories() {
@@ -69,7 +69,7 @@ public class TempFileManager {
         }
 
         Instant cutoff = Instant.now().minus(Duration.ofHours(cleanupAgeHours));
-        log.info("Running stale temp directory cleanup (cutoff: {})", cutoff);
+        log.info("dang chay don dep thu muc tam cu (gioi han: {})", cutoff);
 
         try (Stream<Path> dirs = Files.list(basePath)) {
             dirs.filter(Files::isDirectory)
@@ -78,14 +78,14 @@ public class TempFileManager {
                             Instant lastModified = Files.getLastModifiedTime(dir).toInstant();
                             if (lastModified.isBefore(cutoff)) {
                                 deleteDirectoryRecursive(dir);
-                                log.info("Cleaned up stale directory: {}", dir);
+                                log.info("da don dep thu muc cu: {}", dir);
                             }
                         } catch (IOException e) {
-                            log.warn("Failed to check/clean directory {}: {}", dir, e.getMessage());
+                            log.warn("khong the kiem tra/don dep thu muc {}: {}", dir, e.getMessage());
                         }
                     });
         } catch (IOException e) {
-            log.error("Failed to list temp directories for cleanup: {}", e.getMessage());
+            log.error("khong the liet ke cac thu muc tam de don dep: {}", e.getMessage());
         }
     }
 
@@ -96,7 +96,7 @@ public class TempFileManager {
                     try {
                         deleteDirectoryRecursive(entry);
                     } catch (IOException e) {
-                        log.warn("Failed to delete: {}", entry, e);
+                        log.warn("khong the xoa: {}", entry, e);
                     }
                 });
             }

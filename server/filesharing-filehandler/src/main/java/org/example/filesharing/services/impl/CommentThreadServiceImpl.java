@@ -49,6 +49,8 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
         UserEntity currentUser = auditService.getCurrentUser();
         Instant now = Instant.now();
 
+        // todo: check quyền trước khi comment
+
         CommentMessage rootComment = normalizeRootCommentForCreate(dto.getRootComment(), currentUser, now);
         List<CommentMessage> replies = normalizeReplies(dto.getReplies(), currentUser, now);
         ThreadStatus status = dto.getStatus() != null ? dto.getStatus() : ThreadStatus.OPEN;
@@ -74,6 +76,7 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
     @Override
     @Transactional
     public CommentThreadEntity updateCommentThreadDetail(CommentThreadCreateUpdateDTO dto) {
+        // todo: check xem user có phải owner của comment không
         validateUpdatePayload(dto);
 
         String threadId = dto.getThreadId().trim();
@@ -214,6 +217,7 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
     @Override
     @Transactional
     public String deleteCommentThread(String threadId) {
+        // todo: check comment owner or admin
         if (StringUtils.isNullOrBlank(threadId)) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "threadId is required");
         }

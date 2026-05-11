@@ -26,8 +26,8 @@ spring:
 
 minio:
   endpoint: http://localhost:9000
-  access-key: 20YG284ICBVC7BL4I4LA
-  secret-key: ySHIgqYkj1kvGexCa3kHsUAF+9FKUoQpM+vFZhzJ
+  access-key: CE28BNCAFTPVW8RZLQXC
+  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
   bucket-name: file-sharing
 
 video:

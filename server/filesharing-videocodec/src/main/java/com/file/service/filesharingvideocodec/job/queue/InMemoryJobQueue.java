@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
- * Phase 1 implementation: in-memory queue backed by LinkedBlockingDeque.
- * Supports putFirst() for returning jobs to the head when Bulkhead is full.
- * Data is lost on JVM crash — recovered via JobService.recoverRunningJobs().
+ * thực thi giai đoạn 1: hàng đợi trong bộ nhớ được hỗ trợ bởi LinkedBlockingDeque.
+ * hỗ trợ putFirst() để đưa các job trở lại đầu hàng khi Bulkhead đầy.
+ * dữ liệu bị mất khi JVM gặp sự cố — được khôi phục thông qua JobService.recoverRunningJobs().
  */
 @Component
 @Slf4j
@@ -20,14 +20,14 @@ public class InMemoryJobQueue implements JobQueue {
     public InMemoryJobQueue(VideoEncodingConfig config) {
         int capacity = config.getQueue().getMaxCapacity();
         this.deque = new LinkedBlockingDeque<>(capacity);
-        log.info("InMemoryJobQueue initialized with capacity: {}", capacity);
+        log.info("InMemoryJobQueue duoc khoi tao voi dung luong: {}", capacity);
     }
 
     @Override
     public boolean offer(String jobId) {
         boolean added = deque.offerLast(jobId);
         if (!added) {
-            log.warn("JobQueue is full. Cannot enqueue jobId: {}", jobId);
+            log.warn("JobQueue da day. khong the dua vao hang doi jobId: {}", jobId);
         }
         return added;
     }
@@ -43,7 +43,7 @@ public class InMemoryJobQueue implements JobQueue {
             deque.putFirst(jobId);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("Interrupted while putting job back to queue head: {}", jobId);
+            log.error("bi gian doan khi dua job tro lai dau hang doi: {}", jobId);
         }
     }
 

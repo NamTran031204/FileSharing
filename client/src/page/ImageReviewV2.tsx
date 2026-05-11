@@ -26,9 +26,10 @@ import {
     LeftOutlined,
     MessageOutlined,
 } from '@ant-design/icons';
-import {Button, Input, Slider} from 'antd';
+import { Button, Input, Slider } from 'antd';
+import { HexColorPicker } from 'react-colorful';
 import type {ReactNode} from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AppHeader from '../components/AppHeader';
 import AppSidebar from '../components/AppSidebar';
 import ImageReviewFeedbackItem, {type ImageReviewFeedback,} from '../components/ImageReviewFeedbackItem';
@@ -42,8 +43,9 @@ import { useMeasure } from 'react-use';
 
 const {TextArea} = Input;
 
-type MarkupMode = 'select' | 'draw' | 'text' | 'pan';
+type MarkupMode = 'select' | 'draw' | 'text';
 type ShapeTool = 'rectangle' | 'circle' | 'gesture';
+type ToolType = 'select' | 'circle' | 'rect' | 'pan' | 'rotate';
 
 interface Point {
     x: number;
@@ -52,7 +54,7 @@ interface Point {
 
 interface BaseShape {
     id: string;
-    type: ShapeTool;
+    type: 'circle' | 'rect';
     rotation?: number;
     stroke: string;
     strokeWidth: number;
@@ -66,14 +68,14 @@ interface CircleShape extends BaseShape {
 }
 
 interface RectShape extends BaseShape {
-    type: 'rectangle';
+    type: 'rect';
     x: number;
     y: number;
     width: number;
     height: number;
 }
 
-type Shape = CircleShape | RectShape; // gesture not fully implemented yet
+type Shape = CircleShape | RectShape;
 
 interface ImageReviewV2Props {
     campaignName?: string;
@@ -174,7 +176,8 @@ const ImageReviewV2 = ({
     const [activeMode, setActiveMode] = useState<MarkupMode>('select');
     const [activeShape, setActiveShape] = useState<ShapeTool>('rectangle');
     const [strokeSize, setStrokeSize] = useState<number>(4);
-    const [strokeColor] = useState(COLOR_PRIMARY);
+    const [strokeColor, setStrokeColor] = useState(COLOR_PRIMARY);
+    const [selectedTool, setSelectedTool] = useState<ToolType>('select');
 
     const [searchText, setSearchText] = useState('');
     const [commentDraft, setCommentDraft] = useState('');
@@ -192,7 +195,7 @@ const ImageReviewV2 = ({
     const [isDrawing, setIsDrawing] = useState(false);
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [currentPoint, setCurrentPoint] = useState<Point | null>(null);
-    const [zoomLevel, setZoomLevel] = useState<number>(100);
+    const [stageScale, setStageScale] = useState(1);
     const [stagePosition, setStagePosition] = useState<Point>({ x: 0, y: 0 });
 
     const [bgImage] = useImage(currentImage.url);
@@ -222,20 +225,38 @@ const ImageReviewV2 = ({
         [],
     );
 
-    // Initial fit to screen when image loads or container changes
+    useEffect(() => {
+        if (activeMode === 'select') {
+            setSelectedTool('select');
+            return;
+        }
+
+        if (activeMode === 'text') {
+            setSelectedTool('pan');
+            return;
+        }
+
+        if (activeMode === 'draw') {
+            if (activeShape === 'circle') {
+                setSelectedTool('circle');
+            } else if (activeShape === 'rectangle') {
+                setSelectedTool('rect');
+            } else {
+                setSelectedTool('rotate');
+            }
+        }
+    }, [activeMode, activeShape]);
+
     useEffect(() => {
         if (bgImage && containerWidth > 0 && containerHeight > 0) {
             const scaleX = containerWidth / bgImage.width;
             const scaleY = containerHeight / bgImage.height;
-            // Use 0.9 as padding
-            const newScale = Math.min(scaleX, scaleY) * 0.9;
+            const nextScale = Math.min(scaleX, scaleY) * 0.9;
 
-            setZoomLevel(Math.round(newScale * 100));
-
-            // Center the image
+            setStageScale(nextScale);
             setStagePosition({
-                x: (containerWidth - bgImage.width * newScale) / 2,
-                y: (containerHeight - bgImage.height * newScale) / 2
+                x: (containerWidth - bgImage.width * nextScale) / 2,
+                y: (containerHeight - bgImage.height * nextScale) / 2,
             });
         }
     }, [bgImage, containerWidth, containerHeight]);
@@ -261,14 +282,13 @@ const ImageReviewV2 = ({
         return transform.point(pointerPosition);
     };
 
-    // Handle Transformer
     useEffect(() => {
         const transformer = transformerRef.current;
         if (!transformer) {
             return;
         }
 
-        if (activeMode !== 'select' || !selectedShapeId) {
+        if (selectedTool !== 'rotate' || !selectedShapeId) {
             transformer.nodes([]);
             transformer.getLayer()?.batchDraw();
             return;
@@ -279,13 +299,12 @@ const ImageReviewV2 = ({
             transformer.nodes([node]);
             transformer.getLayer()?.batchDraw();
         }
-    }, [activeMode, selectedShapeId, shapes]);
+    }, [selectedTool, selectedShapeId, shapes]);
 
     const handleStageMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-        if (activeMode !== 'draw') {
-            // Click on empty area deselects
+        if (selectedTool !== 'circle' && selectedTool !== 'rect') {
             if (e.target === e.target.getStage() || e.target.constructor.name === 'Image') {
-               setSelectedShapeId(null);
+                setSelectedShapeId(null);
             }
             return;
         }
@@ -308,22 +327,41 @@ const ImageReviewV2 = ({
         if (startPoint && currentPoint) {
             let newShape: Shape | null = null;
 
-            if (activeShape === 'circle') {
+            if (selectedTool === 'circle') {
                 const { x, y, radius } = getCircleProps(startPoint, currentPoint);
                 if (radius > 2) {
-                    newShape = { id: generateId(), type: 'circle', x, y, radius, rotation: 0, stroke: strokeColor, strokeWidth: strokeSize };
+                    newShape = {
+                        id: generateId(),
+                        type: 'circle',
+                        x,
+                        y,
+                        radius,
+                        rotation: 0,
+                        stroke: strokeColor,
+                        strokeWidth: strokeSize,
+                    };
                 }
             }
 
-            if (activeShape === 'rectangle') {
+            if (selectedTool === 'rect') {
                 const { x, y, width, height } = getRectProps(startPoint, currentPoint);
                 if (width > 2 && height > 2) {
-                    newShape = { id: generateId(), type: 'rectangle', x, y, width, height, rotation: 0, stroke: strokeColor, strokeWidth: strokeSize };
+                    newShape = {
+                        id: generateId(),
+                        type: 'rect',
+                        x,
+                        y,
+                        width,
+                        height,
+                        rotation: 0,
+                        stroke: strokeColor,
+                        strokeWidth: strokeSize,
+                    };
                 }
             }
 
             if (newShape) {
-                setShapes((prev) => [...prev, newShape!]);
+                setShapes((prev) => [...prev, newShape]);
             }
         }
 
@@ -333,7 +371,7 @@ const ImageReviewV2 = ({
     };
 
     const handleStageMouseMove = (e: KonvaEventObject<MouseEvent>) => {
-        if (!isDrawing || activeMode !== 'draw') {
+        if (!isDrawing || (selectedTool !== 'circle' && selectedTool !== 'rect')) {
             return;
         }
 
@@ -358,7 +396,7 @@ const ImageReviewV2 = ({
             return;
         }
 
-        const oldScale = zoomLevel / 100;
+        const oldScale = stageScale;
         const scaleBy = 1.05;
         const direction = e.evt.deltaY > 0 ? -1 : 1;
         const nextScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
@@ -374,34 +412,59 @@ const ImageReviewV2 = ({
             y: pointerPosition.y - mousePointTo.y * clampedScale,
         };
 
-        setZoomLevel(Math.round(clampedScale * 100));
+        setStageScale(clampedScale);
+        setStagePosition(nextPosition);
+    };
+
+    const zoomBy = (delta: number) => {
+        if (containerWidth <= 0 || containerHeight <= 0) {
+            return;
+        }
+
+        const stage = stageRef.current;
+        const basePoint = stage?.getPointerPosition() ?? {
+            x: containerWidth / 2,
+            y: containerHeight / 2,
+        };
+        const oldScale = stageScale;
+        const nextScale = Math.min(5, Math.max(0.3, oldScale + delta));
+        const mousePointTo = {
+            x: (basePoint.x - stagePosition.x) / oldScale,
+            y: (basePoint.y - stagePosition.y) / oldScale,
+        };
+        const nextPosition = {
+            x: basePoint.x - mousePointTo.x * nextScale,
+            y: basePoint.y - mousePointTo.y * nextScale,
+        };
+
+        setStageScale(nextScale);
         setStagePosition(nextPosition);
     };
 
     const handleZoomIn = () => {
-        setZoomLevel((prev) => Math.min(prev + 10, 500));
+        zoomBy(0.1);
     };
 
     const handleZoomOut = () => {
-        setZoomLevel((prev) => Math.max(prev - 10, 10));
+        zoomBy(-0.1);
     };
 
     const handleFit = () => {
         if (bgImage && containerWidth > 0 && containerHeight > 0) {
             const scaleX = containerWidth / bgImage.width;
             const scaleY = containerHeight / bgImage.height;
-            const newScale = Math.min(scaleX, scaleY) * 0.9;
+            const nextScale = Math.min(scaleX, scaleY) * 0.9;
 
-            setZoomLevel(Math.round(newScale * 100));
+            setStageScale(nextScale);
             setStagePosition({
-                x: (containerWidth - bgImage.width * newScale) / 2,
-                y: (containerHeight - bgImage.height * newScale) / 2
+                x: (containerWidth - bgImage.width * nextScale) / 2,
+                y: (containerHeight - bgImage.height * nextScale) / 2,
             });
         } else {
-            setZoomLevel(100);
+            setStageScale(1);
             setStagePosition({ x: 0, y: 0 });
         }
-    }
+    };
 
     const handleDragEnd = useCallback((id: string, e: KonvaEventObject<DragEvent>) => {
         setShapes((prevShapes) =>
@@ -445,6 +508,25 @@ const ImageReviewV2 = ({
         }
     };
 
+    const handleExport = () => {
+        const payload = {
+            image: {
+                src: currentImage.url,
+                naturalWidth: bgImage?.naturalWidth ?? bgImage?.width ?? 0,
+                naturalHeight: bgImage?.naturalHeight ?? bgImage?.height ?? 0,
+            },
+            stage: {
+                width: containerWidth,
+                height: containerHeight,
+                scale: stageScale,
+                position: stagePosition,
+            },
+            shapes,
+        };
+
+        console.log('Image review payload:', payload);
+    };
+
     const goPrevImage = () => {
         setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : REVIEW_IMAGES.length - 1));
         setShapes([]); // clear shapes on image change
@@ -466,7 +548,7 @@ const ImageReviewV2 = ({
 
                 <div className="flex-1 h-full flex overflow-hidden">
                     <section className="flex-1 relative bg-background flex flex-col overflow-hidden">
-                        <div className="flex-1 relative p-8 flex items-center justify-center overflow-hidden">
+                        <div className="flex-1 relative p-8 flex overflow-hidden">
                             <div
                                 className="absolute left-6 top-6 grid grid-cols-2 gap-2 z-10 rounded-2xl bg-card p-2 shadow-sm border border-border">
                                 {WORKSPACE_ACTIONS.map((action) => (
@@ -507,9 +589,9 @@ const ImageReviewV2 = ({
 
                             <div
                                 ref={containerRef}
-                                className="relative w-full h-full shadow-2xl rounded-sm overflow-hidden bg-white/5"
+                                className="relative flex-1 overflow-hidden shadow-2xl rounded-sm bg-white/5"
                                 style={{
-                                     cursor: activeMode === 'select' ? 'default' : activeMode === 'draw' ? 'crosshair' : 'grab'
+                                     cursor: selectedTool === 'select' ? 'default' : selectedTool === 'pan' ? 'grab' : 'crosshair'
                                 }}
                             >
                                 {/* Only render Stage if we have valid dimensions */}
@@ -521,9 +603,9 @@ const ImageReviewV2 = ({
                                         onMouseDown={handleStageMouseDown}
                                         onMouseMove={handleStageMouseMove}
                                         onWheel={handleStageWheel}
-                                        scale={{ x: zoomLevel / 100, y: zoomLevel / 100 }}
+                                        scale={{ x: stageScale, y: stageScale }}
                                         position={stagePosition}
-                                        draggable={activeMode === 'pan'}
+                                        draggable={selectedTool === 'pan'}
                                         onDragEnd={() => {
                                             const stage = stageRef.current;
                                             if (stage) {
@@ -535,7 +617,7 @@ const ImageReviewV2 = ({
                                             {bgImage && <KonvaImage image={bgImage} x={0} y={0} />}
 
                                             {shapes.map((shape) => {
-                                                const isDraggable = activeMode === 'select';
+                                                const isDraggable = selectedTool === 'select';
 
                                                 if (shape.type === 'circle') {
                                                     return (
@@ -548,8 +630,8 @@ const ImageReviewV2 = ({
                                                             stroke={shape.stroke}
                                                             strokeWidth={shape.strokeWidth}
                                                             draggable={isDraggable}
-                                                            onClick={() => activeMode === 'select' && setSelectedShapeId(shape.id)}
-                                                            onTap={() => activeMode === 'select' && setSelectedShapeId(shape.id)}
+                                                            onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
+                                                            onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
                                                             ref={(node) => {
                                                                 shapeRefs.current[shape.id] = node;
                                                             }}
@@ -564,14 +646,14 @@ const ImageReviewV2 = ({
                                                         key={shape.id}
                                                         x={shape.x}
                                                         y={shape.y}
-                                                        width={(shape as RectShape).width}
-                                                        height={(shape as RectShape).height}
+                                                        width={shape.width}
+                                                        height={shape.height}
                                                         rotation={shape.rotation ?? 0}
                                                         stroke={shape.stroke}
                                                         strokeWidth={shape.strokeWidth}
                                                         draggable={isDraggable}
-                                                        onClick={() => activeMode === 'select' && setSelectedShapeId(shape.id)}
-                                                        onTap={() => activeMode === 'select' && setSelectedShapeId(shape.id)}
+                                                        onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
+                                                        onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
                                                         ref={(node) => {
                                                             shapeRefs.current[shape.id] = node;
                                                         }}
@@ -583,15 +665,15 @@ const ImageReviewV2 = ({
 
                                             <Transformer
                                                 ref={transformerRef}
-                                                rotateEnabled={true}
-                                                enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+                                                rotateEnabled={selectedTool === 'rotate'}
+                                                enabledAnchors={[]}
                                                 ignoreStroke
                                                 keepRatio
                                             />
 
                                             {isDrawing && startPoint && currentPoint && (
                                                 <>
-                                                    {activeShape === 'circle' && (
+                                                    {selectedTool === 'circle' && (
                                                         <Circle
                                                             {...getCircleProps(startPoint, currentPoint)}
                                                             stroke={COLOR_PRIMARY}
@@ -600,7 +682,7 @@ const ImageReviewV2 = ({
                                                             opacity={0.7}
                                                         />
                                                     )}
-                                                    {activeShape === 'rectangle' && (
+                                                    {selectedTool === 'rect' && (
                                                         <Rect
                                                             {...getRectProps(startPoint, currentPoint)}
                                                             stroke={COLOR_ACCENT}
@@ -643,7 +725,7 @@ const ImageReviewV2 = ({
                                     className="h-10! px-4 text-xs font-bold text-primary hover:bg-muted! rounded-xl"
                                     onClick={handleFit}
                                 >
-                                    {zoomLevel}%
+                                    {Math.round(stageScale * 100)}%
                                 </Button>
                                 <div className="w-px h-6 bg-border/50 mx-1"/>
                                 <Button
@@ -654,6 +736,7 @@ const ImageReviewV2 = ({
                                 <Button
                                     type="text"
                                     icon={<DownloadOutlined/>}
+                                    onClick={handleExport}
                                     className="h-10! w-10! rounded-xl text-primary hover:bg-muted!"
                                 />
                             </div>
@@ -758,6 +841,23 @@ const ImageReviewV2 = ({
                                                     handle: {borderColor: 'hsl(var(--primary))'},
                                                 }}
                                             />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+                                                <span>Stroke Color</span>
+                                                <span>{strokeColor}</span>
+                                            </div>
+                                            <div className="rounded-xl border border-border bg-background p-2">
+                                                <HexColorPicker color={strokeColor} onChange={setStrokeColor} />
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <span
+                                                    className="h-3 w-3 rounded-full border border-border"
+                                                    style={{ backgroundColor: strokeColor }}
+                                                />
+                                                <span className="font-medium">{strokeColor}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

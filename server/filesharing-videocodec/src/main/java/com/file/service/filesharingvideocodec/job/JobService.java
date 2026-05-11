@@ -5,7 +5,6 @@ import com.file.service.filesharingvideocodec.consumer.dto.EncodeRequestMessage;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobStatus;
 import com.file.service.filesharingvideocodec.enums.ProcessingJobType;
 import com.file.service.filesharingvideocodec.job.queue.JobQueue;
-import com.file.service.filesharingvideocodec.kafka.EncodeResultProducer;
 import com.file.service.filesharingvideocodec.kafka.dto.EncodeResultMessage;
 import com.file.service.filesharingvideocodec.model.ProcessingJobConfig;
 import com.file.service.filesharingvideocodec.model.ProcessingJobEntity;
@@ -32,13 +31,13 @@ public class JobService {
     private final EncodeResultProducer encodeResultProducer;
 
     /**
-     * Create a new job if it doesn't already exist (idempotency).
-     * @return true if new job was created, false if already exists.
+     * tạo một job mới nếu nó chưa tồn tại (tính luỹ đẳng).
+     * @return true nếu job mới được tạo, false nếu đã tồn tại.
      */
     public boolean createJobIfAbsent(EncodeRequestMessage message) {
         Optional<ProcessingJobEntity> existing = jobRepository.findById(message.getJobId());
         if (existing.isPresent()) {
-            log.info("Job {} already exists with status {}, skipping duplicate",
+            log.info("job {} da ton tai voi trang thai {}, bo qua trung lap",
                     message.getJobId(), existing.get().getStatus());
             return false;
         }
@@ -59,12 +58,12 @@ public class JobService {
                 .scheduledAt(message.getSubmittedAt() != null ? message.getSubmittedAt() : Instant.now())
                 .build();
 
-        // Store inputKey in assetId field for retrieval later
+        // lưu trữ inputKey trong trường assetId để truy xuất sau
         job.setAssetId(message.getInputKey());
         job.setIsActive(true);
 
         jobRepository.save(job);
-        log.info("Created new job: {}", message.getJobId());
+        log.info("da tao job moi: {}", message.getJobId());
         return true;
     }
 
@@ -79,8 +78,7 @@ public class JobService {
             job.setWorkerId(getWorkerId());
             job.setWorkerHeartbeat(Instant.now());
             jobRepository.save(job);
-            log.info("Job {} marked as PROCESSING", jobId);
-
+            log.info("job {} duoc danh dau la PROCESSING", jobId);
             encodeResultProducer.sendResult(EncodeResultMessage.builder()
                     .jobId(jobId)
                     .status(ProcessingJobStatus.PROCESSING.name())
@@ -113,7 +111,7 @@ public class JobService {
                     .outputKeys(outputKeys)
                     .build());
             jobRepository.save(job);
-            log.info("Job {} marked as COMPLETED. Playlist: {}", jobId, playlistUrl);
+            log.info("job {} duoc danh dau la COMPLETED. playlist: {}", jobId, playlistUrl);
 
                 encodeResultProducer.sendResult(EncodeResultMessage.builder()
                     .jobId(jobId)
@@ -131,7 +129,7 @@ public class JobService {
             int maxRetries = job.getMaxRetries() != null ? job.getMaxRetries() : encodingConfig.getRetry().getMaxAttempts();
 
             if (currentRetry + 1 < maxRetries) {
-                // Still has retries left — put back to PENDING
+                // vẫn còn lượt thử lại — đưa trở lại PENDING
                 job.setStatus(ProcessingJobStatus.PENDING);
                 job.setRetryCount(currentRetry + 1);
                 job.setLastError(error);
@@ -141,12 +139,12 @@ public class JobService {
                         .build());
                 jobRepository.save(job);
 
-                // Re-enqueue for retry
+                // đưa vào hàng đợi lại để thử lại
                 jobQueue.offer(jobId);
-                log.warn("Job {} failed (attempt {}/{}), re-queued for retry: {}",
+                log.warn("job {} that bai (lan thu {}/{}), duoc dua vao hang doi lai de thu lai: {}",
                         jobId, currentRetry + 1, maxRetries, error);
             } else {
-                // No more retries — permanent failure
+                // không còn lượt thử lại — thất bại vĩnh viễn
                 job.setStatus(ProcessingJobStatus.FAILED);
                 job.setRetryCount(currentRetry + 1);
                 job.setLastError(error);
@@ -160,14 +158,13 @@ public class JobService {
                         .errorMessage(error)
                         .build());
                 jobRepository.save(job);
-                log.error("Job {} permanently FAILED after {} attempts: {}", jobId, maxRetries, error);
-
+                log.error("job {} that bai vinh vien sau {} lan thu: {}", jobId, maxRetries, error);
                 encodeResultProducer.sendResult(EncodeResultMessage.builder()
-                    .jobId(jobId)
-                    .status(ProcessingJobStatus.FAILED.name())
-                    .errorMessage(error)
-                    .completedAt(job.getCompletedAt())
-                    .build());
+                        .jobId(jobId)
+                        .status(ProcessingJobStatus.FAILED.name())
+                        .errorMessage(error)
+                        .completedAt(job.getCompletedAt())
+                        .build());
             }
         });
     }
@@ -177,18 +174,18 @@ public class JobService {
     }
 
     /**
-     * Recovery on startup: reset all PROCESSING jobs back to PENDING.
-     * These jobs were running when JVM crashed and need to be re-encoded.
+     * khôi phục khi khởi động: đặt lại tất cả các job PROCESSING về PENDING.
+     * các job này đang chạy khi JVM gặp sự cố và cần được mã hoá lại.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void recoverRunningJobs() {
         List<ProcessingJobEntity> stuckJobs = jobRepository.findAllByStatus(ProcessingJobStatus.PROCESSING);
         if (stuckJobs.isEmpty()) {
-            log.info("No stuck jobs found during startup recovery");
+            log.info("khong tim thay job nao bi mac ket trong qua trinh khoi phuc khi khoi dong");
             return;
         }
 
-        log.warn("Found {} stuck PROCESSING jobs, resetting to PENDING", stuckJobs.size());
+        log.warn("tim thay {} job PROCESSING bi mac ket, dat lai thanh PENDING", stuckJobs.size());
         for (ProcessingJobEntity job : stuckJobs) {
             job.setStatus(ProcessingJobStatus.PENDING);
             job.setProgress(ProcessingJobProgress.builder()
@@ -197,7 +194,7 @@ public class JobService {
                     .build());
             jobRepository.save(job);
             jobQueue.offer(job.getJobId());
-            log.info("Recovered job {} → PENDING, re-enqueued", job.getJobId());
+            log.info("da khoi phuc job {} → PENDING, da dua vao hang doi lai", job.getJobId());
         }
     }
 

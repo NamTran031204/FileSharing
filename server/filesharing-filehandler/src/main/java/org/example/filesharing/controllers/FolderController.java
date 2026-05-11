@@ -6,6 +6,8 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
 import org.example.filesharing.entities.models.core.FolderEntity;
 import org.example.filesharing.services.FolderService;
@@ -21,6 +23,11 @@ public class FolderController {
     @PostMapping("/create-new")
     public CommonResponse<FolderEntity> createNewFolder(@RequestBody FolderCreateRequestDTO request) {
         return CommonResponse.success(folderService.createNewFolder(request));
+    }
+
+    @PostMapping("/create-tree")
+    public CommonResponse<FolderTreeCreateResponseDTO> createFolderTree(@RequestBody FolderTreeCreateRequestDTO request) {
+        return CommonResponse.success(folderService.createFolderTree(request));
     }
 
     @PostMapping("/update-detail")

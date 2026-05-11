@@ -17,7 +17,7 @@ import java.util.Map;
 public class VideoEncodeProducer {
 
     @Autowired
-    KafkaTemplate<String, String> videoEncodeKafkaTemplate;
+    KafkaTemplate<String, Object> videoEncodeKafkaTemplate;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -32,20 +32,14 @@ public class VideoEncodeProducer {
      * @param inputKey MinIO object key of the source video
      */
     public void sendEncodeRequest(String jobId, String inputKey) {
-        try {
-            Map<String, Object> message = new HashMap<>();
-            message.put("jobId", jobId);
-            message.put("inputKey", inputKey);
-            message.put("callbackUrl", null);
-            message.put("submittedAt", Instant.now().toString());
+        Map<String, Object> message = new HashMap<>();
+        message.put("jobId", jobId);
+        message.put("inputKey", inputKey);
+        message.put("callbackUrl", null);
+        message.put("submittedAt", Instant.now());
 
-            String json = objectMapper.writeValueAsString(message);
-            videoEncodeKafkaTemplate.send(topic, jobId, json);
-            log.info("Sent encode request to Kafka: jobId={}, inputKey={}", jobId, inputKey);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize encode request: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to serialize encode request", e);
-        }
+        videoEncodeKafkaTemplate.send(topic, jobId, message);
+        log.info("Sent encode request to Kafka: jobId={}, inputKey={}", jobId, inputKey);
     }
 
     /**

@@ -29,6 +29,7 @@
 		<module>filesharing-filehandler</module>
 		<module>filesharing-notification</module>
 		<module>filesharing-videocodec</module>
+		<module>filesharing-imagecodec</module>
 	</modules>
 
 	<dependencyManagement>

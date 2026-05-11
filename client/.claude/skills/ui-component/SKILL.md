@@ -20,9 +20,9 @@ Skill này giúp tạo và kiểm tra React components tuân thủ hoàn toàn *
 ## Tech Stack
 
 - **React 18** + **TypeScript**
-- **Tailwind CSS v3** (với custom tokens)
+- **Tailwind CSS v4** (với `@theme` custom tokens)
 - **Ant Design 5** (components chính)
-- **Design tokens** định nghĩa trong `src/index.css`
+- **Design tokens** định nghĩa trong `src/index.css` - Tailwind tự động generate classes từ `@theme`
 
 ## Quy trình làm việc
 
@@ -40,30 +40,32 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 
 **KHÔNG BAO GIỜ** dùng mã màu trực tiếp như `#2A2F6F` hoặc `bg-[#2A2F6F]`.
 
-**LUÔN LUÔN** dùng semantic tokens qua Tailwind classes:
+**LUÔN LUÔN** dùng Tailwind classes được tạo tự động từ `@theme` trong `src/index.css`:
 
 ```tsx
-// ✅ ĐÚNG - Sử dụng design tokens
-<div className="bg-primary-dark text-foreground border-border">
+// ✅ ĐÚNG - Sử dụng Tailwind classes từ @theme
+<div className="bg-background text-foreground border-border">
   
 // ❌ SAI - Hard-coded colors
 <div className="bg-[#2A2F6F] text-[#2A2F6F] border-[#C5C0E6]">
 ```
 
-**Bảng màu design tokens - "Lumina Pro" Theme** (xem chi tiết trong [design-system-spec](./references/design-system-spec.md)):
+**Bảng màu design tokens - "Lumina Pro" Theme** (Tailwind classes tự động từ `@theme`):
 
-| Token                                 | HEX     | Sử dụng                                                   |
-|---------------------------------------|---------|-----------------------------------------------------------|
-| `bg-background`                       | #F3F2F7 | Main application canvas (Light lavender-gray)             |
-| `bg-card`                             | #FFFFFF | Sidebar panels, project cards, comment boxes (Pure White) |
-| `text-foreground` / `bg-primary-dark` | #2A2F6F | Primary text, headers, sidebars (Deep Navy-Purple)        |
-| `bg-primary`                          | #535297 | CTAs, active states, buttons (Primary Purple)             |
-| `bg-accent`                           | #A6A0ED | Badges, markers, secondary highlights (Soft Purple)       |
-| `bg-muted`                            | #D2CAFF | Backgrounds of less critical UI sections (Soft Lavender)  |
-| `border-border`                       | #C5C0E6 | Borders and dividers (Light Lavender)                     |
-| `bg-secondary`                        | #7C78C1 | Hover states, secondary actions                           |
-| `text-muted-foreground`               | #6B6B6B | Secondary text, captions                                  |
-| `text-destructive`                    | #EF4444 | Error states, delete actions                              |
+| Tailwind Class                           | CSS Variable        | HEX     | Sử dụng                                                   |
+|------------------------------------------|---------------------|---------|-----------------------------------------------------------|
+| `bg-background`, `text-background`       | `--color-background` | #F3F2F7 | Main application canvas (Light lavender-gray)             |
+| `bg-card`, `text-card`                   | `--color-card`      | #FFFFFF | Sidebar panels, project cards, comment boxes (Pure White) |
+| `text-foreground`, `bg-foreground`       | `--color-foreground` | #2A2F6F | Primary text, headers, sidebars (Deep Navy-Purple)        |
+| `text-primary-dark`, `bg-primary-dark`   | `--color-primary-dark` | #2A2F6F | Same as foreground                                        |
+| `bg-primary`, `text-primary`             | `--color-primary`   | #535297 | CTAs, active states, buttons (Primary Purple)             |
+| `bg-accent`, `text-accent`               | `--color-accent`    | #A6A0ED | Badges, markers, secondary highlights (Soft Purple)       |
+| `bg-muted`, `text-muted`                 | `--color-muted`     | #D2CAFF | Backgrounds of less critical UI sections (Soft Lavender)  |
+| `border-border`                          | `--color-border`    | #C5C0E6 | Borders and dividers (Light Lavender)                     |
+| `bg-secondary`, `text-secondary`         | `--color-secondary` | #7C78C1 | Hover states, secondary actions                           |
+| `text-primary-foreground`                | `--color-primary-foreground` | #FFFFFF | Text trên primary backgrounds                           |
+| `text-muted-foreground`                  | `--color-muted-foreground` | #6B6B6B | Secondary text, captions                                  |
+| `text-destructive`, `bg-destructive`     | `--color-destructive` | #EF4444 | Error states, delete actions                              |
 
 #### **Bước 3: Áp dụng Typography**
 
@@ -113,14 +115,14 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 ```tsx
 // Primary button (Purple #535297 - Interactive)
 <Button 
-  className="bg-[hsl(var(--primary))] text-white hover:opacity-90"
+  className="bg-primary text-primary-foreground hover:opacity-90"
 >
   Action
 </Button>
 
 // Default button (White surface with Lavender border)
 <Button 
-  className="bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border border-[hsl(var(--border))] hover:border-[hsl(var(--secondary))]"
+  className="bg-card text-foreground border border-border hover:border-secondary"
 >
   Cancel
 </Button>
@@ -128,7 +130,7 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 // Ghost/Text button
 <Button 
   type="text"
-  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]"
+  className="text-muted-foreground hover:text-primary"
 >
   Link
 </Button>
@@ -136,7 +138,7 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 // Destructive button
 <Button 
   type="text"
-  className="text-[hsl(var(--destructive))] hover:opacity-80"
+  className="text-destructive hover:opacity-80"
 >
   Delete
 </Button>
@@ -144,22 +146,22 @@ Khi tạo component React mới, tuân thủ các quy tắc sau:
 
 **Card/Panel Component (Pure White with Lavender border):**
 ```tsx
-<div className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg p-3">
+<div className="bg-card border border-border rounded-lg p-3">
   {/* Content */}
 </div>
 ```
 
 **Badge/Highlight (Soft Purple #A6A0ED):**
 ```tsx
-<span className="bg-[hsl(var(--accent))]/30 text-[hsl(var(--primary))] px-2 py-1 rounded-md text-xs font-semibold">
+<span className="bg-accent/30 text-primary px-2 py-1 rounded-md text-xs font-semibold">
   Featured
 </span>
 ```
 
 **Pin Marker (Soft Purple annotation #A6A0ED):**
 ```tsx
-<div className="w-6 h-6 bg-[hsl(var(--accent))] border-2 border-white rounded-full animate-pulse flex items-center justify-center">
-  <PushpinOutlined className="text-white text-xs" />
+<div className="w-6 h-6 bg-accent border-2 border-card rounded-full animate-pulse flex items-center justify-center">
+  <PushpinOutlined className="text-card text-xs" />
 </div>
 ```
 
@@ -173,25 +175,25 @@ import { Menu, Button, Breadcrumb, Avatar, Tag, Tooltip } from 'antd';
 // Menu với Lumina Pro colors
 <Menu
   className="
-    [&_.ant-menu-item]:text-white/70
-    [&_.ant-menu-item-selected]:bg-[hsl(var(--secondary))]
-    [&_.ant-menu-item-selected]:text-white
+    [&_.ant-menu-item]:text-primary-foreground/70
+    [&_.ant-menu-item-selected]:bg-secondary
+    [&_.ant-menu-item-selected]:text-primary-foreground
   "
   items={menuItems}
 />
 
 // Button với Primary Purple
-<Button className="bg-[hsl(var(--primary))] text-white hover:opacity-90">
+<Button className="bg-primary text-primary-foreground hover:opacity-90">
   Click me
 </Button>
 
 // Tag với Soft Purple highlight
-<Tag color="purple" className="bg-[hsl(var(--accent))]/20 text-[hsl(var(--primary))] border-[hsl(var(--accent))]">
+<Tag color="purple" className="bg-accent/20 text-primary border-accent">
   Pin #1
 </Tag>
 
 // Avatar với Navy-Purple background
-<Avatar className="bg-[hsl(var(--primary-dark))]">
+<Avatar className="bg-primary-dark">
   U
 </Avatar>
 ```
@@ -200,25 +202,25 @@ import { Menu, Button, Breadcrumb, Avatar, Tag, Tooltip } from 'antd';
 
 ```tsx
 // Hover states (Lavender border → Medium Purple)
-<button className="border border-[hsl(var(--border))] hover:border-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] transition-colors">
+<button className="border border-border hover:border-secondary hover:text-primary transition-colors">
 
 // Active tool state (Primary Purple background)
 <button className={cn(
   "border border-transparent",
-  isActive && "bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]"
+  isActive && "bg-primary text-primary-foreground border-primary"
 )}>
 
 // Pin mode active (Soft Purple highlight)
 <button className={cn(
-  "text-[hsl(var(--muted-foreground))]",
-  isPinMode && "text-[hsl(var(--accent))]"
+  "text-muted-foreground",
+  isPinMode && "text-accent"
 )}>
 
 // Sidebar hover expansion (Navy-Purple background)
-<aside className="w-[60px] hover:w-[220px] bg-[hsl(var(--primary-dark))] transition-all duration-300 ease-in-out">
+<aside className="w-[60px] hover:w-[220px] bg-primary-dark transition-all duration-300 ease-in-out">
 
 // Card hover (Shadow + Lavender tint)
-<div className="bg-[hsl(var(--card))] hover:shadow-md hover:bg-[hsl(var(--muted))]/20 transition-all">
+<div className="bg-card hover:shadow-md hover:bg-muted/20 transition-all">
 ```
 
 ### 2. Kiểm tra Component Hiện Có
@@ -228,14 +230,14 @@ Khi review hoặc fix component:
 #### **Checklist kiểm tra - Lumina Pro Theme:**
 
 1. **✅ Màu sắc - Lumina Pro Palette**
-   - [ ] KHÔNG có hard-coded colors (`#HEX` trực tiếp)
-   - [ ] Tất cả màu dùng `hsl(var(--token))`: `bg-[hsl(var(--primary))]`
-   - [ ] Background: #F3F2F7 (Light lavender-gray)
-   - [ ] Cards/Surfaces: #FFFFFF (Pure White)
-   - [ ] Text: #2A2F6F (Deep Navy-Purple)
-   - [ ] Primary actions: #535297 (Primary Purple)
-   - [ ] Highlights: #A6A0ED (Soft Purple)
-   - [ ] Borders: #C5C0E6 (Light Lavender)
+   - [ ] KHÔNG có hard-coded colors (`#HEX` trực tiếp, `hsl(...)` cứng)
+   - [ ] Tất cả màu dùng Tailwind classes: `bg-primary`, `text-foreground`
+   - [ ] Background: `bg-background` (#F3F2F7 - Light lavender-gray)
+   - [ ] Cards/Surfaces: `bg-card` (#FFFFFF - Pure White)
+   - [ ] Text: `text-foreground` (#2A2F6F - Deep Navy-Purple)
+   - [ ] Primary actions: `bg-primary` (#535297 - Primary Purple)
+   - [ ] Highlights: `bg-accent` (#A6A0ED - Soft Purple)
+   - [ ] Borders: `border-border` (#C5C0E6 - Light Lavender)
 
 2. **✅ Typography**
    - [ ] Font sizes đúng: `text-2xl` (H1), `text-xl` (H2), `text-sm` (H3/Body), `text-xs` (Caption)
@@ -248,22 +250,22 @@ Khi review hoặc fix component:
    - [ ] Border radius đúng: `rounded-lg` (8px), `rounded-md` (6px), `rounded-2xl` (16px)
 
 4. **✅ Layout - Lumina Pro Structure**
-   - [ ] Header: `h-[10vh]`, `bg-[hsl(var(--primary-dark))]` (#2A2F6F), `px-6`
-   - [ ] Sidebar: `w-[60px]` → `hover:w-[220px]`, Navy-Purple background
-   - [ ] Main background: `bg-[hsl(var(--background))]` (#F3F2F7)
-   - [ ] Panels: White cards với Lavender borders
+   - [ ] Header: `h-[10vh]`, `bg-primary-dark` (#2A2F6F), `px-6`
+   - [ ] Sidebar: `w-[60px]` → `hover:w-[220px]`, `bg-primary-dark`
+   - [ ] Main background: `bg-background` (#F3F2F7)
+   - [ ] Panels: `bg-card` with `border-border`
 
 5. **✅ Components - Lumina Pro Styling**
    - [ ] Ant Design components có Lumina Pro overrides
-   - [ ] Primary buttons: Purple (#535297) background
-   - [ ] Cards: White (#FFFFFF) với Lavender border (#C5C0E6)
-   - [ ] Pins/Badges: Soft Purple (#A6A0ED) với pulse animation
+   - [ ] Primary buttons: `bg-primary` text-primary-foreground`
+   - [ ] Cards: `bg-card` với `border-border`
+   - [ ] Pins/Badges: `bg-accent` với pulse animation
    - [ ] Tags: Purple variants với appropriate contrast
 
 6. **✅ Interaction States**
-   - [ ] Hover: Lavender border → Medium Purple (#7C78C1)
-   - [ ] Active: Primary Purple (#535297) background, white text
-   - [ ] Highlight: Soft Purple (#A6A0ED) tint
+   - [ ] Hover: `border-border` → `hover:border-secondary`
+   - [ ] Active: `bg-primary` background, `text-primary-foreground`
+   - [ ] Highlight: `bg-accent` tint
    - [ ] Transitions: `transition-all duration-300 ease-in-out`
 
 #### **Quy trình fix:**
@@ -349,7 +351,7 @@ export function CommentItem({ author, timestamp, content, pinNumber }: CommentIt
 **After (✅ ĐÚNG):**
 ```tsx
 <Button 
-  className="bg-primary text-white hover:opacity-90 px-4 py-2"
+  className="bg-primary text-primary-foreground px-4 py-2"
 >
   Submit
 </Button>
@@ -361,25 +363,27 @@ export function CommentItem({ author, timestamp, content, pinNumber }: CommentIt
 
 ## Best Practices - Lumina Pro Theme
 
-1. **Design tokens first**: Luôn dùng `hsl(var(--token))` thay vì HEX colors
-2. **Component reusability**: Tạo base components với Lumina Pro styling
-3. **Type safety**: Sử dụng TypeScript interfaces/types cho props
-4. **Consistency**: Purple palette (#2A2F6F → #535297 → #A6A0ED) xuyên suốt
-5. **Accessibility**: Navy-Purple text (#2A2F6F) đảm bảo contrast ratio WCAG AA
-6. **Performance**: Memoize components nặng với `React.memo`
-7. **Visual hierarchy**: White cards (#FFFFFF) trên Lavender background (#F3F2F7)
+1. **Tailwind classes first**: Luôn dùng `bg-primary`, `text-foreground` từ `@theme`
+2. **KHÔNG hardcode**: Tránh `bg-[#535297]`, `bg-[hsl(var(--primary))]`, v.v
+3. **Component reusability**: Tạo base components với Lumina Pro styling
+4. **Type safety**: Sử dụng TypeScript interfaces/types cho props
+5. **Consistency**: Purple palette (#2A2F6F → #535297 → #A6A0ED) xuyên suốt
+6. **Accessibility**: Navy-Purple text (`text-foreground`) đảm bảo contrast ratio WCAG AA
+7. **Performance**: Memoize components nặng với `React.memo`
+8. **Visual hierarchy**: White cards (`bg-card`) trên Lavender background (`bg-background`)
 
 ## Common Mistakes - Lumina Pro Theme
 
 | Lỗi | Ví dụ SAI | Cách fix ĐÚNG |
 |-----|-----------|---------------|
-| Hard-coded colors | `bg-[#535297]` | `bg-[hsl(var(--primary))]` |
-| Wrong background | `bg-gray-100` | `bg-[hsl(var(--background))]` (#F3F2F7) |
-| Wrong text color | `text-gray-800` | `text-[hsl(var(--foreground))]` (#2A2F6F) |
-| Wrong borders | `border-gray-300` | `border-[hsl(var(--border))]` (#C5C0E6) |
-| Wrong hover | `hover:bg-blue-500` | `hover:border-[hsl(var(--secondary))]` |
-| Missing purple tint | Generic grays | Use Lumina lavender tones (#D2CAFF) |
-| Wrong spacing | Random px values | Dùng gap-2/3/4, p-3/4/5/6 |
+| Hard-coded colors | `bg-[#535297]` | `bg-primary` |
+| Hard-coded hsl | `bg-[hsl(var(--primary))]` | `bg-primary` |
+| Wrong background | `bg-gray-100` | `bg-background` |
+| Wrong text color | `text-gray-800` | `text-foreground` |
+| Wrong borders | `border-gray-300` | `border-border` |
+| Wrong hover | `hover:bg-blue-500` | `hover:border-secondary` |
+| Missing purple tint | Generic grays | Use `bg-muted`, `text-accent` |
+| Wrong spacing | Random px values | Dùng `gap-2/3/4`, `p-3/4/5/6` |
 | No transition | Instant changes | `transition-all duration-300 ease-in-out` |
 
 ## Output Format
@@ -394,4 +398,7 @@ Sau khi hoàn thành, cung cấp:
 
 ---
 
-**Lưu ý quan trọng**: Skill này không tự động format code. Chạy `npm run lint` hoặc `npm run format` sau khi tạo/sửa components.
+**Lưu ý quan trọng**: 
+- Skill này không tự động format code. Chạy `npm run lint` hoặc `npm run format` sau khi tạo/sửa components.
+- **LUÔN sử dụng Tailwind classes từ `@theme`** như `bg-primary`, `text-foreground` - KHÔNG hardcode màu HEX hoặc hsl value
+- Tất cả design tokens được tự động tạo thành Tailwind classes bởi Tailwind v4 `@theme`

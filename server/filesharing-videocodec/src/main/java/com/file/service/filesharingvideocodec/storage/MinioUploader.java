@@ -22,14 +22,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Handles parallel batch upload of HLS files to MinIO.
+ * xử lý việc tải lên hàng loạt song song các tệp HLS lên MinIO.
  *
- * Upload order is critical:
- * 1. Upload ALL .ts segments in parallel batches (CompletableFuture.allOf)
- * 2. Only after ALL .ts succeed → upload index.m3u8
+ * thứ tự tải lên là rất quan trọng:
+ * 1. tải lên tất cả các phân đoạn .ts thành các lô song song (CompletableFuture.allOf)
+ * 2. chỉ sau khi tất cả .ts thành công → tải lên index.m3u8
  *
- * This ensures clients never see a playlist before segments are ready.
- * If any upload fails, all uploaded objects are rolled back.
+ * điều này đảm bảo máy khách không bao giờ thấy playlist trước khi các phân đoạn sẵn sàng.
+ * nếu bất kỳ lần tải lên nào thất bại, tất cả các đối tượng đã tải lên sẽ được khôi phục.
  */
 @Component
 @Slf4j
@@ -46,11 +46,11 @@ public class MinioUploader {
     }
 
     /**
-     * Generate a pre-signed download URL for FFmpeg to read input video from MinIO.
+     * tạo presigned URL tải xuống để FFmpeg đọc video đầu vào từ MinIO.
      *
-     * @param objectKey  the object key in the input bucket
-     * @param ttlHours   how long the URL should be valid
-     * @return pre-signed URL string
+     * @param objectKey  khoá đối tượng trong bucket đầu vào
+     * @param ttlHours   thời gian URL có hiệu lực
+     * @return chuỗi presigned URL
      */
     public String generatePresignedUrl(String objectKey, int ttlHours) throws Exception {
         return minioClient.getPresignedObjectUrl(
@@ -64,18 +64,18 @@ public class MinioUploader {
     }
 
     /**
-     * Upload all HLS files from the output directory to MinIO.
-     * Segments first (parallel), then playlist (single).
+     * tải lên tất cả các tệp HLS từ thư mục đầu ra lên MinIO.
+     * các phân đoạn trước (song song), sau đó là playlist (đơn lẻ).
      *
-     * @param jobId     used as prefix in MinIO: videos/{jobId}/
-     * @param outputDir local directory containing index.m3u8 and seg_*.ts files
-     * @return the MinIO object key of the uploaded playlist
+     * @param jobId     được sử dụng làm tiền tố trong MinIO: videos/{jobId}/
+     * @param outputDir thư mục cục bộ chứa index.m3u8 và các tệp seg_*.ts
+     * @return khoá đối tượng MinIO của playlist đã tải lên
      */
     public String uploadAll(String jobId, String outputDir) throws Exception {
         File dir = new File(outputDir);
         String prefix = "videos/" + jobId;
 
-        // Separate .ts files and .m3u8 file
+        // tách các tệp .ts và tệp .m3u8
         File[] tsFiles = dir.listFiles((d, name) -> name.endsWith(".ts"));
         File m3u8File = new File(dir, "index.m3u8");
 
@@ -86,18 +86,18 @@ public class MinioUploader {
             throw new RuntimeException("index.m3u8 not found in " + outputDir);
         }
 
-        log.info("Job {}: uploading {} ts segments + 1 m3u8 to MinIO (batch size: {})",
+        log.info("job {}: dang tai len {} phan doan ts + 1 m3u8 len MinIO (kich thuoc lo: {})",
                 jobId, tsFiles.length, batchSize);
 
         List<String> uploadedKeys = new ArrayList<>();
 
         try {
-            // Step 1: Upload all .ts files in parallel batches
+            // bước 1: tải lên tất cả các tệp .ts thành các lô song song
             List<List<File>> batches = partitionFiles(Arrays.asList(tsFiles), batchSize);
 
             for (int i = 0; i < batches.size(); i++) {
                 List<File> batch = batches.get(i);
-                log.info("Job {}: uploading batch {}/{} ({} files)", jobId, i + 1, batches.size(), batch.size());
+                log.info("job {}: dang tai len lo {}/{} ({} tep)", jobId, i + 1, batches.size(), batch.size());
 
                 CompletableFuture<?>[] futures = batch.stream()
                         .map(file -> CompletableFuture.runAsync(() -> {
@@ -113,21 +113,21 @@ public class MinioUploader {
                         }, runnable -> Thread.ofVirtual().start(runnable)))
                         .toArray(CompletableFuture[]::new);
 
-                // Wait for entire batch to complete
+                // đợi cho toàn bộ lô hoàn thành
                 CompletableFuture.allOf(futures).join();
             }
 
-            // Step 2: Upload index.m3u8 LAST (after all segments are confirmed)
+            // bước 2: tải lên index.m3u8 CUỐI CÙNG (sau khi tất cả các phân đoạn được xác nhận)
             String playlistKey = prefix + "/index.m3u8";
             uploadFile(playlistKey, m3u8File);
             uploadedKeys.add(playlistKey);
 
-            log.info("Job {}: all {} files uploaded to MinIO successfully", jobId, uploadedKeys.size());
+            log.info("job {}: tat ca {} tep da duoc tai len MinIO thanh cong", jobId, uploadedKeys.size());
             return playlistKey;
 
         } catch (Exception e) {
-            // Rollback: delete any objects that were successfully uploaded
-            log.error("Job {}: upload failed, rolling back {} uploaded objects", jobId, uploadedKeys.size());
+            // khôi phục: xoá bất kỳ đối tượng nào đã được tải lên thành công
+            log.error("job {}: tai len that bai, dang khoi phuc {} doi tuong da tai len", jobId, uploadedKeys.size());
             rollback(uploadedKeys);
             throw new RuntimeException("MinIO upload failed for job " + jobId, e);
         }
@@ -167,11 +167,11 @@ public class MinioUploader {
                 try {
                     result.get();
                 } catch (Exception e) {
-                    log.warn("Failed to delete object during rollback: {}", e.getMessage());
+                    log.warn("khong the xoa doi tuong trong qua trinh khoi phuc: {}", e.getMessage());
                 }
             });
         } catch (Exception e) {
-            log.error("Rollback failed: {}", e.getMessage());
+            log.error("khoi phuc that bai: {}", e.getMessage());
         }
     }
 

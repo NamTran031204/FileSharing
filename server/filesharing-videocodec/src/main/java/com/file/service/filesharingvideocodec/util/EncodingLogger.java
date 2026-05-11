@@ -8,37 +8,37 @@ import org.springframework.stereotype.Component;
 public class EncodingLogger {
 
     public void logEncodingStart(String jobId, String presignedUrl, String profile) {
-        log.info("[Encoding Started] JobId: {}, Profile: {}, URL: {}", jobId, profile, maskUrl(presignedUrl));
+        log.info("[bat dau ma hoa] jobId: {}, profile: {}, url: {}", jobId, profile, maskUrl(presignedUrl));
     }
 
     public void logSegmentComplete(String jobId, String profile, int segmentCount) {
-        log.info("[Segment Complete] JobId: {}, Profile: {}, Segments: {}", jobId, profile, segmentCount);
+        log.info("[hoan tat phan doan] jobId: {}, profile: {}, so phan doan: {}", jobId, profile, segmentCount);
     }
 
     public void logEncodingError(String jobId, String profile, String error) {
-        log.error("[Encoding Error] JobId: {}, Profile: {}, Error: {}", jobId, profile, error);
+        log.error("[loi ma hoa] jobId: {}, profile: {}, loi: {}", jobId, profile, error);
     }
 
     public void logProfileComplete(String jobId, String profile, long durationMs, String m3u8Url) {
-        log.info("[Profile Complete] JobId: {}, Profile: {}, Duration: {}ms, M3U8: {}", 
+        log.info("[hoan tat profile] jobId: {}, profile: {}, thoi gian: {}ms, m3u8: {}", 
                  jobId, profile, durationMs, maskUrl(m3u8Url));
     }
 
     public void logUploadStart(String jobId, String profile, int fileCount) {
-        log.info("[Upload Started] JobId: {}, Profile: {}, Files: {}", jobId, profile, fileCount);
+        log.info("[bat dau tai len] jobId: {}, profile: {}, so tep: {}", jobId, profile, fileCount);
     }
 
     public void logUploadComplete(String jobId, String profile, int fileCount) {
-        log.info("[Upload Complete] JobId: {}, Profile: {}, Files uploaded: {}", jobId, profile, fileCount);
+        log.info("[hoan tat tai len] jobId: {}, profile: {}, so tep da tai: {}", jobId, profile, fileCount);
     }
 
     public void logJobComplete(String jobId, long totalDurationMs, int profileCount) {
-        log.info("[Job Complete] JobId: {}, Total Duration: {}ms, Profiles: {}", 
+        log.info("[hoan tat job] jobId: {}, tong thoi gian: {}ms, so profile: {}", 
                  jobId, totalDurationMs, profileCount);
     }
 
     public void logRetryAttempt(String jobId, int attemptNumber, int maxAttempts) {
-        log.warn("[Retry Attempt] JobId: {}, Attempt: {}/{}", jobId, attemptNumber, maxAttempts);
+        log.warn("[thu lai] jobId: {}, lan thu: {}/{}", jobId, attemptNumber, maxAttempts);
     }
 
     private String maskUrl(String url) {

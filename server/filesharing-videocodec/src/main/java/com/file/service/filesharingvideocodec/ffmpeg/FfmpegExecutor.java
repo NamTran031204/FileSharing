@@ -18,12 +18,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Core FFmpeg execution engine. Manages the full lifecycle:
- * ProcessBuilder → stderr drain → onExit() → upload/complete → cleanup.
+ * công cụ thực thi cốt lõi của FFmpeg. quản lý toàn bộ vòng đời:
+ * ProcessBuilder → rút cạn stderr → onExit() → tải lên/hoàn tất → dọn dẹp.
  *
- * Supports two modes controlled by video.encoding.is-test:
- * - Production: reads from MinIO presigned URL, uploads output to MinIO
- * - Test: reads from hardcoded local file, writes to hardcoded local dir, no cleanup
+ * hỗ trợ hai chế độ được điều khiển bởi video.encoding.is-test:
+ * - Production: đọc từ URL presigned của MinIO, tải lên đầu ra lên MinIO
+ * - Test: đọc từ tệp cục bộ được mã hoá cứng, ghi vào thư mục cục bộ được mã hoá cứng, không dọn dẹp
  */
 @Component
 @Slf4j
@@ -44,8 +44,8 @@ public class FfmpegExecutor {
     private final TempFileManager tempFileManager;
 
     /**
-     * Execute the full encoding pipeline for a given jobId.
-     * This method runs on a Virtual Thread dispatched by JobDispatcher.
+     * thực thi đường ống mã hoá đầy đủ cho một jobId nhất định.
+     * phương thức này chạy trên một Virtual Thread được phân phối bởi JobDispatcher.
      */
     public void execute(String jobId) {
         boolean isTest = encodingConfig.isTest();
@@ -53,41 +53,41 @@ public class FfmpegExecutor {
         String outputDir;
 
         try {
-            // 1. Mark job as PROCESSING
+            // 1. đánh dấu job là PROCESSING
             jobService.markRunning(jobId);
 
             if (isTest) {
-                // TEST MODE: hardcoded paths
+                // chế độ TEST: các đường dẫn được mã hoá cứng
                 inputPath = TEST_INPUT_PATH;
                 outputDir = TEST_OUTPUT_BASE + File.separator + jobId;
                 Files.createDirectories(Path.of(outputDir));
-                log.info("[TEST] Job {}: input={}, output={}", jobId, inputPath, outputDir);
+                log.info("[TEST] job {}: dau vao={}, dau ra={}", jobId, inputPath, outputDir);
             } else {
-                // PRODUCTION MODE: get input from MinIO, output to temp dir
+                // chế độ PRODUCTION: lấy đầu vào từ MinIO, đầu ra tới thư mục tạm
                 ProcessingJobEntity job = jobService.findById(jobId)
                         .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
                 String inputKey = job.getAssetId();
                 inputPath = minioUploader.generatePresignedUrl(inputKey, 4);
                 outputDir = tempFileManager.createJobDir(jobId);
-                log.info("[PROD] Job {}: inputKey={}, outputDir={}", jobId, inputKey, outputDir);
+                log.info("[PROD] job {}: inputKey={}, outputDir={}", jobId, inputKey, outputDir);
             }
 
-            // 2. Build FFmpeg command
+            // 2. xây dựng lệnh FFmpeg
             List<String> command = commandBuilder.buildCommand(inputPath, outputDir);
 
-            // 3. Start FFmpeg process
+            // 3. bắt đầu tiến trình FFmpeg
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.redirectErrorStream(false);  // Keep stderr separate for draining
+            processBuilder.redirectErrorStream(false);  // giữ riêng stderr để rút cạn
             Process process = processBuilder.start();
 
-            // 4. IMMEDIATELY drain stderr on Virtual Thread (mandatory — prevents pipe deadlock)
+            // 4. NGAY LẬP TỨC rút cạn stderr trên Virtual Thread (bắt buộc — ngăn chặn bế tắc đường ống)
             AtomicReference<StderrDrainer.ProgressData> progressRef = new AtomicReference<>();
             Thread drainThread = stderrDrainer.drain(process.getErrorStream(), jobId, progressRef);
 
-            // 5. Start periodic progress flusher (every 5 seconds)
+            // 5. bắt đầu trình xoá tiến trình định kỳ (mỗi 5 giây)
             Thread progressFlusher = startProgressFlusher(jobId, progressRef);
 
-            // 6. Wait for process with timeout (async via onExit)
+            // 6. chờ tiến trình với thời gian chờ (không đồng bộ qua onExit)
             long timeoutMinutes = encodingConfig.getFfmpeg().getTimeout() / 60000;
             try {
                 Process completedProcess = process.onExit()
@@ -96,29 +96,29 @@ public class FfmpegExecutor {
 
                 int exitCode = completedProcess.exitValue();
 
-                // Stop progress flusher
+                // dừng trình xoá tiến trình
                 progressFlusher.interrupt();
-                drainThread.join(5000);  // Wait for drain to finish
+                drainThread.join(5000);  // đợi trình rút cạn hoàn thành
 
                 if (exitCode != 0) {
                     throw new RuntimeException("FFmpeg exited with code " + exitCode);
                 }
 
-                // 7. Validate output
+                // 7. xác thực đầu ra
                 validateOutput(outputDir, jobId);
 
-                // 8. Handle post-encode based on mode
+                // 8. xử lý sau mã hoá dựa trên chế độ
                 if (isTest) {
-                    // TEST: mark completed with local path, do NOT cleanup
+                    // TEST: đánh dấu là đã hoàn thành với đường dẫn cục bộ, KHÔNG dọn dẹp
                     String playlistPath = outputDir + File.separator + "index.m3u8";
                     jobService.markCompleted(jobId, List.of(playlistPath), playlistPath);
-                    log.info("[TEST] Job {} completed. Output at: {}", jobId, outputDir);
+                    log.info("[TEST] job {} hoan tat. dau ra tai: {}", jobId, outputDir);
                 } else {
-                    // PRODUCTION: upload to MinIO, then cleanup
+                    // PRODUCTION: tải lên MinIO, sau đó dọn dẹp
                     String playlistUrl = minioUploader.uploadAll(jobId, outputDir);
                     jobService.markCompleted(jobId, List.of(playlistUrl), playlistUrl);
                     tempFileManager.deleteJobDir(jobId);
-                    log.info("[PROD] Job {} completed. Playlist: {}", jobId, playlistUrl);
+                    log.info("[PROD] job {} hoan tat. playlist: {}", jobId, playlistUrl);
                 }
 
             } catch (TimeoutException e) {
@@ -128,23 +128,23 @@ public class FfmpegExecutor {
             }
 
         } catch (Exception e) {
-            log.error("Job {} failed: {}", jobId, e.getMessage(), e);
+            log.error("job {} that bai: {}", jobId, e.getMessage(), e);
             jobService.markFailed(jobId, e.getMessage());
 
-            // Cleanup temp dir on failure (production only)
+            // dọn dẹp thư mục tạm khi thất bại (chỉ dành cho production)
             if (!encodingConfig.isTest()) {
                 try {
                     tempFileManager.deleteJobDir(jobId);
                 } catch (Exception cleanupEx) {
-                    log.warn("Failed to cleanup temp dir for job {}: {}", jobId, cleanupEx.getMessage());
+                    log.warn("khong the don dep thu muc tam cho job {}: {}", jobId, cleanupEx.getMessage());
                 }
             }
         }
     }
 
     /**
-     * Periodic progress flusher: reads AtomicReference every 5 seconds and writes to DB.
-     * Runs on a Virtual Thread. Stops when interrupted.
+     * trình xoá tiến trình định kỳ: đọc AtomicReference mỗi 5 giây và ghi vào DB.
+     * chạy trên một Virtual Thread. dừng khi bị ngắt.
      */
     private Thread startProgressFlusher(String jobId, AtomicReference<StderrDrainer.ProgressData> progressRef) {
         return Thread.ofVirtual()
@@ -167,7 +167,7 @@ public class FfmpegExecutor {
     }
 
     /**
-     * Validate that FFmpeg produced the expected output files.
+     * xác thực rằng FFmpeg đã tạo ra các tệp đầu ra dự kiến.
      */
     private void validateOutput(String outputDir, String jobId) {
         File dir = new File(outputDir);
@@ -181,6 +181,6 @@ public class FfmpegExecutor {
             throw new RuntimeException("No .ts segments generated for job: " + jobId);
         }
 
-        log.info("Job {} output validated: 1 m3u8 + {} ts segments", jobId, tsFiles.length);
+        log.info("dau ra cua job {} da duoc xac thuc: 1 m3u8 + {} phan doan ts", jobId, tsFiles.length);
     }
 }

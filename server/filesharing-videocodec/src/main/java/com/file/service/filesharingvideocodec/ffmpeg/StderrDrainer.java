@@ -9,15 +9,15 @@ import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Drains FFmpeg stderr on a Virtual Thread to prevent pipe buffer overflow.
- * Linux kernel only allocates 64KB for pipe buffers — if stderr isn't read
- * continuously, the pipe fills up, kernel blocks FFmpeg, and the server hangs.
+ * rút cạn stderr của FFmpeg trên một Virtual Thread để ngăn tràn bộ đệm đường ống.
+ * nhân Linux chỉ phân bổ 64KB cho các bộ đệm đường ống — nếu stderr không được đọc
+ * liên tục, đường ống sẽ đầy, nhân chặn FFmpeg và máy chủ bị treo.
  *
- * <p>Rules inside the drainer:
+ * <p>các quy tắc bên trong trình rút cạn:
  * <ul>
- *   <li>No synchronous DB writes — progress goes into AtomicReference</li>
- *   <li>No external service calls</li>
- *   <li>Only async-safe logging</li>
+ *   <li>không ghi DB đồng bộ — tiến trình đi vào AtomicReference</li>
+ *   <li>không gọi dịch vụ bên ngoài</li>
+ *   <li>chỉ ghi log an toàn không đồng bộ</li>
  * </ul>
  */
 @Component
@@ -31,7 +31,7 @@ public class StderrDrainer {
     }
 
     /**
-     * Data holder for the latest progress parsed from stderr.
+     * trình giữ dữ liệu cho tiến trình mới nhất được phân tích cú pháp từ stderr.
      */
     public static class ProgressData {
         public final double encodedSeconds;
@@ -44,13 +44,13 @@ public class StderrDrainer {
     }
 
     /**
-     * Start draining stderr on a Virtual Thread.
-     * Writes latest progress into the provided AtomicReference (shared with a periodic flusher).
+     * bắt đầu rút cạn stderr trên một Virtual Thread.
+     * ghi tiến trình mới nhất vào AtomicReference được cung cấp (chia sẻ với trình xoá định kỳ).
      *
-     * @param stderr         the stderr InputStream from the FFmpeg process
-     * @param jobId          for logging context
-     * @param progressRef    shared AtomicReference for progress data
-     * @return the Virtual Thread (already started)
+     * @param stderr         InputStream stderr từ tiến trình FFmpeg
+     * @param jobId          cho ngữ cảnh ghi log
+     * @param progressRef    AtomicReference được chia sẻ cho dữ liệu tiến trình
+     * @return Virtual Thread (đã bắt đầu)
      */
     public Thread drain(InputStream stderr, String jobId, AtomicReference<ProgressData> progressRef) {
         return Thread.ofVirtual()
@@ -59,19 +59,19 @@ public class StderrDrainer {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(stderr))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
-                            // Parse progress
+                            // phân tích cú pháp tiến trình
                             double timeSec = progressParser.parseTimeSeconds(line);
                             if (timeSec >= 0) {
                                 double speed = progressParser.parseSpeed(line);
                                 progressRef.set(new ProgressData(timeSec, speed));
                             }
-                            // Log at debug level to avoid flooding
+                            // ghi log ở cấp độ debug để tránh ngập lụt
                             log.debug("[{}] {}", jobId, line);
                         }
                     } catch (Exception e) {
-                        log.warn("Stderr drainer for job {} terminated: {}", jobId, e.getMessage());
+                        log.warn("trinh rut can stderr cho job {} bi cham dut: {}", jobId, e.getMessage());
                     }
-                    log.debug("Stderr drainer for job {} finished", jobId);
+                    log.debug("trinh rut can stderr cho job {} da hoan thanh", jobId);
                 });
     }
 }
