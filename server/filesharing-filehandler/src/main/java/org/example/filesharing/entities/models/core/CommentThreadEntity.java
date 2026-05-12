@@ -22,7 +22,7 @@ public class CommentThreadEntity extends EntityAuditBase {
     private String threadId;
 
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private List<String> annotations;
 
     private CommentMessage rootComment;

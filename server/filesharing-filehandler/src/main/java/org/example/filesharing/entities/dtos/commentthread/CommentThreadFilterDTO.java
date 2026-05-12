@@ -8,7 +8,7 @@ import java.time.Instant;
 @Data
 public class CommentThreadFilterDTO {
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private String annotationId;
     private String participant;
     private String createdBy;

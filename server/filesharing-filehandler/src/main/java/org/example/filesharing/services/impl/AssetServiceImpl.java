@@ -358,11 +358,13 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Override
     @Transactional
     public MetadataEntity updateVersion(VersionUpdateRequestDto request) {
-        if (request == null || StringUtils.isNullOrBlank(request.getVersionId())) {
+        if (request == null || request.getVersionNumber() != null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
         }
 
-        MetadataEntity version = metadataRepo.findById(request.getVersionId().trim())
+        // TODO: fix
+
+        MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(request.getAssetId(), request.getVersionNumber())
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());

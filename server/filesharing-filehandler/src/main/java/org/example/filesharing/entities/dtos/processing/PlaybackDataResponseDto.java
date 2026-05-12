@@ -11,7 +11,7 @@ import org.example.filesharing.enums.ProcessingStatus;
 @AllArgsConstructor
 @Builder
 public class PlaybackDataResponseDto {
-    private String versionId;
+    private Integer versionNumber;
     private String assetId;
     private ProcessingStatus processingStatus;
 

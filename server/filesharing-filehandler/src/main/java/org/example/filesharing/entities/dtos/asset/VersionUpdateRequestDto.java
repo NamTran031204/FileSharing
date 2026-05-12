@@ -13,7 +13,8 @@ import org.example.filesharing.enums.objectPermission.ObjectVisibility;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VersionUpdateRequestDto {
-    private String versionId;
+    private String assetId;
+    private Integer versionNumber;
     private String downloadFileName;
     private ObjectVisibility visibility;
     private ObjectPermission publicPermission;

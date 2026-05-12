@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class NotificationContext {
     private String assetId;
     private String assetName;
-    private String versionId;
+    private Integer versionNumber;
     private String annotationId;
     private String commentId;
     private String reviewSessionId;

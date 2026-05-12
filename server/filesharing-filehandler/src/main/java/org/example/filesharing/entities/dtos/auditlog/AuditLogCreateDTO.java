@@ -21,7 +21,7 @@ public class AuditLogCreateDTO {
     private AuditActorType actorType;
 
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private String reviewSessionId;
 
     private AuditChanges changes;

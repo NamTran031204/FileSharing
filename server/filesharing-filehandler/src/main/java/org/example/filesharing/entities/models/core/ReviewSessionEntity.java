@@ -25,7 +25,7 @@ public class ReviewSessionEntity extends EntityAuditBase {
 
     private String projectId;
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
 
     private String title;
     private String description;

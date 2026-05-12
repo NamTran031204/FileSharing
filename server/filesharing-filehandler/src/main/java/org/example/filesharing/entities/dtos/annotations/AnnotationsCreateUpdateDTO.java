@@ -10,11 +10,15 @@ import org.example.filesharing.enums.AnnotationType;
 public class AnnotationsCreateUpdateDTO {
     private String annotationId;
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private AnnotationType annotationType;
+
+    // video
     private AnnotationTimeCode timeCode;
-    private AnnotationRegion region;
     private Integer frameNumber;
+    // image
+    private AnnotationRegion region;
+
     private AnnotationStatus status;
     private String threadId;
 }

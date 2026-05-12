@@ -29,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 
+import static org.example.filesharing.utils.NumberUtils.requireNumber;
+import static org.example.filesharing.utils.StringUtils.trimToNull;
+
 @Service
 @RequiredArgsConstructor
 public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> implements AnnotationsService {
@@ -54,8 +57,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         AnnotationStatus status = dto.getStatus() != null ? dto.getStatus() : AnnotationStatus.OPEN;
 
         AnnotationsEntity entity = AnnotationsEntity.builder()
-                .assetId(requireNormalized(dto.getAssetId(), "assetId is required"))
-                .versionId(requireNormalized(dto.getVersionId(), "versionId is required"))
+                .assetId(StringUtils.requireNormalized(dto.getAssetId(), "assetId is required"))
+                .versionNumber((Integer) requireNumber(dto.getVersionNumber(), "versionId is required"))
                 .annotationType(annotationType)
                 .timeCode(annotationType == AnnotationType.TIMECODE ? normalizedTimeCode : null)
                 .region(annotationType == AnnotationType.TIMECODE ? null : normalizedRegion)
@@ -81,7 +84,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is immutable");
         }
 
-        if (StringUtils.isNotNullOrBlank(dto.getVersionId()) && !dto.getVersionId().trim().equals(entity.getVersionId())) {
+        if (dto.getVersionNumber() != null && !dto.getVersionNumber().equals(entity.getVersionNumber())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is immutable");
         }
 
@@ -136,8 +139,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 query.addCriteria(Criteria.where("assetId").is(filter.getAssetId().trim()));
             }
 
-            if (StringUtils.isNotNullOrBlank(filter.getVersionId())) {
-                query.addCriteria(Criteria.where("versionId").is(filter.getVersionId().trim()));
+            if (filter.getVersionNumber() != null) {
+                query.addCriteria(Criteria.where("versionId").is(filter.getVersionNumber()));
             }
 
             if (StringUtils.isNotNullOrBlank(filter.getThreadId())) {
@@ -241,8 +244,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
         }
 
-        if (StringUtils.isNullOrBlank(dto.getVersionId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
+        if (dto.getVersionNumber() != null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "version is required");
         }
 
         if (dto.getAnnotationType() == null) {
@@ -363,22 +366,5 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 ? Sort.Direction.DESC
                 : Sort.Direction.ASC;
         return Sort.by(direction, field);
-    }
-
-    private String requireNormalized(String input, String message) {
-        String normalized = trimToNull(input);
-        if (normalized == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
-        }
-        return normalized;
-    }
-
-    private String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-
-        String trimmed = input.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 }

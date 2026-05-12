@@ -1,5 +1,8 @@
 package org.example.filesharing.utils;
 
+import org.example.filesharing.exceptions.ErrorCode;
+import org.example.filesharing.exceptions.specException.UserBusinessException;
+
 import java.text.Normalizer;
 import java.util.regex.Pattern;
 
@@ -41,4 +44,21 @@ public class StringUtils {
 
         return withoutAccents;
     }
+
+    public static String requireNormalized(String input, String message) {
+        String normalized = trimToNull(input);
+        if (normalized == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
+        }
+        return normalized;
+    }
+    public static String trimToNull(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        String trimmed = input.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
 }

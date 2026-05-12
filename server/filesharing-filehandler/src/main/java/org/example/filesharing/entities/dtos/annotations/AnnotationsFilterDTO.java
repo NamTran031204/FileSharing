@@ -9,7 +9,7 @@ import java.time.Instant;
 @Data
 public class AnnotationsFilterDTO {
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private String threadId;
     private AnnotationType annotationType;
     private AnnotationStatus status;

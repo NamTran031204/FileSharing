@@ -26,7 +26,7 @@ public class AnnotationsEntity extends EntityAuditBase {
 
     private String assetId;
 
-    private String versionId;
+    private Integer versionNumber;
 
     private AnnotationType annotationType;
 

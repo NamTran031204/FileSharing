@@ -10,7 +10,7 @@ import java.util.List;
 public class CommentThreadCreateUpdateDTO {
     private String threadId;
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private List<String> annotations;
     private CommentMessage rootComment;
     private List<CommentMessage> replies;

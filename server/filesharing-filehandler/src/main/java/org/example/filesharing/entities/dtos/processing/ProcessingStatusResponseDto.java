@@ -13,7 +13,7 @@ import org.example.filesharing.enums.ProcessingStatus;
 @AllArgsConstructor
 @Builder
 public class ProcessingStatusResponseDto {
-    private String versionId;
+    private Integer versionNumber;
     private ProcessingStatus processingStatus;
     private ProcessingJobStatus jobStatus;
     private ProcessingJobProgress progress;

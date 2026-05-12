@@ -34,7 +34,7 @@ public class AuditLogEntity extends EntityAuditBase {
     private String targetName;
 
     private String assetId;
-    private String versionId;
+    private Integer versionNumber;
     private String reviewSessionId;
 
     private AuditChanges changes;
