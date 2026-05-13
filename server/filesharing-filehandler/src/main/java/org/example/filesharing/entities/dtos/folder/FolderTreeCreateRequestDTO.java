@@ -17,5 +17,4 @@ public class FolderTreeCreateRequestDTO {
     private String baseFolderPath;
     private String rootFolderName;
     private List<FolderTreeNodeDTO> folders;
-    private String createdBy;
 }

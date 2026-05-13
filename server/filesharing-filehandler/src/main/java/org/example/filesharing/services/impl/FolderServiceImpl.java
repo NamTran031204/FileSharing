@@ -524,10 +524,6 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "rootFolderName is required");
         }
 
-        if (StringUtils.isNullOrBlank(request.getCreatedBy())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "createdBy is required");
-        }
-
         if (request.getFolders() == null || request.getFolders().isEmpty()) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folders is required");
         }

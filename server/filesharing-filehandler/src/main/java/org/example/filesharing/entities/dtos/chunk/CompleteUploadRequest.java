@@ -9,5 +9,6 @@ import java.util.List;
 public class CompleteUploadRequest {
     private String objectName;
     private String uploadId;
+    private String assetId;
     private List<MinIoServiceImpl.PartInfo> parts;
 }

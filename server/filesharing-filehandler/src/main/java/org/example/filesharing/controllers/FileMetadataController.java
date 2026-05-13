@@ -11,6 +11,7 @@ import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.models.core.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
+import org.example.filesharing.jobs.kafka.ImageEncodeProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
@@ -35,9 +36,13 @@ public class FileMetadataController {
     private final MetadataRepo metadataRepo;
     private final VideoEncodeProducer videoEncodeProducer;
     private final KafkaTemplate<String, Object> videoEncodeKafkaTemplate;
+    private final ImageEncodeProducer imageEncodeProducer;
 
     @Value(value = "${kafka.topics.video_encode_topic:video_encode_topic}")
     private String videoEncodeTopic;
+
+    @Value(value = "${kafka.topics.image_process_topic:image_process_topic}")
+    private String imageProcessTopic;
 
     @PostMapping("/upload-metadata")
     public CommonResponse<InitiateUploadResponseDto> startUpload(@RequestBody MetadataDTO metadataDTO) {
@@ -70,6 +75,7 @@ public class FileMetadataController {
         }
         minIoService.completeMultipartUpload(input.getObjectName(), input.getUploadId(), input.getParts());
         metadataService.completeUpload(input.getObjectName(), input.getUploadId());
+        imageEncodeProducer.sendKafka(input.getUploadId(), input.getAssetId());
         return CommonResponse.success("complete upload");
     }
 
