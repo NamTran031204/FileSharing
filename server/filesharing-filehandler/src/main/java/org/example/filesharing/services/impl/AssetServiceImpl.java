@@ -41,6 +41,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 
+import static org.example.filesharing.utils.StringUtils.requireNormalized;
+import static org.example.filesharing.utils.StringUtils.trimToNull;
+
 @Service
 @RequiredArgsConstructor
 public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements AssetService {
@@ -82,6 +85,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             return createNewVersion(request, asset.get());
         }
 
+        // tao asset moi neu chua co, asset moi version 1
         String currentUserId = auditService.getCurrentUserId();
         String currentUserEmail = auditService.getCurrentUserEmail();
 
@@ -93,6 +97,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .ownerId(currentUserId)
                 .ownerEmail(currentUserEmail)
                 .versionCount(1)
+                .mediaType(MediaType.fromMime(request.getMimeType()))
                 .assetStatus(AssetStatus.DRAFT)
                 .build();
 
@@ -112,7 +117,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         writeAssetAuditLog(savedAsset, AuditAction.CREATE);
-        writeVersionAuditLog(savedAsset.getAssetId(), version.getFileId(), AuditAction.UPLOAD_NEW_VERSION);
+        writeVersionAuditLog(savedAsset.getAssetId(), 1, AuditAction.UPLOAD_NEW_VERSION);
 
         return AssetCreateResponseDto.builder()
                 .asset(savedAsset)
@@ -319,10 +324,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     }
 
     AssetCreateResponseDto createNewVersion(AssetCreateRequestDto request, AssetEntity asset) {
-        MediaType mediaType = request.getMediaType();
-        MetadataEntity firstVersion = metadataRepo.findFirstByAssetIdOrderByVersionNumberAsc(asset.getAssetId())
-                .orElse(null);
-        if (firstVersion != null && firstVersion.getMediaType() != null && mediaType != firstVersion.getMediaType()) {
+        MediaType mediaType = request.getMediaType() != null ? request.getMediaType() : MediaType.fromMime(request.getMimeType());
+        if (mediaType != asset.getMediaType()) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "mediaType must match original version");
         }
 
@@ -332,6 +335,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         String objectName = generateObjectName(requireNormalized(request.getFileName(), "fileName is required"));
         InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
 
+        // todo: su dung service metadata
         MetadataEntity version = buildMetadataVersion(request, asset.getAssetId(), nextVersionNumber, objectName, upload.getUploadId());
         metadataRepo.save(version);
 
@@ -346,7 +350,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         ProjectEntity project = getProjectOrThrow(asset.getProjectId());
         incrementProjectTotalVersions(project, 1);
 
-        writeVersionAuditLog(asset.getAssetId(), version.getFileId(), AuditAction.UPLOAD_NEW_VERSION);
+        writeVersionAuditLog(asset.getAssetId(), nextVersionNumber, AuditAction.UPLOAD_NEW_VERSION);
+
+        // todo: gui email thong bao cho cac user da update phien ban moi (kafka)
 
         return AssetCreateResponseDto.builder()
                 .version(version)
@@ -358,44 +364,42 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Override
     @Transactional
     public MetadataEntity updateVersion(VersionUpdateRequestDto request) {
-        if (request == null || request.getVersionNumber() != null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
+        if (request == null || request.getVersionNumber() == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
 
-        // TODO: fix
-
-        MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(request.getAssetId(), request.getVersionNumber())
+        MetadataEntity fileVersion = metadataRepo.findByAssetIdAndVersionNumber(request.getAssetId(), request.getVersionNumber())
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
-        AssetEntity asset = getAssetOrThrow(version.getAssetId());
+        AssetEntity asset = getAssetOrThrow(fileVersion.getAssetId());
         ensureAssetPermission(asset, ObjectPermission.MODIFY);
 
         if (StringUtils.isNotNullOrBlank(request.getDownloadFileName())) {
-            version.setDownloadFileName(request.getDownloadFileName().trim());
+            fileVersion.setDownloadFileName(request.getDownloadFileName().trim());
         }
 
         if (request.getVisibility() != null) {
-            version.setVisibility(request.getVisibility());
+            fileVersion.setVisibility(request.getVisibility());
         }
 
         if (request.getPublicPermission() != null) {
-            version.setPublicPermission(request.getPublicPermission());
+            fileVersion.setPublicPermission(request.getPublicPermission());
         }
 
         if (request.getProcessingStatus() != null) {
-            version.setProcessingStatus(request.getProcessingStatus());
+            fileVersion.setProcessingStatus(request.getProcessingStatus());
         }
 
         if (request.getProcessingError() != null) {
-            version.setProcessingError(request.getProcessingError());
+            fileVersion.setProcessingError(request.getProcessingError());
         }
 
         if (request.getMediaInfo() != null) {
-            version.setMediaInfo(mapMediaInfo(request.getMediaInfo()));
+            fileVersion.setMediaInfo(mapMediaInfo(request.getMediaInfo()));
         }
 
-        MetadataEntity saved = metadataRepo.save(version);
-        writeVersionAuditLog(asset.getAssetId(), saved.getFileId(), AuditAction.UPDATE);
+        MetadataEntity saved = metadataRepo.save(fileVersion);
+        writeVersionAuditLog(asset.getAssetId(), saved.getVersionNumber(), AuditAction.UPDATE);
         return saved;
     }
 
@@ -442,6 +446,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .build();
     }
 
+    // todo: chuyen doi dau vao
     @Override
     public MetadataEntity getVersionById(String versionId) {
         if (StringUtils.isNullOrBlank(versionId)) {
@@ -468,6 +473,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         return findLatestCompletedVersion(asset.getAssetId());
     }
 
+    // todo: chuyen doi dau vao
     @Override
     @Transactional
     public void deleteVersion(String versionId) {
@@ -545,22 +551,6 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
     }
 
-    private String requireNormalized(String value, String message) {
-        String normalized = trimToNull(value);
-        if (normalized == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
-        }
-        return normalized;
-    }
-
-    private String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-        String trimmed = input.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
     private String generateObjectName(String fileName) {
         String normalizedFileName = requireNormalized(fileName, "fileName is required");
         String objectName;
@@ -576,7 +566,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
         MetadataEntity metadata = MetadataEntity.builder()
                 .fileName(request.getFileName())
-                .downloadFileName(request.getFileName())
+                .downloadFileName(request.getFileName() + "v" + versionNumber)
                 .objectName(objectName)
                 .mimeType(request.getMimeType())
                 .fileSize(request.getFileSize())
@@ -870,8 +860,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         auditLogService.createAuditLog(dto);
     }
 
-    private void writeVersionAuditLog(String assetId, String versionId, AuditAction action) {
-        if (StringUtils.isNullOrBlank(versionId)) {
+    private void writeVersionAuditLog(String assetId, Integer versionNumber, AuditAction action) {
+        if (versionNumber == null) {
             return;
         }
 
@@ -880,7 +870,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         dto.setTargetType(AuditTargetType.FILE);
         dto.setTargetId(versionId);
         dto.setAssetId(assetId);
-        dto.setVersionId(versionId);
+        dto.setVersionNumber(versionNumber);
         auditLogService.createAuditLog(dto);
     }
 

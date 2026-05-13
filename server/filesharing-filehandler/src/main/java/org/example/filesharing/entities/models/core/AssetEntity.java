@@ -3,6 +3,7 @@ package org.example.filesharing.entities.models.core;
 import lombok.*;
 import org.example.filesharing.entities.models.core.base.EntityAuditBase;
 import org.example.filesharing.enums.AssetStatus;
+import org.example.filesharing.enums.MediaType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -29,6 +30,8 @@ public class AssetEntity extends EntityAuditBase {
 
     private String ownerId;
     private String ownerEmail;
+
+    private MediaType mediaType; // khoi tao tu dau, khong cho phep thay doi
 
     private Integer versionCount;
     private AssetStatus assetStatus;

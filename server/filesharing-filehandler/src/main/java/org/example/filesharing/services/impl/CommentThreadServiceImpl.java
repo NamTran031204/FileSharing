@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import static org.example.filesharing.utils.StringUtils.trimToNull;
+
 @Service
 @RequiredArgsConstructor
 public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEntity> implements CommentThreadService {
@@ -57,7 +59,7 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
 
         CommentThreadEntity entity = CommentThreadEntity.builder()
                 .assetId(trimToNull(dto.getAssetId()))
-                .versionId(trimToNull(dto.getVersionId()))
+                .versionNumber(dto.getVersionNumber())
                 .annotations(normalizeStringList(dto.getAnnotations(), false))
                 .rootComment(rootComment)
                 .replies(replies)
@@ -86,7 +88,7 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is immutable");
         }
 
-        if (StringUtils.isNotNullOrBlank(dto.getVersionId()) && !dto.getVersionId().trim().equals(entity.getVersionId())) {
+        if (dto.getVersionNumber() != null && !dto.getVersionNumber().equals(entity.getVersionNumber())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is immutable");
         }
 
@@ -141,8 +143,8 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
                 query.addCriteria(Criteria.where("assetId").is(filter.getAssetId().trim()));
             }
 
-            if (StringUtils.isNotNullOrBlank(filter.getVersionId())) {
-                query.addCriteria(Criteria.where("versionId").is(filter.getVersionId().trim()));
+            if (filter.getVersionNumber() != null) {
+                query.addCriteria(Criteria.where("versionNumber").is(filter.getVersionNumber()));
             }
 
             if (StringUtils.isNotNullOrBlank(filter.getAnnotationId())) {
@@ -239,8 +241,8 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
         }
 
-        if (StringUtils.isNullOrBlank(dto.getVersionId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
+        if (dto.getVersionNumber() == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "version is required");
         }
 
         if (dto.getRootComment() == null || StringUtils.isNullOrBlank(dto.getRootComment().getContent())) {
@@ -489,15 +491,6 @@ public class CommentThreadServiceImpl extends BaseAuditService<CommentThreadEnti
                 ? Sort.Direction.DESC
                 : Sort.Direction.ASC;
         return Sort.by(direction, field);
-    }
-
-    private String trimToNull(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String normalizeEmail(String email) {

@@ -29,6 +29,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.example.filesharing.utils.StringUtils.requireNormalized;
+import static org.example.filesharing.utils.StringUtils.trimToNull;
+
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl extends BaseAuditService<NotificationEntity> implements NotificationService {
@@ -286,7 +289,7 @@ public class NotificationServiceImpl extends BaseAuditService<NotificationEntity
         return NotificationContext.builder()
                 .assetId(trimToNull(context.getAssetId()))
                 .assetName(trimToNull(context.getAssetName()))
-                .versionId(trimToNull(context.getVersionId()))
+                .versionNumber(context.getVersionNumber())
                 .annotationId(trimToNull(context.getAnnotationId()))
                 .commentId(trimToNull(context.getCommentId()))
                 .reviewSessionId(trimToNull(context.getReviewSessionId()))
@@ -334,20 +337,5 @@ public class NotificationServiceImpl extends BaseAuditService<NotificationEntity
         return Sort.by(direction, field);
     }
 
-    private String requireNormalized(String value, String message) {
-        String normalized = trimToNull(value);
-        if (normalized == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
-        }
-        return normalized;
-    }
 
-    private String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-
-        String trimmed = input.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 }

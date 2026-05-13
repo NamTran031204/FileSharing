@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+import static org.example.filesharing.utils.StringUtils.trimToNull;
+
 @Service
 @RequiredArgsConstructor
 public class AuditLogServiceImpl implements AuditLogService {
@@ -41,7 +43,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .targetId(trimToNull(dto.getTargetId()))
                 .targetName(trimToNull(dto.getTargetName()))
                 .assetId(trimToNull(dto.getAssetId()))
-                .versionId(trimToNull(dto.getVersionId()))
+                .versionNumber(dto.getVersionNumber())
                 .reviewSessionId(trimToNull(dto.getReviewSessionId()))
                 .changes(dto.getChanges())
                 .requestInfo(dto.getRequestInfo())
@@ -114,14 +116,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         entity.setCreatedByEmail(actor.actorEmail);
     }
 
-    private String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-
-        String trimmed = input.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 
     private static class ResolvedActor {
         private final String actorId;
