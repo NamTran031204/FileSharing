@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.permission.GrantedPermission;
+import org.example.filesharing.enums.permission.GrantedProjectRole;
 
 import java.time.Instant;
 
@@ -14,6 +14,6 @@ import java.time.Instant;
 @Builder
 public class ProjectCollaborator {
     private String userId;
-    private GrantedPermission permission;
+    private GrantedProjectRole projectRole;
     private Instant addedAt;
 }

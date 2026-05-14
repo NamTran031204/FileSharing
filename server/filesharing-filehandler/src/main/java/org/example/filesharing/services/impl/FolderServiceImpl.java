@@ -26,7 +26,7 @@ import org.example.filesharing.enums.AuditTargetType;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.enums.objectPermission.ObjectPermission;
-import org.example.filesharing.enums.permission.GrantedPermission;
+import org.example.filesharing.enums.permission.GrantedProjectRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
@@ -715,7 +715,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             return;
         }
 
-        GrantedPermission permission = resolveProjectPermission(project, user);
+        GrantedProjectRole permission = resolveProjectPermission(project, user);
         if (permission == null) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
@@ -726,8 +726,8 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             return;
         }
 
-        GrantedPermission permission = resolveProjectPermission(project, user);
-        if (permission != GrantedPermission.OWNER && permission != GrantedPermission.PRODUCER) {
+        GrantedProjectRole permission = resolveProjectPermission(project, user);
+        if (permission != GrantedProjectRole.OWNER && permission != GrantedProjectRole.PRODUCER) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
     }
@@ -742,13 +742,13 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
     }
 
-    private GrantedPermission resolveProjectPermission(ProjectEntity project, UserEntity user) {
+    private GrantedProjectRole resolveProjectPermission(ProjectEntity project, UserEntity user) {
         if (user == null) {
             return null;
         }
 
         if (Objects.equals(project.getOwnerId(), user.getUserId())) {
-            return GrantedPermission.OWNER;
+            return GrantedProjectRole.OWNER;
         }
 
         if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
@@ -762,7 +762,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             boolean matchUserId = collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId);
             boolean matchEmail = collaborator.getEmail() != null && collaborator.getEmail().equalsIgnoreCase(currentEmail);
             if (matchUserId || matchEmail) {
-                return collaborator.getPermission();
+                return collaborator.getProjectRole();
             }
         }
 

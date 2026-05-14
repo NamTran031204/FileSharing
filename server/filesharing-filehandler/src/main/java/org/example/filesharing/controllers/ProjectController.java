@@ -8,6 +8,8 @@ import org.example.filesharing.entities.dtos.project.ProjectCheckInputDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
+import org.example.filesharing.entities.dtos.project.ShareTokenCreateDTO;
+import org.example.filesharing.entities.dtos.project.ShareTokenCreateResponseDTO;
 import org.example.filesharing.entities.models.core.ProjectEntity;
 import org.example.filesharing.services.ProjectService;
 import org.springframework.web.bind.annotation.*;
@@ -49,6 +51,23 @@ public class ProjectController {
     @GetMapping("/get-by-id/{projectId}")
     public CommonResponse<ProjectEntity> getProjectById(@PathVariable("projectId") String projectId) {
         return CommonResponse.success(projectService.getProjectById(projectId));
+    }
+
+    @PostMapping("/remove-collaborator/{projectId}/{collaboratorId}")
+    public CommonResponse<ProjectEntity> removeCollaboratorFromProject(
+            @PathVariable("projectId") String projectId,
+            @PathVariable("collaboratorId") String collaboratorId) {
+        return CommonResponse.success(projectService.removeCollaboratorFromProject(projectId, collaboratorId));
+    }
+
+    @PostMapping("/create-share-token")
+    public CommonResponse<ShareTokenCreateResponseDTO> createShareToken(@RequestBody ShareTokenCreateDTO input) {
+        return CommonResponse.success(projectService.createShareToken(input));
+    }
+
+    @GetMapping("/join-project/{shareToken}")
+    public CommonResponse<ProjectEntity> joinProject(@PathVariable("shareToken") String shareToken) {
+        return CommonResponse.success(projectService.joinProject(shareToken));
     }
 
     @PostMapping("/move-to-project/{projectId}")

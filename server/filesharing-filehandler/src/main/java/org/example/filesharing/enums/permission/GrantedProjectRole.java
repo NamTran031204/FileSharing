@@ -1,5 +1,5 @@
 package org.example.filesharing.enums.permission;
 
-public enum GrantedPermission {
+public enum GrantedProjectRole {
     OWNER, REVIEWER, PRODUCER, GUEST, VIEWER
 }
