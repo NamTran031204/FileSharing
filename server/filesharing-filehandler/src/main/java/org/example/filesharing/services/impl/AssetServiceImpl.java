@@ -294,8 +294,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         List<MetadataEntity> versions = metadataRepo.findByAssetId(asset.getAssetId());
         Instant trashedAt = Instant.now();
         for (MetadataEntity version : versions) {
-            version.setIsTrash(true);
-            version.setTrashedAt(trashedAt);
+            version.setIsActive(false);
+//            version.setTrashedAt(trashedAt);
         }
         if (!versions.isEmpty()) {
             metadataRepo.saveAll(versions);

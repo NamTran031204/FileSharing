@@ -52,29 +52,4 @@ public class AssetController {
 		return CommonResponse.success("Asset deleted successfully");
 	}
 
-	@PostMapping("/version/create-new")
-	public CommonResponse<AssetCreateResponseDto> createVersion(@RequestBody AssetCreateRequestDto request) {
-		return CommonResponse.success(assetService.createVersion(request));
-	}
-
-	@PostMapping("/version/update-detail")
-	public CommonResponse<MetadataEntity> updateVersion(@RequestBody VersionUpdateRequestDto request) {
-		return CommonResponse.success(assetService.updateVersion(request));
-	}
-
-	@PostMapping("/version/get-page")
-	public CommonResponse<PageResult<MetadataEntity>> getVersionPage(@RequestBody PageRequestDto<VersionFilterRequestDto> dto) {
-		return CommonResponse.success(assetService.getVersionPage(dto));
-	}
-
-	@GetMapping("/version/get-by-id/{versionId}")
-	public CommonResponse<MetadataEntity> getVersionById(@PathVariable("versionId") String versionId) {
-		return CommonResponse.success(assetService.getVersionById(versionId));
-	}
-
-	@PostMapping("/version/delete/{versionId}")
-	public CommonResponse<String> deleteVersion(@PathVariable("versionId") String versionId) {
-		assetService.deleteVersion(versionId);
-		return CommonResponse.success("Version deleted successfully");
-	}
 }

@@ -4,6 +4,7 @@ import lombok.*;
 import org.example.filesharing.entities.models.FolderPermission;
 import org.example.filesharing.entities.models.FolderStats;
 import org.example.filesharing.entities.models.core.base.EntityAuditBase;
+import org.example.filesharing.enums.permission.GrantedVisibility;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -31,6 +32,8 @@ public class FolderEntity extends EntityAuditBase {
     private Integer level;
 
     private List<FolderPermission> permissions;
+    private GrantedVisibility visibility;
+
     private FolderStats stats;
 
     private String shareToken;

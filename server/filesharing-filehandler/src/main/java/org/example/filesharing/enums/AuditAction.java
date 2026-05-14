@@ -3,6 +3,7 @@ package org.example.filesharing.enums;
 public enum AuditAction {
     CREATE,
     UPDATE,
+    TRASH,
     DELETE,
     STATUS_CHANGE,
     PERMISSION_CHANGE,
