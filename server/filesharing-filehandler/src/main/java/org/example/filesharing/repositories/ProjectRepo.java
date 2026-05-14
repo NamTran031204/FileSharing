@@ -12,6 +12,10 @@ public interface ProjectRepo extends MongoRepository<ProjectEntity, String> {
 
     boolean existsByProjectName(String projectName);
 
+    boolean existsByProjectNameAndIsActiveAndOwnerId(String projectName, boolean isActive, String ownerId);
+
+    boolean existsByProjectCodeAndIsActiveAndOwnerId(String projectCode, boolean isActive, String ownerId);
+
     boolean existsByProjectNameAndIsActive(String projectName, boolean isActive);
 
     boolean existsByProjectCodeAndIsActive(String projectCode, Boolean isActive);

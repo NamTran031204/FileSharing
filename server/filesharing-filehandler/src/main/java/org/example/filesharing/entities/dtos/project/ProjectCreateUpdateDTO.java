@@ -21,6 +21,6 @@ public class ProjectCreateUpdateDTO {
     // danh sach user va quyen
     private List<ProjectCollaboratorDTO> collaborators;
 
-    // voi mode create, khong truyen gi mac dinh la ACTIVE
+    // voi mode create mac dinh la ACTIVE
     private ProjectStatus status;
 }

@@ -14,7 +14,6 @@ import java.time.Instant;
 @Builder
 public class ProjectCollaborator {
     private String userId;
-    private String email;
     private GrantedPermission permission;
     private Instant addedAt;
 }

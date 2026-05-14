@@ -50,7 +50,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (inputDTO == null) throw new CommonException(ErrorCode.VALIDATION_ERROR);
 
         if (inputDTO.getProjectName() != null) {
-            if (projectRepo.existsByProjectName(inputDTO.getProjectName())) {
+            if (projectRepo.existsByProjectNameAndIsActiveAndOwnerId(inputDTO.getProjectName(),true, auditService.getCurrentUserId())) {
                 return ProjectCheckResponseDTO.builder()
                         .isSuccess(false)
                         .message("Project name already exists")
@@ -59,7 +59,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         if (inputDTO.getProjectCode() != null) {
-            if (projectRepo.existsByProjectCode(inputDTO.getProjectCode())) {
+            if (projectRepo.existsByProjectCodeAndIsActiveAndOwnerId(inputDTO.getProjectCode(), true, auditService.getCurrentUserId())) {
                 return ProjectCheckResponseDTO.builder()
                         .isSuccess(false)
                         .message("Project code already exists")
@@ -79,12 +79,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         String projectCode;
         if (StringUtils.isNotNullOrBlank(projectCreateUpdateDTO.getProjectCode())) {
             projectCode = projectCreateUpdateDTO.getProjectCode().trim();
-            if (projectRepo.existsByProjectCode(projectCode)) {
-                throw new UserBusinessException(
-                        ErrorCode.BAD_REQUEST,
-                        "projectCode already exists: " + projectCode
-                );
-            }
         } else {
             projectCode = "PRJ_" + UUID.randomUUID();
         }
@@ -92,9 +86,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         String ownerId = auditService.getCurrentUserId();
         String ownerEmail = auditService.getCurrentUserEmail();
-        ProjectStatus status = projectCreateUpdateDTO.getStatus() != null
-                ? projectCreateUpdateDTO.getStatus()
-                : ProjectStatus.ACTIVE;
+        ProjectStatus status = ProjectStatus.ACTIVE;
 
         ProjectEntity project = ProjectEntity.builder()
                 .projectName(projectCreateUpdateDTO.getProjectName().trim())
@@ -104,10 +96,10 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .ownerEmail(ownerEmail)
                 .startDate(projectCreateUpdateDTO.getStartDate())
                 .endDate(projectCreateUpdateDTO.getEndDate())
-                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), true))
+                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), new ArrayList<>(), true))
                 .stats(defaultStats())
                 .status(status)
-                .trashedAt(status == ProjectStatus.ARCHIVED ? Instant.now() : null)
+                .trashedAt(Instant.now())
                 .build();
 
         buildAudit(project, true);
@@ -154,7 +146,10 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         validateProjectDateRange(project.getStartDate(), project.getEndDate());
 
         if (projectCreateUpdateDTO.getCollaborators() != null) {
-            project.setCollaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), false));
+            List<ProjectCollaboratorDTO> newCollaborators = projectCreateUpdateDTO.getCollaborators();
+            List<ProjectCollaborator> oldCollab = project.getCollaborators();
+            var listNewCollab = buildCollaborators(newCollaborators, oldCollab, false);
+            project.setCollaborators(listNewCollab);
         }
 
         if (projectCreateUpdateDTO.getStatus() != null) {
@@ -315,7 +310,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
     private boolean hasProjectAccess(ProjectEntity project) {
         String currentUserId = auditService.getCurrentUserId();
-        String currentUserEmail = auditService.getCurrentUserEmail();
 
         if (currentUserId.equals(project.getOwnerId())) {
             return true;
@@ -327,38 +321,37 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         return project.getCollaborators().stream().anyMatch(collaborator ->
                 (collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId))
-                        || (collaborator.getEmail() != null
-                        && collaborator.getEmail().equalsIgnoreCase(currentUserEmail))
         );
     }
 
-    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collab, Boolean isCreate) {
+    // todo: chuyen thanh merge old new collaborator
+    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> newCollab, List<ProjectCollaborator> oldCollab, Boolean isCreate) {
 
         List<ProjectCollaborator> collaborators = new ArrayList<>();
         if (isCreate) {
             String currentUserId = auditService.getCurrentUserId();
-            String currentUserEmail = auditService.getCurrentUserEmail();
 
             // owner la mot collaborator
             ProjectCollaborator projectCollaborator = ProjectCollaborator.builder()
-                    .email(currentUserEmail)
                     .userId(currentUserId)
                     .permission(GrantedPermission.OWNER)
                     .addedAt(Instant.now())
                     .build();
             collaborators.add(projectCollaborator);
-            if (collab == null || collab.isEmpty()) {
+            if (newCollab == null || newCollab.isEmpty()) {
                 return collaborators;
             }
         }
 
-        if (collab == null) {
+        if (newCollab == null) {
             return collaborators;
         }
 
-        for (ProjectCollaboratorDTO collaborator: collab) {
+        for (ProjectCollaboratorDTO collaborator: newCollab) {
             collaborators.add(mapEmailToCollaborator(collaborator));
         }
+
+        // merge old new collab
 
         return collaborators;
 
@@ -377,7 +370,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         return ProjectCollaborator.builder()
                 .userId(userEntity.getUserId())
-                .email(userEntity.getEmail())
                 .permission(collaboratorDTO.getPermission() != null ? collaboratorDTO.getPermission() : GrantedPermission.VIEWER)
                 .addedAt(Instant.now())
                 .build();
