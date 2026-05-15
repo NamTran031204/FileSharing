@@ -23,4 +23,6 @@ public interface ProjectRepo extends MongoRepository<ProjectEntity, String> {
     boolean existsByProjectCodeAndIsActive(String projectCode, Boolean isActive);
 
     Optional<ProjectEntity> findByShareToken(String shareToken);
+
+    boolean existsByShareToken(String shareToken);
 }
