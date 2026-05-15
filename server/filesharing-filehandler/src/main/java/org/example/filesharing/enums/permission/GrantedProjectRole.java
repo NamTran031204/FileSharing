@@ -13,25 +13,24 @@ public enum GrantedProjectRole {
             GrantedProjectPermission.READ,
             GrantedProjectPermission.DOWNLOAD,
             GrantedProjectPermission.COMMENT,
-            GrantedProjectPermission.MULTIPLE_CHOOSE,
-            GrantedProjectPermission.CREATE_CHILD,
+            GrantedProjectPermission.SELECT_AND_SUBMIT,
+            GrantedProjectPermission.CREATE_FOLDER_ASSET,
             GrantedProjectPermission.UPDATE,
-            GrantedProjectPermission.MODIFY,
             GrantedProjectPermission.ARCHIVE,
             GrantedProjectPermission.DELETE,
             GrantedProjectPermission.ADD_USER,
             GrantedProjectPermission.AUDIT_LOG
     );
 
-    public static List<GrantedProjectPermission> projectPermissionsFromRole(final GrantedProjectRole role) {
+    public static List<GrantedProjectPermission> projectPermissionsFromRole(GrantedProjectRole role) {
         switch (role) {
             case OWNER -> {
                 return List.of(
                         GrantedProjectPermission.READ,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
                         GrantedProjectPermission.DOWNLOAD,
                         GrantedProjectPermission.COMMENT,
-                        GrantedProjectPermission.CREATE_CHILD,
+                        GrantedProjectPermission.CREATE_FOLDER_ASSET,
                         GrantedProjectPermission.UPDATE,
                         GrantedProjectPermission.ARCHIVE,
                         GrantedProjectPermission.DELETE,
@@ -42,7 +41,7 @@ public enum GrantedProjectRole {
             case REVIEWER -> {
                 return List.of(
                         GrantedProjectPermission.READ,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
                         GrantedProjectPermission.DOWNLOAD,
                         GrantedProjectPermission.COMMENT
                 );
@@ -51,16 +50,16 @@ public enum GrantedProjectRole {
                 return List.of(
                         GrantedProjectPermission.READ,
                         GrantedProjectPermission.DOWNLOAD,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
                         GrantedProjectPermission.COMMENT,
-                        GrantedProjectPermission.CREATE_CHILD,
+                        GrantedProjectPermission.CREATE_FOLDER_ASSET,
                         GrantedProjectPermission.ADD_USER
                 );
             }
             case GUEST -> {
                 return List.of(
                         GrantedProjectPermission.READ,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE
+                        GrantedProjectPermission.SELECT_AND_SUBMIT
                 );
             }
             default -> {
@@ -73,17 +72,16 @@ public enum GrantedProjectRole {
     }
 
     // todo: cap phat quyen
-    public static List<GrantedProjectPermission> folderPermissionsFromRole(final GrantedProjectRole role) {
+    public static List<GrantedProjectPermission> folderPermissionsFromRole(GrantedProjectRole role) {
         switch (role) {
             case OWNER -> {
                 return List.of(
                         GrantedProjectPermission.READ,
                         GrantedProjectPermission.DOWNLOAD,
                         GrantedProjectPermission.COMMENT,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
-                        GrantedProjectPermission.CREATE_CHILD,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
+                        GrantedProjectPermission.CREATE_FOLDER_ASSET,
                         GrantedProjectPermission.UPDATE,
-                        GrantedProjectPermission.MODIFY,
                         GrantedProjectPermission.ARCHIVE,
                         GrantedProjectPermission.DELETE,
                         GrantedProjectPermission.ADD_USER,
@@ -93,7 +91,7 @@ public enum GrantedProjectRole {
             case REVIEWER -> {
                 return List.of(
                         GrantedProjectPermission.READ,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
                         GrantedProjectPermission.DOWNLOAD,
                         GrantedProjectPermission.COMMENT
                 );
@@ -102,16 +100,16 @@ public enum GrantedProjectRole {
                 return List.of(
                         GrantedProjectPermission.READ,
                         GrantedProjectPermission.DOWNLOAD,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE,
+                        GrantedProjectPermission.SELECT_AND_SUBMIT,
                         GrantedProjectPermission.COMMENT,
-                        GrantedProjectPermission.CREATE_CHILD,
+                        GrantedProjectPermission.CREATE_FOLDER_ASSET,
                         GrantedProjectPermission.ADD_USER
                 );
             }
             case GUEST -> {
                 return List.of(
                         GrantedProjectPermission.READ,
-                        GrantedProjectPermission.MULTIPLE_CHOOSE
+                        GrantedProjectPermission.SELECT_AND_SUBMIT
                 );
             }
             default -> {
