@@ -4,3 +4,4 @@
 - [ ] Logic lưu trữ có tuân thủ quy tắc: "Metadata là một thể hiện (version) của Asset" không?
 - [ ] Output đã được xuất ra định dạng file `.md` chuẩn xác chưa?
 - [ ] Đã cập nhật các schema mới (nếu user có cung cấp thêm) vào file `schema.md` chưa?
+- [ ] Da doi chieu rule role project (create/update/archive/share token/collaborator, default visibility/startDate/stats) chua?
