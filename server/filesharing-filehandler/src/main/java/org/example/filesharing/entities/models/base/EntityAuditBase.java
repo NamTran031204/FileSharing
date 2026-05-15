@@ -8,6 +8,9 @@ import java.time.Instant;
 
 @Data
 public class EntityAuditBase {
+    private Boolean isTrash;
+    private Instant trashedAt;
+
     private String createdBy;
     private String createdByEmail;
     private String updateBy;
