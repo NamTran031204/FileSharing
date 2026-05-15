@@ -30,6 +30,7 @@
 		<module>filesharing-notification</module>
 		<module>filesharing-videocodec</module>
 		<module>filesharing-imagecodec</module>
+		<module>filesharing-imagerawproccess</module>
 	</modules>
 
 	<dependencyManagement>
