@@ -1,6 +1,5 @@
 package org.example.filesharing.utils;
 
-import org.example.filesharing.enums.objectPermission.FileAppPermission;
 import org.example.filesharing.enums.objectPermission.ObjectPermission;
 
 public class PermissionUtil {

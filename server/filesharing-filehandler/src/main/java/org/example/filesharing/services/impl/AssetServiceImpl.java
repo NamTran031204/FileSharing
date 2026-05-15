@@ -7,15 +7,12 @@ import org.example.filesharing.entities.dtos.asset.*;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.models.*;
-import org.example.filesharing.entities.models.folder.FolderPermission;
 import org.example.filesharing.entities.models.folder.FolderStats;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
 import org.example.filesharing.entities.models.project.ProjectStats;
 import org.example.filesharing.entities.models.base.EntityAuditBase;
 import org.example.filesharing.enums.*;
 import org.example.filesharing.enums.auth.UserGrantedRole;
-import org.example.filesharing.enums.objectPermission.ObjectPermission;
-import org.example.filesharing.enums.permission.GrantedProjectRole;
+import org.example.filesharing.enums.permission.GrantedProjectPermission;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
@@ -28,6 +25,7 @@ import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.baseService.BaseAuditService;
+import org.example.filesharing.utils.ProjectPermissionResolver;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -72,7 +70,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (folderId != null) {
             folder = getActiveFolderOrThrow(folderId);
             ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(folder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -129,7 +127,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Override
     public AssetDetailResponseDto getAssetById(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, ObjectPermission.READ);
+        ensureAssetPermission(asset, GrantedProjectPermission.READ);
 
         MetadataEntity latestVersion = findLatestCompletedVersion(asset.getAssetId());
 
@@ -217,7 +215,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         validateUpdateAssetRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
-        ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
 
         if (StringUtils.isNotNullOrBlank(request.getAssetName())) {
             asset.setAssetName(request.getAssetName().trim());
@@ -251,7 +249,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         FolderEntity currentFolder = null;
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             currentFolder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderPermission(currentFolder, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(currentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -261,7 +259,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (targetFolderId != null) {
             targetFolder = getActiveFolderOrThrow(targetFolderId);
             ensureFolderInProject(targetFolder, project);
-            ensureFolderPermission(targetFolder, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(targetFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -285,7 +283,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Transactional
     public void deleteAsset(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
 
         asset.setIsActive(false);
         buildAudit(asset, false);
@@ -318,7 +316,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         validateCreateVersionRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
-        ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         return createNewVersion(request, asset);
 
     }
@@ -372,7 +370,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(fileVersion.getAssetId());
-        ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
 
         if (StringUtils.isNotNullOrBlank(request.getDownloadFileName())) {
             fileVersion.setDownloadFileName(request.getDownloadFileName().trim());
@@ -413,7 +411,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         AssetEntity asset = getAssetOrThrow(filter.getAssetId().trim());
-        ensureAssetPermission(asset, ObjectPermission.READ);
+        ensureAssetPermission(asset, GrantedProjectPermission.READ);
 
         Query query = new Query();
         query.addCriteria(Criteria.where("assetId").is(asset.getAssetId()));
@@ -457,7 +455,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());
-        ensureAssetPermission(asset, ObjectPermission.READ);
+        ensureAssetPermission(asset, GrantedProjectPermission.READ);
         return version;
     }
 
@@ -468,7 +466,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         AssetEntity asset = getAssetOrThrow(assetId.trim());
-        ensureAssetPermission(asset, ObjectPermission.READ);
+        ensureAssetPermission(asset, GrantedProjectPermission.READ);
 
         return findLatestCompletedVersion(asset.getAssetId());
     }
@@ -485,7 +483,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());
-        ensureAssetPermission(asset, ObjectPermission.MODIFY);
+        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
 
         long activeCount = metadataRepo.countByAssetIdAndIsTrashFalse(asset.getAssetId());
         if (activeCount <= 1) {
@@ -675,68 +673,34 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
     }
 
-    private void ensureAssetPermission(AssetEntity asset, ObjectPermission required) {
+    private void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
         ProjectEntity project = getProjectOrThrow(asset.getProjectId());
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             FolderEntity folder = getActiveFolderOrThrow(asset.getFolderId());
             ensureFolderInProject(folder, project);
             ensureFolderPermission(folder, project, required);
         } else {
-            if (required == ObjectPermission.MODIFY) {
-                ensureProjectModify(project, auditService.getCurrentUser());
-            } else {
-                ensureProjectRead(project, auditService.getCurrentUser());
-            }
+            ensureProjectPermission(project, auditService.getCurrentUser(), required);
         }
     }
 
     private void ensureProjectRead(ProjectEntity project, UserEntity user) {
-        if (isAdmin(user)) {
-            return;
-        }
-
-        GrantedProjectRole permission = resolveProjectPermission(project, user);
-        if (permission == null) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+        ensureProjectPermission(project, user, GrantedProjectPermission.READ);
     }
 
     private void ensureProjectModify(ProjectEntity project, UserEntity user) {
-        if (isAdmin(user)) {
-            return;
-        }
-
-        GrantedProjectRole permission = resolveProjectPermission(project, user);
-        if (permission != GrantedProjectRole.OWNER && permission != GrantedProjectRole.PRODUCER) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+        ensureProjectPermission(project, user, GrantedProjectPermission.CREATE_FOLDER_ASSET);
     }
 
-    private GrantedProjectRole resolveProjectPermission(ProjectEntity project, UserEntity user) {
-        if (user == null) {
-            return null;
+    private void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required) {
+        List<GrantedProjectPermission> permissions = ProjectPermissionResolver.resolveProjectPermissions(
+                project,
+                user,
+                isAdmin(user)
+        );
+        if (!ProjectPermissionResolver.hasPermission(permissions, required)) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
-
-        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
-            return GrantedProjectRole.OWNER;
-        }
-
-        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
-            return null;
-        }
-
-        String currentUserId = user.getUserId();
-        String currentEmail = user.getEmail();
-
-        for (ProjectCollaborator collaborator : project.getCollaborators()) {
-            boolean matchUserId = collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId);
-            boolean matchEmail = collaborator.getEmail() != null && collaborator.getEmail().equalsIgnoreCase(currentEmail);
-            if (matchUserId || matchEmail) {
-                return collaborator.getProjectRole();
-            }
-        }
-
-        return null;
     }
 
     private boolean isAdmin(UserEntity user) {
@@ -747,50 +711,22 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
-    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, ObjectPermission required) {
+    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, GrantedProjectPermission required) {
         UserEntity currentUser = auditService.getCurrentUser();
         if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
             return;
         }
 
-        if (folder.getPermissions() != null && !folder.getPermissions().isEmpty()) {
-            FolderPermission permission = folder.getPermissions().stream()
-                    .filter(p -> Objects.equals(p.getUserId(), currentUser.getUserId()))
-                    .findFirst()
-                    .orElse(null);
-            if (permission == null || !hasRequiredPermission(permission.getPermissions(), required)) {
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-            return;
+        List<GrantedProjectPermission> effectivePermissions = ProjectPermissionResolver.resolveEffectiveFolderPermissions(
+                project,
+                folder,
+                currentUser,
+                isAdmin(currentUser),
+                folderRepo
+        );
+        if (!ProjectPermissionResolver.hasPermission(effectivePermissions, required)) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
-
-        if (required == ObjectPermission.MODIFY) {
-            ensureProjectModify(project, currentUser);
-        } else {
-            ensureProjectRead(project, currentUser);
-        }
-    }
-
-    private boolean hasRequiredPermission(List<ObjectPermission> permissions, ObjectPermission required) {
-        if (permissions == null || permissions.isEmpty()) {
-            return false;
-        }
-
-        int requiredRank = permissionRank(required);
-        for (ObjectPermission permission : permissions) {
-            if (permissionRank(permission) >= requiredRank) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int permissionRank(ObjectPermission permission) {
-        return switch (permission) {
-            case READ -> 1;
-            case COMMENT -> 2;
-            case MODIFY -> 3;
-        };
     }
 
     private void incrementProjectAssetCount(ProjectEntity project, int delta) {

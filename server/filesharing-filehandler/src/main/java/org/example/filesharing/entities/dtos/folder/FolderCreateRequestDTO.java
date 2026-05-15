@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.filesharing.enums.FolderVisibility;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -14,4 +17,6 @@ public class FolderCreateRequestDTO {
     private String parentFolderId;
     private String folderName;
     private String description;
+
+    private FolderVisibility visibility;
 }

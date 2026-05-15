@@ -14,7 +14,6 @@ import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
 import org.example.filesharing.entities.models.auditlog.AuditChanges;
 import org.example.filesharing.entities.models.folder.FolderPermission;
 import org.example.filesharing.entities.models.folder.FolderStats;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
 import org.example.filesharing.entities.models.project.ProjectStats;
 import org.example.filesharing.entities.models.AssetEntity;
 import org.example.filesharing.entities.models.FolderEntity;
@@ -23,10 +22,10 @@ import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.entities.models.base.EntityAuditBase;
 import org.example.filesharing.enums.AuditAction;
 import org.example.filesharing.enums.AuditTargetType;
+import org.example.filesharing.enums.FolderVisibility;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.enums.auth.UserGrantedRole;
-import org.example.filesharing.enums.objectPermission.ObjectPermission;
-import org.example.filesharing.enums.permission.GrantedProjectRole;
+import org.example.filesharing.enums.permission.GrantedProjectPermission;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
@@ -37,6 +36,7 @@ import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.FolderService;
 import org.example.filesharing.services.baseService.BaseAuditService;
+import org.example.filesharing.utils.ProjectPermissionResolver;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -79,7 +79,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         if (parentFolderId != null) {
             parentFolder = getActiveFolderOrThrow(parentFolderId);
             ensureFolderInProject(parentFolder, project);
-            ensureFolderPermission(parentFolder, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(parentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -96,6 +96,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 .description(trimToNull(request.getDescription()))
                 .folderPath(folderPath)
                 .level(level)
+                .visibility(request.getVisibility() != null ? request.getVisibility() : FolderVisibility.INHERIT)
                 .stats(defaultFolderStats())
                 .build();
 
@@ -128,7 +129,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         if (parentFolderId != null) {
             parentFolder = getActiveFolderOrThrow(parentFolderId);
             ensureFolderInProject(parentFolder, project);
-            ensureFolderPermission(parentFolder, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(parentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         }
 
         String baseFolderPath = normalizeBaseFolderPath(parentFolder, request.getBaseFolderPath());
@@ -211,7 +212,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                     .orElse(null);
 
             if (existingFolder != null) {
-                ensureFolderPermission(existingFolder, project, ObjectPermission.MODIFY);
+                ensureFolderPermission(existingFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
 
                 String folderId = existingFolder.getFolderId();
                 relativeToFolderId.put(node.getRelativeFolderPath(), folderId);
@@ -229,6 +230,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                     .folderName(node.getFolderName())
                     .folderPath(folderPath)
                     .level(node.getLevel())
+                    .visibility(FolderVisibility.INHERIT)
                     .stats(defaultFolderStats())
                     .build();
 
@@ -278,7 +280,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         ensureProjectWritable(project);
 
         UserEntity currentUser = auditService.getCurrentUser();
-        ensureFolderPermission(folder, project, ObjectPermission.MODIFY);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
 
         String updatedName = folder.getFolderName();
         if (request.getFolderName() != null) {
@@ -307,7 +309,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 throw new FileBusinessException(ErrorCode.FOLDER_CIRCULAR_REFERENCE);
             }
 
-            ensureFolderPermission(targetParent, project, ObjectPermission.MODIFY);
+            ensureFolderPermission(targetParent, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else if (parentChanged) {
             ensureProjectModify(project, currentUser);
         }
@@ -352,7 +354,8 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         AuditChanges permissionChanges = null;
         if (request.getPermissions() != null) {
-            ensureProjectOwner(project, currentUser);
+            ensureFolderPermission(folder, project, GrantedProjectPermission.ADD_USER);
+            validateFolderPermissions(project, request.getPermissions());
             Map<String, Object> before = new HashMap<>();
             Map<String, Object> after = new HashMap<>();
             before.put("permissions", folder.getPermissions());
@@ -393,7 +396,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
 
         ProjectEntity project = getProjectOrThrow(folder.getProjectId());
-        ensureFolderPermission(folder, project, ObjectPermission.READ);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.READ);
         return folder;
     }
 
@@ -413,7 +416,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         if (parentFolderId != null) {
             FolderEntity parent = getActiveFolderOrThrow(parentFolderId);
             ensureFolderInProject(parent, project);
-            ensureFolderPermission(parent, project, ObjectPermission.READ);
+            ensureFolderPermission(parent, project, GrantedProjectPermission.READ);
         }
 
         Query query = new Query();
@@ -453,7 +456,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         FolderEntity folder = getActiveFolderOrThrow(folderId.trim());
         ProjectEntity project = getProjectOrThrow(folder.getProjectId());
         ensureProjectWritable(project);
-        ensureFolderPermission(folder, project, ObjectPermission.MODIFY);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
 
         String currentPath = folder.getFolderPath();
         String pathWithSelf = StringUtils.isNullOrBlank(currentPath) || "/".equals(currentPath)
@@ -711,62 +714,22 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
     }
 
     private void ensureProjectRead(ProjectEntity project, UserEntity user) {
-        if (isAdmin(user)) {
-            return;
-        }
-
-        GrantedProjectRole permission = resolveProjectPermission(project, user);
-        if (permission == null) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+        ensureProjectPermission(project, user, GrantedProjectPermission.READ);
     }
 
     private void ensureProjectModify(ProjectEntity project, UserEntity user) {
-        if (isAdmin(user)) {
-            return;
-        }
-
-        GrantedProjectRole permission = resolveProjectPermission(project, user);
-        if (permission != GrantedProjectRole.OWNER && permission != GrantedProjectRole.PRODUCER) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+        ensureProjectPermission(project, user, GrantedProjectPermission.CREATE_FOLDER_ASSET);
     }
 
-    private void ensureProjectOwner(ProjectEntity project, UserEntity user) {
-        if (isAdmin(user)) {
-            return;
-        }
-
-        if (!Objects.equals(project.getOwnerId(), user.getUserId())) {
+    private void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required) {
+        List<GrantedProjectPermission> permissions = ProjectPermissionResolver.resolveProjectPermissions(
+                project,
+                user,
+                isAdmin(user)
+        );
+        if (!ProjectPermissionResolver.hasPermission(permissions, required)) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
-    }
-
-    private GrantedProjectRole resolveProjectPermission(ProjectEntity project, UserEntity user) {
-        if (user == null) {
-            return null;
-        }
-
-        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
-            return GrantedProjectRole.OWNER;
-        }
-
-        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
-            return null;
-        }
-
-        String currentUserId = user.getUserId();
-        String currentEmail = user.getEmail();
-
-        for (ProjectCollaborator collaborator : project.getCollaborators()) {
-            boolean matchUserId = collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId);
-            boolean matchEmail = collaborator.getEmail() != null && collaborator.getEmail().equalsIgnoreCase(currentEmail);
-            if (matchUserId || matchEmail) {
-                return collaborator.getProjectRole();
-            }
-        }
-
-        return null;
     }
 
     private boolean isAdmin(UserEntity user) {
@@ -777,50 +740,59 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
-    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, ObjectPermission required) {
+    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, GrantedProjectPermission required) {
         UserEntity currentUser = auditService.getCurrentUser();
         if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
             return;
         }
 
-        if (folder.getPermissions() != null && !folder.getPermissions().isEmpty()) {
-            FolderPermission permission = folder.getPermissions().stream()
-                    .filter(p -> Objects.equals(p.getUserId(), currentUser.getUserId()))
-                    .findFirst()
-                    .orElse(null);
-            if (permission == null || !hasRequiredPermission(permission.getPermissions(), required)) {
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
+        List<GrantedProjectPermission> effectivePermissions = ProjectPermissionResolver.resolveEffectiveFolderPermissions(
+                project,
+                folder,
+                currentUser,
+                isAdmin(currentUser),
+                folderRepo
+        );
+        if (!ProjectPermissionResolver.hasPermission(effectivePermissions, required)) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
+
+    private void validateFolderPermissions(ProjectEntity project, List<FolderPermission> permissions) {
+        if (project == null || permissions == null) {
             return;
         }
 
-        if (required == ObjectPermission.MODIFY) {
-            ensureProjectModify(project, currentUser);
-        } else {
-            ensureProjectRead(project, currentUser);
-        }
-    }
+        for (FolderPermission entry : permissions) {
+            if (entry == null) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions contains empty item");
+            }
 
-    private boolean hasRequiredPermission(List<ObjectPermission> permissions, ObjectPermission required) {
-        if (permissions == null || permissions.isEmpty()) {
-            return false;
-        }
+            String userId = trimToNull(entry.getUserId());
+            if (userId == null) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions.userId is required");
+            }
 
-        int requiredRank = permissionRank(required);
-        for (ObjectPermission permission : permissions) {
-            if (permissionRank(permission) >= requiredRank) {
-                return true;
+            List<GrantedProjectPermission> projectPermissions =
+                    ProjectPermissionResolver.resolveProjectPermissions(project, userId);
+            if (projectPermissions.isEmpty()) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions.userId not in project");
+            }
+
+            List<GrantedProjectPermission> folderPermissions = entry.getPermissions();
+            if (folderPermissions == null) {
+                continue;
+            }
+
+            for (GrantedProjectPermission permission : folderPermissions) {
+                if (!GrantedProjectPermission.isFolderPermission(permission)) {
+                    throw new UserBusinessException(ErrorCode.BAD_REQUEST, "invalid folder permission: " + permission);
+                }
+                if (!projectPermissions.contains(permission)) {
+                    throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folder permission exceeds project scope: " + permission);
+                }
             }
         }
-        return false;
-    }
-
-    private int permissionRank(ObjectPermission permission) {
-        return switch (permission) {
-            case READ -> 1;
-            case COMMENT -> 2;
-            case MODIFY -> 3;
-        };
     }
 
     private void adjustParentSubfolderCounts(String oldParentId, String newParentId) {

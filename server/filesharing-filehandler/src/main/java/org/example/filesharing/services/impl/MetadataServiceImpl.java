@@ -11,7 +11,6 @@ import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.entities.models.metadata.UserFilePermission;
 import org.example.filesharing.enums.UploadStatus;
-import org.example.filesharing.enums.objectPermission.FileAppPermission;
 import org.example.filesharing.enums.objectPermission.ObjectPermission;
 import org.example.filesharing.enums.objectPermission.ObjectVisibility;
 import org.example.filesharing.exceptions.ErrorCode;

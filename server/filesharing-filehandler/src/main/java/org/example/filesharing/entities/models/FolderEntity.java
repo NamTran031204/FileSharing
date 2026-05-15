@@ -5,7 +5,6 @@ import org.example.filesharing.entities.models.folder.FolderPermission;
 import org.example.filesharing.entities.models.folder.FolderStats;
 import org.example.filesharing.entities.models.base.EntityAuditBase;
 import org.example.filesharing.enums.FolderVisibility;
-import org.example.filesharing.enums.permission.GrantedVisibility;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
