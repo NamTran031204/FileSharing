@@ -8,7 +8,7 @@ import org.example.filesharing.entities.dtos.asset.AssetCreateRequestDto;
 import org.example.filesharing.entities.dtos.asset.AssetCreateResponseDto;
 import org.example.filesharing.entities.dtos.asset.VersionFilterRequestDto;
 import org.example.filesharing.entities.dtos.asset.VersionUpdateRequestDto;
-import org.example.filesharing.entities.models.core.MetadataEntity;
+import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.services.AssetService;
 import org.springframework.web.bind.annotation.*;
 

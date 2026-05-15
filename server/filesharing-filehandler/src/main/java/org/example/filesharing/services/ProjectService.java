@@ -4,10 +4,10 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogFilterDTO;
 import org.example.filesharing.entities.dtos.project.*;
-import org.example.filesharing.entities.models.ProjectCollaborator;
-import org.example.filesharing.entities.models.ProjectStats;
-import org.example.filesharing.entities.models.core.AuditLogEntity;
-import org.example.filesharing.entities.models.core.ProjectEntity;
+import org.example.filesharing.entities.models.project.ProjectCollaborator;
+import org.example.filesharing.entities.models.project.ProjectStats;
+import org.example.filesharing.entities.models.AuditLogEntity;
+import org.example.filesharing.entities.models.ProjectEntity;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.enums.permission.GrantedVisibility;
 

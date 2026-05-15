@@ -1,8 +1,8 @@
 package org.example.filesharing.entities.dtos.annotations;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.AnnotationRegion;
-import org.example.filesharing.entities.models.AnnotationTimeCode;
+import org.example.filesharing.entities.models.annotation.AnnotationRegion;
+import org.example.filesharing.entities.models.annotation.AnnotationTimeCode;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.enums.AnnotationType;
 

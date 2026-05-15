@@ -6,7 +6,7 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.notification.NotificationCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.notification.NotificationFilterDTO;
-import org.example.filesharing.entities.models.core.NotificationEntity;
+import org.example.filesharing.entities.models.NotificationEntity;
 import org.example.filesharing.services.NotificationService;
 import org.springframework.web.bind.annotation.*;
 

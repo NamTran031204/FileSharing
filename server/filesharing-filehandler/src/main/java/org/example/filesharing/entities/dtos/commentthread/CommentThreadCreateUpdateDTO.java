@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.commentthread;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.CommentMessage;
+import org.example.filesharing.entities.models.commentthread.CommentMessage;
 import org.example.filesharing.enums.ThreadStatus;
 
 import java.util.List;

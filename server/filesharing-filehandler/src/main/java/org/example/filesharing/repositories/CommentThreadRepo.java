@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.core.CommentThreadEntity;
+import org.example.filesharing.entities.models.CommentThreadEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

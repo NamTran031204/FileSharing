@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.core.AssetEntity;
+import org.example.filesharing.entities.models.AssetEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

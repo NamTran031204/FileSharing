@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.core.MediaRenditionEntity;
+import org.example.filesharing.entities.models.MediaRenditionEntity;
 import org.example.filesharing.enums.RenditionType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

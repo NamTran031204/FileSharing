@@ -2,9 +2,9 @@ package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
-import org.example.filesharing.entities.models.AuditChanges;
-import org.example.filesharing.entities.models.core.AuditLogEntity;
-import org.example.filesharing.entities.models.core.UserEntity;
+import org.example.filesharing.entities.models.auditlog.AuditChanges;
+import org.example.filesharing.entities.models.AuditLogEntity;
+import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.enums.AuditAction;
 import org.example.filesharing.enums.AuditActorType;
 import org.example.filesharing.exceptions.ErrorCode;

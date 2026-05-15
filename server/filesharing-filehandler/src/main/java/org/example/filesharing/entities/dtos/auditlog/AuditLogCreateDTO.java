@@ -1,8 +1,8 @@
 package org.example.filesharing.entities.dtos.auditlog;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.AuditChanges;
-import org.example.filesharing.entities.models.AuditRequestInfo;
+import org.example.filesharing.entities.models.auditlog.AuditChanges;
+import org.example.filesharing.entities.models.auditlog.AuditRequestInfo;
 import org.example.filesharing.enums.AuditAction;
 import org.example.filesharing.enums.AuditActorType;
 import org.example.filesharing.enums.AuditTargetType;

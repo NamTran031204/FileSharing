@@ -1,6 +1,6 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.models.core.UserEntity;
+import org.example.filesharing.entities.models.UserEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

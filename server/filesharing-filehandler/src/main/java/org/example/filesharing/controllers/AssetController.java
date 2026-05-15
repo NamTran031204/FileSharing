@@ -5,8 +5,8 @@ import org.example.filesharing.entities.CommonResponse;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.asset.*;
-import org.example.filesharing.entities.models.core.AssetEntity;
-import org.example.filesharing.entities.models.core.MetadataEntity;
+import org.example.filesharing.entities.models.AssetEntity;
+import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.services.AssetService;
 import org.springframework.web.bind.annotation.*;
 

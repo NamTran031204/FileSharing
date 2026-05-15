@@ -6,7 +6,7 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.annotations.AnnotationsCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.annotations.AnnotationsFilterDTO;
-import org.example.filesharing.entities.models.core.AnnotationsEntity;
+import org.example.filesharing.entities.models.AnnotationsEntity;
 import org.example.filesharing.services.AnnotationsService;
 import org.springframework.web.bind.annotation.*;
 

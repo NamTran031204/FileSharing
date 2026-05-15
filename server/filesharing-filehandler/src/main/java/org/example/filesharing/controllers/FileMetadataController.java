@@ -9,7 +9,7 @@ import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
-import org.example.filesharing.entities.models.core.MetadataEntity;
+import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.jobs.kafka.ImageEncodeProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;

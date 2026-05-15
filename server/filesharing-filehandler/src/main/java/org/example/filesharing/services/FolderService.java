@@ -7,7 +7,7 @@ import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
-import org.example.filesharing.entities.models.core.FolderEntity;
+import org.example.filesharing.entities.models.FolderEntity;
 
 public interface FolderService {
     FolderEntity createNewFolder(FolderCreateRequestDTO request);

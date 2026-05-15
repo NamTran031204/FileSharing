@@ -15,10 +15,10 @@ import org.example.filesharing.entities.dtos.project.ProjectVisibilityUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenCreateDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenCreateResponseDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenInfoDTO;
-import org.example.filesharing.entities.models.ProjectCollaborator;
-import org.example.filesharing.entities.models.ProjectStats;
-import org.example.filesharing.entities.models.core.AuditLogEntity;
-import org.example.filesharing.entities.models.core.ProjectEntity;
+import org.example.filesharing.entities.models.project.ProjectCollaborator;
+import org.example.filesharing.entities.models.project.ProjectStats;
+import org.example.filesharing.entities.models.AuditLogEntity;
+import org.example.filesharing.entities.models.ProjectEntity;
 import org.example.filesharing.services.ProjectService;
 import org.springframework.web.bind.annotation.*;
 

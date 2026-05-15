@@ -9,7 +9,7 @@ import org.example.filesharing.entities.dtos.auth.UserRegisterResponseDto;
 import org.example.filesharing.entities.dtos.user.UpdateUserRequestDto;
 import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;
-import org.example.filesharing.entities.models.AuthProviderInfo;
+import org.example.filesharing.entities.models.user.AuthProviderInfo;
 
 public interface UserService {
     // Authentication methods
