@@ -19,11 +19,27 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class ProjectPermissionResolver {
-    private static final List<GrantedProjectPermission> PUBLIC_VIEWER_PERMISSIONS =
+
+    /**
+     * GUEST (nhập tên, chưa đăng nhập): xem được public folder, và có thể SELECT_AND_SUBMIT.
+     * Theo design doc Section 8.
+     */
+    private static final List<GrantedProjectPermission> GUEST_PUBLIC_FOLDER_PERMISSIONS =
+            List.of(GrantedProjectPermission.READ, GrantedProjectPermission.SELECT_AND_SUBMIT);
+
+    /**
+     * VIEWER (ẩn danh, chưa đăng nhập): chỉ xem, không làm gì thêm.
+     * Theo design doc Section 8.
+     */
+    private static final List<GrantedProjectPermission> VIEWER_PUBLIC_FOLDER_PERMISSIONS =
             List.of(GrantedProjectPermission.READ);
 
     private ProjectPermissionResolver() {
     }
+
+    // -------------------------------------------------------------------------
+    // Project-level permission resolution
+    // -------------------------------------------------------------------------
 
     public static List<GrantedProjectPermission> resolveProjectPermissions(
             ProjectEntity project,
@@ -44,7 +60,7 @@ public final class ProjectPermissionResolver {
         }
 
         if (project.getVisibility() == GrantedVisibility.PUBLIC) {
-            return PUBLIC_VIEWER_PERMISSIONS;
+            return VIEWER_PUBLIC_FOLDER_PERMISSIONS;
         }
 
         return Collections.emptyList();
@@ -76,28 +92,9 @@ public final class ProjectPermissionResolver {
         return Collections.emptyList();
     }
 
-    public static boolean isProjectMember(ProjectEntity project, UserEntity user) {
-        if (project == null || user == null) {
-            return false;
-        }
-
-        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
-            return true;
-        }
-
-        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
-            return false;
-        }
-
-        String currentUserId = user.getUserId();
-        for (ProjectCollaborator collaborator : project.getCollaborators()) {
-            if (Objects.equals(collaborator.getUserId(), currentUserId)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // -------------------------------------------------------------------------
+    // Folder-level permission resolution (for authenticated project members)
+    // -------------------------------------------------------------------------
 
     public static List<GrantedProjectPermission> resolveEffectiveFolderPermissions(
             ProjectEntity project,
@@ -138,7 +135,7 @@ public final class ProjectPermissionResolver {
                 }
                 levelPermissions = folderPermission.getPermissions();
             } else if (visibility == FolderVisibility.PUBLIC) {
-                levelPermissions = isMember ? basePermissions : PUBLIC_VIEWER_PERMISSIONS;
+                levelPermissions = isMember ? basePermissions : VIEWER_PUBLIC_FOLDER_PERMISSIONS;
             }
 
             if (levelPermissions != null) {
@@ -154,6 +151,92 @@ public final class ProjectPermissionResolver {
 
         return effective != null ? effective : Collections.emptyList();
     }
+
+    /**
+     * Tính effective permission cho GUEST (người nhập tên, chưa đăng nhập) trên folder.
+     * GUEST chỉ được phép vào folder PUBLIC và INHERIT dẫn đến PUBLIC.
+     * RESTRICTED → bị từ chối hoàn toàn.
+     */
+    public static List<GrantedProjectPermission> resolveGuestFolderPermissions(
+            ProjectEntity project,
+            FolderEntity folder,
+            FolderRepo folderRepo
+    ) {
+        if (project == null || folder == null) {
+            return Collections.emptyList();
+        }
+
+        List<FolderEntity> chain = resolveFolderChain(folder, folderRepo);
+
+        FolderVisibility effectiveVisibility = FolderVisibility.INHERIT;
+        for (FolderEntity current : chain) {
+            FolderVisibility visibility = current.getVisibility() != null
+                    ? current.getVisibility()
+                    : FolderVisibility.INHERIT;
+
+            if (visibility == FolderVisibility.RESTRICTED) {
+                return Collections.emptyList();
+            }
+            if (visibility == FolderVisibility.PUBLIC) {
+                effectiveVisibility = FolderVisibility.PUBLIC;
+            }
+        }
+
+        if (effectiveVisibility == FolderVisibility.PUBLIC) {
+            return GUEST_PUBLIC_FOLDER_PERMISSIONS;
+        }
+
+        // INHERIT → kế thừa visibility của project
+        if (project.getVisibility() == GrantedVisibility.PUBLIC) {
+            return GUEST_PUBLIC_FOLDER_PERMISSIONS;
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
+     * Tính effective permission cho VIEWER (hoàn toàn ẩn danh, chưa đăng nhập) trên folder.
+     * Chỉ READ nếu folder hoặc project là PUBLIC. RESTRICTED → bị từ chối.
+     */
+    public static List<GrantedProjectPermission> resolveViewerFolderPermissions(
+            ProjectEntity project,
+            FolderEntity folder,
+            FolderRepo folderRepo
+    ) {
+        if (project == null || folder == null) {
+            return Collections.emptyList();
+        }
+
+        List<FolderEntity> chain = resolveFolderChain(folder, folderRepo);
+
+        FolderVisibility effectiveVisibility = FolderVisibility.INHERIT;
+        for (FolderEntity current : chain) {
+            FolderVisibility visibility = current.getVisibility() != null
+                    ? current.getVisibility()
+                    : FolderVisibility.INHERIT;
+
+            if (visibility == FolderVisibility.RESTRICTED) {
+                return Collections.emptyList();
+            }
+            if (visibility == FolderVisibility.PUBLIC) {
+                effectiveVisibility = FolderVisibility.PUBLIC;
+            }
+        }
+
+        if (effectiveVisibility == FolderVisibility.PUBLIC) {
+            return VIEWER_PUBLIC_FOLDER_PERMISSIONS;
+        }
+
+        if (project.getVisibility() == GrantedVisibility.PUBLIC) {
+            return VIEWER_PUBLIC_FOLDER_PERMISSIONS;
+        }
+
+        return Collections.emptyList();
+    }
+
+    // -------------------------------------------------------------------------
+    // Permission check helpers
+    // -------------------------------------------------------------------------
 
     public static boolean hasPermission(List<GrantedProjectPermission> permissions, GrantedProjectPermission required) {
         if (permissions == null || permissions.isEmpty() || required == null) {
@@ -174,6 +257,37 @@ public final class ProjectPermissionResolver {
         }
         return false;
     }
+
+    // -------------------------------------------------------------------------
+    // Membership helpers
+    // -------------------------------------------------------------------------
+
+    public static boolean isProjectMember(ProjectEntity project, UserEntity user) {
+        if (project == null || user == null) {
+            return false;
+        }
+
+        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
+            return true;
+        }
+
+        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
+            return false;
+        }
+
+        String currentUserId = user.getUserId();
+        for (ProjectCollaborator collaborator : project.getCollaborators()) {
+            if (Objects.equals(collaborator.getUserId(), currentUserId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
 
     private static boolean isOwner(ProjectEntity project, UserEntity user) {
         return project != null
