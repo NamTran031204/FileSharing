@@ -14,7 +14,6 @@ import java.util.List;
 public class FolderTreeCreateRequestDTO {
     private String projectId;
     private String parentFolderId;
-    private String baseFolderPath;
     private String rootFolderName;
     private List<FolderTreeNodeDTO> folders;
 }

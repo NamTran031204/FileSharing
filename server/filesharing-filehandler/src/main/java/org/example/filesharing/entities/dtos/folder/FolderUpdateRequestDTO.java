@@ -18,5 +18,5 @@ public class FolderUpdateRequestDTO {
     private String description;
     private String parentFolderId; // Có thể dùng để di chuyển thư mục
     private Boolean isActive;
-    private List<FolderPermission> permissions; // override permissions (Owner only)
+    private List<FolderPermission> permissions; // override permissions (require GrantedProjectPermission.UPDATE only)
 }

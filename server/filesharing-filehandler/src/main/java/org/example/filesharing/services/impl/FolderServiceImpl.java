@@ -89,19 +89,9 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         String folderPath = buildFolderPath(parentFolder, folderName);
         int level = parentFolder != null ? safeLevel(parentFolder.getLevel()) + 1 : 1;
 
-        FolderEntity folder = FolderEntity.builder()
-                .projectId(projectId)
-                .parentFolderId(parentFolderId)
-                .folderName(folderName)
-                .description(trimToNull(request.getDescription()))
-                .folderPath(folderPath)
-                .level(level)
-                .visibility(request.getVisibility() != null ? request.getVisibility() : FolderVisibility.INHERIT)
-                .stats(defaultFolderStats())
-                .build();
-
-        buildAudit(folder, true);
-        FolderEntity savedFolder = folderRepo.save(folder);
+        FolderEntity savedFolder = persistNewFolder(
+                projectId, parentFolderId, folderName,
+                trimToNull(request.getDescription()), folderPath, level, request.getVisibility());
 
         incrementProjectFolderCount(project, 1);
         if (parentFolder != null) {
@@ -132,7 +122,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             ensureFolderPermission(parentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         }
 
-        String baseFolderPath = normalizeBaseFolderPath(parentFolder, request.getBaseFolderPath());
+        String baseFolderPath = parentFolder != null ? normalizeParentFolderPath(parentFolder) : null;
         String rootFolderName = normalizeRelativeFolderPath(request.getRootFolderName(), "rootFolderName is required");
 
         List<FolderTreeNodeDTO> nodes = request.getFolders();
@@ -224,18 +214,9 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 continue;
             }
 
-            FolderEntity folder = FolderEntity.builder()
-                    .projectId(projectId)
-                    .parentFolderId(parentId)
-                    .folderName(node.getFolderName())
-                    .folderPath(folderPath)
-                    .level(node.getLevel())
-                    .visibility(FolderVisibility.INHERIT)
-                    .stats(defaultFolderStats())
-                    .build();
-
-            buildAudit(folder, true);
-            FolderEntity saved = folderRepo.save(folder);
+            FolderEntity saved = persistNewFolder(
+                    projectId, parentId, node.getFolderName(),
+                    null, folderPath, node.getLevel(), null);
 
             relativeToFolderId.put(node.getRelativeFolderPath(), saved.getFolderId());
 
@@ -558,21 +539,21 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private String normalizeBaseFolderPath(FolderEntity parentFolder, String baseFolderPath) {
-        String normalizedBase = trimToNull(baseFolderPath);
-        if (parentFolder == null) {
-            if (normalizedBase != null) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST,
-                        "baseFolderPath must be empty when parentFolderId is null");
-            }
-            return null;
-        }
-
-        String parentPath = normalizeParentFolderPath(parentFolder);
-        if (normalizedBase != null && !Objects.equals(normalizedBase, parentPath)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "baseFolderPath does not match parent folder");
-        }
-        return parentPath;
+    private FolderEntity persistNewFolder(String projectId, String parentFolderId,
+            String folderName, String description, String folderPath, int level,
+            FolderVisibility visibility) {
+        FolderEntity folder = FolderEntity.builder()
+                .projectId(projectId)
+                .parentFolderId(parentFolderId)
+                .folderName(folderName)
+                .description(description)
+                .folderPath(folderPath)
+                .level(level)
+                .visibility(visibility != null ? visibility : FolderVisibility.INHERIT)
+                .stats(defaultFolderStats())
+                .build();
+        buildAudit(folder, true);
+        return folderRepo.save(folder);
     }
 
     private String normalizeParentFolderPath(FolderEntity parentFolder) {
