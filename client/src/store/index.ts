@@ -1,9 +1,15 @@
 import SessionStore from './sessionStore';
+import UiStore from './uiStore';
+import FolderStore from './folderStore';
+import AssetStore from './assetStore';
 import {createContext, useContext} from "react";
 // import NotificationStore from './notificationStore';
 
 export const rootStore = {
     sessionStore: new SessionStore(),
+    uiStore: new UiStore(),
+    folderStore: new FolderStore(),
+    assetStore: new AssetStore(),
     // notificationStore: new NotificationStore()
 };
 export type TRootStore = typeof rootStore;
