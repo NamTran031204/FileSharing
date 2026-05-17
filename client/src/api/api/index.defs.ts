@@ -207,38 +207,9 @@ export interface PageResultUserDto {
   data?: UserDto[];
 }
 
-export interface ProjectCollaboratorDTO {
+export interface ProjectVisibilityUpdateDTO {
   /**  */
-  email?: string;
-
-  /**  */
-  permission?: GrantedPermission;
-}
-
-export interface ProjectCreateUpdateDTO {
-  /**  */
-  projectName?: string;
-
-  /**  */
-  projectCode?: string;
-
-  /**  */
-  description?: string;
-
-  /**  */
-  projectId?: string;
-
-  /**  */
-  startDate?: Date;
-
-  /**  */
-  endDate?: Date;
-
-  /**  */
-  collaborators?: ProjectCollaboratorDTO[];
-
-  /**  */
-  status?: ProjectStatus;
+  visibility?: GrantedVisibility;
 }
 
 export interface CommonResponseProjectEntity {
@@ -260,16 +231,22 @@ export interface ProjectCollaborator {
   userId?: string;
 
   /**  */
-  email?: string;
+  projectRole?: GrantedProjectRole;
 
   /**  */
-  permission?: GrantedPermission;
+  projectPermissions?: GrantedProjectPermission[];
 
   /**  */
   addedAt?: Date;
 }
 
 export interface ProjectEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -331,9 +308,6 @@ export interface ProjectEntity {
   status?: ProjectStatus;
 
   /**  */
-  trashedAt?: Date;
-
-  /**  */
   shareToken?: string;
 
   /**  */
@@ -352,6 +326,87 @@ export interface ProjectStats {
 
   /**  */
   pendingReviews?: number;
+}
+
+export interface ProjectStatusUpdateDTO {
+  /**  */
+  status?: ProjectStatus;
+}
+
+export interface ShareTokenCreateDTO {
+  /**  */
+  rangeTime?: ShareTokenTime;
+
+  /**  */
+  expireDate?: Date;
+
+  /**  */
+  projectId?: string;
+}
+
+export interface CommonResponseShareTokenCreateResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ShareTokenCreateResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ShareTokenCreateResponseDTO {
+  /**  */
+  shareToken?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProjectCollaboratorDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  email?: string;
+
+  /**  */
+  userId?: string;
+
+  /**  */
+  projectRole?: GrantedProjectRole;
+}
+
+export interface ProjectCreateUpdateDTO {
+  /**  */
+  projectName?: string;
+
+  /**  */
+  projectCode?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  startDate?: Date;
+
+  /**  */
+  endDate?: Date;
+
+  /**  */
+  collaborators?: ProjectCollaboratorDTO[];
+
+  /**  */
+  visibility?: GrantedVisibility;
+
+  /**  */
+  status?: ProjectStatus;
 }
 
 export interface PageRequestDtoProjectFilterDTO {
@@ -459,7 +514,7 @@ export interface NotificationContext {
   assetName?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotationId?: string;
@@ -532,6 +587,12 @@ export interface CommonResponseNotificationEntity {
 }
 
 export interface NotificationEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -655,17 +716,6 @@ export interface PageResultNotificationEntity {
   data?: NotificationEntity[];
 }
 
-export interface FolderPermission {
-  /**  */
-  userId?: string;
-
-  /**  */
-  permissions?: ObjectPermission[];
-
-  /**  */
-  grantedAt?: Date;
-}
-
 export interface FolderUpdateRequestDTO {
   /**  */
   folderId?: string;
@@ -683,7 +733,7 @@ export interface FolderUpdateRequestDTO {
   isActive?: boolean;
 
   /**  */
-  permissions?: FolderPermission[];
+  restrictedUserIds?: string[];
 }
 
 export interface CommonResponseFolderEntity {
@@ -701,6 +751,12 @@ export interface CommonResponseFolderEntity {
 }
 
 export interface FolderEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -738,13 +794,16 @@ export interface FolderEntity {
   description?: string;
 
   /**  */
-  folderPath?: string;
+  ancestorIds?: string[];
 
   /**  */
   level?: number;
 
   /**  */
-  permissions?: FolderPermission[];
+  userPermissions?: FolderPermission[];
+
+  /**  */
+  visibility?: FolderVisibility;
 
   /**  */
   stats?: FolderStats;
@@ -754,6 +813,20 @@ export interface FolderEntity {
 
   /**  */
   shareExpiry?: Date;
+}
+
+export interface FolderPermission {
+  /**  */
+  userId?: string;
+
+  /**  */
+  permissions?: GrantedProjectPermission[];
+
+  /**  */
+  isPrivateCollaborator?: boolean;
+
+  /**  */
+  grantedAt?: Date;
 }
 
 export interface FolderStats {
@@ -779,6 +852,9 @@ export interface FolderFilterRequestDTO {
 
   /**  */
   isActive?: boolean;
+
+  /**  */
+  isTrash?: boolean;
 }
 
 export interface PageRequestDtoFolderFilterRequestDTO {
@@ -825,16 +901,10 @@ export interface FolderTreeCreateRequestDTO {
   parentFolderId?: string;
 
   /**  */
-  baseFolderPath?: string;
-
-  /**  */
   rootFolderName?: string;
 
   /**  */
   folders?: FolderTreeNodeDTO[];
-
-  /**  */
-  createdBy?: string;
 }
 
 export interface FolderTreeNodeDTO {
@@ -896,9 +966,6 @@ export interface FolderTreeMappingDTO {
   relativeFolderPath?: string;
 
   /**  */
-  folderPath?: string;
-
-  /**  */
   folderId?: string;
 
   /**  */
@@ -920,6 +987,42 @@ export interface FolderCreateRequestDTO {
 
   /**  */
   description?: string;
+
+  /**  */
+  visibility?: FolderVisibility;
+}
+
+export interface FolderChangeVisibilityRequestDTO {
+  /**  */
+  folderId?: string;
+
+  /**  */
+  visibility?: FolderVisibility;
+
+  /**  */
+  restrictedUserIds?: string[];
+}
+
+export interface CommonResponseFolderArchiveResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: FolderArchiveResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface FolderArchiveResponseDTO {
+  /**  */
+  archivedFolderIds?: string[];
+
+  /**  */
+  archivedAssetIds?: string[];
 }
 
 export interface MetadataUpdateRequestDto {
@@ -1061,15 +1164,6 @@ export interface MetadataEntity {
   isActive?: boolean;
 
   /**  */
-  publicPermission?: ObjectPermission;
-
-  /**  */
-  visibility?: ObjectVisibility;
-
-  /**  */
-  userFilePermissions?: UserFilePermission[];
-
-  /**  */
   isTrash?: boolean;
 
   /**  */
@@ -1077,9 +1171,6 @@ export interface MetadataEntity {
 
   /**  */
   renditionCount?: number;
-
-  /**  */
-  publishUserPermission?: FileAppPermission;
 
   /**  */
   creationTimestamp?: Date;
@@ -1175,6 +1266,9 @@ export interface CompleteUploadRequest {
 
   /**  */
   uploadId?: string;
+
+  /**  */
+  assetId?: string;
 
   /**  */
   parts?: PartInfo[];
@@ -1320,7 +1414,7 @@ export interface CommentThreadCreateUpdateDTO {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotations?: string[];
@@ -1336,6 +1430,12 @@ export interface CommentThreadCreateUpdateDTO {
 }
 
 export interface CommentThreadEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -1364,7 +1464,7 @@ export interface CommentThreadEntity {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotations?: string[];
@@ -1413,7 +1513,7 @@ export interface CommentThreadFilterDTO {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotationId?: string;
@@ -1498,7 +1598,10 @@ export interface MediaInfoDto {
 
 export interface VersionUpdateRequestDto {
   /**  */
-  versionId?: string;
+  assetId?: string;
+
+  /**  */
+  versionNumber?: number;
 
   /**  */
   downloadFileName?: string;
@@ -1547,9 +1650,15 @@ export interface VersionFilterRequestDto {
   processingStatus?: ProcessingStatus;
 }
 
-export interface VersionCreateRequestDto {
+export interface AssetCreateRequestDto {
   /**  */
-  assetId?: string;
+  projectId?: string;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  description?: string;
 
   /**  */
   fileName?: string;
@@ -1570,27 +1679,19 @@ export interface VersionCreateRequestDto {
   timeToLive?: number;
 
   /**  */
+  assetId?: string;
+
+  /**  */
   changeNote?: string;
 
   /**  */
   assetStatus?: AssetStatus;
 }
 
-export interface CommonResponseVersionCreateResponseDto {
+export interface AssetCreateResponseDto {
   /**  */
-  isSuccessful?: boolean;
+  asset?: AssetEntity;
 
-  /**  */
-  data?: VersionCreateResponseDto;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface VersionCreateResponseDto {
   /**  */
   version?: MetadataEntity;
 
@@ -1598,24 +1699,13 @@ export interface VersionCreateResponseDto {
   upload?: InitiateUploadResponseDto;
 }
 
-export interface AssetUpdateRequestDto {
-  /**  */
-  assetId?: string;
-
-  /**  */
-  assetName?: string;
-
-  /**  */
-  description?: string;
-
-  /**  */
-  shareExpiry?: Date;
-
-  /**  */
-  regenerateShareToken?: boolean;
-}
-
 export interface AssetEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -1659,6 +1749,9 @@ export interface AssetEntity {
   ownerEmail?: string;
 
   /**  */
+  mediaType?: MediaType;
+
+  /**  */
   versionCount?: number;
 
   /**  */
@@ -1672,6 +1765,37 @@ export interface AssetEntity {
 
   /**  */
   shareExpiry?: Date;
+}
+
+export interface CommonResponseAssetCreateResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AssetCreateResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AssetUpdateRequestDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  shareExpiry?: Date;
+
+  /**  */
+  regenerateShareToken?: boolean;
 }
 
 export interface CommonResponseAssetEntity {
@@ -1763,63 +1887,6 @@ export interface PageResultAssetSummaryDto {
   data?: AssetSummaryDto[];
 }
 
-export interface AssetCreateRequestDto {
-  /**  */
-  projectId?: string;
-
-  /**  */
-  folderId?: string;
-
-  /**  */
-  assetName?: string;
-
-  /**  */
-  description?: string;
-
-  /**  */
-  fileName?: string;
-
-  /**  */
-  mimeType?: string;
-
-  /**  */
-  fileSize?: number;
-
-  /**  */
-  mediaType?: MediaType;
-
-  /**  */
-  compressionAlgo?: string;
-
-  /**  */
-  timeToLive?: number;
-}
-
-export interface AssetCreateResponseDto {
-  /**  */
-  asset?: AssetEntity;
-
-  /**  */
-  version?: MetadataEntity;
-
-  /**  */
-  upload?: InitiateUploadResponseDto;
-}
-
-export interface CommonResponseAssetCreateResponseDto {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: AssetCreateResponseDto;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
 export interface AnnotationPoint {
   /**  */
   x?: number;
@@ -1861,7 +1928,7 @@ export interface AnnotationsCreateUpdateDTO {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotationType?: AnnotationType;
@@ -1870,10 +1937,10 @@ export interface AnnotationsCreateUpdateDTO {
   timeCode?: AnnotationTimeCode;
 
   /**  */
-  region?: AnnotationRegion;
+  frameNumber?: number;
 
   /**  */
-  frameNumber?: number;
+  region?: AnnotationRegion;
 
   /**  */
   status?: AnnotationStatus;
@@ -1883,6 +1950,12 @@ export interface AnnotationsCreateUpdateDTO {
 }
 
 export interface AnnotationsEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
   /**  */
   createdBy?: string;
 
@@ -1911,7 +1984,7 @@ export interface AnnotationsEntity {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   annotationType?: AnnotationType;
@@ -1957,7 +2030,7 @@ export interface AnnotationsFilterDTO {
   assetId?: string;
 
   /**  */
-  versionId?: string;
+  versionNumber?: number;
 
   /**  */
   threadId?: string;
@@ -2026,6 +2099,585 @@ export interface PageResultAnnotationsEntity {
   data?: AnnotationsEntity[];
 }
 
+export interface CommonResponseProcessingJobEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProcessingJobEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProcessingJobConfig {
+  /**  */
+  profiles?: string[];
+
+  /**  */
+  intervalSeconds?: number;
+
+  /**  */
+  maxThumbnails?: number;
+
+  /**  */
+  scanEngine?: string;
+}
+
+export interface ProcessingJobEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  jobId?: string;
+
+  /**  */
+  metadataId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  jobType?: ProcessingJobType;
+
+  /**  */
+  config?: ProcessingJobConfig;
+
+  /**  */
+  status?: ProcessingJobStatus;
+
+  /**  */
+  priority?: number;
+
+  /**  */
+  progress?: ProcessingJobProgress;
+
+  /**  */
+  result?: ProcessingJobResult;
+
+  /**  */
+  scheduledAt?: Date;
+
+  /**  */
+  startedAt?: Date;
+
+  /**  */
+  completedAt?: Date;
+
+  /**  */
+  retryCount?: number;
+
+  /**  */
+  maxRetries?: number;
+
+  /**  */
+  lastError?: string;
+
+  /**  */
+  workerId?: string;
+
+  /**  */
+  workerHeartbeat?: Date;
+}
+
+export interface ProcessingJobProgress {
+  /**  */
+  percent?: number;
+
+  /**  */
+  currentStep?: string;
+
+  /**  */
+  estimatedTimeRemainingMs?: string;
+}
+
+export interface ProcessingJobResult {
+  /**  */
+  success?: boolean;
+
+  /**  */
+  outputKeys?: string[];
+
+  /**  */
+  errorMessage?: string;
+
+  /**  */
+  errorDetails?: object;
+}
+
+export interface CommonResponseListMediaRenditionEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: MediaRenditionEntity[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface MediaRenditionEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  renditionId?: string;
+
+  /**  */
+  metadataId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  renditionType?: RenditionType;
+
+  /**  */
+  profile?: string;
+
+  /**  */
+  manifestKey?: string;
+
+  /**  */
+  segmentPathPrefix?: string;
+
+  /**  */
+  bandwidth?: string;
+
+  /**  */
+  resolution?: RenditionResolution;
+
+  /**  */
+  thumbnailCount?: number;
+
+  /**  */
+  intervalMs?: string;
+
+  /**  */
+  spriteKey?: string;
+
+  /**  */
+  spriteMetadataKey?: string;
+
+  /**  */
+  posterKey?: string;
+
+  /**  */
+  posterTimestamp?: string;
+
+  /**  */
+  fileSize?: string;
+
+  /**  */
+  status?: RenditionStatus;
+}
+
+export interface RenditionResolution {
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+}
+
+export interface CommonResponsePlaybackDataResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PlaybackDataResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PlaybackDataResponseDto {
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+
+  /**  */
+  manifestKey?: string;
+
+  /**  */
+  posterKey?: string;
+
+  /**  */
+  spriteKey?: string;
+
+  /**  */
+  spriteMetadataKey?: string;
+
+  /**  */
+  imageUrl?: string;
+}
+
+export interface CommonResponseProjectStats {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProjectStats;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface CommonResponseListProjectCollaborator {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProjectCollaborator[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AuditLogFilterDTO {
+  /**  */
+  actorId?: string;
+
+  /**  */
+  actorEmail?: string;
+
+  /**  */
+  action?: AuditAction;
+
+  /**  */
+  fromTimestamp?: Date;
+
+  /**  */
+  toTimestamp?: Date;
+}
+
+export interface PageRequestDtoAuditLogFilterDTO {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: AuditLogFilterDTO;
+}
+
+export interface AuditChanges {
+  /**  */
+  before?: object;
+
+  /**  */
+  after?: object;
+}
+
+export interface AuditLogEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  logId?: string;
+
+  /**  */
+  actorId?: string;
+
+  /**  */
+  actorEmail?: string;
+
+  /**  */
+  actorType?: AuditActorType;
+
+  /**  */
+  action?: AuditAction;
+
+  /**  */
+  targetType?: AuditTargetType;
+
+  /**  */
+  targetId?: string;
+
+  /**  */
+  targetName?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  reviewSessionId?: string;
+
+  /**  */
+  changes?: AuditChanges;
+
+  /**  */
+  requestInfo?: AuditRequestInfo;
+
+  /**  */
+  timestamp?: Date;
+
+  /**  */
+  expiresAt?: Date;
+}
+
+export interface AuditRequestInfo {
+  /**  */
+  ipAddress?: string;
+
+  /**  */
+  userAgent?: string;
+
+  /**  */
+  requestId?: string;
+}
+
+export interface CommonResponsePageResultAuditLogEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultAuditLogEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultAuditLogEntity {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: AuditLogEntity[];
+}
+
+export interface CommonResponseShareTokenInfoDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ShareTokenInfoDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ShareTokenInfoDTO {
+  /**  */
+  shareToken?: string;
+
+  /**  */
+  shareExpiry?: Date;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  projectName?: string;
+
+  /**  */
+  visibility?: GrantedVisibility;
+}
+
+export interface CommonResponseProcessingStatusResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProcessingStatusResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProcessingStatusResponseDto {
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+
+  /**  */
+  jobStatus?: ProcessingJobStatus;
+
+  /**  */
+  progress?: ProcessingJobProgress;
+
+  /**  */
+  errorMessage?: string;
+}
+
+export interface CommonResponseFolderTreeResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: FolderTreeResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface FolderBreadcrumbItemDTO {
+  /**  */
+  folderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  level?: number;
+}
+
+export interface FolderTreeItemDTO {
+  /**  */
+  folderId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  ancestorIds?: string[];
+
+  /**  */
+  level?: number;
+
+  /**  */
+  visibility?: FolderVisibility;
+
+  /**  */
+  stats?: FolderStats;
+}
+
+export interface FolderTreeResponseDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  breadcrumb?: FolderBreadcrumbItemDTO[];
+
+  /**  */
+  tree?: FolderTreeItemDTO[];
+}
+
 export interface AssetDetailResponseDto {
   /**  */
   asset?: AssetEntity;
@@ -2059,7 +2711,26 @@ export enum AuthProvider {
   'GOOGLE' = 'GOOGLE'
 }
 
-export enum GrantedPermission {
+export enum GrantedVisibility {
+  'PUBLIC' = 'PUBLIC',
+  'PRIVATE' = 'PRIVATE'
+}
+
+export enum GrantedProjectPermission {
+  'READ' = 'READ',
+  'SELECT_AND_SUBMIT' = 'SELECT_AND_SUBMIT',
+  'DOWNLOAD' = 'DOWNLOAD',
+  'COMMENT' = 'COMMENT',
+  'CREATE_FOLDER_ASSET' = 'CREATE_FOLDER_ASSET',
+  'UPDATE' = 'UPDATE',
+  'ARCHIVE' = 'ARCHIVE',
+  'DELETE' = 'DELETE',
+  'ADD_USER' = 'ADD_USER',
+  'PROJECT_APPROVE' = 'PROJECT_APPROVE',
+  'AUDIT_LOG' = 'AUDIT_LOG'
+}
+
+export enum GrantedProjectRole {
   'OWNER' = 'OWNER',
   'REVIEWER' = 'REVIEWER',
   'PRODUCER' = 'PRODUCER',
@@ -2073,9 +2744,12 @@ export enum ProjectStatus {
   'COMPLETED' = 'COMPLETED'
 }
 
-export enum GrantedVisibility {
-  'PUBLIC' = 'PUBLIC',
-  'PRIVATE' = 'PRIVATE'
+export enum ShareTokenTime {
+  'ONE_DAY' = 'ONE_DAY',
+  'ONE_WEEK' = 'ONE_WEEK',
+  'ONE_MONTH' = 'ONE_MONTH',
+  'ONE_YEAR' = 'ONE_YEAR',
+  'UNLIMITED' = 'UNLIMITED'
 }
 
 export enum DeliveryStatus {
@@ -2096,6 +2770,12 @@ export enum NotificationType {
   'DEADLINE_REMINDER' = 'DEADLINE_REMINDER'
 }
 
+export enum FolderVisibility {
+  'INHERIT' = 'INHERIT',
+  'RESTRICTED' = 'RESTRICTED',
+  'PUBLIC' = 'PUBLIC'
+}
+
 export enum ObjectPermission {
   'READ' = 'READ',
   'COMMENT' = 'COMMENT',
@@ -2105,14 +2785,6 @@ export enum ObjectPermission {
 export enum ObjectVisibility {
   'PRIVATE' = 'PRIVATE',
   'PUBLIC' = 'PUBLIC'
-}
-
-export enum FileAppPermission {
-  'PUBLIC' = 'PUBLIC',
-  'READ' = 'READ',
-  'COMMENT' = 'COMMENT',
-  'MODIFY' = 'MODIFY',
-  'OWNER' = 'OWNER'
 }
 
 export enum MediaType {
@@ -2166,5 +2838,71 @@ export enum Shape {
   'RECTANGLE' = 'RECTANGLE',
   'CIRCLE' = 'CIRCLE',
   'POLYGON' = 'POLYGON',
-  'FREEFORM' = 'FREEFORM'
+  'FREEFORM' = 'FREEFORM',
+  'DOT' = 'DOT'
+}
+
+export enum ProcessingJobStatus {
+  'PENDING' = 'PENDING',
+  'PROCESSING' = 'PROCESSING',
+  'COMPLETED' = 'COMPLETED',
+  'FAILED' = 'FAILED',
+  'CANCELLED' = 'CANCELLED'
+}
+
+export enum ProcessingJobType {
+  'TRANSCODE_HLS' = 'TRANSCODE_HLS',
+  'GENERATE_THUMBNAILS' = 'GENERATE_THUMBNAILS',
+  'GENERATE_SPRITE' = 'GENERATE_SPRITE',
+  'GENERATE_POSTER' = 'GENERATE_POSTER',
+  'GENERATE_WAVEFORM' = 'GENERATE_WAVEFORM',
+  'VIRUS_SCAN' = 'VIRUS_SCAN'
+}
+
+export enum RenditionStatus {
+  'PENDING' = 'PENDING',
+  'PROCESSING' = 'PROCESSING',
+  'READY' = 'READY',
+  'FAILED' = 'FAILED'
+}
+
+export enum RenditionType {
+  'HLS' = 'HLS',
+  'THUMBNAIL' = 'THUMBNAIL',
+  'SPRITE' = 'SPRITE',
+  'WAVEFORM' = 'WAVEFORM',
+  'POSTER' = 'POSTER'
+}
+
+export enum AuditAction {
+  'CREATE' = 'CREATE',
+  'UPDATE' = 'UPDATE',
+  'TRASH' = 'TRASH',
+  'DELETE' = 'DELETE',
+  'STATUS_CHANGE' = 'STATUS_CHANGE',
+  'PERMISSION_CHANGE' = 'PERMISSION_CHANGE',
+  'LOGIN' = 'LOGIN',
+  'LOGOUT' = 'LOGOUT',
+  'SHARE' = 'SHARE',
+  'DOWNLOAD' = 'DOWNLOAD',
+  'UPLOAD_COMPLETE' = 'UPLOAD_COMPLETE',
+  'UPLOAD_NEW_VERSION' = 'UPLOAD_NEW_VERSION'
+}
+
+export enum AuditActorType {
+  'USER' = 'USER',
+  'SYSTEM' = 'SYSTEM',
+  'API_KEY' = 'API_KEY'
+}
+
+export enum AuditTargetType {
+  'PROJECT' = 'PROJECT',
+  'FOLDER' = 'FOLDER',
+  'FILE' = 'FILE',
+  'ASSET' = 'ASSET',
+  'ANNOTATION' = 'ANNOTATION',
+  'COMMENT' = 'COMMENT',
+  'REVIEW_SESSION' = 'REVIEW_SESSION',
+  'USER' = 'USER',
+  'PERMISSION' = 'PERMISSION'
 }

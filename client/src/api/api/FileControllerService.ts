@@ -9,7 +9,6 @@ import {
   type UploadStatus,
   type ProcessingStatus,
   type MediaInfo,
-  type FileAppPermission,
   type EmailSenderRequestDto,
   type CommonResponseString,
   type PageRequestDtoUserFileFilterPageRequestDto,

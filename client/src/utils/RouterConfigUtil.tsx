@@ -14,6 +14,7 @@ import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
 import FolderAsset from "../page/FolderAsset.tsx";
+import ImageReviewV3 from "../page/ImageReviewV3.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -94,7 +95,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     {
         path: '/review/image-v2',
         name: 'Image Review V2',
-        element: <ImageReviewV2/>,
+        element: <ImageReviewV3/>,
         isShow: false,
     },
     {
