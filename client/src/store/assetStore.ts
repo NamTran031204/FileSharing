@@ -4,60 +4,42 @@ import type {
     AssetDetailResponseDto,
 } from '../api/api/index.defs';
 import { AssetControllerService } from '../api/api/AssetControllerService';
+import {CommonPagingStore} from "./CommonPagingStore.ts";
 
-class AssetStore {
+class AssetStore extends CommonPagingStore{
     // ── Data ──────────────────────────────────────────────────────────────
     assets: AssetSummaryDto[] = [];
     /** Asset đang được xem detail — load từ getById khi mở modal/preview */
     selectedAsset: AssetDetailResponseDto | null = null;
 
-    // ── Pagination ────────────────────────────────────────────────────────
-    page: number = 1;
-    pageSize: number = 50;
-    totalCount: number = 0;
-    sorting: string = 'updatedAt desc';
 
-    // ── Loading / Error ───────────────────────────────────────────────────
-    isLoading: boolean = false;
+    sortDirection: string = 'asc';
+    sortBy: string = 'updateAt';
+
     errorMessage: string | null = null;
 
-    // ── Modal trigger flags ───────────────────────────────────────────────
-    /** true → mở modal upload file mới */
     isUploadAsset: boolean = false;
-    /** true → mở modal upload folder (tạo asset hàng loạt) */
     isUploadFolder: boolean = false;
-    /** true → mở modal chỉnh sửa thông tin asset */
     isUpdateDetail: boolean = false;
-    /**
-     * true → mở modal xác nhận chuyển asset vào thùng rác.
-     * Hành động thực tế: archive (isTrash=true, isActive=true vẫn giữ nguyên).
-     * Xóa hẳn (isActive=false) chỉ thực hiện từ trang Trash riêng.
-     */
     isRemove: boolean = false;
-    /** assetId đang được thao tác (dùng cho modal edit/remove) */
     targetAssetId: string | null = null;
 
-    // ── Image/Asset Preview (mở rộng cho ImageReview về sau) ─────────────
     previewAssetId: string | null = null;
     isPreviewOpen: boolean = false;
 
-    // ── i18n & UI config ──────────────────────────────────────────────────
     nameSpaceLocale: string = 'asset';
     modalWidth: number = 900;
 
-    // ── Private context (dùng cho reaction auto-fetch) ────────────────────
     private _projectId: string = '';
     private _folderId: string | undefined = undefined;
 
     constructor() {
+        super();
         makeObservable(this, {
             assets: observable,
             selectedAsset: observable,
-            page: observable,
-            pageSize: observable,
-            totalCount: observable,
-            sorting: observable,
-            isLoading: observable,
+            sortBy: observable,
+            sortDirection: observable,
             errorMessage: observable,
             isUploadAsset: observable,
             isUploadFolder: observable,
@@ -68,10 +50,10 @@ class AssetStore {
             isPreviewOpen: observable,
             nameSpaceLocale: observable,
             modalWidth: observable,
-            // computed
-            skipCount: computed,
-            totalPages: computed,
-            // actions
+
+            sortTerm: computed,
+
+            setSortTerm: action,
             fetchPage: action,
             fetchDetail: action,
             moveAsset: action,
@@ -86,7 +68,6 @@ class AssetStore {
             reset: action,
         });
 
-        // Khi page thay đổi → tự gọi lại fetchPage với context đã lưu
         reaction(
             () => this.page,
             () => {
@@ -97,24 +78,15 @@ class AssetStore {
         );
     }
 
-    // ── Computed ──────────────────────────────────────────────────────────
-
-    get skipCount(): number {
-        return (this.page - 1) * this.pageSize;
+    get sortTerm(): string {
+        return this.sortBy + " " + this.sortDirection;
     }
 
-    get totalPages(): number {
-        return Math.ceil(this.totalCount / this.pageSize);
+    setSortTerm(sortBy: string, sortDirection: string) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────
-
-    /**
-     * Load danh sách asset — gọi khi projectId hoặc folderId thay đổi.
-     * Lưu context để reaction có thể tự gọi lại khi page thay đổi.
-     * Lưu ý: AssetControllerService dùng getPage1 trong FolderAsset.tsx cũ,
-     * store này gọi trực tiếp getPage từ service đã cập nhật.
-     */
     async fetchPage(projectId: string, folderId?: string): Promise<void> {
         this._projectId = projectId;
         this._folderId = folderId;
@@ -143,10 +115,7 @@ class AssetStore {
         }
     }
 
-    /**
-     * Load chi tiết một asset — dùng khi mở modal detail hoặc preview.
-     * Trả về AssetDetailResponseDto: { asset, latestVersion }
-     */
+
     async fetchDetail(assetId: string): Promise<void> {
         try {
             const res = await AssetControllerService.getById({ assetId });
@@ -158,11 +127,7 @@ class AssetStore {
         }
     }
 
-    /**
-     * Di chuyển asset sang folder khác.
-     * AssetMoveRequestDto: { assetId, targetFolderId }
-     * Sau khi thành công tự refresh lại trang hiện tại.
-     */
+
     async moveAsset(assetId: string, targetFolderId: string): Promise<void> {
         try {
             const res = await AssetControllerService.move({ body: { assetId, targetFolderId } });
@@ -174,14 +139,6 @@ class AssetStore {
             const msg = e instanceof Error ? e.message : 'Không thể di chuyển asset';
             this.errorMessage = msg;
         }
-    }
-
-    /**
-     * Đổi trang — reaction sẽ tự gọi fetchPage.
-     * Chú ý: gọi fetchPage trực tiếp khi lần đầu load (page = 1 không trigger reaction).
-     */
-    setPage(page: number): void {
-        this.page = page;
     }
 
     openUploadAssetModal(): void {
@@ -206,7 +163,7 @@ class AssetStore {
         this.isRemove = true;
     }
 
-    /** Mở preview asset — dành cho ImageReview về sau */
+    /** Mở trang review asset — dành cho ImageReview về sau */
     openPreview(assetId: string): void {
         this.previewAssetId = assetId;
         this.isPreviewOpen = true;
@@ -226,7 +183,6 @@ class AssetStore {
         this.errorMessage = null;
     }
 
-    /** Reset toàn bộ state — gọi khi chuyển folder/project hoặc unmount */
     reset(): void {
         this.assets = [];
         this.selectedAsset = null;

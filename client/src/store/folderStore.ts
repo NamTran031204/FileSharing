@@ -7,23 +7,18 @@ import {
     GrantedProjectPermission,
 } from '../api/api/index.defs';
 import {FolderControllerService} from '../api/api/FolderControllerService';
+import {CommonPagingStore} from "./CommonPagingStore.ts";
 
-class FolderStore {
+class FolderStore extends CommonPagingStore{
     folders: FolderEntity[] = [];
 
     breadcrumb: FolderBreadcrumbItemDTO[] = [];
 
     treeItems: FolderTreeItemDTO[] = [];
 
-    page: number = 1;
-    pageSize: number = 50;
-    totalCount: number = 0;
-    sorting: string = 'folderName asc';
-
     sortDirection: string = 'asc';
     sortBy: string = 'folderName';
 
-    isLoading: boolean = false;
     isTreeLoading: boolean = false;
     errorMessage: string | null = null;
 
@@ -43,15 +38,13 @@ class FolderStore {
     private _currentUserId: string = '';
 
     constructor() {
+        super();
         makeObservable(this, {
             folders: observable,
             breadcrumb: observable,
             treeItems: observable,
-            page: observable,
-            pageSize: observable,
-            totalCount: observable,
-            sorting: observable,
-            isLoading: observable,
+            sortBy: observable,
+            sortDirection: observable,
             isTreeLoading: observable,
             errorMessage: observable,
             isUploadAsset: observable,
@@ -61,15 +54,14 @@ class FolderStore {
             targetFolderId: observable,
             nameSpaceLocale: observable,
             modalWidth: observable,
-            _currentUserId: observable, // observable để folderPermissionMap computed tự cập nhật
-            // computed — tự tính từ observable, không cần lưu thủ công
-            skipCount: computed,
-            totalPages: computed,
-            folderPermissionMap: computed, // derive từ folders + _currentUserId
-            // actions
+            _currentUserId: observable,
+
+            sorting: computed,
+            folderPermissionMap: computed,
+
+            setSorting: action,
             fetchPage: action,
             fetchTree: action,
-            setPage: action,
             setCurrentUser: action,
             openUploadAssetModal: action,
             openUploadFolderModal: action,
@@ -90,12 +82,13 @@ class FolderStore {
         );
     }
 
-    get skipCount(): number {
-        return (this.page - 1) * this.pageSize;
+    get sorting(): string {
+        return this.sortBy + " " + this.sortDirection;
     }
 
-    get totalPages(): number {
-        return Math.ceil(this.totalCount / this.pageSize);
+    setSorting(sortBy: string, sortDirection: string) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
     }
 
     get folderPermissionMap(): Map<string, GrantedProjectPermission[]> {
@@ -154,10 +147,6 @@ class FolderStore {
         } finally {
             this.isTreeLoading = false;
         }
-    }
-
-    setPage(page: number): void {
-        this.page = page;
     }
 
     setCurrentUser(userId: string): void {
