@@ -15,6 +15,7 @@ export interface ProjectMember {
 }
 
 export interface ProjectOverviewCardProps {
+    projectId?: string;  // id thực tế từ DB, khác với code hiển thị
     title: string;
     code: string;
     category?: string;

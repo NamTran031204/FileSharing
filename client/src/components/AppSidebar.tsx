@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import CreateProjectModal, {type CreateProjectFormValues} from "./CreateProjectModal.tsx";
+import CreateProjectModal, {type CreateProjectFormValues} from "./project/CreateProjectModal.tsx";
 import {useState} from "react";
 
 /**

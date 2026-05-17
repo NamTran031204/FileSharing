@@ -11,11 +11,13 @@ import {
 } from '@ant-design/icons';
 import {Button, Empty, Input, Skeleton, Space, message} from 'antd';
 import {useEffect, useMemo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {ProjectControllerService} from '../api/api/ProjectControllerService';
 import {type ProjectEntity, type ProjectStatus} from '../api/api/index.defs';
-import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
-import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/ProjectOverviewCard';
+import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
+import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/project/ProjectOverviewCard.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
+import {useStore} from '../store';
 
 const PAGE_SIZE = 24;
 
@@ -63,6 +65,7 @@ const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
     const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || 'N/A';
 
     return {
+        projectId: project.projectId,
         title: project.projectName || 'Untitled Project',
         code: project.projectCode || project.projectId || 'N/A',
         category: project.category,
@@ -81,6 +84,8 @@ const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
 };
 
 const ProjectMain = () => {
+    const navigate = useNavigate();
+    const {sessionStore} = useStore();
     const [searchKeyword, setSearchKeyword] = useState('');
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
@@ -215,8 +220,16 @@ const ProjectMain = () => {
                                         key={project.code}
                                         {...project}
                                         onClick={() => {
-                                            // TODO: Open project detail route.
-                                            console.info('Open project detail:', project.code);
+                                            const projectId = project.projectId;
+                                            if (!projectId) return;
+                                            // Lưu project hiện tại vào session store
+                                            sessionStore.setCurrentProject({
+                                                projectId,
+                                                projectName: project.title,
+                                            });
+                                            // Xóa folder session khi chuyển project
+                                            sessionStore.setCurrentFolder(undefined);
+                                            navigate(`/projects/${projectId}`);
                                         }}
                                     />
                                 ))}

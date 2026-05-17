@@ -9,7 +9,7 @@ import {useMemo, useState} from 'react';
 import AppHeader from '../components/AppHeader';
 import AppSidebar from '../components/AppSidebar';
 import MainPageActionCard, {type MainPageActionTone} from '../components/MainPageActionCard';
-import CreateProjectModal, {type CreateProjectFormValues} from '../components/CreateProjectModal';
+import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
 
 interface MainPageProps {

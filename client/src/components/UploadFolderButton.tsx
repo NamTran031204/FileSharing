@@ -20,15 +20,7 @@ import {
     type UploadQueueItem,
 } from '../service/folderUploadService';
 import {uploadService, type UploadProgress} from '../service/uploadService';
-
-export interface UploadFolderButtonProps {
-    projectId: string;
-    currentParentFolderId?: string;
-    currentBaseFolderPath?: string;
-    onCompleted?: (result: {uploaded: number; failed: number}) => void;
-    onFolderTreeCreated?: () => void;
-    onAssetUploaded?: (item: UploadQueueItem) => void;
-}
+import {useStore} from "../store";
 
 type UploadPhase =
     | 'IDLE'
@@ -74,14 +66,16 @@ const formatTime = (ms: number): string => {
     return `${minutes}m ${remainingSeconds}s`;
 };
 
-const UploadFolderButton = ({
-    projectId,
-    currentParentFolderId,
-    currentBaseFolderPath,
-    onCompleted,
-    onFolderTreeCreated,
-    onAssetUploaded,
-}: UploadFolderButtonProps) => {
+const UploadFolderButton = () => {
+
+    const {sessionStore} = useStore();
+
+    const projectId = sessionStore.currentProjectId;
+    // folderId của folder hiện tại mà user đang đứng — dùng làm parentFolderId cho root folder của tree
+    const currentParentFolderId = sessionStore.currentFolderId || undefined;
+    // folderPath đầy đủ của folder hiện tại — dùng làm baseFolderPath để server biết prefix đường dẫn
+    const currentBaseFolderPath = sessionStore.currentFolderPath;
+
     const [selectedFolderName, setSelectedFolderName] = useState<string | null>(null);
     const [folderManifest, setFolderManifest] = useState<FolderManifest | null>(null);
     const [folderQueue, setFolderQueue] = useState<UploadQueueItem[]>([]);
@@ -212,7 +206,6 @@ const UploadFolderButton = ({
 
             setFolderPathToId(result.folderPathToId);
             setPhase('FOLDER_TREE_CREATED');
-            onFolderTreeCreated?.();
         } catch (error) {
             setTreeError(error instanceof Error ? error.message : 'Create folder tree failed');
             setPhase('FAILED');
@@ -223,7 +216,6 @@ const UploadFolderButton = ({
         currentBaseFolderPath,
         currentParentFolderId,
         folderManifest,
-        onFolderTreeCreated,
         projectId,
     ]);
 
@@ -318,7 +310,6 @@ const UploadFolderButton = ({
                 uploadedTotal += 1;
                 setUploadedCount(uploadedTotal);
                 setCompletedBytes((prev) => prev + item.size);
-                onAssetUploaded?.(workingQueue[i]);
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Upload failed';
                 workingQueue = updateQueueItem(workingQueue, i, {
@@ -345,13 +336,9 @@ const UploadFolderButton = ({
         } else {
             setPhase('COMPLETED');
         }
-
-        onCompleted?.({uploaded: uploadedTotal, failed: failedTotal});
     }, [
         folderManifest,
         folderPathToId,
-        onAssetUploaded,
-        onCompleted,
         projectId,
     ]);
 
