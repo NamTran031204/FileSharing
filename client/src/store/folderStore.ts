@@ -15,7 +15,9 @@ class FolderStore {
 
     treeItems: FolderTreeItemDTO[] = [];
 
-
+    page: number = 1;
+    pageSize: number = 50;
+    totalCount: number = 0;
     sorting: string = 'folderName asc';
 
     sortDirection: string = 'asc';
