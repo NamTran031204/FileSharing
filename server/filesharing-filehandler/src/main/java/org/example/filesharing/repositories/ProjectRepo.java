@@ -25,4 +25,6 @@ public interface ProjectRepo extends MongoRepository<ProjectEntity, String> {
     Optional<ProjectEntity> findByShareToken(String shareToken);
 
     boolean existsByShareToken(String shareToken);
+
+    void deleteByProjectId(String projectId);
 }

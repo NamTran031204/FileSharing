@@ -11,10 +11,14 @@ import org.example.filesharing.enums.permission.GrantedProjectRole;
 import org.example.filesharing.enums.permission.GrantedVisibility;
 import org.example.filesharing.repositories.FolderRepo;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -50,6 +54,7 @@ public final class ProjectPermissionResolver {
             return Collections.emptyList();
         }
 
+        // sau nay neu them role admin thi can tach ra
         if (isAdmin || isOwner(project, user)) {
             return GrantedProjectRole.projectPermissionsFromRole(GrantedProjectRole.OWNER);
         }
@@ -93,64 +98,97 @@ public final class ProjectPermissionResolver {
     }
 
     // -------------------------------------------------------------------------
-    // Folder-level permission resolution (for authenticated project members)
+    // Folder userPermissions build (write-time materialization)
     // -------------------------------------------------------------------------
 
-    public static List<GrantedProjectPermission> resolveEffectiveFolderPermissions(
+    /**
+     * Builds the denormalized userPermissions list for a folder.
+     *
+     * @param project              the project entity
+     * @param visibility           the target visibility of the folder
+     * @param parentUserPermissions parent's current userPermissions (used for INHERIT)
+     * @param restrictedUserIds    explicit userId list (only used for RESTRICTED; ignored otherwise)
+     */
+    public static List<FolderPermission> buildFolderUserPermissions(
             ProjectEntity project,
-            FolderEntity folder,
-            UserEntity user,
-            boolean isAdmin,
-            FolderRepo folderRepo
+            FolderVisibility visibility,
+            List<FolderPermission> parentUserPermissions,
+            List<String> restrictedUserIds
     ) {
-        if (project == null || folder == null) {
-            return Collections.emptyList();
+        if (project == null) {
+            return new ArrayList<>();
         }
 
-        List<GrantedProjectPermission> basePermissions = resolveProjectPermissions(project, user, isAdmin);
-        boolean isMember = isAdmin || isProjectMember(project, user);
+        FolderVisibility effective = visibility != null ? visibility : FolderVisibility.INHERIT;
 
-        List<FolderEntity> chain = resolveFolderChain(folder, folderRepo);
-        List<GrantedProjectPermission> effective = null;
-
-        for (FolderEntity current : chain) {
-            FolderVisibility visibility = current.getVisibility() != null
-                    ? current.getVisibility()
-                    : FolderVisibility.INHERIT;
-
-            if (visibility == FolderVisibility.INHERIT) {
-                continue;
+        switch (effective) {
+            case INHERIT -> {
+                return parentUserPermissions != null ? new ArrayList<>(parentUserPermissions) : new ArrayList<>();
             }
-
-            List<GrantedProjectPermission> levelPermissions = null;
-            if (visibility == FolderVisibility.RESTRICTED) {
-                if (!isMember) {
-                    return Collections.emptyList();
-                }
-                FolderPermission folderPermission = findFolderPermission(current, user);
-                if (folderPermission == null
-                        || folderPermission.getPermissions() == null
-                        || folderPermission.getPermissions().isEmpty()) {
-                    return Collections.emptyList();
-                }
-                levelPermissions = folderPermission.getPermissions();
-            } else if (visibility == FolderVisibility.PUBLIC) {
-                levelPermissions = isMember ? basePermissions : VIEWER_PUBLIC_FOLDER_PERMISSIONS;
+            case RESTRICTED -> {
+                return buildRestrictedPermissions(project, restrictedUserIds);
             }
-
-            if (levelPermissions != null) {
-                effective = effective == null
-                        ? new ArrayList<>(levelPermissions)
-                        : intersect(effective, levelPermissions);
+            default -> {
+                // PUBLIC: all project members
+                return buildAllMemberPermissions(project);
             }
         }
-
-        if (effective == null) {
-            effective = basePermissions;
-        }
-
-        return effective != null ? effective : Collections.emptyList();
     }
+
+    /**
+     * Merges permissions for a folder transitioning from RESTRICTED → INHERIT.
+     * Keeps entries with isPrivateCollaborator=true, then merges parent permissions for remaining users.
+     */
+    public static List<FolderPermission> buildInheritMerge(
+            List<FolderPermission> currentPermissions,
+            List<FolderPermission> parentPermissions
+    ) {
+        List<FolderPermission> kept = new ArrayList<>();
+        Set<String> keptUserIds = new HashSet<>();
+
+        if (currentPermissions != null) {
+            for (FolderPermission fp : currentPermissions) {
+                if (Boolean.TRUE.equals(fp.getIsPrivateCollaborator())) {
+                    kept.add(fp);
+                    if (fp.getUserId() != null) {
+                        keptUserIds.add(fp.getUserId());
+                    }
+                }
+            }
+        }
+
+        if (parentPermissions != null) {
+            for (FolderPermission fp : parentPermissions) {
+                if (fp.getUserId() != null && !keptUserIds.contains(fp.getUserId())) {
+                    kept.add(fp);
+                }
+            }
+        }
+
+        return kept;
+    }
+
+    /**
+     * Builds a single FolderPermission entry from a user's project role.
+     * Permissions are filtered to folder-applicable permissions only.
+     */
+    public static FolderPermission buildSingleEntry(String userId, GrantedProjectRole role, boolean isPrivateCollaborator) {
+        List<GrantedProjectPermission> rolePermissions = GrantedProjectRole.projectPermissionsFromRole(role);
+        List<GrantedProjectPermission> folderPerms = rolePermissions.stream()
+                .filter(GrantedProjectPermission::isFolderPermission)
+                .toList();
+
+        return FolderPermission.builder()
+                .userId(userId)
+                .permissions(new ArrayList<>(folderPerms))
+                .isPrivateCollaborator(isPrivateCollaborator ? Boolean.TRUE : null)
+                .grantedAt(Instant.now())
+                .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Guest / Viewer permission resolution (unauthenticated access, visibility-chain walk)
+    // -------------------------------------------------------------------------
 
     /**
      * Tính effective permission cho GUEST (người nhập tên, chưa đăng nhập) trên folder.
@@ -314,62 +352,89 @@ public final class ProjectPermissionResolver {
         return null;
     }
 
-    private static FolderPermission findFolderPermission(FolderEntity folder, UserEntity user) {
-        if (folder == null || user == null) {
-            return null;
+    /**
+     * Builds the member permissions for all project members (owner + collaborators).
+     * Used for PUBLIC and INHERIT visibility.
+     */
+    private static List<FolderPermission> buildAllMemberPermissions(ProjectEntity project) {
+        List<FolderPermission> result = new ArrayList<>();
+
+        if (project.getOwnerId() != null) {
+            result.add(buildSingleEntry(project.getOwnerId(), GrantedProjectRole.OWNER, false));
         }
 
-        if (folder.getPermissions() == null || folder.getPermissions().isEmpty()) {
-            return null;
-        }
-
-        String currentUserId = user.getUserId();
-        for (FolderPermission permission : folder.getPermissions()) {
-            if (Objects.equals(permission.getUserId(), currentUserId)) {
-                return permission;
+        if (project.getCollaborators() != null) {
+            for (ProjectCollaborator collaborator : project.getCollaborators()) {
+                if (collaborator.getUserId() != null && collaborator.getProjectRole() != null) {
+                    result.add(buildSingleEntry(collaborator.getUserId(), collaborator.getProjectRole(), false));
+                }
             }
         }
 
-        return null;
+        return result;
     }
 
-    private static List<FolderEntity> resolveFolderChain(FolderEntity folder, FolderRepo folderRepo) {
-        List<FolderEntity> chain = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-
-        FolderEntity current = folder;
-        while (current != null) {
-            String folderId = current.getFolderId();
-            if (folderId != null && !visited.add(folderId)) {
-                break;
-            }
-
-            chain.add(current);
-            String parentId = current.getParentFolderId();
-            if (parentId == null) {
-                break;
-            }
-
-            current = folderRepo.findById(parentId).orElse(null);
+    /**
+     * Builds restricted permissions for an explicit userId list.
+     * Each user's permissions are derived from their project role.
+     */
+    private static List<FolderPermission> buildRestrictedPermissions(ProjectEntity project, List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        Collections.reverse(chain);
-        return chain;
-    }
+        Map<String, GrantedProjectRole> roleMap = buildRoleMap(project);
 
-    private static List<GrantedProjectPermission> intersect(List<GrantedProjectPermission> left,
-                                                            List<GrantedProjectPermission> right) {
-        if (left == null || left.isEmpty() || right == null || right.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Set<GrantedProjectPermission> rightSet = new HashSet<>(right);
-        List<GrantedProjectPermission> result = new ArrayList<>();
-        for (GrantedProjectPermission permission : left) {
-            if (rightSet.contains(permission)) {
-                result.add(permission);
+        List<FolderPermission> result = new ArrayList<>();
+        for (String userId : userIds) {
+            GrantedProjectRole role = roleMap.get(userId);
+            if (role != null) {
+                result.add(buildSingleEntry(userId, role, true));
             }
         }
         return result;
+    }
+
+    /**
+     * Builds a userId → projectRole map for all project members (owner + collaborators).
+     */
+    public static Map<String, GrantedProjectRole> buildRoleMap(ProjectEntity project) {
+        Map<String, GrantedProjectRole> roleMap = new HashMap<>();
+
+        if (project.getOwnerId() != null) {
+            roleMap.put(project.getOwnerId(), GrantedProjectRole.OWNER);
+        }
+
+        if (project.getCollaborators() != null) {
+            for (ProjectCollaborator collaborator : project.getCollaborators()) {
+                if (collaborator.getUserId() != null && collaborator.getProjectRole() != null) {
+                    roleMap.put(collaborator.getUserId(), collaborator.getProjectRole());
+                }
+            }
+        }
+
+        return roleMap;
+    }
+
+    /**
+     * Resolves the full ancestor chain for a folder (root → folder) using ancestorIds batch load.
+     * Used only for guest/viewer visibility chain-walk (not for authenticated permission lookups).
+     */
+    private static List<FolderEntity> resolveFolderChain(FolderEntity folder, FolderRepo folderRepo) {
+        List<String> ancestorIds = folder.getAncestorIds();
+        if (ancestorIds == null || ancestorIds.isEmpty()) {
+            return new ArrayList<>(List.of(folder));
+        }
+
+        Map<String, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < ancestorIds.size(); i++) {
+            orderMap.put(ancestorIds.get(i), i);
+        }
+
+        List<FolderEntity> ancestors = new ArrayList<>();
+        folderRepo.findAllById(ancestorIds).forEach(ancestors::add);
+        ancestors.sort(Comparator.comparingInt(f -> orderMap.getOrDefault(f.getFolderId(), Integer.MAX_VALUE)));
+        ancestors.add(folder);
+        return ancestors;
     }
 }

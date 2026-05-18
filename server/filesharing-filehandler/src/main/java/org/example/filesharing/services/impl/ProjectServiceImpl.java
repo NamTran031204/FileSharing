@@ -42,6 +42,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -109,11 +110,10 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .ownerEmail(ownerEmail)
                 .startDate(startDate)
                 .endDate(projectCreateUpdateDTO.getEndDate())
-                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), new ArrayList<>(), true))
+                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), ownerId, true))
                 .visibility(visibility)
                 .stats(defaultStats())
                 .status(status)
-                .trashedAt(Instant.now())
                 .build();
 
         buildAudit(project, true);
@@ -161,8 +161,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         if (projectCreateUpdateDTO.getCollaborators() != null) {
             List<ProjectCollaboratorDTO> newCollaborators = projectCreateUpdateDTO.getCollaborators();
-            List<ProjectCollaborator> oldCollab = project.getCollaborators();
-            var listNewCollab = buildCollaborators(newCollaborators, oldCollab, false);
+            var listNewCollab = buildCollaborators(newCollaborators, project.getOwnerId(), false);
             project.setCollaborators(listNewCollab);
         }
 
@@ -190,7 +189,8 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         ensureOwnerOrAdminPermission(project);
 
         project.setStatus(ProjectStatus.ARCHIVED);
-        project.setTrashedAt(Instant.now());
+
+        moveToTrashAudit(project);
 
         buildAudit(project, false);
         projectRepo.save(project);
@@ -402,8 +402,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             oldCollab = new ArrayList<>();
         }
 
-        List<ProjectCollaboratorDTO> newCollaborators = Collections.singletonList(collaborator);
-        List<ProjectCollaborator> updated = buildCollaborators(newCollaborators, oldCollab, false);
+        List<ProjectCollaborator> updated = addCollaborator(collaborator, oldCollab);
         project.setCollaborators(updated);
 
         buildAudit(project, false);
@@ -640,9 +639,9 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         String targetUserId = currentUserId;
         if (filter != null && StringUtils.isNotNullOrBlank(filter.getUserId())) {
             targetUserId = filter.getUserId().trim();
-            if (!currentUserId.equals(targetUserId)) {
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
+//            if (!currentUserId.equals(targetUserId)) {
+//                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+//            }
         }
 
         String targetEmail = currentUserEmail;
@@ -909,7 +908,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     }
 
     // neu danh sach collab moi khong co permission, mac dinh la Guest
-    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> newCollab, List<ProjectCollaborator> oldCollab, Boolean isCreate) {
+    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collaboratorDTOS, String ownerId, Boolean isCreate) {
 
         List<ProjectCollaborator> collaborators = new ArrayList<>();
         if (isCreate) {
@@ -922,43 +921,48 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                     .addedAt(Instant.now())
                     .build();
             collaborators.add(projectCollaborator);
-            if (newCollab == null || newCollab.isEmpty()) {
+            if (collaboratorDTOS == null || collaboratorDTOS.isEmpty()) {
+                return collaborators;
+            }
+        } else {
+            ProjectCollaborator projectCollaborator = ProjectCollaborator.builder()
+                    .userId(ownerId)
+                    .projectRole(GrantedProjectRole.OWNER)
+                    .addedAt(Instant.now())
+                    .build();
+            collaborators.add(projectCollaborator);
+            if (collaboratorDTOS == null || collaboratorDTOS.isEmpty()) {
                 return collaborators;
             }
         }
 
-        if (newCollab == null) {
-            return collaborators;
+        Set<String> addCollaborator = new HashSet<>();
+        if (ownerId == null || !ownerId.isBlank()) {
+            addCollaborator.add(ownerId);
         }
-
-        if (oldCollab == null) {
-            oldCollab = new ArrayList<>();
-        }
-
-        collaborators = oldCollab;
-
-        Set<String> oldCollaborator = new HashSet<>();
-        oldCollab.forEach(x -> oldCollaborator.add(x.getUserId()));
-        for (var newCollaborator : newCollab) {
+        collaborators.forEach(x -> addCollaborator.add(x.getUserId()));
+        for (var newCollaborator : collaboratorDTOS) {
             if (newCollaborator.getUserId() != null && !newCollaborator.getUserId().isBlank()) {
-                if (!oldCollaborator.contains(newCollaborator.getUserId())) {
-                    oldCollaborator.add(newCollaborator.getUserId());
-                    var newCob = ProjectCollaborator.builder()
-                            .userId(newCollaborator.getUserId())
-                            .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.GUEST)
-                            .addedAt(Instant.now())
-                            .build();
-                    collaborators.add(newCob);
+                if (!addCollaborator.contains(newCollaborator.getUserId())) {
+                    userRepo.findById(newCollaborator.getUserId()).ifPresent(x -> {
+                        addCollaborator.add(newCollaborator.getUserId());
+                        var newCob = ProjectCollaborator.builder()
+                                .userId(newCollaborator.getUserId())
+                                .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                                .addedAt(Instant.now())
+                                .build();
+                        collaborators.add(newCob);
+                    });
                 }
             } else if (newCollaborator.getEmail() != null && !newCollaborator.getEmail().isBlank()) {
                 Optional<UserEntity> user = userRepo.findByEmail(newCollaborator.getEmail());
                 if (user.isPresent()) {
                     var userId = user.get().getUserId();
-                    if (!oldCollaborator.contains(userId)) {
-                        oldCollaborator.add(userId);
+                    if (!addCollaborator.contains(userId)) {
+                        addCollaborator.add(userId);
                         var newCob = ProjectCollaborator.builder()
                                 .userId(userId)
-                                .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.GUEST)
+                                .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
                                 .addedAt(Instant.now())
                                 .build();
                         collaborators.add(newCob);
@@ -969,6 +973,46 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
         return collaborators;
 
+    }
+
+    private List<ProjectCollaborator> addCollaborator(ProjectCollaboratorDTO newCollaborator, List<ProjectCollaborator> oldCollaborator) {
+        Set<String> oldCollaboratorIds = oldCollaborator.stream().map(ProjectCollaborator::getUserId).collect(Collectors.toSet());
+        if (newCollaborator.getUserId() != null && !newCollaborator.getUserId().isBlank()) {
+            if (oldCollaboratorIds.contains(newCollaborator.getUserId())) {
+                return oldCollaborator;
+            }
+            var userOpt = userRepo.findById(newCollaborator.getUserId());
+            if (userOpt.isPresent()) {
+                var newCob = ProjectCollaborator.builder()
+                        .userId(newCollaborator.getUserId())
+                        .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                        .addedAt(Instant.now())
+                        .build();
+                oldCollaborator.add(newCob);
+                return oldCollaborator;
+            } else {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "collaboratorId khong hop le");
+            }
+        }
+        if (newCollaborator.getEmail() != null && !newCollaborator.getEmail().isBlank()) {
+            Optional<UserEntity> user = userRepo.findByEmail(newCollaborator.getEmail());
+            if (user.isPresent()) {
+                var userId = user.get().getUserId();
+                if (!oldCollaboratorIds.contains(userId)) {
+                    var newCob = ProjectCollaborator.builder()
+                            .userId(userId)
+                            .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                            .addedAt(Instant.now())
+                            .build();
+                    oldCollaborator.add(newCob);
+                    return oldCollaborator;
+                }
+                return oldCollaborator;
+            }
+            // todo: tam thoi la luong email khong ton tai trong he thong, sau nay se thanh send invite
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "email khong ton tai trong he thong");
+        }
+        throw new UserBusinessException(ErrorCode.BAD_REQUEST, "collaborator infor missing");
     }
 
     private ProjectStats defaultStats() {

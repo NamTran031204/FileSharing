@@ -39,7 +39,6 @@ public class ProjectEntity extends EntityAuditBase {
     private ProjectStats stats;
 
     private ProjectStatus status; // khi cho vao thung rac -> ARCHIVE
-    private Instant trashedAt; // cap nhat khi status = ARCHIVE
 
     private String shareToken;
     private Instant shareExpiry;
