@@ -172,6 +172,221 @@
         }
       }
     },
+    "/api/project/{projectId}/visibility" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "updateProjectVisibility",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProjectVisibilityUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/status" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "updateProjectStatus",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProjectStatusUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/share-token/refresh" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "refreshShareToken",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ShareTokenCreateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseShareTokenCreateResponseDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/leave" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "leaveProject",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/addCollaborator" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "addCollaboratorToProject",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProjectCollaboratorDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/update-detail" : {
       "post" : {
         "tags" : [ "project-controller" ],
@@ -186,6 +401,83 @@
           },
           "required" : true
         },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/restore/{projectId}" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "restoreProject",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/remove-collaborator/{projectId}/{collaboratorId}" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "removeCollaboratorFromProject",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "collaboratorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -281,6 +573,43 @@
         }
       }
     },
+    "/api/project/create-share-token" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "createShareToken",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ShareTokenCreateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseShareTokenCreateResponseDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/create-new" : {
       "post" : {
         "tags" : [ "project-controller" ],
@@ -290,6 +619,43 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/ProjectCreateUpdateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/collaborators/changePermission" : {
+      "post" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "changeCollaboratorPermission",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProjectCollaboratorDTO"
               }
             }
           },
@@ -573,6 +939,78 @@
         }
       }
     },
+    "/api/folder/restore/{folderId}" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "restoreFolder",
+        "parameters" : [ {
+          "name" : "folderId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/folder/get-trash" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "getFolderTrash",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoFolderFilterRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultFolderEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/folder/get-page" : {
       "post" : {
         "tags" : [ "folder-controller" ],
@@ -668,6 +1106,78 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseFolderEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/folder/change-visibility" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "changeFolderVisibility",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FolderChangeVisibilityRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/folder/archive/{folderId}" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "archiveFolder",
+        "parameters" : [ {
+          "name" : "folderId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderArchiveResponseDTO"
                 }
               }
             }
@@ -1212,9 +1722,52 @@
         }
       }
     },
+    "/api/asset/version/{assetId}/{versionNumber}/delete" : {
+      "post" : {
+        "tags" : [ "asset-version-controller" ],
+        "operationId" : "deleteVersion",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/asset/version/update-detail" : {
       "post" : {
-        "tags" : [ "asset-controller" ],
+        "tags" : [ "asset-version-controller" ],
         "operationId" : "updateVersion",
         "requestBody" : {
           "content" : {
@@ -1251,7 +1804,7 @@
     },
     "/api/asset/version/get-page" : {
       "post" : {
-        "tags" : [ "asset-controller" ],
+        "tags" : [ "asset-version-controller" ],
         "operationId" : "getVersionPage",
         "requestBody" : {
           "content" : {
@@ -1286,44 +1839,9 @@
         }
       }
     },
-    "/api/asset/version/delete/{versionId}" : {
-      "post" : {
-        "tags" : [ "asset-controller" ],
-        "operationId" : "deleteVersion",
-        "parameters" : [ {
-          "name" : "versionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseString"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - Invalid or missing JWT token"
-          },
-          "403" : {
-            "description" : "Forbidden - Access denied"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        }
-      }
-    },
     "/api/asset/version/create-new" : {
       "post" : {
-        "tags" : [ "asset-controller" ],
+        "tags" : [ "asset-version-controller" ],
         "operationId" : "createVersion",
         "requestBody" : {
           "content" : {
@@ -1722,16 +2240,24 @@
         }
       }
     },
-    "/api/versions/{versionId}/renditions" : {
+    "/api/versions/{assetId}/{versionNumber}/renditions" : {
       "get" : {
         "tags" : [ "playback-controller" ],
         "operationId" : "getRenditions",
         "parameters" : [ {
-          "name" : "versionId",
+          "name" : "assetId",
           "in" : "path",
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1757,16 +2283,24 @@
         }
       }
     },
-    "/api/versions/{versionId}/playback" : {
+    "/api/versions/{assetId}/{versionNumber}/playback" : {
       "get" : {
         "tags" : [ "playback-controller" ],
         "operationId" : "getPlaybackData",
         "parameters" : [ {
-          "name" : "versionId",
+          "name" : "assetId",
           "in" : "path",
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1914,6 +2448,188 @@
         }
       }
     },
+    "/api/project/{projectId}/stats" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "getProjectStats",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectStats"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/getCollaborators" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "getProjectCollaborators",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListProjectCollaborator"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/audit-log" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "getProjectAuditLog",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dto",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/PageRequestDtoAuditLogFilterDTO"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAuditLogEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/share-token/{shareToken}" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "getShareTokenInfo",
+        "parameters" : [ {
+          "name" : "shareToken",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseShareTokenInfoDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/join-project/{shareToken}" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "joinProject",
+        "parameters" : [ {
+          "name" : "shareToken",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseProjectEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/get-by-id/{projectId}" : {
       "get" : {
         "tags" : [ "project-controller" ],
@@ -1949,16 +2665,24 @@
         }
       }
     },
-    "/api/processing/version/{versionId}" : {
+    "/api/processing/{assetId}/{versionNumber}" : {
       "get" : {
         "tags" : [ "processing-controller" ],
         "operationId" : "getProcessingStatus",
         "parameters" : [ {
-          "name" : "versionId",
+          "name" : "assetId",
           "in" : "path",
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -2003,6 +2727,48 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseNotificationEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/folder/get-tree/{projectId}" : {
+      "get" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "getFolderTree",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "currentFolderId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderTreeResponseDTO"
                 }
               }
             }
@@ -2124,16 +2890,24 @@
         }
       }
     },
-    "/api/asset/version/get-by-id/{versionId}" : {
+    "/api/asset/version/{assetId}/{versionNumber}" : {
       "get" : {
-        "tags" : [ "asset-controller" ],
-        "operationId" : "getVersionById",
+        "tags" : [ "asset-version-controller" ],
+        "operationId" : "getVersion",
         "parameters" : [ {
-          "name" : "versionId",
+          "name" : "assetId",
           "in" : "path",
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -2283,6 +3057,76 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseProcessingJobEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/delete-share-token" : {
+      "delete" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "revokeShareToken",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/delete/{projectId}" : {
+      "delete" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "deleteProject",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
                 }
               }
             }
@@ -2560,58 +3404,17 @@
           }
         }
       },
-      "GrantedPermission" : {
+      "GrantedVisibility" : {
         "type" : "string",
-        "enum" : [ "OWNER", "REVIEWER", "PRODUCER", "GUEST", "VIEWER" ]
+        "enum" : [ "PUBLIC", "PRIVATE" ]
       },
-      "ProjectCollaboratorDTO" : {
+      "ProjectVisibilityUpdateDTO" : {
         "type" : "object",
         "properties" : {
-          "email" : {
-            "type" : "string"
-          },
-          "permission" : {
-            "$ref" : "#/components/schemas/GrantedPermission"
+          "visibility" : {
+            "$ref" : "#/components/schemas/GrantedVisibility"
           }
         }
-      },
-      "ProjectCreateUpdateDTO" : {
-        "type" : "object",
-        "properties" : {
-          "projectName" : {
-            "type" : "string"
-          },
-          "projectCode" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "projectId" : {
-            "type" : "string"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "endDate" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "collaborators" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProjectCollaboratorDTO"
-            }
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/ProjectStatus"
-          }
-        }
-      },
-      "ProjectStatus" : {
-        "type" : "string",
-        "enum" : [ "ACTIVE", "ARCHIVED", "COMPLETED" ]
       },
       "CommonResponseProjectEntity" : {
         "type" : "object",
@@ -2630,9 +3433,13 @@
           }
         }
       },
-      "GrantedVisibility" : {
+      "GrantedProjectPermission" : {
         "type" : "string",
-        "enum" : [ "PUBLIC", "PRIVATE" ]
+        "enum" : [ "READ", "SELECT_AND_SUBMIT", "DOWNLOAD", "COMMENT", "CREATE_FOLDER_ASSET", "UPDATE", "ARCHIVE", "DELETE", "ADD_USER", "PROJECT_APPROVE", "AUDIT_LOG" ]
+      },
+      "GrantedProjectRole" : {
+        "type" : "string",
+        "enum" : [ "OWNER", "REVIEWER", "PRODUCER", "GUEST", "VIEWER" ]
       },
       "ProjectCollaborator" : {
         "type" : "object",
@@ -2640,11 +3447,14 @@
           "userId" : {
             "type" : "string"
           },
-          "email" : {
-            "type" : "string"
+          "projectRole" : {
+            "$ref" : "#/components/schemas/GrantedProjectRole"
           },
-          "permission" : {
-            "$ref" : "#/components/schemas/GrantedPermission"
+          "projectPermissions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GrantedProjectPermission"
+            }
           },
           "addedAt" : {
             "type" : "string",
@@ -2655,6 +3465,13 @@
       "ProjectEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -2722,10 +3539,6 @@
           "status" : {
             "$ref" : "#/components/schemas/ProjectStatus"
           },
-          "trashedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
           "shareToken" : {
             "type" : "string"
           },
@@ -2753,6 +3566,119 @@
           "pendingReviews" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }
+      },
+      "ProjectStatus" : {
+        "type" : "string",
+        "enum" : [ "ACTIVE", "ARCHIVED", "COMPLETED" ]
+      },
+      "ProjectStatusUpdateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "$ref" : "#/components/schemas/ProjectStatus"
+          }
+        }
+      },
+      "ShareTokenCreateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "rangeTime" : {
+            "$ref" : "#/components/schemas/ShareTokenTime"
+          },
+          "expireDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "projectId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ShareTokenTime" : {
+        "type" : "string",
+        "enum" : [ "ONE_DAY", "ONE_WEEK", "ONE_MONTH", "ONE_YEAR", "UNLIMITED" ]
+      },
+      "CommonResponseShareTokenCreateResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ShareTokenCreateResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ShareTokenCreateResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "shareToken" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProjectCollaboratorDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "projectRole" : {
+            "$ref" : "#/components/schemas/GrantedProjectRole"
+          }
+        }
+      },
+      "ProjectCreateUpdateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectName" : {
+            "type" : "string"
+          },
+          "projectCode" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "collaborators" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProjectCollaboratorDTO"
+            }
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/GrantedVisibility"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProjectStatus"
           }
         }
       },
@@ -2898,8 +3824,9 @@
           "assetName" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotationId" : {
             "type" : "string"
@@ -2989,6 +3916,13 @@
       "NotificationEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -3137,24 +4071,6 @@
           }
         }
       },
-      "FolderPermission" : {
-        "type" : "object",
-        "properties" : {
-          "userId" : {
-            "type" : "string"
-          },
-          "permissions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ObjectPermission"
-            }
-          },
-          "grantedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
       "FolderUpdateRequestDTO" : {
         "type" : "object",
         "properties" : {
@@ -3173,17 +4089,13 @@
           "isActive" : {
             "type" : "boolean"
           },
-          "permissions" : {
+          "restrictedUserIds" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/FolderPermission"
+              "type" : "string"
             }
           }
         }
-      },
-      "ObjectPermission" : {
-        "type" : "string",
-        "enum" : [ "READ", "COMMENT", "MODIFY" ]
       },
       "CommonResponseFolderEntity" : {
         "type" : "object",
@@ -3205,6 +4117,13 @@
       "FolderEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -3243,18 +4162,24 @@
           "description" : {
             "type" : "string"
           },
-          "folderPath" : {
-            "type" : "string"
+          "ancestorIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           },
           "level" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "permissions" : {
+          "userPermissions" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FolderPermission"
             }
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/FolderVisibility"
           },
           "stats" : {
             "$ref" : "#/components/schemas/FolderStats"
@@ -3263,6 +4188,27 @@
             "type" : "string"
           },
           "shareExpiry" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "FolderPermission" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GrantedProjectPermission"
+            }
+          },
+          "isPrivateCollaborator" : {
+            "type" : "boolean"
+          },
+          "grantedAt" : {
             "type" : "string",
             "format" : "date-time"
           }
@@ -3285,6 +4231,10 @@
           }
         }
       },
+      "FolderVisibility" : {
+        "type" : "string",
+        "enum" : [ "INHERIT", "RESTRICTED", "PUBLIC" ]
+      },
       "FolderFilterRequestDTO" : {
         "type" : "object",
         "properties" : {
@@ -3298,6 +4248,9 @@
             "type" : "string"
           },
           "isActive" : {
+            "type" : "boolean"
+          },
+          "isTrash" : {
             "type" : "boolean"
           }
         }
@@ -3362,9 +4315,6 @@
           "parentFolderId" : {
             "type" : "string"
           },
-          "baseFolderPath" : {
-            "type" : "string"
-          },
           "rootFolderName" : {
             "type" : "string"
           },
@@ -3373,9 +4323,6 @@
             "items" : {
               "$ref" : "#/components/schemas/FolderTreeNodeDTO"
             }
-          },
-          "createdBy" : {
-            "type" : "string"
           }
         }
       },
@@ -3458,9 +4405,6 @@
           "relativeFolderPath" : {
             "type" : "string"
           },
-          "folderPath" : {
-            "type" : "string"
-          },
           "folderId" : {
             "type" : "string"
           },
@@ -3486,6 +4430,60 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/FolderVisibility"
+          }
+        }
+      },
+      "FolderChangeVisibilityRequestDTO" : {
+        "type" : "object",
+        "properties" : {
+          "folderId" : {
+            "type" : "string"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/FolderVisibility"
+          },
+          "restrictedUserIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "CommonResponseFolderArchiveResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FolderArchiveResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FolderArchiveResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "archivedFolderIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "archivedAssetIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -3515,6 +4513,10 @@
             }
           }
         }
+      },
+      "ObjectPermission" : {
+        "type" : "string",
+        "enum" : [ "READ", "COMMENT", "MODIFY" ]
       },
       "ObjectVisibility" : {
         "type" : "string",
@@ -3553,10 +4555,6 @@
             "type" : "string"
           }
         }
-      },
-      "FileAppPermission" : {
-        "type" : "string",
-        "enum" : [ "PUBLIC", "READ", "COMMENT", "MODIFY", "OWNER" ]
       },
       "MediaInfo" : {
         "type" : "object",
@@ -3669,18 +4667,6 @@
           "isActive" : {
             "type" : "boolean"
           },
-          "publicPermission" : {
-            "$ref" : "#/components/schemas/ObjectPermission"
-          },
-          "visibility" : {
-            "$ref" : "#/components/schemas/ObjectVisibility"
-          },
-          "userFilePermissions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/UserFilePermission"
-            }
-          },
           "isTrash" : {
             "type" : "boolean"
           },
@@ -3691,9 +4677,6 @@
           "renditionCount" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "publishUserPermission" : {
-            "$ref" : "#/components/schemas/FileAppPermission"
           },
           "creationTimestamp" : {
             "type" : "string",
@@ -3831,6 +4814,9 @@
             "type" : "string"
           },
           "uploadId" : {
+            "type" : "string"
+          },
+          "assetId" : {
             "type" : "string"
           },
           "parts" : {
@@ -4029,8 +5015,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotations" : {
             "type" : "array",
@@ -4059,6 +5046,13 @@
       "CommentThreadEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -4088,8 +5082,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotations" : {
             "type" : "array",
@@ -4155,8 +5150,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotationId" : {
             "type" : "string"
@@ -4267,8 +5263,12 @@
       "VersionUpdateRequestDto" : {
         "type" : "object",
         "properties" : {
-          "versionId" : {
+          "assetId" : {
             "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "downloadFileName" : {
             "type" : "string"
@@ -4390,6 +5390,13 @@
       "AssetEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -4433,6 +5440,9 @@
           },
           "ownerEmail" : {
             "type" : "string"
+          },
+          "mediaType" : {
+            "$ref" : "#/components/schemas/MediaType"
           },
           "versionCount" : {
             "type" : "integer",
@@ -4674,8 +5684,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotationType" : {
             "$ref" : "#/components/schemas/AnnotationType"
@@ -4683,12 +5694,12 @@
           "timeCode" : {
             "$ref" : "#/components/schemas/AnnotationTimeCode"
           },
-          "region" : {
-            "$ref" : "#/components/schemas/AnnotationRegion"
-          },
           "frameNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/AnnotationRegion"
           },
           "status" : {
             "$ref" : "#/components/schemas/AnnotationStatus"
@@ -4700,11 +5711,18 @@
       },
       "Shape" : {
         "type" : "string",
-        "enum" : [ "RECTANGLE", "CIRCLE", "POLYGON", "FREEFORM" ]
+        "enum" : [ "RECTANGLE", "CIRCLE", "POLYGON", "FREEFORM", "DOT" ]
       },
       "AnnotationsEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -4734,8 +5752,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "annotationType" : {
             "$ref" : "#/components/schemas/AnnotationType"
@@ -4788,8 +5807,9 @@
           "assetId" : {
             "type" : "string"
           },
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "threadId" : {
             "type" : "string"
@@ -4921,6 +5941,13 @@
       "ProcessingJobEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -4947,8 +5974,12 @@
           "jobId" : {
             "type" : "string"
           },
-          "versionId" : {
+          "metadataId" : {
             "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "assetId" : {
             "type" : "string"
@@ -5074,6 +6105,13 @@
       "MediaRenditionEntity" : {
         "type" : "object",
         "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "createdBy" : {
             "type" : "string"
           },
@@ -5100,8 +6138,12 @@
           "renditionId" : {
             "type" : "string"
           },
-          "versionId" : {
+          "metadataId" : {
             "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "assetId" : {
             "type" : "string"
@@ -5196,8 +6238,9 @@
       "PlaybackDataResponseDto" : {
         "type" : "object",
         "properties" : {
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "assetId" : {
             "type" : "string"
@@ -5222,6 +6265,280 @@
           }
         }
       },
+      "CommonResponseProjectStats" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ProjectStats"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseListProjectCollaborator" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProjectCollaborator"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AuditAction" : {
+        "type" : "string",
+        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION" ]
+      },
+      "AuditLogFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "actorId" : {
+            "type" : "string"
+          },
+          "actorEmail" : {
+            "type" : "string"
+          },
+          "action" : {
+            "$ref" : "#/components/schemas/AuditAction"
+          },
+          "fromTimestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "toTimestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PageRequestDtoAuditLogFilterDTO" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/AuditLogFilterDTO"
+          }
+        }
+      },
+      "AuditActorType" : {
+        "type" : "string",
+        "enum" : [ "USER", "SYSTEM", "API_KEY" ]
+      },
+      "AuditChanges" : {
+        "type" : "object",
+        "properties" : {
+          "before" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object"
+            }
+          },
+          "after" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object"
+            }
+          }
+        }
+      },
+      "AuditLogEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "logId" : {
+            "type" : "string"
+          },
+          "actorId" : {
+            "type" : "string"
+          },
+          "actorEmail" : {
+            "type" : "string"
+          },
+          "actorType" : {
+            "$ref" : "#/components/schemas/AuditActorType"
+          },
+          "action" : {
+            "$ref" : "#/components/schemas/AuditAction"
+          },
+          "targetType" : {
+            "$ref" : "#/components/schemas/AuditTargetType"
+          },
+          "targetId" : {
+            "type" : "string"
+          },
+          "targetName" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reviewSessionId" : {
+            "type" : "string"
+          },
+          "changes" : {
+            "$ref" : "#/components/schemas/AuditChanges"
+          },
+          "requestInfo" : {
+            "$ref" : "#/components/schemas/AuditRequestInfo"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "AuditRequestInfo" : {
+        "type" : "object",
+        "properties" : {
+          "ipAddress" : {
+            "type" : "string"
+          },
+          "userAgent" : {
+            "type" : "string"
+          },
+          "requestId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AuditTargetType" : {
+        "type" : "string",
+        "enum" : [ "PROJECT", "FOLDER", "FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION" ]
+      },
+      "CommonResponsePageResultAuditLogEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAuditLogEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultAuditLogEntity" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditLogEntity"
+            }
+          }
+        }
+      },
+      "CommonResponseShareTokenInfoDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ShareTokenInfoDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ShareTokenInfoDTO" : {
+        "type" : "object",
+        "properties" : {
+          "shareToken" : {
+            "type" : "string"
+          },
+          "shareExpiry" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "projectName" : {
+            "type" : "string"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/GrantedVisibility"
+          }
+        }
+      },
       "CommonResponseProcessingStatusResponseDto" : {
         "type" : "object",
         "properties" : {
@@ -5242,8 +6559,9 @@
       "ProcessingStatusResponseDto" : {
         "type" : "object",
         "properties" : {
-          "versionId" : {
-            "type" : "string"
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "processingStatus" : {
             "$ref" : "#/components/schemas/ProcessingStatus"
@@ -5256,6 +6574,91 @@
           },
           "errorMessage" : {
             "type" : "string"
+          }
+        }
+      },
+      "CommonResponseFolderTreeResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FolderTreeResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FolderBreadcrumbItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "folderId" : {
+            "type" : "string"
+          },
+          "folderName" : {
+            "type" : "string"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "FolderTreeItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "folderId" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "parentFolderId" : {
+            "type" : "string"
+          },
+          "folderName" : {
+            "type" : "string"
+          },
+          "ancestorIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/FolderVisibility"
+          },
+          "stats" : {
+            "$ref" : "#/components/schemas/FolderStats"
+          }
+        }
+      },
+      "FolderTreeResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "breadcrumb" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderBreadcrumbItemDTO"
+            }
+          },
+          "tree" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderTreeItemDTO"
+            }
           }
         }
       },
