@@ -5,18 +5,26 @@ import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.annotations.AnnotationsCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.annotations.AnnotationsFilterDTO;
+import org.example.filesharing.entities.models.*;
 import org.example.filesharing.entities.models.annotation.AnnotationRegion;
 import org.example.filesharing.entities.models.annotation.AnnotationTimeCode;
-import org.example.filesharing.entities.models.AnnotationsEntity;
+import org.example.filesharing.entities.models.folder.FolderPermission;
+import org.example.filesharing.entities.models.project.ProjectCollaborator;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.enums.AnnotationType;
+import org.example.filesharing.enums.auth.UserGrantedRole;
+import org.example.filesharing.enums.permission.GrantedProjectPermission;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AnnotationsRepo;
+import org.example.filesharing.repositories.AssetRepo;
+import org.example.filesharing.repositories.FolderRepo;
+import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.AnnotationsService;
 import org.example.filesharing.services.baseService.BaseAuditService;
+import org.example.filesharing.utils.ProjectPermissionResolver;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,8 +36,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 import static org.example.filesharing.utils.NumberUtils.requireNumber;
+import static org.example.filesharing.utils.ProjectPermissionResolver.resolveProjectPermissions;
 import static org.example.filesharing.utils.StringUtils.trimToNull;
 
 @Service
@@ -39,13 +49,17 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private final AnnotationsRepo annotationsRepo;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
+    private final FolderRepo folderRepo;
+    private final ProjectRepo projectRepo;
+    private final AssetRepo assetRepo;
 
     @Override
     @Transactional
     public AnnotationsEntity createNewAnnotation(AnnotationsCreateUpdateDTO dto) {
         validateCreatePayload(dto);
 
-        // todo: check quyền tạo annotation
+        AssetEntity assetEntity = assetRepo.findById(dto.getAssetId()).orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
+        ensureCommentPermission(assetEntity);
 
         AnnotationType annotationType = dto.getAnnotationType();
         AnnotationTimeCode normalizedTimeCode = normalizeTimeCode(dto.getTimeCode());
@@ -83,6 +97,9 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         if (StringUtils.isNotNullOrBlank(dto.getAssetId()) && !dto.getAssetId().trim().equals(entity.getAssetId())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is immutable");
         }
+
+        AssetEntity assetEntity = assetRepo.findById(dto.getAssetId()).orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
+        ensureCommentPermission(assetEntity);
 
         if (dto.getVersionNumber() != null && !dto.getVersionNumber().equals(entity.getVersionNumber())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is immutable");
@@ -233,6 +250,72 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         annotationsRepo.save(entity);
 
         return "Annotation deleted successfully";
+    }
+
+    private void ensureCommentPermission(AssetEntity asset) {
+        if (asset.getFolderId() != null) {
+            FolderEntity folder = folderRepo.findById(asset.getFolderId())
+                    .orElseThrow(() -> new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId not found"));
+            ensureFolderPermission(folder, GrantedProjectPermission.COMMENT);
+        } else {
+            ProjectEntity project = projectRepo.findById(asset.getProjectId())
+                    .orElseThrow(() -> new UserBusinessException(ErrorCode.BAD_REQUEST, "project not found"));
+            ensureProjectPermission(project, GrantedProjectPermission.COMMENT);
+        }
+    }
+
+    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (isAdmin(currentUser)) {
+            return;
+        }
+
+        List<FolderPermission> userPermissions = folder.getUserPermissions();
+        if (userPermissions == null || userPermissions.isEmpty()) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+
+        String currentUserId = currentUser.getUserId();
+        for (FolderPermission fp : userPermissions) {
+            if (Objects.equals(fp.getUserId(), currentUserId)) {
+                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
+                    return;
+                }
+                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            }
+        }
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    }
+
+    private void ensureProjectPermission(ProjectEntity project, GrantedProjectPermission required) {
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (isAdmin(currentUser)) {
+            return;
+        }
+
+        List<ProjectCollaborator> collaborators = project.getCollaborators();
+        if (collaborators == null || collaborators.isEmpty()) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+
+        String currentUserId = currentUser.getUserId();
+        for (ProjectCollaborator collaborator : collaborators) {
+            if (Objects.equals(collaborator.getUserId(), currentUserId)) {
+                if (ProjectPermissionResolver.hasPermission(collaborator.getProjectPermissions(), required)) {
+                    return;
+                }
+                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            }
+        }
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    }
+
+    private boolean isAdmin(UserEntity user) {
+        if (user == null || user.getUserGrantedRoles() == null) {
+            return false;
+        }
+        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
+                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
     private void validateCreatePayload(AnnotationsCreateUpdateDTO dto) {

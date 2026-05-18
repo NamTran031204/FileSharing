@@ -71,7 +71,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (folderId != null) {
             folder = getActiveFolderOrThrow(folderId);
             ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+            ensureFolderPermission(folder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -259,7 +259,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         FolderEntity currentFolder = null;
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             currentFolder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderPermission(currentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+            ensureFolderPermission(currentFolder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -269,7 +269,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (targetFolderId != null) {
             targetFolder = getActiveFolderOrThrow(targetFolderId);
             ensureFolderInProject(targetFolder, project);
-            ensureFolderPermission(targetFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+            ensureFolderPermission(targetFolder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         } else {
             ensureProjectModify(project, auditService.getCurrentUser());
         }
@@ -684,7 +684,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             FolderEntity folder = getActiveFolderOrThrow(asset.getFolderId());
             ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, project, required);
+            ensureFolderPermission(folder, required);
         } else {
             ensureProjectPermission(project, auditService.getCurrentUser(), required);
         }
@@ -717,9 +717,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
-    private void ensureFolderPermission(FolderEntity folder, ProjectEntity project, GrantedProjectPermission required) {
+    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
         UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
+        if (isAdmin(currentUser)) {
             return;
         }
 
