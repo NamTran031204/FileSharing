@@ -29,7 +29,7 @@ minio:
 
 image:
   processing:
-    is-test: true
+    is-test: false
     kafka:
       topic: image_process_topic
     vips:
@@ -38,7 +38,7 @@ image:
     output:
       webp-quality: 82
       strip-metadata: true
-      bucket: processed-images
+      bucket: file-sharing
     queue:
       max-capacity: 500
     retry:

@@ -75,7 +75,7 @@ public class FileMetadataController {
         }
         minIoService.completeMultipartUpload(input.getObjectName(), input.getUploadId(), input.getParts());
         metadataService.completeUpload(input.getObjectName(), input.getUploadId());
-        imageEncodeProducer.sendKafka(input.getUploadId(), input.getAssetId());
+        imageEncodeProducer.sendKafka(input.getObjectName(), input.getObjectName());
         return CommonResponse.success("complete upload");
     }
 
