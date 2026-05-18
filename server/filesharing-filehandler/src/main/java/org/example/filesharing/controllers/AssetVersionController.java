@@ -34,14 +34,16 @@ public class AssetVersionController {
         return CommonResponse.success(assetService.getVersionPage(dto));
     }
 
-    @GetMapping("/get-by-id/{versionId}")
-    public CommonResponse<MetadataEntity> getVersionById(@PathVariable("versionId") String versionId) {
-        return CommonResponse.success(assetService.getVersionById(versionId));
+    @GetMapping("/{assetId}/{versionNumber}")
+    public CommonResponse<MetadataEntity> getVersion(@PathVariable("assetId") String assetId,
+                                                     @PathVariable("versionNumber") Integer versionNumber) {
+        return CommonResponse.success(assetService.getVersion(assetId, versionNumber));
     }
 
-    @PostMapping("/delete/{versionId}")
-    public CommonResponse<String> deleteVersion(@PathVariable("versionId") String versionId) {
-        assetService.deleteVersion(versionId);
+    @PostMapping("/{assetId}/{versionNumber}/delete")
+    public CommonResponse<String> deleteVersion(@PathVariable("assetId") String assetId,
+                                                @PathVariable("versionNumber") Integer versionNumber) {
+        assetService.deleteVersion(assetId, versionNumber);
         return CommonResponse.success("Version deleted successfully");
     }
 }

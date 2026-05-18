@@ -17,9 +17,7 @@ public class EntityAuditBase {
     private String updateByEmail;
     private Boolean isActive;
 
-    @CreatedDate
     private Instant createdAt;
 
-    @LastModifiedDate
     private Instant updatedAt;
 }

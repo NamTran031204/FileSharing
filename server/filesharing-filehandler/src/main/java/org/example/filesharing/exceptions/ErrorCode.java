@@ -35,6 +35,7 @@ public enum ErrorCode {
     FOLDER_ALREADY_EXISTS("5402", "Folder already exists", HttpStatus.BAD_REQUEST),
     FOLDER_CIRCULAR_REFERENCE("5403", "Circular reference detected in folder structure", HttpStatus.BAD_REQUEST),
     FOLDER_PARENT_NOT_FOUND("5404", "Parent folder not found", HttpStatus.NOT_FOUND),
+    FOLDER_NOT_IN_TRASH("5405", "Folder is not in trash", HttpStatus.BAD_REQUEST),
 
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),

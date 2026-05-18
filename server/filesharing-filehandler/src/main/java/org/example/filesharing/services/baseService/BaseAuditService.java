@@ -14,6 +14,7 @@ public class BaseAuditService<T extends EntityAuditBase> {
 
     protected void buildAudit(T model, Boolean isCreateNew) {
         model.setIsActive(true);
+        model.setIsTrash(false);
 
         if (isCreateNew) {
             createAudit(model);
@@ -52,10 +53,12 @@ public class BaseAuditService<T extends EntityAuditBase> {
     protected void createAudit(T model) {
         model.setCreatedBy(auditService.getCurrentUserId());
         model.setCreatedByEmail(auditService.getCurrentUserEmail());
+        model.setCreatedAt(Instant.now());
     }
 
     protected void updateAudit(T model) {
         model.setUpdateBy(auditService.getCurrentUserId());
         model.setUpdateByEmail(auditService.getCurrentUserEmail());
+        model.setUpdatedAt(Instant.now());
     }
 }

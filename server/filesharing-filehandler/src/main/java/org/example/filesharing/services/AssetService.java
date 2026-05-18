@@ -25,9 +25,9 @@ public interface AssetService {
 
     PageResult<MetadataEntity> getVersionPage(PageRequestDto<VersionFilterRequestDto> dto);
 
-    MetadataEntity getVersionById(String versionId);
+    MetadataEntity getVersion(String assetId, Integer versionNumber);
 
     MetadataEntity getLatestVersion(String assetId);
 
-    void deleteVersion(String versionId);
+    void deleteVersion(String assetId, Integer versionNumber);
 }

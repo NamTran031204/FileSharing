@@ -7,6 +7,7 @@ import org.example.filesharing.entities.dtos.asset.*;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.models.*;
+import org.example.filesharing.entities.models.folder.FolderPermission;
 import org.example.filesharing.entities.models.folder.FolderStats;
 import org.example.filesharing.entities.models.project.ProjectStats;
 import org.example.filesharing.entities.models.base.EntityAuditBase;
@@ -376,14 +377,6 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             fileVersion.setDownloadFileName(request.getDownloadFileName().trim());
         }
 
-        if (request.getVisibility() != null) {
-            fileVersion.setVisibility(request.getVisibility());
-        }
-
-        if (request.getPublicPermission() != null) {
-            fileVersion.setPublicPermission(request.getPublicPermission());
-        }
-
         if (request.getProcessingStatus() != null) {
             fileVersion.setProcessingStatus(request.getProcessingStatus());
         }
@@ -444,14 +437,16 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .build();
     }
 
-    // todo: chuyen doi dau vao
     @Override
-    public MetadataEntity getVersionById(String versionId) {
-        if (StringUtils.isNullOrBlank(versionId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
+    public MetadataEntity getVersion(String assetId, Integer versionNumber) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+        if (versionNumber == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
 
-        MetadataEntity version = metadataRepo.findById(versionId.trim())
+        MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(assetId.trim(), versionNumber)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());
@@ -471,15 +466,17 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         return findLatestCompletedVersion(asset.getAssetId());
     }
 
-    // todo: chuyen doi dau vao
     @Override
     @Transactional
-    public void deleteVersion(String versionId) {
-        if (StringUtils.isNullOrBlank(versionId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is required");
+    public void deleteVersion(String assetId, Integer versionNumber) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+        if (versionNumber == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
 
-        MetadataEntity version = metadataRepo.findById(versionId.trim())
+        MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(assetId.trim(), versionNumber)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());
@@ -494,7 +491,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         version.setTrashedAt(Instant.now());
         metadataRepo.save(version);
 
-        writeVersionAuditLog(asset.getAssetId(), version.getFileId(), AuditAction.DELETE);
+        writeVersionAuditLog(asset.getAssetId(), version.getVersionNumber(), AuditAction.DELETE);
     }
 
     private void validateCreateAssetRequest(AssetCreateRequestDto request) {
@@ -717,16 +714,21 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             return;
         }
 
-        List<GrantedProjectPermission> effectivePermissions = ProjectPermissionResolver.resolveEffectiveFolderPermissions(
-                project,
-                folder,
-                currentUser,
-                isAdmin(currentUser),
-                folderRepo
-        );
-        if (!ProjectPermissionResolver.hasPermission(effectivePermissions, required)) {
+        List<FolderPermission> userPermissions = folder.getUserPermissions();
+        if (userPermissions == null || userPermissions.isEmpty()) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
+
+        String currentUserId = currentUser.getUserId();
+        for (FolderPermission fp : userPermissions) {
+            if (Objects.equals(fp.getUserId(), currentUserId)) {
+                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
+                    return;
+                }
+                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            }
+        }
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
     }
 
     private void incrementProjectAssetCount(ProjectEntity project, int delta) {
@@ -804,7 +806,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         AuditLogCreateDTO dto = new AuditLogCreateDTO();
         dto.setAction(action);
         dto.setTargetType(AuditTargetType.FILE);
-        dto.setTargetId(versionId);
+        dto.setTargetId(assetId);
         dto.setAssetId(assetId);
         dto.setVersionNumber(versionNumber);
         auditLogService.createAuditLog(dto);
