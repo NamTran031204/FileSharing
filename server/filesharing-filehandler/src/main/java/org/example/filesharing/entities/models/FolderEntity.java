@@ -28,10 +28,10 @@ public class FolderEntity extends EntityAuditBase {
     private String folderName;
     private String description;
 
-    private String folderPath;
+    private List<String> ancestorIds;
     private Integer level;
 
-    private List<FolderPermission> permissions;
+    private List<FolderPermission> userPermissions;
     private FolderVisibility visibility;
 
     private FolderStats stats;

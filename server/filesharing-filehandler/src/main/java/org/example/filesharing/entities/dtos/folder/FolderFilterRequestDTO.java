@@ -14,4 +14,5 @@ public class FolderFilterRequestDTO {
     private String parentFolderId;
     private String folderName;
     private Boolean isActive;
+    private Boolean isTrash;
 }

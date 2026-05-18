@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class FolderTreeMappingDTO {
     private String clientFolderKey;
     private String relativeFolderPath;
-    private String folderPath;
     private String folderId;
     private String parentFolderId;
     private String status;

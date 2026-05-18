@@ -16,5 +16,11 @@ import java.util.List;
 public class FolderPermission {
     private String userId;
     private List<GrantedProjectPermission> permissions;
+
+    /**
+     * false or null: khi chuyen tu FolderVisibility.RESTRICTED sang FolderVisibility.INHERIT thi xoa nhung user nay
+     * true: khi chuyen tu FolderVisibility.RESTRICTED sang FolderVisibility.INHERIT thi khong xoa user
+     */
+    private Boolean isPrivateCollaborator;
     private Instant grantedAt;
 }

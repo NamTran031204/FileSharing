@@ -4,16 +4,22 @@ import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.PageRequestDto;
 import org.example.filesharing.entities.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
+import org.example.filesharing.entities.dtos.folder.FolderArchiveResponseDTO;
+import org.example.filesharing.entities.dtos.folder.FolderBreadcrumbItemDTO;
+import org.example.filesharing.entities.dtos.folder.FolderChangeVisibilityRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeItemDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeMappingDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeNodeDTO;
+import org.example.filesharing.entities.dtos.folder.FolderTreeResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
 import org.example.filesharing.entities.models.auditlog.AuditChanges;
 import org.example.filesharing.entities.models.folder.FolderPermission;
 import org.example.filesharing.entities.models.folder.FolderStats;
+import org.example.filesharing.entities.models.project.ProjectCollaborator;
 import org.example.filesharing.entities.models.project.ProjectStats;
 import org.example.filesharing.entities.models.AssetEntity;
 import org.example.filesharing.entities.models.FolderEntity;
@@ -26,6 +32,7 @@ import org.example.filesharing.enums.FolderVisibility;
 import org.example.filesharing.enums.ProjectStatus;
 import org.example.filesharing.enums.auth.UserGrantedRole;
 import org.example.filesharing.enums.permission.GrantedProjectPermission;
+import org.example.filesharing.enums.permission.GrantedProjectRole;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
@@ -44,13 +51,20 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.example.filesharing.utils.StringUtils.requireNormalized;
+import static org.example.filesharing.utils.StringUtils.trimToNull;
 
 @Service
 @RequiredArgsConstructor
@@ -86,12 +100,15 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         ensureFolderNameUnique(projectId, parentFolderId, folderName, null);
 
-        String folderPath = buildFolderPath(parentFolder, folderName);
+        List<String> ancestorIds = buildAncestorIds(parentFolder);
         int level = parentFolder != null ? safeLevel(parentFolder.getLevel()) + 1 : 1;
+
+        List<FolderPermission> userPermissions = mapProjectCollaboratorList2FolderPermissionsList(project.getCollaborators());
 
         FolderEntity savedFolder = persistNewFolder(
                 projectId, parentFolderId, folderName,
-                trimToNull(request.getDescription()), folderPath, level, request.getVisibility());
+                trimToNull(request.getDescription()), ancestorIds, level, request.getVisibility(),
+                userPermissions);
 
         incrementProjectFolderCount(project, 1);
         if (parentFolder != null) {
@@ -122,7 +139,6 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             ensureFolderPermission(parentFolder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
         }
 
-        String baseFolderPath = parentFolder != null ? normalizeParentFolderPath(parentFolder) : null;
         String rootFolderName = normalizeRelativeFolderPath(request.getRootFolderName(), "rootFolderName is required");
 
         List<FolderTreeNodeDTO> nodes = request.getFolders();
@@ -179,26 +195,46 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         List<FolderTreeNodeDTO> sortedNodes = new ArrayList<>(normalizedNodes.values());
         sortedNodes.sort(Comparator.comparing(FolderTreeNodeDTO::getLevel)
-                .thenComparing(node -> composeFolderPath(baseFolderPath, node.getRelativeFolderPath())));
+                .thenComparing(FolderTreeNodeDTO::getRelativeFolderPath));
 
+        // Track folderId, ancestorIds, and userPermissions per relative path for building child chains
         Map<String, String> relativeToFolderId = new HashMap<>();
+        Map<String, List<String>> relativeToAncestorIds = new HashMap<>();
+        Map<String, List<FolderPermission>> relativeToUserPermissions = new HashMap<>();
+
         List<FolderTreeMappingDTO> folderMappings = new ArrayList<>();
         List<FolderTreeMappingDTO> createdFolders = new ArrayList<>();
         List<FolderTreeMappingDTO> existingFolders = new ArrayList<>();
         int createdCount = 0;
 
+        // Precompute base ancestorIds from the external parent folder (if any)
+        List<String> baseAncestorIds = buildAncestorIds(parentFolder);
+        List<FolderPermission> baseUserPermissions = parentFolder != null
+                ? (parentFolder.getUserPermissions() == null || parentFolder.getUserPermissions().isEmpty() ? ProjectPermissionResolver.buildFolderUserPermissions(project, FolderVisibility.INHERIT, null, null) : parentFolder.getUserPermissions())
+                : mapProjectCollaboratorList2FolderPermissionsList(project.getCollaborators());
+
         for (FolderTreeNodeDTO node : sortedNodes) {
             String parentRelativePath = trimToNull(node.getParentRelativeFolderPath());
-            String parentId = parentRelativePath != null
-                    ? relativeToFolderId.get(parentRelativePath)
-                    : parentFolderId;
 
-            if (parentRelativePath != null && parentId == null) {
+            String effectiveParentId;
+            List<String> parentAncestorIds;
+            List<FolderPermission> parentUserPermissions;
+            if (parentRelativePath != null) {
+                effectiveParentId = relativeToFolderId.get(parentRelativePath);
+                parentAncestorIds = relativeToAncestorIds.get(parentRelativePath);
+                parentUserPermissions = relativeToUserPermissions.get(parentRelativePath);
+            } else {
+                effectiveParentId = parentFolderId;
+                parentAncestorIds = baseAncestorIds;
+                parentUserPermissions = baseUserPermissions;
+            }
+
+            if (parentRelativePath != null && effectiveParentId == null) {
                 throw new FileBusinessException(ErrorCode.FOLDER_PARENT_NOT_FOUND);
             }
 
-            String folderPath = composeFolderPath(baseFolderPath, node.getRelativeFolderPath());
-            FolderEntity existingFolder = folderRepo.findByProjectIdAndFolderPath(projectId, folderPath)
+            FolderEntity existingFolder = folderRepo
+                    .findByProjectIdAndParentFolderIdAndFolderName(projectId, effectiveParentId, node.getFolderName())
                     .orElse(null);
 
             if (existingFolder != null) {
@@ -206,28 +242,34 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
                 String folderId = existingFolder.getFolderId();
                 relativeToFolderId.put(node.getRelativeFolderPath(), folderId);
+                relativeToAncestorIds.put(node.getRelativeFolderPath(), existingFolder.getAncestorIds());
+                relativeToUserPermissions.put(node.getRelativeFolderPath(), existingFolder.getUserPermissions());
 
-                FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, folderPath, folderId,
-                        existingFolder.getParentFolderId(), "EXISTING");
+                FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, folderId, existingFolder.getParentFolderId(), "EXISTING");
                 folderMappings.add(mapping);
                 existingFolders.add(mapping);
                 continue;
             }
 
+            List<String> nodeAncestorIds = buildAncestorIdsForNode(effectiveParentId, parentAncestorIds);
+            List<FolderPermission> nodeUserPermissions = ProjectPermissionResolver.buildFolderUserPermissions(
+                    project, FolderVisibility.INHERIT, parentUserPermissions, null);
+
             FolderEntity saved = persistNewFolder(
-                    projectId, parentId, node.getFolderName(),
-                    null, folderPath, node.getLevel(), null);
+                    projectId, effectiveParentId, node.getFolderName(),
+                    null, nodeAncestorIds, node.getLevel(), FolderVisibility.INHERIT, nodeUserPermissions);
 
             relativeToFolderId.put(node.getRelativeFolderPath(), saved.getFolderId());
+            relativeToAncestorIds.put(node.getRelativeFolderPath(), nodeAncestorIds);
+            relativeToUserPermissions.put(node.getRelativeFolderPath(), nodeUserPermissions);
 
-            FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, folderPath, saved.getFolderId(),
-                    parentId, "CREATED");
+            FolderTreeMappingDTO mapping = buildFolderTreeMapping(node, saved.getFolderId(), effectiveParentId, "CREATED");
             folderMappings.add(mapping);
             createdFolders.add(mapping);
             createdCount++;
 
-            if (parentId != null) {
-                folderRepo.findById(parentId)
+            if (effectiveParentId != null) {
+                folderRepo.findById(effectiveParentId)
                         .ifPresent(parent -> incrementParentSubfolderCount(parent, 1));
             }
 
@@ -239,7 +281,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
 
         String rootFolderId = relativeToFolderId.get(rootFolderName);
-        String folderUploadSessionId = generateFolderUploadSessionId(baseFolderPath, rootFolderName);
+        String folderUploadSessionId = generateFolderUploadSessionId(parentFolder, rootFolderName);
 
         return FolderTreeCreateResponseDTO.builder()
                 .folderUploadSessionId(folderUploadSessionId)
@@ -261,7 +303,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         ensureProjectWritable(project);
 
         UserEntity currentUser = auditService.getCurrentUser();
-        ensureFolderPermission(folder, project, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.UPDATE);
 
         String updatedName = folder.getFolderName();
         if (request.getFolderName() != null) {
@@ -298,34 +340,40 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         if (nameChanged || parentChanged) {
             ensureFolderNameUnique(project.getProjectId(), updatedParentId, updatedName, folder.getFolderId());
 
-                    String existingPath = folder.getFolderPath();
-                    String oldPath = StringUtils.isNullOrBlank(existingPath) || "/".equals(existingPath)
-                        ? folder.getFolderName()
-                        : existingPath;
-                String newPath = buildFolderPath(targetParent, updatedName);
-            int oldLevel = safeLevel(folder.getLevel());
-            int newLevel = targetParent != null ? safeLevel(targetParent.getLevel()) + 1 : 1;
-            int levelDelta = newLevel - oldLevel;
+            if (parentChanged) {
+                // MOVE: rebuild ancestor chain for folder and all descendants
+                List<String> newAncestorIds = buildAncestorIds(targetParent);
+                int oldLevel = safeLevel(folder.getLevel());
+                int newLevel = targetParent != null ? safeLevel(targetParent.getLevel()) + 1 : 1;
+                int levelDelta = newLevel - oldLevel;
 
-            if (StringUtils.isNotNullOrBlank(oldPath) && !Objects.equals(oldPath, newPath)) {
-                List<FolderEntity> descendants = folderRepo.findByFolderPathStartingWith(oldPath + "/");
+                // old prefix = [ancestors of folder] + [folder itself]
+                List<String> oldPrefix = new ArrayList<>(folder.getAncestorIds() != null ? folder.getAncestorIds() : List.of());
+                oldPrefix.add(folder.getFolderId());
+
+                // new prefix = [new ancestors of folder] + [folder itself]
+                List<String> newPrefix = new ArrayList<>(newAncestorIds);
+                newPrefix.add(folder.getFolderId());
+
+                List<FolderEntity> descendants = folderRepo.findByAncestorIdsContaining(folder.getFolderId());
                 for (FolderEntity child : descendants) {
-                    String updatedPath = newPath + child.getFolderPath().substring(oldPath.length());
-                    child.setFolderPath(updatedPath);
+                    child.setAncestorIds(replaceAncestorPrefix(child.getAncestorIds(), oldPrefix, newPrefix));
                     if (levelDelta != 0) {
                         child.setLevel(safeLevel(child.getLevel()) + levelDelta);
                     }
                 }
                 folderRepo.saveAll(descendants);
+
+                folder.setParentFolderId(updatedParentId);
+                folder.setAncestorIds(newAncestorIds);
+                folder.setLevel(newLevel);
+
+                adjustParentSubfolderCounts(oldParentId, updatedParentId);
             }
 
-            folder.setFolderName(updatedName);
-            folder.setParentFolderId(updatedParentId);
-            folder.setFolderPath(newPath);
-            folder.setLevel(newLevel);
-
-            if (parentChanged) {
-                adjustParentSubfolderCounts(oldParentId, updatedParentId);
+            if (nameChanged) {
+                // RENAME: zero cascade — IDs don't change, only folderName on this document
+                folder.setFolderName(updatedName);
             }
         }
 
@@ -334,22 +382,30 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
 
         AuditChanges permissionChanges = null;
-        if (request.getPermissions() != null) {
+        if (request.getRestrictedUserIds() != null) {
             ensureFolderPermission(folder, project, GrantedProjectPermission.ADD_USER);
-            validateFolderPermissions(project, request.getPermissions());
+            validateRestrictedUserIds(project, request.getRestrictedUserIds());
+
+            List<FolderPermission> newPermissions = ProjectPermissionResolver.buildFolderUserPermissions(
+                    project, folder.getVisibility(), null, request.getRestrictedUserIds());
+
             Map<String, Object> before = new HashMap<>();
             Map<String, Object> after = new HashMap<>();
-            before.put("permissions", folder.getPermissions());
-            after.put("permissions", request.getPermissions());
+            before.put("permissions", folder.getUserPermissions());
+            after.put("permissions", newPermissions);
             permissionChanges = AuditChanges.builder()
                     .before(before)
                     .after(after)
                     .build();
-            folder.setPermissions(request.getPermissions());
+            folder.setUserPermissions(newPermissions);
         }
 
         buildAudit(folder, false);
         FolderEntity savedFolder = folderRepo.save(folder);
+
+        if (permissionChanges != null) {
+            cascadeInheritPermissions(savedFolder.getFolderId(), savedFolder.getUserPermissions());
+        }
 
         if (nameChanged || parentChanged || request.getDescription() != null) {
             writeFolderAuditLog(savedFolder, AuditAction.UPDATE, null);
@@ -377,6 +433,13 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
 
         ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+
+        // danh cho truong hop xem man trash
+        if (Boolean.TRUE.equals(folder.getIsTrash())) {
+            ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
+            return folder;
+        }
+
         ensureFolderPermission(folder, project, GrantedProjectPermission.READ);
         return folder;
     }
@@ -405,6 +468,8 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         if (parentFolderId != null) {
             query.addCriteria(Criteria.where("parentFolderId").is(parentFolderId));
+        } else {
+            query.addCriteria(Criteria.where("parentFolderId").is(null));
         }
 
         if (StringUtils.isNotNullOrBlank(filter.getFolderName())) {
@@ -415,6 +480,12 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             query.addCriteria(Criteria.where("isActive").is(filter.getIsActive()));
         } else {
             query.addCriteria(Criteria.where("isActive").is(true));
+        }
+
+        if (filter.getIsTrash() != null) {
+            query.addCriteria(Criteria.where("isTrash").is(filter.getIsActive()));
+        } else {
+            query.addCriteria(Criteria.where("isTrash").is(false));
         }
 
         long total = mongoTemplate.count(query, FolderEntity.class);
@@ -434,54 +505,426 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
         }
 
+        FolderEntity folder = getTrashedFolderOrThrow(folderId.trim());
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureProjectWritable(project);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
+
+        List<FolderEntity> descendants = folderRepo.findByAncestorIdsContaining(folder.getFolderId())
+                .stream()
+                .filter(f -> Boolean.TRUE.equals(f.getIsActive()))
+                .toList();
+
+        List<FolderEntity> toDelete = new ArrayList<>(descendants.size() + 1);
+        toDelete.add(folder);
+        toDelete.addAll(descendants);
+
+        List<String> folderIds = toDelete.stream()
+                .map(FolderEntity::getFolderId)
+                .filter(StringUtils::isNotNullOrBlank)
+                .toList();
+
+        List<AssetEntity> assetsToDelete = assetRepo.findByFolderIdInAndIsActiveTrue(folderIds);
+        for (AssetEntity asset : assetsToDelete) {
+            asset.setIsActive(false);
+            applyUpdateAudit(asset);
+        }
+        if (!assetsToDelete.isEmpty()) {
+            assetRepo.saveAll(assetsToDelete);
+        }
+
+        for (FolderEntity item : toDelete) {
+            item.setIsActive(false);
+            applyUpdateAudit(item);
+        }
+        folderRepo.saveAll(toDelete);
+
+        // Stats were already decremented at archive time — no changes needed here
+        writeFolderAuditLog(folder, AuditAction.DELETE, null);
+    }
+
+    @Override
+    public FolderTreeResponseDTO getFolderTree(String projectId, String currentFolderId) {
+        if (StringUtils.isNullOrBlank(projectId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        ProjectEntity project = getProjectOrThrow(projectId.trim());
+        ensureProjectRead(project, auditService.getCurrentUser());
+
+        List<FolderEntity> allFolders = folderRepo.findByProjectId(projectId.trim())
+                .stream()
+                .filter(f -> Boolean.TRUE.equals(f.getIsActive()) && !Boolean.TRUE.equals(f.getIsTrash()))
+                .toList();
+
+        Map<String, FolderEntity> folderMap = allFolders.stream()
+                .collect(Collectors.toMap(FolderEntity::getFolderId, f -> f));
+
+        Map<String, List<FolderEntity>> childrenMap = allFolders.stream()
+                .collect(Collectors.groupingBy(f ->
+                        f.getParentFolderId() != null ? f.getParentFolderId() : "__root__"));
+
+        List<FolderEntity> roots = childrenMap.getOrDefault("__root__", List.of());
+        List<FolderTreeItemDTO> tree = roots.stream()
+                .sorted(Comparator.comparing(FolderEntity::getFolderName))
+                .map(root -> buildTreeNode(root, childrenMap))
+                .toList();
+
+        List<FolderBreadcrumbItemDTO> breadcrumb = List.of();
+        if (StringUtils.isNotNullOrBlank(currentFolderId)) {
+            breadcrumb = buildBreadcrumb(currentFolderId.trim(), folderMap);
+        }
+
+        return FolderTreeResponseDTO.builder()
+                .projectId(projectId.trim())
+                .breadcrumb(breadcrumb)
+                .tree(tree)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FolderArchiveResponseDTO archiveFolder(String folderId) {
+        if (StringUtils.isNullOrBlank(folderId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+
         FolderEntity folder = getActiveFolderOrThrow(folderId.trim());
         ProjectEntity project = getProjectOrThrow(folder.getProjectId());
         ensureProjectWritable(project);
         ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
 
-        String currentPath = folder.getFolderPath();
-        String pathWithSelf = StringUtils.isNullOrBlank(currentPath) || "/".equals(currentPath)
-            ? folder.getFolderName() + "/"
-            : currentPath + "/";
-        List<FolderEntity> descendants = folderRepo.findByFolderPathStartingWith(pathWithSelf);
+        List<FolderEntity> descendants = folderRepo.findByAncestorIdsContaining(folder.getFolderId())
+                .stream()
+                .filter(f -> Boolean.TRUE.equals(f.getIsActive()) && !Boolean.TRUE.equals(f.getIsTrash()))
+                .toList();
 
-        List<FolderEntity> toDeactivate = new ArrayList<>(descendants.size() + 1);
-        toDeactivate.add(folder);
-        toDeactivate.addAll(descendants);
+        List<FolderEntity> toArchive = new ArrayList<>(descendants.size() + 1);
+        toArchive.add(folder);
+        toArchive.addAll(descendants);
 
-        List<String> folderIds = toDeactivate.stream()
+        Instant now = Instant.now();
+        for (FolderEntity f : toArchive) {
+            applyTrashAudit(f, now);
+        }
+        folderRepo.saveAll(toArchive);
+
+        List<String> folderIds = toArchive.stream()
                 .map(FolderEntity::getFolderId)
                 .filter(StringUtils::isNotNullOrBlank)
                 .toList();
 
-        List<AssetEntity> assetsToDeactivate = assetRepo.findByFolderIdInAndIsActiveTrue(folderIds);
-        for (AssetEntity asset : assetsToDeactivate) {
-            asset.setIsActive(false);
-            applyUpdateAudit(asset);
+        List<AssetEntity> assetsToArchive = assetRepo.findByFolderIdInAndIsActiveTrue(folderIds)
+                .stream()
+                .filter(a -> !Boolean.TRUE.equals(a.getIsTrash()))
+                .toList();
+        for (AssetEntity asset : assetsToArchive) {
+            applyTrashAudit(asset, now);
         }
-        if (!assetsToDeactivate.isEmpty()) {
-            assetRepo.saveAll(assetsToDeactivate);
+        if (!assetsToArchive.isEmpty()) {
+            assetRepo.saveAll(assetsToArchive);
         }
 
-        for (FolderEntity item : toDeactivate) {
-            item.setIsActive(false);
-            applyUpdateAudit(item);
-        }
-        folderRepo.saveAll(toDeactivate);
-
-        incrementProjectFolderCount(project, -toDeactivate.size());
-        incrementProjectAssetCount(project, -assetsToDeactivate.size());
-
+        incrementProjectFolderCount(project, -toArchive.size());
+        incrementProjectAssetCount(project, -assetsToArchive.size());
         if (StringUtils.isNotNullOrBlank(folder.getParentFolderId())) {
-            FolderEntity parent = folderRepo.findById(folder.getParentFolderId())
-                    .orElse(null);
-            if (parent != null) {
-                incrementParentSubfolderCount(parent, -1);
+            folderRepo.findById(folder.getParentFolderId())
+                    .ifPresent(parent -> incrementParentSubfolderCount(parent, -1));
+        }
+
+        writeFolderAuditLog(folder, AuditAction.TRASH, null);
+
+        List<String> archivedAssetIds = assetsToArchive.stream()
+                .map(AssetEntity::getAssetId)
+                .filter(StringUtils::isNotNullOrBlank)
+                .toList();
+
+        return FolderArchiveResponseDTO.builder()
+                .archivedFolderIds(folderIds)
+                .archivedAssetIds(archivedAssetIds)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FolderEntity restoreFolder(String folderId) {
+        if (StringUtils.isNullOrBlank(folderId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+
+        FolderEntity folder = getTrashedFolderOrThrow(folderId.trim());
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureProjectWritable(project);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
+
+        List<FolderEntity> descendants = folderRepo.findByAncestorIdsContaining(folder.getFolderId())
+                .stream()
+                .filter(f -> Boolean.TRUE.equals(f.getIsActive()) && Boolean.TRUE.equals(f.getIsTrash()))
+                .toList();
+
+        List<FolderEntity> toRestore = new ArrayList<>(descendants.size() + 1);
+        toRestore.add(folder);
+        toRestore.addAll(descendants);
+
+        for (FolderEntity f : toRestore) {
+            applyRestoreAudit(f);
+        }
+        folderRepo.saveAll(toRestore);
+
+        List<String> folderIds = toRestore.stream()
+                .map(FolderEntity::getFolderId)
+                .filter(StringUtils::isNotNullOrBlank)
+                .toList();
+
+        List<AssetEntity> assetsToRestore = assetRepo.findByFolderIdInAndIsActiveTrue(folderIds)
+                .stream()
+                .filter(a -> Boolean.TRUE.equals(a.getIsTrash()))
+                .toList();
+        for (AssetEntity asset : assetsToRestore) {
+            applyRestoreAudit(asset);
+        }
+        if (!assetsToRestore.isEmpty()) {
+            assetRepo.saveAll(assetsToRestore);
+        }
+
+        incrementProjectFolderCount(project, toRestore.size());
+        incrementProjectAssetCount(project, assetsToRestore.size());
+        if (StringUtils.isNotNullOrBlank(folder.getParentFolderId())) {
+            folderRepo.findById(folder.getParentFolderId())
+                    .ifPresent(parent -> incrementParentSubfolderCount(parent, 1));
+        }
+
+        writeFolderAuditLog(folder, AuditAction.UPDATE, null);
+        return folder;
+    }
+
+    @Override
+    public PageResult<FolderEntity> getFolderTrash(PageRequestDto<FolderFilterRequestDTO> dto) {
+        PageRequestDto<FolderFilterRequestDTO> pageRequest = dto != null ? dto : new PageRequestDto<>();
+        FolderFilterRequestDTO filter = pageRequest.getFilter();
+
+        if (filter == null || StringUtils.isNullOrBlank(filter.getProjectId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        ProjectEntity project = getProjectOrThrow(filter.getProjectId().trim());
+        ensureProjectPermission(project, auditService.getCurrentUser(), GrantedProjectPermission.DELETE);
+
+        Query query = new Query();
+        query.addCriteria(Criteria.where("projectId").is(project.getProjectId()));
+        query.addCriteria(Criteria.where("isActive").is(true));
+        query.addCriteria(Criteria.where("isTrash").is(true));
+
+        if (StringUtils.isNotNullOrBlank(filter.getFolderName())) {
+            query.addCriteria(Criteria.where("folderName").regex(filter.getFolderName().trim(), "i"));
+        }
+
+        long total = mongoTemplate.count(query, FolderEntity.class);
+        query.with(pageRequest.getPageRequest());
+        List<FolderEntity> data = mongoTemplate.find(query, FolderEntity.class);
+
+        return PageResult.<FolderEntity>builder()
+                .totalCount(total)
+                .data(data)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FolderEntity changeFolderVisibility(FolderChangeVisibilityRequestDTO request) {
+        if (request == null || StringUtils.isNullOrBlank(request.getFolderId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+        if (request.getVisibility() == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "visibility is required");
+        }
+
+        FolderEntity folder = getActiveFolderOrThrow(request.getFolderId().trim());
+        ProjectEntity project = getProjectOrThrow(folder.getProjectId());
+        ensureProjectWritable(project);
+        ensureFolderPermission(folder, project, GrantedProjectPermission.UPDATE);
+
+        FolderVisibility newVisibility = request.getVisibility();
+        FolderVisibility oldVisibility = folder.getVisibility() != null ? folder.getVisibility() : FolderVisibility.INHERIT;
+
+        if (oldVisibility == newVisibility) {
+            return folder;
+        }
+
+        if (newVisibility == FolderVisibility.RESTRICTED && (request.getRestrictedUserIds() == null || request.getRestrictedUserIds().isEmpty())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "restrictedUserIds is required when visibility is RESTRICTED");
+        }
+
+        List<FolderPermission> newPermissions;
+
+        if (newVisibility == FolderVisibility.INHERIT) {
+            List<FolderPermission> parentPermissions = resolveParentPermissions(folder);
+            if (oldVisibility == FolderVisibility.RESTRICTED) {
+                // keep isPrivateCollaborator=true entries, merge with parent
+                newPermissions = ProjectPermissionResolver.buildInheritMerge(folder.getUserPermissions(), parentPermissions);
+            } else {
+                // PUBLIC → INHERIT: just inherit from parent
+                newPermissions = new ArrayList<>(parentPermissions != null ? parentPermissions : List.of());
+            }
+        } else if (newVisibility == FolderVisibility.RESTRICTED) {
+            validateRestrictedUserIds(project, request.getRestrictedUserIds());
+            newPermissions = ProjectPermissionResolver.buildFolderUserPermissions(
+                    project, FolderVisibility.RESTRICTED, null, request.getRestrictedUserIds());
+        } else {
+            // PUBLIC
+            newPermissions = ProjectPermissionResolver.buildFolderUserPermissions(
+                    project, FolderVisibility.PUBLIC, null, null);
+        }
+
+        Map<String, Object> before = new HashMap<>();
+        Map<String, Object> after = new HashMap<>();
+        before.put("visibility", oldVisibility);
+        before.put("permissions", folder.getUserPermissions());
+        after.put("visibility", newVisibility);
+        after.put("permissions", newPermissions);
+
+        folder.setVisibility(newVisibility);
+        folder.setUserPermissions(newPermissions);
+        buildAudit(folder, false);
+        FolderEntity savedFolder = folderRepo.save(folder);
+
+        cascadeInheritPermissions(savedFolder.getFolderId(), newPermissions);
+
+        AuditChanges changes = AuditChanges.builder().before(before).after(after).build();
+        writeFolderAuditLog(savedFolder, AuditAction.PERMISSION_CHANGE, changes);
+
+        return savedFolder;
+    }
+
+    // -------------------------------------------------------------------------
+    // Ancestor ID helpers
+    // -------------------------------------------------------------------------
+
+    private List<String> buildAncestorIds(FolderEntity parent) {
+        if (parent == null) {
+            return new ArrayList<>();
+        }
+        List<String> result = new ArrayList<>(parent.getAncestorIds() != null ? parent.getAncestorIds() : List.of());
+        result.add(parent.getFolderId());
+        return result;
+    }
+
+    private List<String> buildAncestorIdsForNode(String parentId, List<String> parentAncestorIds) {
+        List<String> result = new ArrayList<>(parentAncestorIds != null ? parentAncestorIds : List.of());
+        if (parentId != null) {
+            result.add(parentId);
+        }
+        return result;
+    }
+
+    private List<FolderPermission> mapProjectCollaboratorList2FolderPermissionsList(List<ProjectCollaborator> projectCollaborators) {
+        List<FolderPermission> result = new ArrayList<>();
+        for (ProjectCollaborator projectCollaborator : projectCollaborators) {
+            result.add(mapProjectCollaborator2FolderPermissions(projectCollaborator));
+        }
+        return result;
+    }
+
+    private FolderPermission mapProjectCollaborator2FolderPermissions(ProjectCollaborator projectCollaborator) {
+        return FolderPermission.builder()
+                .userId(projectCollaborator.getUserId())
+                .permissions(projectCollaborator.getProjectPermissions() != null
+                    ? projectCollaborator.getProjectPermissions()
+                    : GrantedProjectRole.projectPermissionsFromRole(projectCollaborator.getProjectRole())
+                )
+                .grantedAt(projectCollaborator.getAddedAt())
+                .build();
+    }
+
+    /**
+     * Replace oldPrefix with newPrefix at the start of ancestorIds.
+     * Used when moving a subtree: descendants share the moved folder's old ancestor prefix.
+     */
+    private List<String> replaceAncestorPrefix(List<String> ancestorIds, List<String> oldPrefix, List<String> newPrefix) {
+        if (ancestorIds == null || ancestorIds.size() < oldPrefix.size()) {
+            return new ArrayList<>(newPrefix);
+        }
+        List<String> tail = ancestorIds.subList(oldPrefix.size(), ancestorIds.size());
+        List<String> result = new ArrayList<>(newPrefix);
+        result.addAll(tail);
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Permission cascade helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Cascades new permissions to all INHERIT descendants of the given folder,
+     * stopping at sub-folders that have their own non-INHERIT visibility.
+     */
+    private void cascadeInheritPermissions(String folderId, List<FolderPermission> newPermissions) {
+        List<FolderEntity> allDescendants = folderRepo.findByAncestorIdsContaining(folderId)
+                .stream()
+                .filter(f -> Boolean.TRUE.equals(f.getIsActive()) && !Boolean.TRUE.equals(f.getIsTrash()))
+                .sorted(Comparator.comparingInt(f -> safeLevel(f.getLevel())))
+                .toList();
+
+        if (allDescendants.isEmpty()) {
+            return;
+        }
+
+        // Track folder IDs that have their own visibility (shield their subtrees from cascade)
+        Set<String> shielded = new HashSet<>();
+
+        List<FolderEntity> toUpdate = new ArrayList<>();
+        for (FolderEntity d : allDescendants) {
+            boolean blocked = isShieldedByAncestor(d, folderId, shielded);
+
+            if (blocked) {
+                shielded.add(d.getFolderId());
+                continue;
+            }
+
+            FolderVisibility dVisibility = d.getVisibility() != null ? d.getVisibility() : FolderVisibility.INHERIT;
+            if (dVisibility != FolderVisibility.INHERIT) {
+                shielded.add(d.getFolderId());
+                continue;
+            }
+
+            d.setUserPermissions(new ArrayList<>(newPermissions));
+            applyUpdateAudit(d);
+            toUpdate.add(d);
+        }
+
+        if (!toUpdate.isEmpty()) {
+            folderRepo.saveAll(toUpdate);
+        }
+    }
+
+    private boolean isShieldedByAncestor(FolderEntity folder, String rootFolderId, Set<String> shielded) {
+        List<String> ancestors = folder.getAncestorIds();
+        if (ancestors == null) {
+            return false;
+        }
+        int rootIdx = ancestors.indexOf(rootFolderId);
+        // Check ancestors between rootFolder and this folder (exclusive of rootFolder itself)
+        for (int i = rootIdx + 1; i < ancestors.size(); i++) {
+            if (shielded.contains(ancestors.get(i))) {
+                return true;
             }
         }
-
-        writeFolderAuditLog(folder, AuditAction.DELETE, null);
+        return false;
     }
+
+    private List<FolderPermission> resolveParentPermissions(FolderEntity folder) {
+        String parentId = folder.getParentFolderId();
+        if (parentId == null) {
+            return new ArrayList<>();
+        }
+        return folderRepo.findById(parentId)
+                .map(FolderEntity::getUserPermissions)
+                .orElse(new ArrayList<>());
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
 
     private void validateCreatePayload(FolderCreateRequestDTO request) {
         if (request == null) {
@@ -523,48 +966,23 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
     }
 
-    private String requireNormalized(String value, String message) {
-        String normalized = trimToNull(value);
-        if (normalized == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, message);
-        }
-        return normalized;
-    }
-
-    private String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-        String trimmed = input.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 
     private FolderEntity persistNewFolder(String projectId, String parentFolderId,
-            String folderName, String description, String folderPath, int level,
-            FolderVisibility visibility) {
+            String folderName, String description, List<String> ancestorIds, int level,
+            FolderVisibility visibility, List<FolderPermission> userPermissions) {
         FolderEntity folder = FolderEntity.builder()
                 .projectId(projectId)
                 .parentFolderId(parentFolderId)
                 .folderName(folderName)
                 .description(description)
-                .folderPath(folderPath)
+                .ancestorIds(ancestorIds)
                 .level(level)
                 .visibility(visibility != null ? visibility : FolderVisibility.INHERIT)
+                .userPermissions(userPermissions)
                 .stats(defaultFolderStats())
                 .build();
         buildAudit(folder, true);
         return folderRepo.save(folder);
-    }
-
-    private String normalizeParentFolderPath(FolderEntity parentFolder) {
-        String parentPath = parentFolder.getFolderPath();
-        if (StringUtils.isNullOrBlank(parentPath) || "/".equals(parentPath)) {
-            return parentFolder.getFolderName();
-        }
-        if (parentPath.endsWith("/")) {
-            parentPath = parentPath.substring(0, parentPath.length() - 1);
-        }
-        return parentPath;
     }
 
     private String normalizeRelativeFolderPath(String relativePath) {
@@ -604,51 +1022,22 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         return index >= 0 ? relativePath.substring(index + 1) : relativePath;
     }
 
-    private String composeFolderPath(String baseFolderPath, String relativePath) {
-        if (StringUtils.isNullOrBlank(baseFolderPath)) {
-            return relativePath;
-        }
-        String normalizedBase = baseFolderPath;
-        if (normalizedBase.endsWith("/")) {
-            normalizedBase = normalizedBase.substring(0, normalizedBase.length() - 1);
-        }
-        return normalizedBase + "/" + relativePath;
-    }
-
-    private FolderTreeMappingDTO buildFolderTreeMapping(FolderTreeNodeDTO node, String folderPath,
-                                                        String folderId, String parentFolderId, String status) {
+    private FolderTreeMappingDTO buildFolderTreeMapping(FolderTreeNodeDTO node, String folderId,
+                                                        String parentFolderId, String status) {
         return FolderTreeMappingDTO.builder()
                 .clientFolderKey(node.getClientFolderKey())
                 .relativeFolderPath(node.getRelativeFolderPath())
-                .folderPath(folderPath)
                 .folderId(folderId)
                 .parentFolderId(parentFolderId)
                 .status(status)
                 .build();
     }
 
-    private String generateFolderUploadSessionId(String baseFolderPath, String rootFolderName) {
-        String prefix = StringUtils.isNullOrBlank(baseFolderPath)
-                ? rootFolderName
-                : baseFolderPath + "/" + rootFolderName;
+    private String generateFolderUploadSessionId(FolderEntity parentFolder, String rootFolderName) {
+        String prefix = parentFolder != null
+                ? parentFolder.getFolderId() + "/" + rootFolderName
+                : rootFolderName;
         return prefix + "-" + UUID.randomUUID();
-    }
-
-    private String buildFolderPath(FolderEntity parent, String folderName) {
-        if (parent == null) {
-            return folderName;
-        }
-        String parentPath = parent.getFolderPath();
-        if (StringUtils.isNullOrBlank(parentPath)) {
-            return folderName;
-        }
-        if ("/".equals(parentPath)) {
-            parentPath = parent.getFolderName();
-        }
-        if (parentPath.endsWith("/")) {
-            parentPath = parentPath.substring(0, parentPath.length() - 1);
-        }
-        return parentPath + "/" + folderName;
     }
 
     private int safeLevel(Integer level) {
@@ -676,7 +1065,16 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
     private FolderEntity getActiveFolderOrThrow(String folderId) {
         FolderEntity folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
-        if (Boolean.FALSE.equals(folder.getIsActive())) {
+        if (Boolean.FALSE.equals(folder.getIsActive()) || Boolean.TRUE.equals(folder.getIsTrash())) {
+            throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
+        }
+        return folder;
+    }
+
+    private FolderEntity getTrashedFolderOrThrow(String folderId) {
+        FolderEntity folder = folderRepo.findById(folderId)
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
+        if (!Boolean.TRUE.equals(folder.getIsActive()) || !Boolean.TRUE.equals(folder.getIsTrash())) {
             throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
         }
         return folder;
@@ -727,51 +1125,37 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
             return;
         }
 
-        List<GrantedProjectPermission> effectivePermissions = ProjectPermissionResolver.resolveEffectiveFolderPermissions(
-                project,
-                folder,
-                currentUser,
-                isAdmin(currentUser),
-                folderRepo
-        );
-        if (!ProjectPermissionResolver.hasPermission(effectivePermissions, required)) {
+        List<FolderPermission> userPermissions = folder.getUserPermissions();
+        if (userPermissions == null || userPermissions.isEmpty()) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
+
+        String currentUserId = currentUser.getUserId();
+        for (FolderPermission fp : userPermissions) {
+            if (Objects.equals(fp.getUserId(), currentUserId)) {
+                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
+                    return;
+                }
+                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            }
+        }
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
     }
 
-    private void validateFolderPermissions(ProjectEntity project, List<FolderPermission> permissions) {
-        if (project == null || permissions == null) {
+    private void validateRestrictedUserIds(ProjectEntity project, List<String> userIds) {
+        if (project == null || userIds == null) {
             return;
         }
 
-        for (FolderPermission entry : permissions) {
-            if (entry == null) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions contains empty item");
-            }
-
-            String userId = trimToNull(entry.getUserId());
-            if (userId == null) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions.userId is required");
+        for (String userId : userIds) {
+            if (StringUtils.isNullOrBlank(userId)) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "restrictedUserIds contains blank userId");
             }
 
             List<GrantedProjectPermission> projectPermissions =
-                    ProjectPermissionResolver.resolveProjectPermissions(project, userId);
+                    ProjectPermissionResolver.resolveProjectPermissions(project, userId.trim());
             if (projectPermissions.isEmpty()) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "permissions.userId not in project");
-            }
-
-            List<GrantedProjectPermission> folderPermissions = entry.getPermissions();
-            if (folderPermissions == null) {
-                continue;
-            }
-
-            for (GrantedProjectPermission permission : folderPermissions) {
-                if (!GrantedProjectPermission.isFolderPermission(permission)) {
-                    throw new UserBusinessException(ErrorCode.BAD_REQUEST, "invalid folder permission: " + permission);
-                }
-                if (!projectPermissions.contains(permission)) {
-                    throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folder permission exceeds project scope: " + permission);
-                }
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "userId not in project: " + userId);
             }
         }
     }
@@ -849,6 +1233,71 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         entity.setUpdateByEmail(auditService.getCurrentUserEmail());
     }
 
+    private void applyTrashAudit(EntityAuditBase entity, Instant trashedAt) {
+        entity.setIsTrash(true);
+        entity.setTrashedAt(trashedAt);
+        entity.setUpdateBy(auditService.getCurrentUserId());
+        entity.setUpdateByEmail(auditService.getCurrentUserEmail());
+    }
+
+    private void applyRestoreAudit(EntityAuditBase entity) {
+        entity.setIsTrash(false);
+        entity.setTrashedAt(null);
+        entity.setUpdateBy(auditService.getCurrentUserId());
+        entity.setUpdateByEmail(auditService.getCurrentUserEmail());
+    }
+
+    private FolderTreeItemDTO buildTreeNode(FolderEntity folder, Map<String, List<FolderEntity>> childrenMap) {
+        List<FolderEntity> children = childrenMap.getOrDefault(folder.getFolderId(), List.of());
+        List<FolderTreeItemDTO> childNodes = children.stream()
+                .sorted(Comparator.comparing(FolderEntity::getFolderName))
+                .map(child -> buildTreeNode(child, childrenMap))
+                .toList();
+
+        return FolderTreeItemDTO.builder()
+                .folderId(folder.getFolderId())
+                .projectId(folder.getProjectId())
+                .parentFolderId(folder.getParentFolderId())
+                .folderName(folder.getFolderName())
+                .ancestorIds(folder.getAncestorIds())
+                .level(folder.getLevel())
+                .visibility(folder.getVisibility())
+                .stats(folder.getStats())
+                .children(childNodes)
+                .build();
+    }
+
+    private List<FolderBreadcrumbItemDTO> buildBreadcrumb(String currentFolderId, Map<String, FolderEntity> folderMap) {
+        FolderEntity current = folderMap.get(currentFolderId);
+        if (current == null) {
+            return List.of();
+        }
+
+        List<FolderBreadcrumbItemDTO> breadcrumb = new ArrayList<>();
+
+        // ancestorIds are ordered from root → direct parent; read them directly (zero extra queries)
+        if (current.getAncestorIds() != null) {
+            for (String ancestorId : current.getAncestorIds()) {
+                FolderEntity ancestor = folderMap.get(ancestorId);
+                if (ancestor != null) {
+                    breadcrumb.add(FolderBreadcrumbItemDTO.builder()
+                            .folderId(ancestor.getFolderId())
+                            .folderName(ancestor.getFolderName())
+                            .level(ancestor.getLevel())
+                            .build());
+                }
+            }
+        }
+
+        breadcrumb.add(FolderBreadcrumbItemDTO.builder()
+                .folderId(current.getFolderId())
+                .folderName(current.getFolderName())
+                .level(current.getLevel())
+                .build());
+
+        return breadcrumb;
+    }
+
     private void writeFolderAuditLog(FolderEntity folder, AuditAction action, AuditChanges changes) {
         if (folder == null || StringUtils.isNullOrBlank(folder.getFolderId())) {
             return;
@@ -867,12 +1316,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
     }
 
     private boolean isDescendantFolder(FolderEntity candidateParent, FolderEntity targetFolder) {
-        if (candidateParent.getFolderPath() == null || targetFolder.getFolderPath() == null) {
-            return false;
-        }
-
-        String parentPath = candidateParent.getFolderPath();
-        String targetPath = targetFolder.getFolderPath();
-        return parentPath.startsWith(targetPath + "/");
+        List<String> ancestors = candidateParent.getAncestorIds();
+        return ancestors != null && ancestors.contains(targetFolder.getFolderId());
     }
 }

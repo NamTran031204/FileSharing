@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.entities.models.folder.FolderPermission;
-
 import java.util.List;
 
 @Data
@@ -18,5 +16,5 @@ public class FolderUpdateRequestDTO {
     private String description;
     private String parentFolderId; // Có thể dùng để di chuyển thư mục
     private Boolean isActive;
-    private List<FolderPermission> permissions; // override permissions (require GrantedProjectPermission.UPDATE only)
+    private List<String> restrictedUserIds; // userId list for RESTRICTED folders (require ADD_USER permission)
 }
