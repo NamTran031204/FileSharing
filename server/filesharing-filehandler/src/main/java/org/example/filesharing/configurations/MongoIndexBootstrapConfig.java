@@ -101,16 +101,17 @@ public class MongoIndexBootstrapConfig {
                 .on("parentFolderId", Sort.Direction.ASC));
         ops.createIndex(new Index()
                 .on("projectId", Sort.Direction.ASC)
-                .on("folderPath", Sort.Direction.ASC));
+                .on("ancestorIds", Sort.Direction.ASC));
         ops.createIndex(new Index().on("folderId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("parentFolderId", Sort.Direction.ASC));
+        ops.createIndex(new Index().on("ancestorIds", Sort.Direction.ASC));
         ops.createIndex(new Index().on("permissions.userId", Sort.Direction.ASC));
     }
 
     private void applyMediaRenditionsIndexes() {
         IndexOperations ops = mongoTemplate.indexOps("media_renditions");
         ops.createIndex(new Index()
-                .on("versionId", Sort.Direction.ASC)
+                .on("metadataId", Sort.Direction.ASC)
                 .on("renditionType", Sort.Direction.ASC));
         ops.createIndex(new Index().on("assetId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("status", Sort.Direction.ASC));
@@ -172,7 +173,7 @@ public class MongoIndexBootstrapConfig {
                 .on("status", Sort.Direction.ASC)
                 .on("priority", Sort.Direction.ASC)
                 .on("scheduledAt", Sort.Direction.ASC));
-        ops.createIndex(new Index().on("versionId", Sort.Direction.ASC));
+        ops.createIndex(new Index().on("metadataId", Sort.Direction.ASC));
         ops.createIndex(new Index()
                 .on("workerId", Sort.Direction.ASC)
                 .on("status", Sort.Direction.ASC));
