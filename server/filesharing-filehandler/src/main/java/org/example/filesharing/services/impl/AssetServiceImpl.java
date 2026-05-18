@@ -77,9 +77,18 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         String fileName = requireNormalized(request.getFileName(), "fileName is required");
-        Optional<AssetEntity> asset = folderId != null
-                ? assetRepo.findByAssetNameAndFolderIdAndProjectIdAndIsActiveTrue(fileName, folderId, projectId)
-                : assetRepo.findByAssetNameAndProjectIdAndIsActiveTrue(fileName, projectId);
+        Optional<AssetEntity> asset;
+
+        if (folderId != null) {
+            asset = assetRepo.findByAssetNameAndFolderIdAndProjectIdAndIsActiveTrue(fileName, folderId, projectId);
+        } else {
+            Query query = new Query();
+            query.addCriteria(Criteria.where("fileName").is(fileName));
+            query.addCriteria(Criteria.where("projectId").is(projectId));
+            query.addCriteria(Criteria.where("isActive").is(true));
+            query.addCriteria(Criteria.where("folderId").is(null));
+            asset = Optional.ofNullable(mongoTemplate.findOne(query, AssetEntity.class));
+        }
         if (asset.isPresent()) {
             return createNewVersion(request, asset.get());
         }
