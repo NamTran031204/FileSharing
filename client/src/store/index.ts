@@ -1,30 +1,31 @@
 import SessionStore from './sessionStore';
 import UiStore from './uiStore';
-import FolderStore from './folderStore';
+import FolderAssetStore from './folderAssetStore.ts';
 import AssetStore from './assetStore';
-import {createContext, useContext} from "react";
+import { createContext, useContext } from 'react';
 // import NotificationStore from './notificationStore';
 
+const sessionStore = new SessionStore();
+
 export const rootStore = {
-    sessionStore: new SessionStore(),
+    sessionStore,
     uiStore: new UiStore(),
-    folderStore: new FolderStore(),
+    folderStore: new FolderAssetStore(sessionStore),
     assetStore: new AssetStore(),
     // notificationStore: new NotificationStore()
 };
 export type TRootStore = typeof rootStore;
 const RootStoreContext = createContext<null | TRootStore>(null);
 
-
-// Tạo ra provider để cung cấp store cho toàn bộ app
+// tao ra provider de cung cap store cho toan bo app
 export const Provider = RootStoreContext.Provider;
 
-/** tra lai store, chi dung o function component */
+// tra lai store, chi dung o function component
 export function useStore() {
-    /** store này sẽ chứa toàn bộ data */
+    // store nay se chua toan bo data
     const store = useContext(RootStoreContext);
     if (store === null) {
-        throw new Error("Store cannot be null, please add a context provider");
+        throw new Error('Store cannot be null, please add a context provider');
     }
     return store;
 }
