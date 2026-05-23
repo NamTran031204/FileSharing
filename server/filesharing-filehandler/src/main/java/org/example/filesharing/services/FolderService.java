@@ -18,7 +18,7 @@ public interface FolderService {
     FolderEntity updateFolderDetail(FolderUpdateRequestDTO request);
     FolderEntity getFolderById(String folderId);
     PageResult<FolderEntity> getFolderPage(PageRequestDto<FolderFilterRequestDTO> dto);
-    FolderTreeResponseDTO getFolderTree(String projectId, String currentFolderId);
+    FolderTreeResponseDTO getFolderTree(String projectId);
     FolderArchiveResponseDTO archiveFolder(String folderId);
     FolderEntity restoreFolder(String folderId);
     PageResult<FolderEntity> getFolderTrash(PageRequestDto<FolderFilterRequestDTO> dto);

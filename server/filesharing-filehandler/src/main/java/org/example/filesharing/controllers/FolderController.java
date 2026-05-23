@@ -50,17 +50,16 @@ public class FolderController {
 
     @GetMapping("/get-tree/{projectId}")
     public CommonResponse<FolderTreeResponseDTO> getFolderTree(
-            @PathVariable("projectId") String projectId,
-            @RequestParam(value = "currentFolderId", required = false) String currentFolderId) {
-        return CommonResponse.success(folderService.getFolderTree(projectId, currentFolderId));
+            @PathVariable("projectId") String projectId) {
+        return CommonResponse.success(folderService.getFolderTree(projectId));
     }
 
-    @PostMapping("/archive/{folderId}")
+    @PostMapping("/move-to-trash/{folderId}")
     public CommonResponse<FolderArchiveResponseDTO> archiveFolder(@PathVariable("folderId") String folderId) {
         return CommonResponse.success(folderService.archiveFolder(folderId));
     }
 
-    @PostMapping("/restore/{folderId}")
+    @PostMapping("/restore-from-trash/{folderId}")
     public CommonResponse<FolderEntity> restoreFolder(@PathVariable("folderId") String folderId) {
         return CommonResponse.success(folderService.restoreFolder(folderId));
     }

@@ -539,12 +539,11 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
         folderRepo.saveAll(toDelete);
 
-        // Stats were already decremented at archive time — no changes needed here
         writeFolderAuditLog(folder, AuditAction.DELETE, null);
     }
 
     @Override
-    public FolderTreeResponseDTO getFolderTree(String projectId, String currentFolderId) {
+    public FolderTreeResponseDTO getFolderTree(String projectId) {
         if (StringUtils.isNullOrBlank(projectId)) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
         }
@@ -557,9 +556,6 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 .filter(f -> Boolean.TRUE.equals(f.getIsActive()) && !Boolean.TRUE.equals(f.getIsTrash()))
                 .toList();
 
-        Map<String, FolderEntity> folderMap = allFolders.stream()
-                .collect(Collectors.toMap(FolderEntity::getFolderId, f -> f));
-
         Map<String, List<FolderEntity>> childrenMap = allFolders.stream()
                 .collect(Collectors.groupingBy(f ->
                         f.getParentFolderId() != null ? f.getParentFolderId() : "__root__"));
@@ -570,14 +566,8 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
                 .map(root -> buildTreeNode(root, childrenMap))
                 .toList();
 
-        List<FolderBreadcrumbItemDTO> breadcrumb = List.of();
-        if (StringUtils.isNotNullOrBlank(currentFolderId)) {
-            breadcrumb = buildBreadcrumb(currentFolderId.trim(), folderMap);
-        }
-
         return FolderTreeResponseDTO.builder()
                 .projectId(projectId.trim())
-                .breadcrumb(breadcrumb)
                 .tree(tree)
                 .build();
     }

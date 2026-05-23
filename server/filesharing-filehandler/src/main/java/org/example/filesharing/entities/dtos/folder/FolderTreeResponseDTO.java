@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class FolderTreeResponseDTO {
     private String projectId;
-    private List<FolderBreadcrumbItemDTO> breadcrumb;
+//    private List<FolderBreadcrumbItemDTO> breadcrumb;
     private List<FolderTreeItemDTO> tree;
 }
