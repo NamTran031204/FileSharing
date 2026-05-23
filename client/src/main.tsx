@@ -4,11 +4,14 @@ import './index.css'
 import './api/apiClient'
 import App from './App.tsx'
 import {Provider, rootStore} from './store'
+import ModalProvider from './core/context/ModalProvider'
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <Provider value={rootStore}>
-            <App/>
+            <ModalProvider>
+                <App/>
+            </ModalProvider>
         </Provider>
     </StrictMode>,
 )

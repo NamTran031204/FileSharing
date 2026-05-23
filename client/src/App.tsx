@@ -1,5 +1,8 @@
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import {ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
+import BusyOverlay from "./components/core/common/BusyOverlay";
 import {type AppRoute, ROUTER_CONFIG} from './utils/RouterConfigUtil.tsx';
 
 const normalizePath = (path: string) => {
@@ -77,6 +80,8 @@ const App = () => {
     return (
         <BrowserRouter>
             <Routes>{normalizedRoutes.map(renderRoute)}</Routes>
+            <ToastContainer />
+            <BusyOverlay />
         </BrowserRouter>
     );
 };

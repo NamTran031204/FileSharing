@@ -7,9 +7,9 @@ import {
   InfoCircleFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import CusCommonConfirm from '../components/confirm/CusCommonConfirm.tsx';
-import type { OrdConfirmProps } from '../components/confirm/CusCommonConfirm.types.ts';
-import ToastCustomContent from '../components/common/ToastCustomContent';
+import CusCommonConfirm from '../components/core/confirm/CusCommonConfirm.tsx';
+import type { OrdConfirmProps } from '../components/core/confirm/CusCommonConfirm.types.ts';
+import ToastCustomContent from '../components/core/common/ToastCustomContent';
 import { rootStore } from '../store';
 
 class UiUtils {

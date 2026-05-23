@@ -6,10 +6,12 @@ import {
   VideoCameraOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
+import type { MouseEvent } from 'react';
+import ActionDropdown, { type ActionDropdownItem } from './ActionDropdown';
 
 export type AssetType = 'image' | 'video' | 'doc' | 'svg';
 
-interface AssetCardProps {
+interface AssetCardProps<TRecord = unknown> {
   name: string;
   sizeLabel: string;
   versionLabel: string;
@@ -17,9 +19,12 @@ interface AssetCardProps {
   thumbnailUrl?: string;
   durationLabel?: string;
   onClick?: () => void;
+  actions?: ActionDropdownItem<TRecord>[];
+  record?: TRecord;
+  canAccess?: (permission?: string) => boolean;
 }
 
-const AssetCard = ({
+const AssetCard = <TRecord,>({
   name,
   sizeLabel,
   versionLabel,
@@ -27,39 +32,49 @@ const AssetCard = ({
   thumbnailUrl,
   durationLabel,
   onClick,
-}: AssetCardProps) => {
+  actions,
+  record,
+  canAccess,
+}: AssetCardProps<TRecord>) => {
   const isVideo = type === 'video';
   const isDocument = type === 'doc';
   const isImage = type === 'image' || type === 'svg';
   const showThumbnail = Boolean(thumbnailUrl) && isImage;
+  const cardActions: ActionDropdownItem<TRecord>[] = actions ?? []
+  const hasActions = cardActions.length > 0;
 
   const typeLabel = (() => {
-    if (isVideo) {
-      return durationLabel || 'VID';
-    }
-
-    if (type === 'svg') {
-      return 'SVG';
-    }
-
+    if (isVideo) return durationLabel || 'VID';
+    if (type === 'svg') return 'SVG';
     return isDocument ? 'DOC' : 'IMG';
   })();
 
   const PreviewIcon = isDocument ? FilePdfOutlined : isVideo ? VideoCameraOutlined : FileImageOutlined;
+
+  const stopPropagation = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  console.log("canAccess", canAccess);
 
   return (
     <div
       className="group relative flex h-[280px] flex-col overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
       onClick={onClick}
     >
-      <div className="absolute right-3 top-3 z-10 opacity-0 transition group-hover:opacity-100">
-        <Button
-          type="text"
-          icon={<MoreOutlined className="text-base" />}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 text-foreground shadow-sm hover:!bg-card"
-          aria-label="Open asset actions"
-        />
-      </div>
+      {hasActions && (
+        <div
+          className="absolute right-3 top-3 z-10 opacity-0 transition group-hover:opacity-100"
+          onClick={stopPropagation}
+        >
+          <ActionDropdown<TRecord>
+            actions={cardActions}
+            record={record}
+            canAccess={canAccess}
+          />
+        </div>
+      )}
 
       <div className="relative h-48 w-full overflow-hidden bg-muted/40">
         {showThumbnail ? (

@@ -7,14 +7,13 @@ import UploadPage from '../page/Phase1/uploadPage';
 import UserProfilePage from '../page/Phase1/UserProfilePage/UserProfilePage.tsx';
 import TrashPage from '../page/Phase1/trashPage';
 import FilePreviewPage from '../page/Phase1/filePreviewPage';
-import ImageReviewV2 from '../page/ImageReviewV2';
 import LoginPageV2 from '../page/LoginPageV2.tsx';
 import MainPage from '../page/MainPage';
 import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
-import FolderAsset from "../page/FolderAsset.tsx";
-import ImageReviewV3 from "../page/ImageReviewV3.tsx";
+import ImageReviewPage from "../page/ImageReviewPage.tsx";
+import FolderAssetPageV2 from "../page/FolderAssetPageV2.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -95,7 +94,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     {
         path: '/review/image-v2',
         name: 'Image Review V2',
-        element: <ImageReviewV3/>,
+        element: <ImageReviewPage/>,
         isShow: false,
     },
     {
@@ -113,7 +112,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     {
         path: '/projects/:projectId',
         name: 'Project Assets',
-        element: <FolderAsset/>,
+        element: <FolderAssetPageV2/>,
         isProtected: true,
         isShow: false,
     }

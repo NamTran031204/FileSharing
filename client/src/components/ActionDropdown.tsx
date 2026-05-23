@@ -1,14 +1,14 @@
 import {
-  CopyOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  PrinterOutlined,
-  SwapOutlined,
-  UndoOutlined,
+    CopyOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    EyeOutlined, MoreOutlined,
+    PlusOutlined,
+    PrinterOutlined,
+    SwapOutlined,
+    UndoOutlined,
 } from '@ant-design/icons';
-import { Dropdown, type DropdownProps, type MenuProps } from 'antd';
+import {Button, Dropdown, type DropdownProps, type MenuProps} from 'antd';
 import { useMemo } from 'react';
 
 export interface ActionDropdownItem<TRecord> {
@@ -34,12 +34,12 @@ export interface ActionDropdownLazyProps<TRecord> {
 interface ActionDropdownProps<TRecord> {
   actions: ActionDropdownItem<TRecord>[];
   record?: TRecord;
-  trigger: React.ReactNode;
   placement?: DropdownProps['placement'];
   disabled?: boolean;
   menuClassName?: string;
   onOpenChange?: (open: boolean) => void;
   canAccess?: (permission?: string) => boolean;
+  trigger?: React.ReactNode;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -57,7 +57,6 @@ const iconMap: Record<string, React.ReactNode> = {
 const ActionDropdown = <TRecord,>({
   actions,
   record,
-  trigger,
   placement = 'bottomRight',
   disabled,
   menuClassName,
@@ -143,7 +142,9 @@ const ActionDropdown = <TRecord,>({
       disabled={disabled}
       onOpenChange={onOpenChange}
     >
-      <span className="inline-flex">{trigger}</span>
+        <MoreOutlined className="text-base flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 text-foreground shadow-sm hover:bg-card!" />
+
+
     </Dropdown>
   );
 };
