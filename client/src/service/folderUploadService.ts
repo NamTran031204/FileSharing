@@ -143,11 +143,10 @@ export interface CreateAssetUploadSessionInput {
 export const createAssetUploadSession = async (
     input: CreateAssetUploadSessionInput
 ): Promise<AssetUploadSession> => {
-    const response = await AssetControllerService.createNew1({
+    const response = await AssetControllerService.createNew({
         body: {
             projectId: input.projectId,
             folderId: input.folderId,
-            assetName: input.fileName,
             fileName: input.fileName,
             mimeType: input.mimeType,
             fileSize: input.fileSize,

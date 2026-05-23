@@ -13,7 +13,7 @@ import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
 import ImageReviewPage from "../page/ImageReviewPage.tsx";
-import FolderAssetPageV2 from "../page/FolderAssetPageV2.tsx";
+import FolderAssetPage from "../page/FolderAssetPage.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -112,7 +112,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     {
         path: '/projects/:projectId',
         name: 'Project Assets',
-        element: <FolderAssetPageV2/>,
+        element: <FolderAssetPage/>,
         isProtected: true,
         isShow: false,
     }
