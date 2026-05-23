@@ -840,6 +840,28 @@ export interface FolderStats {
   pendingReviewsCount?: number;
 }
 
+export interface CommonResponseFolderArchiveResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: FolderArchiveResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface FolderArchiveResponseDTO {
+  /**  */
+  archivedFolderIds?: string[];
+
+  /**  */
+  archivedAssetIds?: string[];
+}
+
 export interface FolderFilterRequestDTO {
   /**  */
   projectId?: string;
@@ -1001,28 +1023,6 @@ export interface FolderChangeVisibilityRequestDTO {
 
   /**  */
   restrictedUserIds?: string[];
-}
-
-export interface CommonResponseFolderArchiveResponseDTO {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: FolderArchiveResponseDTO;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface FolderArchiveResponseDTO {
-  /**  */
-  archivedFolderIds?: string[];
-
-  /**  */
-  archivedAssetIds?: string[];
 }
 
 export interface MetadataUpdateRequestDto {
@@ -1841,6 +1841,9 @@ export interface AssetFilterRequestDto {
 
   /**  */
   isActive?: boolean;
+
+  /**  */
+  isTrash?: boolean;
 }
 
 export interface PageRequestDtoAssetFilterRequestDto {
@@ -2630,17 +2633,6 @@ export interface CommonResponseFolderTreeResponseDTO {
   message?: string;
 }
 
-export interface FolderBreadcrumbItemDTO {
-  /**  */
-  folderId?: string;
-
-  /**  */
-  folderName?: string;
-
-  /**  */
-  level?: number;
-}
-
 export interface FolderTreeItemDTO {
   /**  */
   folderId?: string;
@@ -2670,9 +2662,6 @@ export interface FolderTreeItemDTO {
 export interface FolderTreeResponseDTO {
   /**  */
   projectId?: string;
-
-  /**  */
-  breadcrumb?: FolderBreadcrumbItemDTO[];
 
   /**  */
   tree?: FolderTreeItemDTO[];
@@ -2886,7 +2875,8 @@ export enum AuditAction {
   'SHARE' = 'SHARE',
   'DOWNLOAD' = 'DOWNLOAD',
   'UPLOAD_COMPLETE' = 'UPLOAD_COMPLETE',
-  'UPLOAD_NEW_VERSION' = 'UPLOAD_NEW_VERSION'
+  'UPLOAD_NEW_VERSION' = 'UPLOAD_NEW_VERSION',
+  'RESTORE' = 'RESTORE'
 }
 
 export enum AuditActorType {

@@ -4,6 +4,7 @@ import {
   type AssetEntity,
   type MediaType,
   type AssetStatus,
+  type CommonResponseString,
   type AssetMoveRequestDto,
   type PageRequestDtoAssetFilterRequestDto,
   type AssetFilterRequestDto,
@@ -14,7 +15,6 @@ import {
   type UploadStatus,
   type ProcessingStatus,
   type MediaInfo,
-  type CommonResponseString,
   type AssetCreateRequestDto,
   type CommonResponseAssetCreateResponseDto,
   type AssetCreateResponseDto,
@@ -67,6 +67,44 @@ export class AssetControllerService {
   /**
    *
    */
+  static undoDelete(
+    params: {
+      /**  */
+      assetId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/asset/undo-delete/{assetId}';
+      url = url.replace('{assetId}', params['assetId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static restoreFromTrash(
+    params: {
+      /**  */
+      assetId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/asset/restore-from-trash/{assetId}';
+      url = url.replace('{assetId}', params['assetId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
   static move(
     params: {
       /** requestBody */
@@ -82,6 +120,25 @@ export class AssetControllerService {
       let data = params.body;
 
       configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static moveToTrash(
+    params: {
+      /**  */
+      assetId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseString> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/asset/move-to-trash/{assetId}';
+      url = url.replace('{assetId}', params['assetId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });

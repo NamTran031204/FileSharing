@@ -6,6 +6,8 @@ import {
   type GrantedProjectPermission,
   type FolderVisibility,
   type FolderStats,
+  type CommonResponseFolderArchiveResponseDTO,
+  type FolderArchiveResponseDTO,
   type PageRequestDtoFolderFilterRequestDTO,
   type FolderFilterRequestDTO,
   type CommonResponsePageResultFolderEntity,
@@ -17,11 +19,8 @@ import {
   type FolderTreeMappingDTO,
   type FolderCreateRequestDTO,
   type FolderChangeVisibilityRequestDTO,
-  type CommonResponseFolderArchiveResponseDTO,
-  type FolderArchiveResponseDTO,
   type CommonResponseFolderTreeResponseDTO,
   type FolderTreeResponseDTO,
-  type FolderBreadcrumbItemDTO,
   type FolderTreeItemDTO,
   type CommonResponseString,
   type IList,
@@ -69,7 +68,7 @@ export class FolderControllerService {
   /**
    *
    */
-  static restore(
+  static restoreFromTrash(
     params: {
       /**  */
       folderId: string;
@@ -77,7 +76,26 @@ export class FolderControllerService {
     options: IRequestOptions = {}
   ): Promise<CommonResponseFolderEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/restore/{folderId}';
+      let url = basePath + '/api/folder/restore-from-trash/{folderId}';
+      url = url.replace('{folderId}', params['folderId'] + '');
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static moveToTrash(
+    params: {
+      /**  */
+      folderId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseFolderArchiveResponseDTO> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/folder/move-to-trash/{folderId}';
       url = url.replace('{folderId}', params['folderId'] + '');
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
@@ -198,31 +216,10 @@ export class FolderControllerService {
   /**
    *
    */
-  static archive(
-    params: {
-      /**  */
-      folderId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderArchiveResponseDTO> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/archive/{folderId}';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
   static getTree(
     params: {
       /**  */
       projectId: string;
-      /**  */
-      currentFolderId?: string;
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<CommonResponseFolderTreeResponseDTO> {
@@ -231,7 +228,6 @@ export class FolderControllerService {
       url = url.replace('{projectId}', params['projectId'] + '');
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
-      configs.params = { currentFolderId: params['currentFolderId'] };
 
       axios(configs, resolve, reject);
     });
