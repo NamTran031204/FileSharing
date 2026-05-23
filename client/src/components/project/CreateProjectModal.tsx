@@ -82,7 +82,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       onCancel={onCancel}
       title={<h2 className="text-2xl font-extrabold tracking-tighter text-on-surface">Create Project</h2>}
       width={960}
-      destroyOnClose
+      destroyOnHidden
       centered
       className="create-project-modal"
       styles={{
