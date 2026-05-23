@@ -2,6 +2,7 @@ import SessionStore from './sessionStore';
 import UiStore from './uiStore';
 import FolderAssetStore from './folderAssetStore.ts';
 import AssetStore from './assetStore';
+import {UploadManagerStore} from './uploadManagerStore';
 import { createContext, useContext } from 'react';
 // import NotificationStore from './notificationStore';
 
@@ -12,6 +13,7 @@ export const rootStore = {
     uiStore: new UiStore(),
     folderStore: new FolderAssetStore(sessionStore),
     assetStore: new AssetStore(),
+    uploadManagerStore: new UploadManagerStore(),
     // notificationStore: new NotificationStore()
 };
 export type TRootStore = typeof rootStore;

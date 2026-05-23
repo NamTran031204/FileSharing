@@ -1,5 +1,5 @@
 import {action, computed, makeObservable, observable} from 'mobx';
-import type {FolderEntity, ProjectEntity, UserGrantedRole} from '../api/api/index.defs';
+import type {FolderEntity, FolderTreeItemDTO, ProjectEntity, UserGrantedRole} from '../api/api/index.defs';
 import type {UserRole} from '../api/enums';
 import {tokenManager} from '../api/baseApi';
 
@@ -34,6 +34,7 @@ export class AppSessionDto {
     setting?: Record<string, unknown>;
     currentProject?: ProjectSessionInfo;
     currentFolder?: FolderSessionInfo;
+    projectTree?: FolderTreeItemDTO[];
 
     constructor() {
         this.isLogined = tokenManager.isAuthenticated();
@@ -62,9 +63,11 @@ class SessionStore {
             currentProjectName: computed,
             currentFolderName: computed,
             currentFolderPath: computed,
+            currentProjectTree: computed,
             setSession: action,
             setCurrentProject: action,
             setCurrentFolder: action,
+            setProjectTree: action,
             clearSession: action,
         });
     }
@@ -109,6 +112,10 @@ class SessionStore {
         return this.appSession.currentFolder?.folderPath;
     }
 
+    get currentProjectTree() {
+        return this.appSession.projectTree ?? [];
+    }
+
     setSession(session: AppSessionDto) {
         if (session?.user?.userGrantedRoles) {
             session.permissionGranted = {};
@@ -125,12 +132,14 @@ class SessionStore {
     setCurrentProject(project?: Pick<ProjectEntity, 'projectId' | 'projectName'>) {
         if (!project) {
             this.appSession.currentProject = undefined;
+            this.appSession.projectTree = [];
             return;
         }
         this.appSession.currentProject = {
             projectId: project.projectId,
             projectName: project.projectName,
         };
+        this.appSession.projectTree = [];
     }
 
     setCurrentFolder(folder?: Pick<FolderEntity, 'folderId' | 'folderName' | 'folderPath'>) {
@@ -143,6 +152,10 @@ class SessionStore {
             folderName: folder.folderName,
             folderPath: folder.folderPath,
         };
+    }
+
+    setProjectTree(tree?: FolderTreeItemDTO[]) {
+        this.appSession.projectTree = tree ?? [];
     }
 
     clearSession() {

@@ -57,7 +57,7 @@ class AssetStore extends CommonPagingStore{
             fetchPage: action,
             fetchDetail: action,
             moveAsset: action,
-            setPage: action,
+            // setPage: action,
             openUploadAssetModal: action,
             openUploadFolderModal: action,
             openUpdateDetailModal: action,
