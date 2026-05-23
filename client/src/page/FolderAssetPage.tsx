@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Input, Modal, Select } from 'antd';
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     GrantedProjectPermission,
@@ -81,7 +81,7 @@ const buildTreeNodes = (items: FolderTreeItemDTO[], projectName: string): Folder
     return [{ id: 'root', name: projectName, children: roots }];
 };
 
-const FolderAssetPage = observer(function FolderAssetPageV2() {
+const FolderAssetPage = observer(function FolderAssetPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -96,30 +96,48 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
     const [filterUser, setFilterUser] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
 
+    // Ref to skip the search debounce effect when a folder/project navigation resets the query
+    const searchSkipRef = useRef(false);
+
+    // Effect A — fetch tree once per project; re-fetch after mutations via handleMutationSuccess
+    useEffect(() => {
+        if (!projectId) return;
+        void folderStore.fetchTree(projectId);
+    }, [projectId, folderStore]);
+
+    // Effect B — re-fetch folders & assets whenever project or folder changes
     useEffect(() => {
         if (!projectId) return;
         sessionStore.setCurrentProject({ projectId, projectName: sessionStore.currentProjectName || projectId });
-        if (!currentFolderId) sessionStore.setCurrentFolder(undefined);
+        // Update sessionStore immediately from URL so pagination reaction uses the correct folderId
+        sessionStore.setCurrentFolder(
+            currentFolderId
+                ? ({ folderId: currentFolderId } as FolderEntity)
+                : undefined
+        );
+        // If there was an active search, flag Effect C to skip the reset trigger
+        if (searchQuery) searchSkipRef.current = true;
         setSearchQuery('');
+        folderStore.setKeyword('');
         folderStore.setPage(1);
         void folderStore.fetchFolders(projectId, currentFolderId);
         void folderStore.fetchAssetsPage(projectId, currentFolderId);
-        void folderStore.fetchTree(projectId, currentFolderId);
-    }, [projectId, currentFolderId, folderStore, sessionStore]);
+    }, [projectId, currentFolderId, folderStore, sessionStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        if (!currentFolderId) {
-            sessionStore.setCurrentFolder(undefined);
+        if (searchSkipRef.current) {
+            searchSkipRef.current = false;
             return;
         }
-        const currentBreadcrumb = folderStore.breadcrumb[folderStore.breadcrumb.length - 1];
-        if (!currentBreadcrumb?.folderId) return;
-        sessionStore.setCurrentFolder({
-            folderId: currentBreadcrumb.folderId,
-            folderName: currentBreadcrumb.folderName,
-            folderPath: undefined,
-        });
-    }, [currentFolderId, folderStore.breadcrumb, sessionStore]);
+        if (!projectId) return;
+        const timer = setTimeout(() => {
+            folderStore.setKeyword(searchQuery);
+            folderStore.setPage(1);
+            void folderStore.fetchFolders(projectId, currentFolderId);
+            void folderStore.fetchAssetsPage(projectId, currentFolderId);
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleFolderClick = (folder: FolderEntity) => {
         if (!folder.folderId || !projectId) return;
@@ -149,22 +167,27 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
         if (!projectId) return;
         void folderStore.fetchFolders(projectId, currentFolderId);
         void folderStore.fetchAssetsPage(projectId, currentFolderId);
-        void folderStore.fetchTree(projectId, currentFolderId);
     };
 
-    const filteredFolders = useMemo(() => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return folderStore.folders;
-        return folderStore.folders.filter((f) => (f.folderName ?? '').toLowerCase().includes(q));
-    }, [folderStore.folders, searchQuery]);
+    // Called after upload / delete mutations: also re-syncs the folder tree
+    const handleMutationSuccess = () => {
+        if (!projectId) return;
+        void folderStore.fetchFolders(projectId, currentFolderId);
+        void folderStore.fetchAssetsPage(projectId, currentFolderId);
+        void folderStore.fetchTree(projectId);
+    };
 
-    const filteredAssets = useMemo(() => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return folderStore.assets;
-        return folderStore.assets.filter((a) =>
-            (a.asset?.assetName ?? a.latestVersion?.fileName ?? '').toLowerCase().includes(q)
-        );
-    }, [folderStore.assets, searchQuery]);
+    // build breadcrumb path client-side from flat treeItems using ancestorIds
+    const breadcrumbFolders = useMemo((): FolderTreeItemDTO[] => {
+        if (!currentFolderId) return [];
+        const map = new Map(folderStore.treeItems.map((i) => [i.folderId!, i]));
+        const current = map.get(currentFolderId);
+        if (!current) return [];
+        const ancestors = (current.ancestorIds ?? [])
+            .map((id) => map.get(id))
+            .filter((item): item is FolderTreeItemDTO => item !== undefined);
+        return [...ancestors, current];
+    }, [folderStore.treeItems, currentFolderId]);
 
     const treeData = useMemo(
         () => buildTreeNodes(folderStore.treeItems, projectName),
@@ -185,7 +208,7 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
                 <span>{projectName}</span>
             ),
         },
-        ...folderStore.breadcrumb.slice(0, -1).map((folder) => ({
+        ...breadcrumbFolders.slice(0, -1).map((folder) => ({
             title: folder.folderId ? (
                 <button
                     type="button"
@@ -198,13 +221,13 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
                 <span>{folder.folderName}</span>
             ),
         })),
-        ...(folderStore.breadcrumb.length > 0
+        ...(breadcrumbFolders.length > 0
             ? [
                 {
                     title: (
                         <span className="text-foreground font-medium">
-                {folderStore.breadcrumb[folderStore.breadcrumb.length - 1]?.folderName}
-              </span>
+                            {breadcrumbFolders[breadcrumbFolders.length - 1]?.folderName}
+                        </span>
                     ),
                 },
             ]
@@ -326,7 +349,6 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
         },
     ];
 
-    // Advanced search panel rendered as contentTop inside the body scroll area
     const contentTop = showAdvancedSearch ? (
         <div className="flex shrink-0 items-end gap-4 rounded-xl border border-border bg-card px-6 py-5">
             <div className="flex flex-col gap-1">
@@ -381,8 +403,8 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
                 toolbarSlot={toolbarSlot}
                 topActions={topActions}
                 breadcrumbItems={breadcrumbItems}
-                folders={filteredFolders}
-                assets={filteredAssets}
+                folders={folderStore.folders}
+                assets={folderStore.assets}
                 isLoadingFolders={folderStore.isFolderLoading}
                 isLoadingAssets={folderStore.isLoading}
                 mapFolderToCard={(folder) => ({
@@ -417,13 +439,22 @@ const FolderAssetPage = observer(function FolderAssetPageV2() {
                 className="[&_.ant-modal-content]:bg-card"
                 title={
                     <span className="text-lg font-semibold text-foreground">
-            {folderStore.isUploadFolderOpen ? 'Upload Folder' : 'Upload File'}
-          </span>
+                        {folderStore.isUploadFolderOpen ? 'Upload Folder' : 'Upload File'}
+                    </span>
                 }
                 destroyOnHidden
             >
                 <div className="max-h-[70vh] overflow-auto">
-                    {folderStore.isUploadFolderOpen ? <UploadFolderButton /> : <UploadAssetButton />}
+                    {folderStore.isUploadFolderOpen
+                        ? <UploadFolderButton
+                            parentFolderId={currentFolderId}
+                            onSuccess={handleMutationSuccess}
+                          />
+                        : <UploadAssetButton
+                            parentFolderId={currentFolderId}
+                            onSuccess={handleMutationSuccess}
+                          />
+                    }
                 </div>
             </Modal>
         </>

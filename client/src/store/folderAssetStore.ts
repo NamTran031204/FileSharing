@@ -2,7 +2,6 @@ import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import {
     type AssetDetailResponseDto,
     type AssetSummaryDto,
-    type FolderBreadcrumbItemDTO,
     type FolderEntity,
     type FolderPermission,
     type FolderTreeItemDTO,
@@ -22,13 +21,31 @@ type ActiveModal =
     | 'delete-asset'
     | null;
 
+// API response includes nested children not captured in the generated type
+interface FolderTreeItemWithChildren extends FolderTreeItemDTO {
+    children?: FolderTreeItemWithChildren[];
+}
+
+function flattenTree(items: FolderTreeItemWithChildren[]): FolderTreeItemDTO[] {
+    const result: FolderTreeItemDTO[] = [];
+    const traverse = (nodes: FolderTreeItemWithChildren[]) => {
+        for (const node of nodes) {
+            const { children, ...item } = node;
+            result.push(item);
+            if (children?.length) traverse(children);
+        }
+    };
+    traverse(items);
+    return result;
+}
+
 class FolderAssetStore extends CommonPagingStore {
     folders: FolderEntity[] = [];
     assets: AssetSummaryDto[] = [];
     selectedAsset: AssetDetailResponseDto | null = null;
 
-    breadcrumb: FolderBreadcrumbItemDTO[] = [];
     treeItems: FolderTreeItemDTO[] = [];
+    keyword: string = '';
 
     sortDirection: string = 'asc';
     sortBy: string = 'folderName';
@@ -57,8 +74,8 @@ class FolderAssetStore extends CommonPagingStore {
             folders: observable,
             assets: observable,
             selectedAsset: observable,
-            breadcrumb: observable,
             treeItems: observable,
+            keyword: observable,
             sortBy: observable,
             sortDirection: observable,
             isFolderLoading: observable,
@@ -85,6 +102,7 @@ class FolderAssetStore extends CommonPagingStore {
             isDeleteAssetOpen: computed,
 
             setSorting: action,
+            setKeyword: action,
             fetchFolders: action,
             fetchAssetsPage: action,
             fetchAssetDetail: action,
@@ -159,6 +177,10 @@ class FolderAssetStore extends CommonPagingStore {
         this.sortDirection = sortDirection;
     }
 
+    setKeyword(keyword: string) {
+        this.keyword = keyword;
+    }
+
     get folderPermissionMap(): Map<string, GrantedProjectPermission[]> {
         const map = new Map<string, GrantedProjectPermission[]>();
 
@@ -190,7 +212,12 @@ class FolderAssetStore extends CommonPagingStore {
                     maxResultCount: 999,
                     skipCount: 0,
                     sorting: this.sorting,
-                    filter: { projectId, parentFolderId, isActive: true },
+                    filter: {
+                        projectId,
+                        parentFolderId,
+                        isActive: true,
+                        folderName: this.keyword || undefined,
+                    },
                 },
             });
 
@@ -216,7 +243,12 @@ class FolderAssetStore extends CommonPagingStore {
                     maxResultCount: this.pageSize,
                     skipCount: this.skipCount,
                     sorting: this.sorting,
-                    filter: { projectId, folderId, isActive: true },
+                    filter: {
+                        projectId,
+                        folderId,
+                        isActive: true,
+                        keyword: this.keyword || undefined,
+                    },
                 },
             });
 
@@ -262,21 +294,18 @@ class FolderAssetStore extends CommonPagingStore {
         }
     }
 
-    async fetchTree(projectId: string, currentFolderId?: string): Promise<void> {
+    async fetchTree(projectId: string): Promise<void> {
         try {
             this.isTreeLoading = true;
-            this.folderErrorMessage = null;
-            const response = await FolderControllerService.getTree({ projectId, currentFolderId });
+            const response = await FolderControllerService.getTree({ projectId });
             if (response?.isSuccessful && response.data) {
-                this.breadcrumb = response.data.breadcrumb ?? [];
-                this.treeItems = response.data.tree ?? [];
+                this.treeItems = flattenTree(
+                    (response.data.tree ?? []) as FolderTreeItemWithChildren[]
+                );
                 return;
             }
-
-            this.breadcrumb = [];
             this.treeItems = [];
         } catch {
-            this.breadcrumb = [];
             this.treeItems = [];
         } finally {
             this.isTreeLoading = false;
@@ -345,8 +374,8 @@ class FolderAssetStore extends CommonPagingStore {
         this.folders = [];
         this.assets = [];
         this.selectedAsset = null;
-        this.breadcrumb = [];
         this.treeItems = [];
+        this.keyword = '';
         this.page = 1;
         this.totalCount = 0;
         this.isLoading = false;

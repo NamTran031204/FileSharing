@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Alert, Button, Progress, Tag} from 'antd';
 import {
     CheckCircleOutlined,
@@ -36,18 +36,23 @@ const formatTime = (ms: number): string => {
     return `${minutes}m ${seconds % 60}s`;
 };
 
-const UploadFolderButton = observer(() => {
+interface UploadFolderButtonProps {
+    parentFolderId?: string;
+    baseFolderPath?: string;
+    onSuccess?: () => void;
+}
+
+const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess }: UploadFolderButtonProps) => {
     const {sessionStore, uploadManagerStore} = useStore();
 
     const projectId = sessionStore.currentProjectId;
-    const currentParentFolderId = sessionStore.currentFolderId || undefined;
-    const currentBaseFolderPath = sessionStore.currentFolderPath;
 
     // Local UI state: only folder selection & browser API
     const [selectedFolderName, setSelectedFolderName] = useState<string | null>(null);
     const [folderManifest, setFolderManifest] = useState<FolderManifest | null>(null);
     const [parseError, setParseError] = useState<string | null>(null);
     const [jobId, setJobId] = useState<string | null>(null);
+    const [reportedSuccessJobId, setReportedSuccessJobId] = useState<string | null>(null);
 
     const job = uploadManagerStore.getJob(jobId);
     const currentItem = jobId ? uploadManagerStore.jobCurrentItem(jobId) : undefined;
@@ -59,6 +64,17 @@ const UploadFolderButton = observer(() => {
     const isCreatingTree = job?.isCreatingTree ?? false;
     const isUploading = job?.status === 'RUNNING';
     const totalFiles = folderManifest?.totalFiles ?? 0;
+
+    const jobStatus = job?.status;
+    const reportedRef = useRef(reportedSuccessJobId);
+    reportedRef.current = reportedSuccessJobId;
+
+    useEffect(() => {
+        if (!jobId || jobStatus !== 'COMPLETED') return;
+        if (reportedRef.current === jobId) return;
+        setReportedSuccessJobId(jobId);
+        onSuccess?.();
+    }, [jobId, jobStatus, onSuccess]);
 
     const directoryPicker =
         (window as Window & {showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>})
@@ -119,15 +135,15 @@ const UploadFolderButton = observer(() => {
             // Create folder job immediately so the UI has a status to display
             const id = uploadManagerStore.createFolderJob(manifest, {
                 projectId,
-                parentFolderId: currentParentFolderId,
-                baseFolderPath: currentBaseFolderPath,
+                parentFolderId: parentFolderId,
+                baseFolderPath: baseFolderPath,
             });
             setJobId(id);
         } catch (error) {
             if (error instanceof DOMException && error.name === 'AbortError') return;
             setParseError(error instanceof Error ? error.message : 'Failed to parse folder');
         }
-    }, [collectFilesFromDirectory, currentBaseFolderPath, currentParentFolderId, directoryPicker, projectId, uploadManagerStore]);
+    }, [collectFilesFromDirectory, baseFolderPath, parentFolderId, directoryPicker, projectId, uploadManagerStore]);
 
     const handleCreateTree = useCallback(() => {
         if (!jobId) return;
