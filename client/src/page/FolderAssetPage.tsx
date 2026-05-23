@@ -17,13 +17,13 @@ import {
     type FolderEntity,
     type FolderTreeItemDTO,
 } from '../api/api/index.defs';
-import ActionDropdown, { type ActionDropdownItem } from '../components/ActionDropdown';
-import { type AssetType } from '../components/AssetCard';
-import FolderTreePanel, { type FolderTreeNode } from '../components/FolderTreePanel';
+import ActionDropdown, { type ActionDropdownItem } from '../components/core/common/ActionDropdown.tsx';
+import { type AssetType } from '../components/assets/AssetCard.tsx';
+import FolderTreePanel, { type FolderTreeNode } from '../components/folder/FolderTreePanel.tsx';
 import FolderAssetCommonCrudPage from '../components/core/crud/FolderAssetCommonCrudPage';
 import type { TopActionConfig } from '../components/core/crud/TopActions';
-import UploadAssetButton from '../components/UploadAssetButton';
-import UploadFolderButton from '../components/UploadFolderButton';
+import UploadAssetButton from '../components/assets/UploadAssetButton.tsx';
+import UploadFolderButton from '../components/folder/UploadFolderButton.tsx';
 import { useStore } from '../store';
 
 const resolveAssetType = (mimeType?: string): AssetType => {

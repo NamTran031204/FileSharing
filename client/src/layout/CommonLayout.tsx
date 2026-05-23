@@ -1,5 +1,5 @@
-import AppHeader from '../components/AppHeader';
-import AppSidebar from '../components/AppSidebar';
+import AppHeader from '../components/core/layout/AppHeader.tsx';
+import AppSidebar from '../components/core/layout/AppSidebar.tsx';
 
 interface ReviewLayoutProps {
   children: React.ReactNode;

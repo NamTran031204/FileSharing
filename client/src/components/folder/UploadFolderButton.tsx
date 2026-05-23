@@ -8,14 +8,14 @@ import {
     LoadingOutlined,
 } from '@ant-design/icons';
 import {observer} from 'mobx-react-lite';
-import {FileViewUtil} from '../utils/FileViewUtil';
+import {FileViewUtil} from '../../utils/FileViewUtil.ts';
 import {
     buildFolderManifest,
     type FileWithPath,
     type FolderManifest,
-} from '../utils/folderUploadParser';
-import {useStore} from '../store';
-import type {UploadJobStatus} from '../store/uploadManagerStore';
+} from '../../utils/folderUploadParser.ts';
+import {useStore} from '../../store';
+import type {UploadJobStatus} from '../../store/uploadManagerStore.ts';
 
 const phaseLabelMap: Record<UploadJobStatus, string> = {
     DRAFT: 'Ready to create tree',

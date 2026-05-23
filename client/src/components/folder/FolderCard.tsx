@@ -1,7 +1,7 @@
 import { FolderFilled, MoreOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import type { MouseEvent } from 'react';
-import ActionDropdown, { type ActionDropdownItem } from './ActionDropdown';
+import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
 
 interface FolderCardProps<TRecord = unknown> {
   name: string;

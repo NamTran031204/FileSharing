@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Alert, Button, Progress} from 'antd';
 import {CheckCircleOutlined, CloseCircleOutlined, CloudUploadOutlined, InboxOutlined} from '@ant-design/icons';
 import {observer} from 'mobx-react-lite';
-import {useStore} from '../store';
+import {useStore} from '../../store';
 
 interface UploadAssetButtonProps {
     parentFolderId?: string;

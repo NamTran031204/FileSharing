@@ -1,9 +1,9 @@
 import { Breadcrumb, Empty, Skeleton, type BreadcrumbProps } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import type { ReactNode } from 'react';
-import FolderCard from "../../FolderCard.tsx";
-import type {ActionDropdownItem} from "../../ActionDropdown.tsx";
-import AssetCard, {type AssetType} from "../../AssetCard.tsx";
+import FolderCard from "../../folder/FolderCard.tsx";
+import type {ActionDropdownItem} from "../common/ActionDropdown.tsx";
+import AssetCard, {type AssetType} from "../../assets/AssetCard.tsx";
 
 export interface FolderCardData {
   name: string;

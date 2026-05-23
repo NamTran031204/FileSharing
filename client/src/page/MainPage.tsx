@@ -6,8 +6,8 @@ import {
 } from '@ant-design/icons';
 import {Badge, Button, Input, Tag} from 'antd';
 import {useMemo, useState} from 'react';
-import AppHeader from '../components/AppHeader';
-import AppSidebar from '../components/AppSidebar';
+import AppHeader from '../components/core/layout/AppHeader.tsx';
+import AppSidebar from '../components/core/layout/AppSidebar.tsx';
 import MainPageActionCard, {type MainPageActionTone} from '../components/MainPageActionCard';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";

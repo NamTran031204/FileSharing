@@ -1,9 +1,9 @@
 import { BellOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo/logo2k.png';
-import BreadCrumbNav from './BreadCrumbNav.tsx';
-import {type AppRoute, ROUTER_CONFIG} from '../utils/RouterConfigUtil.tsx';
+import logo from '../../../assets/logo/logo2k.png';
+import BreadCrumbNav from '../../BreadCrumbNav.tsx';
+import {type AppRoute, ROUTER_CONFIG} from '../../../utils/RouterConfigUtil.tsx';
 
 interface AppHeaderProps {
   showBreadcrumb?: boolean;
