@@ -1,4 +1,4 @@
-package org.example.filesharing.jobs.kafka;
+package org.example.filesharing.jobs.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.enums.ProcessingStatus;
 import org.example.filesharing.enums.RenditionStatus;
 import org.example.filesharing.enums.RenditionType;
-import org.example.filesharing.jobs.kafka.dto.EncodeResultMessage;
+import org.example.filesharing.jobs.consumer.dto.EncodeResultMessage;
 import org.example.filesharing.repositories.MediaRenditionRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -95,10 +95,10 @@ public class VideoEncodeResultConsumer {
         }
 
         MediaRenditionEntity rendition = mediaRenditionRepo
-                .findFirstByVersionIdAndRenditionType(version.getFileId(), RenditionType.HLS)
+                .findFirstByMetadataIdAndRenditionType(version.getFileId(), RenditionType.HLS)
                 .orElseGet(MediaRenditionEntity::new);
 
-        rendition.setVersionId(version.getFileId());
+        rendition.setMetadataId(version.getFileId());
         rendition.setAssetId(version.getAssetId());
         rendition.setRenditionType(RenditionType.HLS);
         rendition.setProfile("ORIGINAL");
@@ -108,7 +108,7 @@ public class VideoEncodeResultConsumer {
 
         mediaRenditionRepo.save(rendition);
 
-        long renditionCount = mediaRenditionRepo.countByVersionId(version.getFileId());
+        long renditionCount = mediaRenditionRepo.countByMetadataId(version.getFileId());
         version.setRenditionCount((int) renditionCount);
     }
 

@@ -19,9 +19,6 @@ public class VideoEncodeProducer {
     @Autowired
     KafkaTemplate<String, Object> videoEncodeKafkaTemplate;
 
-    @Autowired
-    ObjectMapper objectMapper;
-
     @Value(value = "${kafka.topics.video_encode_topic}")
     private String topic;
 

@@ -1,4 +1,4 @@
-package org.example.filesharing.jobs.kafka.dto;
+package org.example.filesharing.jobs.consumer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
