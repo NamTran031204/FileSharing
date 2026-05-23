@@ -25,7 +25,9 @@ minio:
   endpoint: http://localhost:9000
   access-key: CE28BNCAFTPVW8RZLQXC
   secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
-  bucket-name: file-sharing
+  buckets:
+    files: file-sharing
+    thumbnails: thumbnail-bucket
 
 image:
   processing:
@@ -38,7 +40,6 @@ image:
     output:
       webp-quality: 82
       strip-metadata: true
-      bucket: file-sharing
     queue:
       max-capacity: 500
     retry:

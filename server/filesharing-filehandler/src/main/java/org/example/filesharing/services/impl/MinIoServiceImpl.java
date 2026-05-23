@@ -34,7 +34,7 @@ public class MinIoServiceImpl implements MinIoService {
     private final OkHttpClient httpClient = new OkHttpClient();
     private final MetadataRepo metadataRepo;
     private final Integer CHUNK_SIZE = 5 * 1024 * 1024;
-    @Value("${minio.bucket-name}")
+    @Value("${minio.buckets.files}")
     private String bucketName;
 
     @Override

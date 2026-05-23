@@ -1,4 +1,4 @@
-package com.file.service.filesharingimagecodec.config;
+package com.file.service.filesharingimagerawproccess.config;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;

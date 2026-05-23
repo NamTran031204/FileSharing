@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: filesharing-imagerawproccess
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: image-raw-processing-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: CE28BNCAFTPVW8RZLQXC
+  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
+  buckets:
+    files: file-sharing
+    image-preview: image-preview-bucket

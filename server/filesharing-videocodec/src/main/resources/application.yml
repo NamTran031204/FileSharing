@@ -28,7 +28,9 @@ minio:
   endpoint: http://localhost:9000
   access-key: CE28BNCAFTPVW8RZLQXC
   secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
-  bucket-name: file-sharing
+  buckets:
+    files: file-sharing
+    hls: hls-bucket
 
 video:
   encoding:
@@ -61,8 +63,6 @@ video:
     temp:
       base-dir: ${java.io.tmpdir}/encode
       cleanup-age-hours: 24
-    output:
-      bucket: file-sharing
 
 resilience4j:
   bulkhead:

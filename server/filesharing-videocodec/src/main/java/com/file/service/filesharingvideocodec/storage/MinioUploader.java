@@ -8,13 +8,11 @@ import io.minio.RemoveObjectsArgs;
 import io.minio.messages.DeleteObject;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,12 +34,17 @@ import java.util.concurrent.TimeUnit;
 public class MinioUploader {
 
     private final MinioClient minioClient;
+    private final String inputBucket;
     private final String outputBucket;
     private final int batchSize;
 
-    public MinioUploader(MinioClient minioClient, VideoEncodingConfig config) {
+    public MinioUploader(MinioClient minioClient,
+                         @Value("${minio.buckets.files}") String inputBucket,
+                         @Value("${minio.buckets.hls}") String outputBucket,
+                         VideoEncodingConfig config) {
         this.minioClient = minioClient;
-        this.outputBucket = config.getOutput().getBucket();
+        this.inputBucket = inputBucket;
+        this.outputBucket = outputBucket;
         this.batchSize = config.getUpload().getBatchSize();
     }
 
@@ -56,7 +59,7 @@ public class MinioUploader {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
-                        .bucket("file-sharing")
+                        .bucket(inputBucket)
                         .object(objectKey)
                         .expiry(ttlHours, TimeUnit.HOURS)
                         .build()

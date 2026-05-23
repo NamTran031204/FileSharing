@@ -1,7 +1,7 @@
 # #!/bin/bash
 set -e
 MINIO_HOST="http://minio:9000"
-BUCKET_NAME="file-sharing"
+BUCKET_NAMES=("file-sharing" "thumbnail-bucket" "image-preview-bucket" "hls-bucket")
 ACCESS_FILE="/config/access.txt"
 ALIAS_NAME="myminio"
 
@@ -33,17 +33,19 @@ if [ ${RETRY_COUNT} -eq ${MAX_RETRIES} ]; then
     exit 1
 fi
 
-# ========== BƯỚC 2: Tạo Bucket ==========
+# ========== BƯỚC 2: Tạo Buckets ==========
 echo ""
-echo "[2/4] Kiểm tra và tạo bucket '${BUCKET_NAME}'..."
+echo "[2/4] Kiểm tra và tạo các bucket..."
 
-if mc ls ${ALIAS_NAME}/${BUCKET_NAME} >/dev/null 2>&1; then
-    echo "      ✓ Bucket '${BUCKET_NAME}' đã tồn tại."
-else
-    echo "      Đang tạo bucket '${BUCKET_NAME}'..."
-    mc mb ${ALIAS_NAME}/${BUCKET_NAME}
-    echo "      ✓ Bucket '${BUCKET_NAME}' đã được tạo."
-fi
+for BUCKET_NAME in "${BUCKET_NAMES[@]}"; do
+    if mc ls ${ALIAS_NAME}/${BUCKET_NAME} >/dev/null 2>&1; then
+        echo "      ✓ Bucket '${BUCKET_NAME}' đã tồn tại."
+    else
+        echo "      Đang tạo bucket '${BUCKET_NAME}'..."
+        mc mb ${ALIAS_NAME}/${BUCKET_NAME}
+        echo "      ✓ Bucket '${BUCKET_NAME}' đã được tạo."
+    fi
+done
 
 # ========== BƯỚC 3: Generate Access Key ==========
 echo ""
@@ -52,7 +54,7 @@ echo "[3/4] Đang tạo Service Account (Access Key)..."
 # Tạo service account và lấy output JSON
 ACCESS_KEY_OUTPUT=$(mc admin user svcacct add ${ALIAS_NAME} ${MINIO_ROOT_USER} --json 2>/dev/null)
 
-echo ACCESS_KEY_OUTPUT > ACCESS_FILE
+echo "$ACCESS_KEY_OUTPUT" > "$ACCESS_FILE"
 
 if [ -z "${ACCESS_KEY_OUTPUT}" ]; then
     echo "      ✗ Không thể tạo access key!"
@@ -70,10 +72,6 @@ echo "[4/4] Đang ghi credentials vào ${ACCESS_FILE}..."
 # Tạo thư mục nếu chưa tồn tại
 mkdir -p "$(dirname ${ACCESS_FILE})"
 
-# Ghi credentials vào file
-cat > ${ACCESS_FILE} << EOF
-EOF
-
 # Đảm bảo file có quyền đọc
 chmod 644 ${ACCESS_FILE}
 
@@ -88,7 +86,7 @@ echo ""
 echo "Thông tin kết nối:"
 echo "  - Endpoint:    ${MINIO_HOST}"
 echo "  - Console:     http://localhost:9001"
-echo "  - Bucket:      ${BUCKET_NAME}"
+echo "  - Buckets:     ${BUCKET_NAMES[*]}"
 echo "  - Access Key:  ${ACCESS_KEY}"
 echo "  - Secret Key:  ${ACCESS_KEY_OUTPUT} (xem trong ${ACCESS_FILE})"
 echo ""

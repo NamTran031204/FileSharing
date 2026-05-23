@@ -3,44 +3,30 @@ package com.file.service.filesharingvideocodec.config;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableConfigurationProperties(MinIOProperties.class)
 public class MinIOConfig {
-    @Value("${minio.endpoint}")
-    private String endpoint;
-
-    @Value("${minio.access-key}")
-    private String accessKey;
-
-    @Value("${minio.secret-key}")
-    private String secretKey;
-
-    @Value("${minio.bucket-name}")
-    private String bucketName;
 
     @Bean
-    public MinioClient minioClient() {
+    public MinioClient minioClient(MinIOProperties props) {
         try {
-            MinioClient minioClient = MinioClient.builder()
-                    .endpoint(endpoint)
-                    .credentials(accessKey, secretKey)
+            MinioClient client = MinioClient.builder()
+                    .endpoint(props.getEndpoint())
+                    .credentials(props.getAccessKey(), props.getSecretKey())
                     .build();
-            boolean exists = minioClient.bucketExists(
-                    BucketExistsArgs.builder()
-                            .bucket(bucketName)
-                            .build()
-            );
 
-            if (!exists) {
-                minioClient.makeBucket(MakeBucketArgs.builder()
-                        .bucket(bucketName)
-                        .build());
+            for (String bucketName : props.getBuckets().values()) {
+                boolean exists = client.bucketExists(
+                        BucketExistsArgs.builder().bucket(bucketName).build());
+                if (!exists) {
+                    client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+                }
             }
-
-            return minioClient;
+            return client;
         } catch (Exception e) {
             throw new RuntimeException("MinIO setup failed: " + e.getMessage());
         }

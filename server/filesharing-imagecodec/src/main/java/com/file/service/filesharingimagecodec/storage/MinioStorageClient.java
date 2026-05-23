@@ -27,11 +27,12 @@ public class MinioStorageClient {
     private final long largeImageThresholdBytes;
 
     public MinioStorageClient(MinioClient minioClient,
-                              @Value("${minio.bucket-name}") String inputBucket,
+                              @Value("${minio.buckets.files}") String inputBucket,
+                              @Value("${minio.buckets.thumbnails}") String outputBucket,
                               ImageProcessingConfig config) {
         this.minioClient = minioClient;
         this.inputBucket = inputBucket;
-        this.outputBucket = config.getOutput().getBucket();
+        this.outputBucket = outputBucket;
         this.largeImageThresholdBytes = config.getVips().getLargeImageThresholdMb() * 1024L * 1024L;
     }
 

@@ -35,7 +35,6 @@ public class ImageProcessingConfig {
     public static class OutputConfig {
         private int webpQuality;
         private boolean stripMetadata;
-        private String bucket;
     }
 
     @Data

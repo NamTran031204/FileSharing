@@ -24,7 +24,6 @@ public class VideoEncodingConfig {
     private RetryConfig retry;
     private UploadConfig upload;
     private TempConfig temp;
-    private OutputConfig output;
 
     @Data
     public static class FfmpegConfig {
@@ -73,10 +72,5 @@ public class VideoEncodingConfig {
     public static class TempConfig {
         private String baseDir;
         private int cleanupAgeHours;
-    }
-
-    @Data
-    public static class OutputConfig {
-        private String bucket;
     }
 }
