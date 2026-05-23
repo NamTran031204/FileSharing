@@ -291,12 +291,62 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
     @Override
     @Transactional
+    public void moveToTrash(String assetId) {
+        AssetEntity asset = getAssetOrThrow(assetId);
+        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+
+        if (Boolean.TRUE.equals(asset.getIsTrash())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "asset is already in trash");
+        }
+
+        moveToTrashAudit(asset);
+        assetRepo.save(asset);
+
+        ProjectEntity project = getProjectOrThrow(asset.getProjectId());
+        incrementProjectAssetCount(project, -1);
+
+        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
+            FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
+            if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
+                incrementFolderAssetCount(folder, -1);
+            }
+        }
+
+        writeAssetAuditLog(asset, AuditAction.TRASH);
+    }
+
+    @Override
+    @Transactional
+    public void restoreFromTrash(String assetId) {
+        AssetEntity asset = getAssetOrThrow(assetId);
+        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+
+        if (!Boolean.TRUE.equals(asset.getIsTrash())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "asset is not in trash");
+        }
+
+        restoreTrashAudit(asset);
+        assetRepo.save(asset);
+
+        ProjectEntity project = getProjectOrThrow(asset.getProjectId());
+        incrementProjectAssetCount(project, 1);
+
+        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
+            FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
+            if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
+                incrementFolderAssetCount(folder, 1);
+            }
+        }
+        writeAssetAuditLog(asset, AuditAction.RESTORE);
+    }
+
+    @Override
+    @Transactional
     public void deleteAsset(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
         ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
 
-        asset.setIsActive(false);
-        buildAudit(asset, false);
+        softDeleteAudit(asset);
         assetRepo.save(asset);
 
         List<MetadataEntity> versions = metadataRepo.findByAssetId(asset.getAssetId());
@@ -318,6 +368,18 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         writeAssetAuditLog(asset, AuditAction.DELETE);
+    }
+
+    @Override
+    @Transactional
+    public void undoDelete(String assetId) {
+        AssetEntity asset = getInactiveAssetOrThrow(assetId);
+        ensureDeletedAssetPermission(asset, GrantedProjectPermission.DELETE);
+
+        undoDeleteAudit(asset);
+        assetRepo.save(asset);
+
+        writeAssetAuditLog(asset, AuditAction.RESTORE);
     }
 
     @Override
@@ -665,6 +727,31 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             throw new FileBusinessException(ErrorCode.NOT_FOUND);
         }
         return asset;
+    }
+
+    private AssetEntity getInactiveAssetOrThrow(String assetId) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+        AssetEntity asset = assetRepo.findById(assetId.trim())
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.NOT_FOUND));
+        if (Boolean.TRUE.equals(asset.getIsActive())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "asset is not deleted");
+        }
+        return asset;
+    }
+
+    private void ensureDeletedAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
+        ProjectEntity project = getProjectOrThrow(asset.getProjectId());
+        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
+            FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
+            if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
+                ensureFolderInProject(folder, project);
+                ensureFolderPermission(folder, required);
+                return;
+            }
+        }
+        ensureProjectPermission(project, auditService.getCurrentUser(), required);
     }
 
     private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {

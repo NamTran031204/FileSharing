@@ -12,5 +12,6 @@ public enum AuditAction {
     SHARE,
     DOWNLOAD,
     UPLOAD_COMPLETE,
-    UPLOAD_NEW_VERSION
+    UPLOAD_NEW_VERSION,
+    RESTORE
 }

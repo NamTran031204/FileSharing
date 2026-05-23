@@ -52,4 +52,22 @@ public class AssetController {
 		return CommonResponse.success("Asset deleted successfully");
 	}
 
+	@PostMapping("/move-to-trash/{assetId}")
+	public CommonResponse<String> moveToTrash(@PathVariable("assetId") String assetId) {
+		assetService.moveToTrash(assetId);
+		return CommonResponse.success("Asset moved to trash");
+	}
+
+	@PostMapping("/restore-from-trash/{assetId}")
+	public CommonResponse<String> restoreFromTrash(@PathVariable("assetId") String assetId) {
+		assetService.restoreFromTrash(assetId);
+		return CommonResponse.success("Asset restored from trash");
+	}
+
+	@PostMapping("/undo-delete/{assetId}")
+	public CommonResponse<String> undoDelete(@PathVariable("assetId") String assetId) {
+		assetService.undoDelete(assetId);
+		return CommonResponse.success("Asset restored successfully");
+	}
+
 }

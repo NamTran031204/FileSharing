@@ -19,4 +19,5 @@ public class AssetFilterRequestDto {
     private String ownerId;
     private String keyword;
     private Boolean isActive;
+    private Boolean isTrash;
 }

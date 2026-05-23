@@ -19,6 +19,12 @@ public interface AssetService {
 
     void deleteAsset(String assetId);
 
+    void moveToTrash(String assetId);
+
+    void restoreFromTrash(String assetId);
+
+    void undoDelete(String assetId);
+
     AssetCreateResponseDto createVersion(AssetCreateRequestDto request);
 
     MetadataEntity updateVersion(VersionUpdateRequestDto request);
