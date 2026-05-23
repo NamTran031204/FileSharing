@@ -6317,7 +6317,7 @@
       },
       "RenditionType" : {
         "type" : "string",
-        "enum" : [ "HLS", "THUMBNAIL", "SPRITE", "WAVEFORM", "POSTER" ]
+        "enum" : [ "HLS", "IMAGE_THUMBNAIL", "IMAGE_PREVIEW", "SPRITE", "WAVEFORM", "POSTER" ]
       },
       "CommonResponsePlaybackDataResponseDto" : {
         "type" : "object",

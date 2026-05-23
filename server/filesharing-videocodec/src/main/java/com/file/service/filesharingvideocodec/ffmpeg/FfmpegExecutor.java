@@ -51,6 +51,7 @@ public class FfmpegExecutor {
         boolean isTest = encodingConfig.isTest();
         String inputPath;
         String outputDir;
+        String inputKey = null;
 
         try {
             // 1. đánh dấu job là PROCESSING
@@ -66,7 +67,7 @@ public class FfmpegExecutor {
                 // chế độ PRODUCTION: lấy đầu vào từ MinIO, đầu ra tới thư mục tạm
                 ProcessingJobEntity job = jobService.findById(jobId)
                         .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
-                String inputKey = job.getAssetId();
+                inputKey = job.getAssetId();
                 inputPath = minioUploader.generatePresignedUrl(inputKey, 4);
                 outputDir = tempFileManager.createJobDir(jobId);
                 log.info("[PROD] job {}: inputKey={}, outputDir={}", jobId, inputKey, outputDir);
@@ -115,7 +116,7 @@ public class FfmpegExecutor {
                     log.info("[TEST] job {} hoan tat. dau ra tai: {}", jobId, outputDir);
                 } else {
                     // PRODUCTION: tải lên MinIO, sau đó dọn dẹp
-                    String playlistUrl = minioUploader.uploadAll(jobId, outputDir);
+                    String playlistUrl = minioUploader.uploadAll(inputKey, outputDir);
                     jobService.markCompleted(jobId, List.of(playlistUrl), playlistUrl);
                     tempFileManager.deleteJobDir(jobId);
                     log.info("[PROD] job {} hoan tat. playlist: {}", jobId, playlistUrl);

@@ -149,19 +149,25 @@ public class ImageJobExecutor {
 
             jobService.updateProgress(jobId, 80, "UPLOADING");
 
-            // tải lên kết quả song song
-            String outputPrefix = "processed/" + jobId;
-            List<MinioStorageClient.UploadItem> uploadItems = results.stream()
-                    .map(r -> new MinioStorageClient.UploadItem(r.getFileName(), r.getData(), r.getContentType()))
-                    .toList();
-            storageClient.uploadAllParallel(outputPrefix, uploadItems);
+            VipsResult thumb = results.stream()
+                    .filter(r -> r.getFileName().equals("thumb.webp"))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("thumb.webp not found in processing results"));
+            VipsResult preview = results.stream()
+                    .filter(r -> r.getFileName().equals("preview.webp"))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("preview.webp not found in processing results"));
 
-            List<String> outputKeys = results.stream()
-                    .map(r -> outputPrefix + "/" + r.getFileName())
-                    .toList();
+            storageClient.uploadThumbnail(inputKey, thumb.getData(), thumb.getContentType());
+            try {
+                storageClient.uploadPreview(inputKey, preview.getData(), preview.getContentType());
+            } catch (Exception e) {
+                storageClient.rollbackThumbnail(inputKey);
+                throw e;
+            }
 
-            jobService.markCompleted(jobId, outputKeys, outputPrefix + "/thumb.webp");
-            log.info("[prod] job {} hoan tat. tien to dau ra: {}", jobId, outputPrefix);
+            jobService.markCompleted(jobId, List.of(inputKey), inputKey);
+            log.info("[prod] job {} hoan tat. objectKey: {}", jobId, inputKey);
 
             // dọn dẹp temp dir
             tempFileManager.deleteJobDir(jobId);

@@ -74,9 +74,9 @@ public class MinioUploader {
      * @param outputDir thư mục cục bộ chứa index.m3u8 và các tệp seg_*.ts
      * @return khoá đối tượng MinIO của playlist đã tải lên
      */
-    public String uploadAll(String jobId, String outputDir) throws Exception {
+    public String uploadAll(String inputKey, String outputDir) throws Exception {
         File dir = new File(outputDir);
-        String prefix = "videos/" + jobId;
+        String prefix = inputKey;
 
         // tách các tệp .ts và tệp .m3u8
         File[] tsFiles = dir.listFiles((d, name) -> name.endsWith(".ts"));
@@ -89,8 +89,8 @@ public class MinioUploader {
             throw new RuntimeException("index.m3u8 not found in " + outputDir);
         }
 
-        log.info("job {}: dang tai len {} phan doan ts + 1 m3u8 len MinIO (kich thuoc lo: {})",
-                jobId, tsFiles.length, batchSize);
+        log.info("inputKey {}: dang tai len {} phan doan ts + 1 m3u8 len MinIO (kich thuoc lo: {})",
+                inputKey, tsFiles.length, batchSize);
 
         List<String> uploadedKeys = new ArrayList<>();
 
@@ -100,7 +100,7 @@ public class MinioUploader {
 
             for (int i = 0; i < batches.size(); i++) {
                 List<File> batch = batches.get(i);
-                log.info("job {}: dang tai len lo {}/{} ({} tep)", jobId, i + 1, batches.size(), batch.size());
+                log.info("inputKey {}: dang tai len lo {}/{} ({} tep)", inputKey, i + 1, batches.size(), batch.size());
 
                 CompletableFuture<?>[] futures = batch.stream()
                         .map(file -> CompletableFuture.runAsync(() -> {
@@ -125,14 +125,14 @@ public class MinioUploader {
             uploadFile(playlistKey, m3u8File);
             uploadedKeys.add(playlistKey);
 
-            log.info("job {}: tat ca {} tep da duoc tai len MinIO thanh cong", jobId, uploadedKeys.size());
+            log.info("inputKey {}: tat ca {} tep da duoc tai len MinIO thanh cong", inputKey, uploadedKeys.size());
             return playlistKey;
 
         } catch (Exception e) {
             // khôi phục: xoá bất kỳ đối tượng nào đã được tải lên thành công
-            log.error("job {}: tai len that bai, dang khoi phuc {} doi tuong da tai len", jobId, uploadedKeys.size());
+            log.error("inputKey {}: tai len that bai, dang khoi phuc {} doi tuong da tai len", inputKey, uploadedKeys.size());
             rollback(uploadedKeys);
-            throw new RuntimeException("MinIO upload failed for job " + jobId, e);
+            throw new RuntimeException("MinIO upload failed for inputKey " + inputKey, e);
         }
     }
 

@@ -28,6 +28,7 @@ minio:
   buckets:
     files: file-sharing
     thumbnails: thumbnail-bucket
+    image-preview: image-preview-bucket
 
 image:
   processing:
