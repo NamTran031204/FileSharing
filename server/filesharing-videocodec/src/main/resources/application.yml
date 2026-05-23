@@ -32,7 +32,7 @@ minio:
 
 video:
   encoding:
-    is-test: true
+    is-test: false
     ffmpeg:
       path: ${FFMPEG_PATH:E:/DaiCuongBK/Project3/FileSharing/server/filesharing-videocodec/src/main/resources/ffmpeg/bin/ffmpeg.exe}
       timeout: 3600000
@@ -62,7 +62,7 @@ video:
       base-dir: ${java.io.tmpdir}/encode
       cleanup-age-hours: 24
     output:
-      bucket: videos
+      bucket: file-sharing
 
 resilience4j:
   bulkhead:
