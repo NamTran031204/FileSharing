@@ -97,7 +97,7 @@ class AssetStore extends CommonPagingStore{
                 body: {
                     maxResultCount: this.pageSize,
                     skipCount: this.skipCount,
-                    sorting: this.sorting,
+                    // sorting: this.sorting,
                     filter: { projectId, folderId, isActive: true },
                 },
             });

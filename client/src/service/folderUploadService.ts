@@ -59,7 +59,6 @@ export const createFolderTree = async (input: CreateFolderTreeInput): Promise<Cr
         body: {
             projectId: input.projectId,
             parentFolderId: input.parentFolderId,
-            baseFolderPath: input.baseFolderPath,
             rootFolderName: input.rootFolderName,
             folders: input.folderNodes,
         },
