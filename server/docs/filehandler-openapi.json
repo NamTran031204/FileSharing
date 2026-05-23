@@ -939,7 +939,7 @@
         }
       }
     },
-    "/api/folder/restore/{folderId}" : {
+    "/api/folder/restore-from-trash/{folderId}" : {
       "post" : {
         "tags" : [ "folder-controller" ],
         "operationId" : "restoreFolder",
@@ -958,6 +958,41 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseFolderEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/folder/move-to-trash/{folderId}" : {
+      "post" : {
+        "tags" : [ "folder-controller" ],
+        "operationId" : "archiveFolder",
+        "parameters" : [ {
+          "name" : "folderId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseFolderArchiveResponseDTO"
                 }
               }
             }
@@ -1143,41 +1178,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseFolderEntity"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - Invalid or missing JWT token"
-          },
-          "403" : {
-            "description" : "Forbidden - Access denied"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/folder/archive/{folderId}" : {
-      "post" : {
-        "tags" : [ "folder-controller" ],
-        "operationId" : "archiveFolder",
-        "parameters" : [ {
-          "name" : "folderId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseFolderArchiveResponseDTO"
                 }
               }
             }
@@ -1913,6 +1913,76 @@
         }
       }
     },
+    "/api/asset/undo-delete/{assetId}" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "undoDelete",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/restore-from-trash/{assetId}" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "restoreFromTrash",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/asset/move" : {
       "post" : {
         "tags" : [ "asset-controller" ],
@@ -1934,6 +2004,41 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseAssetEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/move-to-trash/{assetId}" : {
+      "post" : {
+        "tags" : [ "asset-controller" ],
+        "operationId" : "moveToTrash",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseString"
                 }
               }
             }
@@ -2751,13 +2856,6 @@
           "name" : "projectId",
           "in" : "path",
           "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "currentFolderId",
-          "in" : "query",
-          "required" : false,
           "schema" : {
             "type" : "string"
           }
@@ -4235,6 +4333,40 @@
         "type" : "string",
         "enum" : [ "INHERIT", "RESTRICTED", "PUBLIC" ]
       },
+      "CommonResponseFolderArchiveResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FolderArchiveResponseDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FolderArchiveResponseDTO" : {
+        "type" : "object",
+        "properties" : {
+          "archivedFolderIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "archivedAssetIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
       "FolderFilterRequestDTO" : {
         "type" : "object",
         "properties" : {
@@ -4446,40 +4578,6 @@
             "$ref" : "#/components/schemas/FolderVisibility"
           },
           "restrictedUserIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }
-      },
-      "CommonResponseFolderArchiveResponseDTO" : {
-        "type" : "object",
-        "properties" : {
-          "isSuccessful" : {
-            "type" : "boolean"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/FolderArchiveResponseDTO"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          }
-        }
-      },
-      "FolderArchiveResponseDTO" : {
-        "type" : "object",
-        "properties" : {
-          "archivedFolderIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "archivedAssetIds" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -5552,6 +5650,9 @@
           },
           "isActive" : {
             "type" : "boolean"
+          },
+          "isTrash" : {
+            "type" : "boolean"
           }
         }
       },
@@ -6304,7 +6405,7 @@
       },
       "AuditAction" : {
         "type" : "string",
-        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION" ]
+        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION", "RESTORE" ]
       },
       "AuditLogFilterDTO" : {
         "type" : "object",
@@ -6594,21 +6695,6 @@
           }
         }
       },
-      "FolderBreadcrumbItemDTO" : {
-        "type" : "object",
-        "properties" : {
-          "folderId" : {
-            "type" : "string"
-          },
-          "folderName" : {
-            "type" : "string"
-          },
-          "level" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
       "FolderTreeItemDTO" : {
         "type" : "object",
         "properties" : {
@@ -6647,12 +6733,6 @@
         "properties" : {
           "projectId" : {
             "type" : "string"
-          },
-          "breadcrumb" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FolderBreadcrumbItemDTO"
-            }
           },
           "tree" : {
             "type" : "array",
