@@ -16,8 +16,9 @@ public class ProcessingController {
 
     private final ProcessingService processingService;
 
-    @GetMapping("/version/{versionId}")
-    public CommonResponse<ProcessingStatusResponseDto> getProcessingStatus(@PathVariable("versionId") String versionId) {
-        return CommonResponse.success(processingService.getProcessingStatus(versionId));
+    @GetMapping("/{assetId}/{versionNumber}")
+    public CommonResponse<ProcessingStatusResponseDto> getProcessingStatus(@PathVariable("assetId") String assetId,
+                                                                           @PathVariable("versionNumber") Integer versionNumber) {
+        return CommonResponse.success(processingService.getProcessingStatus(assetId, versionNumber));
     }
 }

@@ -39,9 +39,9 @@ public class ProcessingServiceImpl implements ProcessingService {
     private final MinIoService minIoService;
 
     @Override
-    public ProcessingStatusResponseDto getProcessingStatus(String versionId) {
-        MetadataEntity version = assetService.getVersionById(versionId);
-        ProcessingJobEntity job = processingJobRepo.findById(versionId).orElse(null);
+    public ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber) {
+        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        ProcessingJobEntity job = processingJobRepo.findById(version.getFileId()).orElse(null);
 
         String errorMessage = version.getProcessingError();
         if (errorMessage == null && job != null && job.getResult() != null) {
@@ -49,7 +49,7 @@ public class ProcessingServiceImpl implements ProcessingService {
         }
 
         return ProcessingStatusResponseDto.builder()
-                .versionId(version.getFileId())
+                .versionNumber(version.getVersionNumber())
                 .processingStatus(version.getProcessingStatus())
                 .jobStatus(job != null ? job.getStatus() : null)
                 .progress(job != null ? job.getProgress() : null)
@@ -58,8 +58,8 @@ public class ProcessingServiceImpl implements ProcessingService {
     }
 
     @Override
-    public PlaybackDataResponseDto getPlaybackData(String versionId) {
-        MetadataEntity version = assetService.getVersionById(versionId);
+    public PlaybackDataResponseDto getPlaybackData(String assetId, Integer versionNumber) {
+        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
 
         if (version.getStatus() != UploadStatus.COMPLETED) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "version is not completed");
@@ -69,11 +69,11 @@ public class ProcessingServiceImpl implements ProcessingService {
             ProcessingStatus processingStatus = version.getProcessingStatus();
             if (processingStatus == ProcessingStatus.READY) {
                 MediaRenditionEntity hlsRendition = mediaRenditionRepo
-                        .findFirstByVersionIdAndRenditionType(version.getFileId(), RenditionType.HLS)
+                        .findFirstByMetadataIdAndRenditionType(version.getFileId(), RenditionType.HLS)
                         .orElse(null);
 
                 return PlaybackDataResponseDto.builder()
-                        .versionId(version.getFileId())
+                        .versionNumber(version.getVersionNumber())
                         .assetId(version.getAssetId())
                         .processingStatus(processingStatus)
                         .manifestKey(hlsRendition != null ? hlsRendition.getManifestKey() : null)
@@ -88,7 +88,7 @@ public class ProcessingServiceImpl implements ProcessingService {
             }
 
             return PlaybackDataResponseDto.builder()
-                    .versionId(version.getFileId())
+                    .versionNumber(version.getVersionNumber())
                     .assetId(version.getAssetId())
                     .processingStatus(processingStatus)
                     .build();
@@ -96,7 +96,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
         String imageUrl = resolveDownloadUrl(version);
         return PlaybackDataResponseDto.builder()
-                .versionId(version.getFileId())
+                .versionNumber(version.getVersionNumber())
                 .assetId(version.getAssetId())
                 .processingStatus(version.getProcessingStatus())
                 .imageUrl(imageUrl)
@@ -104,9 +104,9 @@ public class ProcessingServiceImpl implements ProcessingService {
     }
 
     @Override
-    public List<MediaRenditionEntity> getRenditions(String versionId) {
-        MetadataEntity version = assetService.getVersionById(versionId);
-        return mediaRenditionRepo.findByVersionId(version.getFileId());
+    public List<MediaRenditionEntity> getRenditions(String assetId, Integer versionNumber) {
+        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        return mediaRenditionRepo.findByMetadataId(version.getFileId());
     }
 
     @Override
@@ -133,8 +133,8 @@ public class ProcessingServiceImpl implements ProcessingService {
 
         ProcessingJobEntity saved = processingJobRepo.save(job);
 
-        String versionId = job.getVersionId() != null ? job.getVersionId() : job.getJobId();
-        metadataRepo.findById(versionId).ifPresent(version -> {
+        String metadataId = job.getMetadataId() != null ? job.getMetadataId() : job.getJobId();
+        metadataRepo.findById(metadataId).ifPresent(version -> {
             version.setProcessingStatus(ProcessingStatus.FAILED);
             version.setProcessingError("CANCELLED");
             version.setProcessingCompleteAt(Instant.now());

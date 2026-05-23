@@ -23,6 +23,7 @@ public class ProcessingJobEntity extends EntityAuditBase {
     @Id
     private String jobId;
 
+    private String metadataId;
     private Integer versionNumber;
     private String assetId;
 

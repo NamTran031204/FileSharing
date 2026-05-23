@@ -19,13 +19,15 @@ public class PlaybackController {
 
     private final ProcessingService processingService;
 
-    @GetMapping("/{versionId}/playback")
-    public CommonResponse<PlaybackDataResponseDto> getPlaybackData(@PathVariable("versionId") String versionId) {
-        return CommonResponse.success(processingService.getPlaybackData(versionId));
+    @GetMapping("/{assetId}/{versionNumber}/playback")
+    public CommonResponse<PlaybackDataResponseDto> getPlaybackData(@PathVariable("assetId") String assetId,
+                                                                   @PathVariable("versionNumber") Integer versionNumber) {
+        return CommonResponse.success(processingService.getPlaybackData(assetId, versionNumber));
     }
 
-    @GetMapping("/{versionId}/renditions")
-    public CommonResponse<List<MediaRenditionEntity>> getRenditions(@PathVariable("versionId") String versionId) {
-        return CommonResponse.success(processingService.getRenditions(versionId));
+    @GetMapping("/{assetId}/{versionNumber}/renditions")
+    public CommonResponse<List<MediaRenditionEntity>> getRenditions(@PathVariable("assetId") String assetId,
+                                                                    @PathVariable("versionNumber") Integer versionNumber) {
+        return CommonResponse.success(processingService.getRenditions(assetId, versionNumber));
     }
 }

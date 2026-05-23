@@ -8,11 +8,11 @@ import org.example.filesharing.entities.models.ProcessingJobEntity;
 import java.util.List;
 
 public interface ProcessingService {
-    ProcessingStatusResponseDto getProcessingStatus(String versionId);
+    ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber);
 
-    PlaybackDataResponseDto getPlaybackData(String versionId);
+    PlaybackDataResponseDto getPlaybackData(String assetId, Integer versionNumber);
 
-    List<MediaRenditionEntity> getRenditions(String versionId);
+    List<MediaRenditionEntity> getRenditions(String assetId, Integer versionNumber);
 
     ProcessingJobEntity getJob(String jobId);
 
