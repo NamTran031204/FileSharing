@@ -10,9 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface MediaRenditionRepo extends MongoRepository<MediaRenditionEntity, String> {
-    Optional<MediaRenditionEntity> findFirstByVersionIdAndRenditionType(String versionId, RenditionType renditionType);
+    Optional<MediaRenditionEntity> findFirstByMetadataIdAndRenditionType(String metadataId, RenditionType renditionType);
 
-    List<MediaRenditionEntity> findByVersionId(String versionId);
+    List<MediaRenditionEntity> findByMetadataId(String metadataId);
 
-    long countByVersionId(String versionId);
+    long countByMetadataId(String metadataId);
 }

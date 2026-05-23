@@ -19,6 +19,7 @@ public class MediaRenditionEntity extends EntityAuditBase {
     @Id
     private String renditionId;
 
+    private String metadataId;
     private Integer versionNumber;
     private String assetId;
 
