@@ -1,5 +1,5 @@
 package org.example.filesharing.enums;
 
 public enum Shape {
-    RECTANGLE, CIRCLE, POLYGON, FREEFORM, DOT
+    RECT, CIRCLE, ARROW, TEXT, DOT
 }
