@@ -1,19 +1,30 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.annotations.AnnotationsCreateUpdateDTO;
-import org.example.filesharing.entities.dtos.annotations.AnnotationsFilterDTO;
+import org.example.filesharing.entities.dtos.annotations.*;
 import org.example.filesharing.entities.models.AnnotationsEntity;
+import org.example.filesharing.enums.AnnotationStatus;
+
+import java.util.List;
 
 public interface AnnotationsService {
-    AnnotationsEntity createNewAnnotation(AnnotationsCreateUpdateDTO dto);
 
-    AnnotationsEntity updateAnnotationDetail(AnnotationsCreateUpdateDTO dto);
+    AnnotationsEntity createAnnotation(AnnotationCreateDTO dto);
 
-    PageResult<AnnotationsEntity> getAnnotationPage(PageRequestDto<AnnotationsFilterDTO> dto);
+    AnnotationsEntity editAnnotation(AnnotationEditDTO dto);
 
-    AnnotationsEntity getAnnotationById(String annotationId);
+    AnnotationsEntity resolveAnnotation(AnnotationIdDTO dto);
 
-    String deleteAnnotation(String annotationId);
+    AnnotationsEntity reopenAnnotation(AnnotationIdDTO dto);
+
+    String archiveAnnotation(AnnotationIdDTO dto);
+
+    String deleteAnnotation(AnnotationIdDTO dto);
+
+    List<AnnotationsEntity> listByAsset(String assetId, Integer versionNumber, AnnotationStatus status);
+
+    List<AnnotationsEntity> listReplies(String threadRootId);
+
+    AnnotationsEntity getById(String annotationId);
+
+    AnnotationSummaryResponse getSummary(String assetId, Integer versionNumber);
 }

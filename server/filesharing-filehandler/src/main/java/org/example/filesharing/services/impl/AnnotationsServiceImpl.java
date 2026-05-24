@@ -1,453 +1,474 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
-import org.example.filesharing.entities.dtos.annotations.AnnotationsCreateUpdateDTO;
-import org.example.filesharing.entities.dtos.annotations.AnnotationsFilterDTO;
-import org.example.filesharing.entities.models.*;
-import org.example.filesharing.entities.models.annotation.AnnotationRegion;
-import org.example.filesharing.entities.models.annotation.AnnotationTimeCode;
-import org.example.filesharing.entities.models.folder.FolderPermission;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
+import org.example.filesharing.entities.dtos.annotations.*;
+import org.example.filesharing.entities.models.AnnotationsEntity;
 import org.example.filesharing.enums.AnnotationStatus;
-import org.example.filesharing.enums.AnnotationType;
-import org.example.filesharing.enums.auth.UserGrantedRole;
-import org.example.filesharing.enums.permission.GrantedProjectPermission;
 import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AnnotationsRepo;
 import org.example.filesharing.repositories.AssetRepo;
-import org.example.filesharing.repositories.FolderRepo;
-import org.example.filesharing.repositories.ProjectRepo;
-import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.AnnotationsService;
+import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.baseService.BaseAuditService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
 import org.example.filesharing.utils.StringUtils;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-
-import static org.example.filesharing.utils.NumberUtils.requireNumber;
-import static org.example.filesharing.utils.ProjectPermissionResolver.resolveProjectPermissions;
-import static org.example.filesharing.utils.StringUtils.trimToNull;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> implements AnnotationsService {
 
     private final AnnotationsRepo annotationsRepo;
-    private final MongoTemplate mongoTemplate;
-    private final AuditService auditService;
-    private final FolderRepo folderRepo;
-    private final ProjectRepo projectRepo;
     private final AssetRepo assetRepo;
+    private final AuditService auditService;
 
+    private static final Sort SORT_BY_CREATED_AT_ASC = Sort.by(Sort.Direction.ASC, "createdAt");
+
+    // ================================================================
+    //  3.1. Tao comment / reply
+    // ================================================================
     @Override
     @Transactional
-    public AnnotationsEntity createNewAnnotation(AnnotationsCreateUpdateDTO dto) {
-        validateCreatePayload(dto);
-
-        AssetEntity assetEntity = assetRepo.findById(dto.getAssetId()).orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
-        ensureCommentPermission(assetEntity);
-
-        AnnotationType annotationType = dto.getAnnotationType();
-        AnnotationTimeCode normalizedTimeCode = normalizeTimeCode(dto.getTimeCode());
-        AnnotationRegion normalizedRegion = normalizeRegion(dto.getRegion());
-        Integer frameNumber = normalizeFrameNumber(dto.getFrameNumber());
-
-        validateByType(annotationType, normalizedTimeCode, normalizedRegion, frameNumber);
-
-        AnnotationStatus status = dto.getStatus() != null ? dto.getStatus() : AnnotationStatus.OPEN;
-
-        AnnotationsEntity entity = AnnotationsEntity.builder()
-                .assetId(StringUtils.requireNormalized(dto.getAssetId(), "assetId is required"))
-                .versionNumber((Integer) requireNumber(dto.getVersionNumber(), "versionId is required"))
-                .annotationType(annotationType)
-                .timeCode(annotationType == AnnotationType.TIMECODE ? normalizedTimeCode : null)
-                .region(annotationType == AnnotationType.TIMECODE ? null : normalizedRegion)
-                .frameNumber(annotationType == AnnotationType.FRAME_REGION ? frameNumber : null)
-                .status(status)
-                .threadId(trimToNull(dto.getThreadId()))
-                .build();
-
-        buildAudit(entity, true);
-
-        return annotationsRepo.save(entity);
-    }
-
-    @Override
-    @Transactional
-    public AnnotationsEntity updateAnnotationDetail(AnnotationsCreateUpdateDTO dto) {
-        validateUpdatePayload(dto);
-
-        String annotationId = dto.getAnnotationId().trim();
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(annotationId);
-
-        if (StringUtils.isNotNullOrBlank(dto.getAssetId()) && !dto.getAssetId().trim().equals(entity.getAssetId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is immutable");
-        }
-
-        AssetEntity assetEntity = assetRepo.findById(dto.getAssetId()).orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
-        ensureCommentPermission(assetEntity);
-
-        if (dto.getVersionNumber() != null && !dto.getVersionNumber().equals(entity.getVersionNumber())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionId is immutable");
-        }
-
-        if (dto.getAnnotationType() != null) {
-            entity.setAnnotationType(dto.getAnnotationType());
-        }
-
-        if (dto.getTimeCode() != null) {
-            entity.setTimeCode(normalizeTimeCode(dto.getTimeCode()));
-        }
-
-        if (dto.getRegion() != null) {
-            entity.setRegion(normalizeRegion(dto.getRegion()));
-        }
-
-        if (dto.getFrameNumber() != null) {
-            entity.setFrameNumber(normalizeFrameNumber(dto.getFrameNumber()));
-        }
-
-        if (dto.getThreadId() != null) {
-            entity.setThreadId(trimToNull(dto.getThreadId()));
-        }
-
-        if (dto.getStatus() != null) {
-            entity.setStatus(dto.getStatus());
-            if (dto.getStatus() == AnnotationStatus.RESOLVED) {
-                entity.setResolvedAt(Instant.now());
-                entity.setResolvedBy(auditService.getCurrentUserId());
-            } else {
-                entity.setResolvedAt(null);
-                entity.setResolvedBy(null);
-            }
-        }
-
-        normalizeEntityByType(entity);
-        validateByType(entity.getAnnotationType(), entity.getTimeCode(), entity.getRegion(), entity.getFrameNumber());
-
-        buildAudit(entity, false);
-        return annotationsRepo.save(entity);
-    }
-
-    @Override
-    public PageResult<AnnotationsEntity> getAnnotationPage(PageRequestDto<AnnotationsFilterDTO> dto) {
-        PageRequestDto<AnnotationsFilterDTO> pageRequest = dto != null ? dto : new PageRequestDto<>();
-        AnnotationsFilterDTO filter = pageRequest.getFilter();
-
-        Query query = new Query();
-        query.addCriteria(Criteria.where("isActive").is(true));
-
-        if (filter != null) {
-            if (StringUtils.isNotNullOrBlank(filter.getAssetId())) {
-                query.addCriteria(Criteria.where("assetId").is(filter.getAssetId().trim()));
-            }
-
-            if (filter.getVersionNumber() != null) {
-                query.addCriteria(Criteria.where("versionId").is(filter.getVersionNumber()));
-            }
-
-            if (StringUtils.isNotNullOrBlank(filter.getThreadId())) {
-                query.addCriteria(Criteria.where("threadId").is(filter.getThreadId().trim()));
-            }
-
-            if (filter.getAnnotationType() != null) {
-                query.addCriteria(Criteria.where("annotationType").is(filter.getAnnotationType()));
-            }
-
-            if (filter.getStatus() != null) {
-                query.addCriteria(Criteria.where("status").is(filter.getStatus()));
-            }
-
-            if (StringUtils.isNotNullOrBlank(filter.getCreatedBy())) {
-                query.addCriteria(Criteria.where("createdBy").is(filter.getCreatedBy().trim()));
-            }
-
-            if (StringUtils.isNotNullOrBlank(filter.getCreatedByEmail())) {
-                query.addCriteria(Criteria.where("createdByEmail").is(filter.getCreatedByEmail().trim()));
-            }
-
-            if (filter.getFrameNumber() != null) {
-                query.addCriteria(Criteria.where("frameNumber").is(normalizeFrameNumber(filter.getFrameNumber())));
-            }
-
-            if (filter.getFromStartMs() != null || filter.getToStartMs() != null) {
-                Criteria startMsCriteria = Criteria.where("timeCode.startMs");
-                if (filter.getFromStartMs() != null && filter.getToStartMs() != null) {
-                    query.addCriteria(startMsCriteria.gte(filter.getFromStartMs()).lte(filter.getToStartMs()));
-                } else if (filter.getFromStartMs() != null) {
-                    query.addCriteria(startMsCriteria.gte(filter.getFromStartMs()));
-                } else {
-                    query.addCriteria(startMsCriteria.lte(filter.getToStartMs()));
-                }
-            }
-
-            if (filter.getFromCreatedAt() != null || filter.getToCreatedAt() != null) {
-                Criteria createdAtCriteria = Criteria.where("createdAt");
-                if (filter.getFromCreatedAt() != null && filter.getToCreatedAt() != null) {
-                    query.addCriteria(createdAtCriteria.gte(filter.getFromCreatedAt()).lte(filter.getToCreatedAt()));
-                } else if (filter.getFromCreatedAt() != null) {
-                    query.addCriteria(createdAtCriteria.gte(filter.getFromCreatedAt()));
-                } else {
-                    query.addCriteria(createdAtCriteria.lte(filter.getToCreatedAt()));
-                }
-            }
-        }
-
-        long totalCount = mongoTemplate.count(query, AnnotationsEntity.class);
-
-        int maxResultCount = pageRequest.getMaxResultCount() == null || pageRequest.getMaxResultCount() <= 0
-                ? 10
-                : pageRequest.getMaxResultCount();
-        int skipCount = pageRequest.getSkipCount() == null || pageRequest.getSkipCount() < 0
-                ? 0
-                : pageRequest.getSkipCount();
-        int pageIndex = skipCount / maxResultCount;
-
-        Sort sort = parseSortFromRequest(pageRequest.getSorting());
-        query.with(PageRequest.of(pageIndex, maxResultCount, sort));
-
-        List<AnnotationsEntity> data = mongoTemplate.find(query, AnnotationsEntity.class);
-
-        return PageResult.<AnnotationsEntity>builder()
-                .totalCount(totalCount)
-                .data(data)
-                .build();
-    }
-
-    @Override
-    public AnnotationsEntity getAnnotationById(String annotationId) {
-        if (StringUtils.isNullOrBlank(annotationId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
-        }
-
-        return getActiveAnnotationOrThrow(annotationId.trim());
-    }
-
-    @Override
-    @Transactional
-    public String deleteAnnotation(String annotationId) {
-        if (StringUtils.isNullOrBlank(annotationId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
-        }
-
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(annotationId.trim());
-        buildAudit(entity, false);
-        entity.setIsActive(false);
-        annotationsRepo.save(entity);
-
-        return "Annotation deleted successfully";
-    }
-
-    private void ensureCommentPermission(AssetEntity asset) {
-        if (asset.getFolderId() != null) {
-            FolderEntity folder = folderRepo.findById(asset.getFolderId())
-                    .orElseThrow(() -> new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId not found"));
-            ensureFolderPermission(folder, GrantedProjectPermission.COMMENT);
-        } else {
-            ProjectEntity project = projectRepo.findById(asset.getProjectId())
-                    .orElseThrow(() -> new UserBusinessException(ErrorCode.BAD_REQUEST, "project not found"));
-            ensureProjectPermission(project, GrantedProjectPermission.COMMENT);
-        }
-    }
-
-    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
-
-        List<FolderPermission> userPermissions = folder.getUserPermissions();
-        if (userPermissions == null || userPermissions.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-
-        String currentUserId = currentUser.getUserId();
-        for (FolderPermission fp : userPermissions) {
-            if (Objects.equals(fp.getUserId(), currentUserId)) {
-                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
-                    return;
-                }
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-        }
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-    }
-
-    private void ensureProjectPermission(ProjectEntity project, GrantedProjectPermission required) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
-
-        List<ProjectCollaborator> collaborators = project.getCollaborators();
-        if (collaborators == null || collaborators.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-
-        String currentUserId = currentUser.getUserId();
-        for (ProjectCollaborator collaborator : collaborators) {
-            if (Objects.equals(collaborator.getUserId(), currentUserId)) {
-                if (ProjectPermissionResolver.hasPermission(collaborator.getProjectPermissions(), required)) {
-                    return;
-                }
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-        }
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
-    }
-
-    private void validateCreatePayload(AnnotationsCreateUpdateDTO dto) {
+    public AnnotationsEntity createAnnotation(AnnotationCreateDTO dto) {
         if (dto == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
         }
 
+        String parentCommentId = StringUtils.isNullOrBlank(dto.getParentCommentId())
+                ? null : dto.getParentCommentId().trim();
+
+        if (parentCommentId == null) {
+            // --- Tao root comment ---
+            return createRootComment(dto);
+        } else {
+            // --- Tao reply ---
+            return createReply(dto, parentCommentId);
+        }
+    }
+
+    private AnnotationsEntity createRootComment(AnnotationCreateDTO dto) {
+        // 1. Xac thuc assetId ton tai va versionNumber hop le
         if (StringUtils.isNullOrBlank(dto.getAssetId())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
         }
-
-        if (dto.getVersionNumber() != null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "version is required");
+        if (dto.getVersionNumber() == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
+        assetRepo.findById(dto.getAssetId().trim())
+                .orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
 
-        if (dto.getAnnotationType() == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationType is required");
-        }
+        // 2. Sinh annotationId moi
+        String annotationId = UUID.randomUUID().toString();
+
+        // 3-8. Build entity
+        AnnotationsEntity entity = AnnotationsEntity.builder()
+                .annotationId(annotationId)
+                .assetId(dto.getAssetId().trim())
+                .versionNumber(dto.getVersionNumber())
+                .commentBody(dto.getCommentBody())
+                .authorId(auditService.getCurrentUserId())
+                .mediaType(dto.getMediaType())
+                .timeCode(dto.getTimeCode())
+                .frameNumber(dto.getFrameNumber())
+                .region(dto.getRegion())
+                .status(AnnotationStatus.OPEN)
+                .parentCommentId(null)
+                .threadRootId(annotationId) // threadRootId = chinh annotationId vua tao
+                .build();
+
+        // 7. buildAudit — isActive=true, isTrash=false, createdBy/At
+        buildAudit(entity, true);
+
+        // 8. Luu document
+        AnnotationsEntity saved = annotationsRepo.save(entity);
+
+        // 9. TODO: gui notification cho userMentions
+        // if (dto.getCommentBody() != null && dto.getCommentBody().getUserMentions() != null) {
+        //     // TODO: gui notification
+        // }
+
+        // 10. Tra ve
+        return saved;
     }
 
-    private void validateUpdatePayload(AnnotationsCreateUpdateDTO dto) {
+    private AnnotationsEntity createReply(AnnotationCreateDTO dto, String parentCommentId) {
+        // 1. Xac thuc parentCommentId ton tai
+        AnnotationsEntity parentAnnotation = getActiveAnnotationOrThrow(parentCommentId);
+
+        // 2. Lay threadRootId tu annotation cha
+        String threadRootId = parentAnnotation.getThreadRootId();
+
+        // 3. Kiem tra annotation cha khong bi ARCHIVED
+        if (parentAnnotation.getStatus() == AnnotationStatus.ARCHIVED) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Cannot reply to an archived comment");
+        }
+
+        // 4. Sinh annotationId moi
+        String annotationId = UUID.randomUUID().toString();
+
+        // 5-9. Build entity — ke thua assetId, versionNumber tu annotation cha
+        AnnotationsEntity entity = AnnotationsEntity.builder()
+                .annotationId(annotationId)
+                .assetId(parentAnnotation.getAssetId())
+                .versionNumber(parentAnnotation.getVersionNumber())
+                .commentBody(dto.getCommentBody())
+                .authorId(auditService.getCurrentUserId())
+                .mediaType(parentAnnotation.getMediaType())
+                .timeCode(dto.getTimeCode())
+                .frameNumber(dto.getFrameNumber())
+                .region(dto.getRegion())
+                .status(AnnotationStatus.OPEN)
+                .parentCommentId(parentCommentId)
+                .threadRootId(threadRootId) // ke thua tu root
+                .build();
+
+        // 8. buildAudit
+        buildAudit(entity, true);
+
+        // 9. Luu document
+        AnnotationsEntity saved = annotationsRepo.save(entity);
+
+        // 10. TODO: gui notification cho userMentions
+        // if (dto.getCommentBody() != null && dto.getCommentBody().getUserMentions() != null) {
+        //     // TODO: gui notification
+        // }
+
+        // 11. TODO: gui notification cho authorId cua root comment
+        // notify parentAnnotation root author about new reply
+
+        // 12. Tra ve
+        return saved;
+    }
+
+    // ================================================================
+    //  3.2. Sua noi dung comment
+    // ================================================================
+    @Override
+    @Transactional
+    public AnnotationsEntity editAnnotation(AnnotationEditDTO dto) {
         if (dto == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
         }
-
         if (StringUtils.isNullOrBlank(dto.getAnnotationId())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
         }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+
+        // 3. Kiem tra quyen: chi authorId moi duoc sua
+        String currentUserId = auditService.getCurrentUserId();
+        if (!Objects.equals(entity.getAuthorId(), currentUserId)) {
+            throw new UserBusinessException(ErrorCode.FORBIDDEN, "Only the author can edit this annotation");
+        }
+
+        // 4. Kiem tra status != ARCHIVED
+        if (entity.getStatus() == AnnotationStatus.ARCHIVED) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Cannot edit an archived annotation");
+        }
+
+        // 5. Cap nhat commentBody va region
+        entity.setCommentBody(dto.getCommentBody());
+        entity.setRegion(dto.getRegion());
+
+        // 6. buildAudit(entity, false) — cap nhat updateBy/At
+        buildAudit(entity, false);
+
+        // 7. TODO: gui notification cho userMentions moi
+        // if (dto.getCommentBody() != null && dto.getCommentBody().getUserMentions() != null) {
+        //     // TODO: gui notification
+        // }
+
+        // 8. Luu va tra ve
+        return annotationsRepo.save(entity);
     }
 
+    // ================================================================
+    //  3.3. Resolve comment
+    // ================================================================
+    @Override
+    @Transactional
+    public AnnotationsEntity resolveAnnotation(AnnotationIdDTO dto) {
+        if (dto == null || StringUtils.isNullOrBlank(dto.getAnnotationId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
+        }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+
+        // 3. Kiem tra phai la root comment
+        if (entity.getParentCommentId() != null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Only root comments can be resolved");
+        }
+
+        // 4. Kiem tra status == OPEN
+        if (entity.getStatus() != AnnotationStatus.OPEN) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                    "Cannot resolve annotation with status: " + entity.getStatus());
+        }
+
+        // 5-8. Cap nhat status, resolvedAt, resolvedBy
+        entity.setStatus(AnnotationStatus.RESOLVED);
+        entity.setResolvedAt(Instant.now());
+        entity.setResolvedBy(auditService.getCurrentUserId());
+
+        // 9. buildAudit(entity, false)
+        buildAudit(entity, false);
+
+        // 10. Luu va tra ve
+        return annotationsRepo.save(entity);
+    }
+
+    // ================================================================
+    //  3.4. Reopen comment
+    // ================================================================
+    @Override
+    @Transactional
+    public AnnotationsEntity reopenAnnotation(AnnotationIdDTO dto) {
+        if (dto == null || StringUtils.isNullOrBlank(dto.getAnnotationId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
+        }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+
+        // 3. Kiem tra phai la root comment
+        if (entity.getParentCommentId() != null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Only root comments can be reopened");
+        }
+
+        // 4. Kiem tra status == RESOLVED
+        if (entity.getStatus() != AnnotationStatus.RESOLVED) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                    "Cannot reopen annotation with status: " + entity.getStatus());
+        }
+
+        // 5-7. Cap nhat status ve OPEN, xoa resolvedAt va resolvedBy
+        entity.setStatus(AnnotationStatus.OPEN);
+        entity.setResolvedAt(null);
+        entity.setResolvedBy(null);
+
+        // 8. buildAudit(entity, false)
+        buildAudit(entity, false);
+
+        // 9. Luu va tra ve
+        return annotationsRepo.save(entity);
+    }
+
+    // ================================================================
+    //  3.5. Archive comment
+    // ================================================================
+    @Override
+    @Transactional
+    public String archiveAnnotation(AnnotationIdDTO dto) {
+        if (dto == null || StringUtils.isNullOrBlank(dto.getAnnotationId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
+        }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+
+        // 3. Kiem tra phai la root comment
+        if (entity.getParentCommentId() != null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Only root comments can be archived");
+        }
+
+        // 4. Kiem tra status != ARCHIVED
+        if (entity.getStatus() == AnnotationStatus.ARCHIVED) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Annotation is already archived");
+        }
+
+        // 5. Kiem tra quyen: chi authorId cua root comment moi duoc archive
+        String currentUserId = auditService.getCurrentUserId();
+        if (!Objects.equals(entity.getAuthorId(), currentUserId)) {
+            throw new UserBusinessException(ErrorCode.FORBIDDEN, "Only the author can archive this annotation");
+        }
+
+        // 6. Cap nhat status = ARCHIVED tren root comment
+        entity.setStatus(AnnotationStatus.ARCHIVED);
+        buildAudit(entity, false);
+        annotationsRepo.save(entity);
+
+        // 7. Bulk update toan bo reply co cung threadRootId
+        List<AnnotationsEntity> replies = annotationsRepo
+                .findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(entity.getAnnotationId());
+        for (AnnotationsEntity reply : replies) {
+            reply.setStatus(AnnotationStatus.ARCHIVED);
+            buildAudit(reply, false);
+        }
+        if (!replies.isEmpty()) {
+            annotationsRepo.saveAll(replies);
+        }
+
+        // 8. Tra ve thong bao thanh cong
+        return "Annotation archived successfully";
+    }
+
+    // ================================================================
+    //  3.6. Xoa comment
+    // ================================================================
+    @Override
+    @Transactional
+    public String deleteAnnotation(AnnotationIdDTO dto) {
+        if (dto == null || StringUtils.isNullOrBlank(dto.getAnnotationId())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
+        }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+
+        // 3. Kiem tra quyen: chi authorId moi duoc xoa
+        String currentUserId = auditService.getCurrentUserId();
+        if (!Objects.equals(entity.getAuthorId(), currentUserId)) {
+            throw new UserBusinessException(ErrorCode.FORBIDDEN, "Only the author can delete this annotation");
+        }
+
+        if (entity.getParentCommentId() != null) {
+            // 4. Neu la reply: soft delete chi reply do
+            softDeleteAudit(entity);
+            annotationsRepo.save(entity);
+        } else {
+            // 5. Neu la root comment: soft delete root + toan bo replies
+            softDeleteAudit(entity);
+            annotationsRepo.save(entity);
+
+            List<AnnotationsEntity> replies = annotationsRepo
+                    .findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(entity.getAnnotationId());
+            for (AnnotationsEntity reply : replies) {
+                softDeleteAudit(reply);
+            }
+            if (!replies.isEmpty()) {
+                annotationsRepo.saveAll(replies);
+            }
+        }
+
+        // 6. Tra ve thong bao thanh cong
+        return "Annotation deleted successfully";
+    }
+
+    // ================================================================
+    //  3.7. Lay danh sach root comments cua asset/version
+    // ================================================================
+    @Override
+    public List<AnnotationsEntity> listByAsset(String assetId, Integer versionNumber, AnnotationStatus status) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+        if (versionNumber == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
+        }
+
+        // query: parentCommentId = null, isActive = true, sap xep theo createdAt ASC
+        if (status != null) {
+            return annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
+                    assetId.trim(), versionNumber, status, SORT_BY_CREATED_AT_ASC);
+        }
+        return annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrue(
+                assetId.trim(), versionNumber, SORT_BY_CREATED_AT_ASC);
+    }
+
+    // ================================================================
+    //  3.8. Lay danh sach replies cua mot root comment
+    // ================================================================
+    @Override
+    public List<AnnotationsEntity> listReplies(String threadRootId) {
+        if (StringUtils.isNullOrBlank(threadRootId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "threadRootId is required");
+        }
+
+        // 1-2. Load root comment, kiem tra ton tai, la root comment va isActive = true
+        AnnotationsEntity rootComment = getActiveAnnotationOrThrow(threadRootId.trim());
+        if (rootComment.getParentCommentId() != null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST,
+                    "threadRootId must refer to a root comment (parentCommentId must be null)");
+        }
+
+        // 4-6. Query replies, sap xep theo createdAt ASC
+        return annotationsRepo.findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(
+                threadRootId.trim(), SORT_BY_CREATED_AT_ASC);
+    }
+
+    // ================================================================
+    //  3.9. Lay chi tiet mot annotation
+    // ================================================================
+    @Override
+    public AnnotationsEntity getById(String annotationId) {
+        if (StringUtils.isNullOrBlank(annotationId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "annotationId is required");
+        }
+
+        // 1-2. Load annotation, kiem tra ton tai va isActive = true
+        return getActiveAnnotationOrThrow(annotationId.trim());
+    }
+
+    // ================================================================
+    //  3.10. Dashboard tong hop
+    // ================================================================
+    @Override
+    public AnnotationSummaryResponse getSummary(String assetId, Integer versionNumber) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+
+        List<AnnotationsEntity> allAnnotations;
+        List<AnnotationsEntity> rootComments;
+
+        if (versionNumber != null) {
+            allAnnotations = annotationsRepo.findByAssetIdAndVersionNumberAndIsActiveTrue(assetId.trim(), versionNumber);
+            rootComments = allAnnotations.stream()
+                    .filter(a -> a.getParentCommentId() == null)
+                    .collect(Collectors.toList());
+        } else {
+            allAnnotations = annotationsRepo.findByAssetIdAndIsActiveTrue(assetId.trim());
+            rootComments = allAnnotations.stream()
+                    .filter(a -> a.getParentCommentId() == null)
+                    .collect(Collectors.toList());
+        }
+
+        long openCount = rootComments.stream()
+                .filter(a -> a.getStatus() == AnnotationStatus.OPEN).count();
+        long resolvedCount = rootComments.stream()
+                .filter(a -> a.getStatus() == AnnotationStatus.RESOLVED).count();
+        long archivedCount = rootComments.stream()
+                .filter(a -> a.getStatus() == AnnotationStatus.ARCHIVED).count();
+        long totalThreads = rootComments.size();
+
+        long totalReplies = allAnnotations.stream()
+                .filter(a -> a.getParentCommentId() != null).count();
+
+        // tap hop participants tu authorId cua toan bo annotation (ca root va reply)
+        List<String> participants = allAnnotations.stream()
+                .map(AnnotationsEntity::getAuthorId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        return AnnotationSummaryResponse.builder()
+                .assetId(assetId.trim())
+                .versionNumber(versionNumber)
+                .totalThreads(totalThreads)
+                .open(openCount)
+                .resolved(resolvedCount)
+                .archived(archivedCount)
+                .totalReplies(totalReplies)
+                .participants(participants)
+                .build();
+    }
+
+    // ================================================================
+    //  Helper
+    // ================================================================
     private AnnotationsEntity getActiveAnnotationOrThrow(String annotationId) {
         return annotationsRepo.findByAnnotationIdAndIsActiveTrue(annotationId)
-                .orElseThrow(() -> new FileBusinessException(
-                        ErrorCode.FILE_NOT_FOUND,
+                .orElseThrow(() -> new UserBusinessException(
+                        ErrorCode.NOT_FOUND,
                         "Cannot find active annotation with id: " + annotationId
                 ));
-    }
-
-    private void normalizeEntityByType(AnnotationsEntity entity) {
-        AnnotationType annotationType = entity.getAnnotationType();
-        if (annotationType == AnnotationType.TIMECODE) {
-            entity.setRegion(null);
-            entity.setFrameNumber(null);
-            return;
-        }
-
-        entity.setTimeCode(null);
-        if (annotationType == AnnotationType.REGION) {
-            entity.setFrameNumber(null);
-        }
-    }
-
-    private void validateByType(
-            AnnotationType annotationType,
-            AnnotationTimeCode timeCode,
-            AnnotationRegion region,
-            Integer frameNumber
-    ) {
-        if (annotationType == AnnotationType.TIMECODE) {
-            if (timeCode == null || timeCode.getStartMs() == null || timeCode.getEndMs() == null) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "timeCode.startMs and timeCode.endMs are required");
-            }
-            if (timeCode.getEndMs() < timeCode.getStartMs()) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "timeCode.endMs must be greater than or equal to timeCode.startMs");
-            }
-            return;
-        }
-
-        if (region == null || region.getShape() == null || region.getPoints() == null || region.getPoints().isEmpty()) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "region with shape and points is required");
-        }
-
-        if (annotationType == AnnotationType.FRAME_REGION && frameNumber == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "frameNumber is required for FRAME_REGION");
-        }
-    }
-
-    private AnnotationTimeCode normalizeTimeCode(AnnotationTimeCode input) {
-        if (input == null) {
-            return null;
-        }
-
-        return AnnotationTimeCode.builder()
-                .startMs(input.getStartMs())
-                .endMs(input.getEndMs())
-                .build();
-    }
-
-    private AnnotationRegion normalizeRegion(AnnotationRegion input) {
-        if (input == null) {
-            return null;
-        }
-
-        return AnnotationRegion.builder()
-                .shape(input.getShape())
-                .points(input.getPoints())
-                .strokeColor(trimToNull(input.getStrokeColor()))
-                .strokeWidth(input.getStrokeWidth())
-                .fillColor(trimToNull(input.getFillColor()))
-                .build();
-    }
-
-    private Integer normalizeFrameNumber(Integer frameNumber) {
-        if (frameNumber == null) {
-            return null;
-        }
-
-        if (frameNumber < 0) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "frameNumber must be greater than or equal to 0");
-        }
-        return frameNumber;
-    }
-
-    private Sort parseSortFromRequest(String sorting) {
-        if (sorting == null || sorting.isBlank()) {
-            return Sort.unsorted();
-        }
-
-        String[] parts = sorting.split(",", 2);
-        if (parts.length < 2) {
-            return Sort.unsorted();
-        }
-
-        String directionRaw = parts[0].trim();
-        String field = parts[1].trim();
-        if (field.isEmpty()) {
-            return Sort.unsorted();
-        }
-
-        Sort.Direction direction = "DESC".equalsIgnoreCase(directionRaw)
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        return Sort.by(direction, field);
     }
 }
