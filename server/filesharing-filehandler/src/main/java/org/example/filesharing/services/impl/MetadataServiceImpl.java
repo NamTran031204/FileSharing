@@ -13,6 +13,7 @@ import org.example.filesharing.enums.UploadStatus;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.jobs.kafka.EmailProducer;
+import org.example.filesharing.jobs.kafka.ImageEncodeProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AuditService;
@@ -39,6 +40,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final PasswordEncoder passwordEncoder;
     private final EmailProducer emailProducer;
     private final VideoEncodeProducer videoEncodeProducer;
+    private final ImageEncodeProducer imageEncodeProducer;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
@@ -96,6 +98,8 @@ public class MetadataServiceImpl implements MetadataService {
         try {
             if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
                 videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
+            } else {
+                imageEncodeProducer.sendKafka(entity.getFileId(), entity.getObjectName());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
