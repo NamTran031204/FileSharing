@@ -11,7 +11,9 @@ import org.example.filesharing.entities.models.project.ProjectCollaborator;
 import org.example.filesharing.entities.models.project.ProjectStats;
 import org.example.filesharing.entities.models.AuditLogEntity;
 import org.example.filesharing.entities.models.ProjectEntity;
+import org.example.filesharing.entities.models.ReviewSessionEntity;
 import org.example.filesharing.entities.models.UserEntity;
+import org.example.filesharing.entities.models.review.ReviewerInfo;
 import org.example.filesharing.enums.AuditAction;
 import org.example.filesharing.enums.AuditTargetType;
 import org.example.filesharing.enums.ProjectStatus;
@@ -24,6 +26,7 @@ import org.example.filesharing.exceptions.specException.CommonException;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.ProjectRepo;
+import org.example.filesharing.repositories.ReviewSessionRepo;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
@@ -50,6 +53,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
     private final ProjectRepo projectRepo;
     private final UserRepo userRepo;
+    private final ReviewSessionRepo reviewSessionRepo;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final AuditLogService auditLogService;
@@ -379,6 +383,46 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         return project.getCollaborators();
+    }
+
+    @Override
+    public List<ProjectMemberDTO> getProjectMembers(String projectId, String searchQuery, String reviewSessionId) {
+        if (StringUtils.isNullOrBlank(projectId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
+        }
+
+        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
+        ensureProjectAccessOrAdmin(project);
+
+        Set<String> memberIds = new HashSet<>();
+        if (StringUtils.isNotNullOrBlank(project.getOwnerId())) {
+            memberIds.add(project.getOwnerId());
+        }
+
+        if (project.getCollaborators() != null) {
+            for (ProjectCollaborator collaborator : project.getCollaborators()) {
+                if (StringUtils.isNotNullOrBlank(collaborator.getUserId())) {
+                    memberIds.add(collaborator.getUserId());
+                }
+            }
+        }
+
+        if (memberIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String normalizedQuery = normalizeSearch(searchQuery);
+        List<ProjectMemberDTO> members = userRepo.findAllById(memberIds).stream()
+                .filter(user -> matchesSearch(user, normalizedQuery))
+                .map(this::mapToProjectMember)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        Set<String> prioritized = resolveReviewerPriority(project, reviewSessionId);
+        members.sort(Comparator
+                .comparing((ProjectMemberDTO member) -> !prioritized.contains(member.getUserId()))
+                .thenComparing(member -> normalizeSortKey(member.getName()), String.CASE_INSENSITIVE_ORDER));
+
+        return members;
     }
 
     @Override
@@ -784,6 +828,77 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (!hasProjectAccess(project)) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
+    }
+
+    private Set<String> resolveReviewerPriority(ProjectEntity project, String reviewSessionId) {
+        if (StringUtils.isNotNullOrBlank(reviewSessionId)) {
+            ReviewSessionEntity session = reviewSessionRepo.findByReviewSessionIdAndIsActiveTrue(reviewSessionId.trim())
+                    .orElse(null);
+            if (session != null
+                    && Objects.equals(session.getProjectId(), project.getProjectId())
+                    && session.getReviewers() != null) {
+                return session.getReviewers().stream()
+                        .map(ReviewerInfo::getUserId)
+                        .filter(StringUtils::isNotNullOrBlank)
+                        .collect(Collectors.toSet());
+            }
+        }
+
+        if (project.getCollaborators() == null) {
+            return Collections.emptySet();
+        }
+
+        return project.getCollaborators().stream()
+                .filter(collaborator -> collaborator.getProjectRole() == GrantedProjectRole.REVIEWER)
+                .map(ProjectCollaborator::getUserId)
+                .filter(StringUtils::isNotNullOrBlank)
+                .collect(Collectors.toSet());
+    }
+
+    private ProjectMemberDTO mapToProjectMember(UserEntity user) {
+        String name = trimToNull(user.getPublicUserName());
+        String fallback = name != null ? name : user.getEmail();
+        return ProjectMemberDTO.builder()
+                .userId(user.getUserId())
+                .username(fallback)
+                .name(fallback)
+                .avatar(resolveAvatar(user.getMetadata()))
+                .build();
+    }
+
+    private boolean matchesSearch(UserEntity user, String normalizedQuery) {
+        if (normalizedQuery == null) {
+            return true;
+        }
+
+        String name = normalizeSearch(user.getPublicUserName());
+        String email = normalizeSearch(user.getEmail());
+        return (name != null && name.contains(normalizedQuery))
+                || (email != null && email.contains(normalizedQuery));
+    }
+
+    private String normalizeSearch(String value) {
+        String normalized = trimToNull(value);
+        if (normalized == null) {
+            return null;
+        }
+        return StringUtils.removeVietnameseAccents(normalized).toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeSortKey(String value) {
+        String normalized = trimToNull(value);
+        return normalized != null ? normalized : "";
+    }
+
+    private String resolveAvatar(Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return null;
+        }
+        Object avatar = metadata.get("avatar");
+        if (avatar == null) {
+            avatar = metadata.get("avatarUrl");
+        }
+        return avatar != null ? avatar.toString() : null;
     }
 
     private ProjectEntity getActiveProjectOrThrow(String projectId) {

@@ -24,6 +24,8 @@ import {
   type ProjectCheckResponseDTO,
   type CommonResponseString,
   type CommonResponseProjectStats,
+  type CommonResponseListProjectMemberDTO,
+  type ProjectMemberDTO,
   type CommonResponseListProjectCollaborator,
   type PageRequestDtoAuditLogFilterDTO,
   type AuditLogFilterDTO,
@@ -402,6 +404,30 @@ export class ProjectControllerService {
       url = url.replace('{projectId}', params['projectId'] + '');
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static members(
+    params: {
+      /**  */
+      projectId: string;
+      /**  */
+      searchQuery?: string;
+      /**  */
+      reviewSessionId?: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseListProjectMemberDTO> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/project/{projectId}/members';
+      url = url.replace('{projectId}', params['projectId'] + '');
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { searchQuery: params['searchQuery'], reviewSessionId: params['reviewSessionId'] };
 
       axios(configs, resolve, reject);
     });

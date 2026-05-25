@@ -207,6 +207,167 @@ export interface PageResultUserDto {
   data?: UserDto[];
 }
 
+export interface ReviewSessionDecisionDTO {
+  /**  */
+  decision?: ReviewSessionStatus;
+
+  /**  */
+  note?: string;
+}
+
+export interface CommonResponseReviewSessionEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ReviewSessionEntity;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ReviewMetrics {
+  /**  */
+  totalAnnotations?: number;
+
+  /**  */
+  openAnnotations?: number;
+
+  /**  */
+  resolvedAnnotations?: number;
+
+  /**  */
+  totalComments?: number;
+}
+
+export interface ReviewSessionEntity {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  reviewSessionId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  title?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  dueDate?: Date;
+
+  /**  */
+  status?: ReviewSessionStatus;
+
+  /**  */
+  statusHistory?: ReviewStatusHistory[];
+
+  /**  */
+  reviewers?: ReviewerInfo[];
+
+  /**  */
+  metrics?: ReviewMetrics;
+
+  /**  */
+  completedAt?: Date;
+}
+
+export interface ReviewStatusHistory {
+  /**  */
+  status?: ReviewSessionStatus;
+
+  /**  */
+  changedBy?: string;
+
+  /**  */
+  changedByEmail?: string;
+
+  /**  */
+  changedAt?: Date;
+
+  /**  */
+  note?: string;
+}
+
+export interface ReviewerInfo {
+  /**  */
+  userId?: string;
+
+  /**  */
+  email?: string;
+
+  /**  */
+  role?: ReviewerRole;
+
+  /**  */
+  invitedAt?: Date;
+
+  /**  */
+  lastViewedAt?: Date;
+
+  /**  */
+  hasCommented?: boolean;
+}
+
+export interface ReviewSessionCreateDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  title?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  dueDate?: Date;
+
+  /**  */
+  reviewerIds?: string[];
+}
+
 export interface ProjectVisibilityUpdateDTO {
   /**  */
   visibility?: GrantedVisibility;
@@ -2165,6 +2326,20 @@ export interface PlaybackDataResponseDto {
   imageUrl?: string;
 }
 
+export interface CommonResponseListReviewSessionEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ReviewSessionEntity[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export interface CommonResponseProjectStats {
   /**  */
   isSuccessful?: boolean;
@@ -2177,6 +2352,34 @@ export interface CommonResponseProjectStats {
 
   /**  */
   message?: string;
+}
+
+export interface CommonResponseListProjectMemberDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProjectMemberDTO[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProjectMemberDTO {
+  /**  */
+  userId?: string;
+
+  /**  */
+  username?: string;
+
+  /**  */
+  name?: string;
+
+  /**  */
+  avatar?: string;
 }
 
 export interface CommonResponseListProjectCollaborator {
@@ -2449,6 +2652,45 @@ export interface FolderTreeResponseDTO {
   tree?: FolderTreeItemDTO[];
 }
 
+export interface AuditLogItemDTO {
+  /**  */
+  iconType?: string;
+
+  /**  */
+  action?: string;
+
+  /**  */
+  detail?: string;
+
+  /**  */
+  timeAgo?: string;
+
+  /**  */
+  actorName?: string;
+}
+
+export interface CommonResponsePageResultAuditLogItemDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultAuditLogItemDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultAuditLogItemDTO {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: AuditLogItemDTO[];
+}
+
 export interface AssetDetailResponseDto {
   /**  */
   asset?: AssetEntity;
@@ -2534,6 +2776,18 @@ export enum UserGrantedRole {
 export enum AuthProvider {
   'LOCAL' = 'LOCAL',
   'GOOGLE' = 'GOOGLE'
+}
+
+export enum ReviewSessionStatus {
+  'DRAFT' = 'DRAFT',
+  'IN_REVIEW' = 'IN_REVIEW',
+  'REQUEST_CHANGES' = 'REQUEST_CHANGES',
+  'APPROVED' = 'APPROVED'
+}
+
+export enum ReviewerRole {
+  'REVIEWER' = 'REVIEWER',
+  'APPROVER' = 'APPROVER'
 }
 
 export enum GrantedVisibility {

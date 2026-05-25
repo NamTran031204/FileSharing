@@ -57,4 +57,6 @@ public interface ProjectService {
     ProjectStats getProjectStats(String projectId);
 
     PageResult<AuditLogEntity> getProjectAuditLog(String projectId, PageRequestDto<AuditLogFilterDTO> dto);
+
+    List<ProjectMemberDTO> getProjectMembers(String projectId, String searchQuery, String reviewSessionId);
 }

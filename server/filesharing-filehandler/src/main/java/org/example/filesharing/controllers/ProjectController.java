@@ -10,6 +10,7 @@ import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCollaboratorDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
+import org.example.filesharing.entities.dtos.project.ProjectMemberDTO;
 import org.example.filesharing.entities.dtos.project.ProjectStatusUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ProjectVisibilityUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenCreateDTO;
@@ -84,6 +85,14 @@ public class ProjectController {
     public CommonResponse<List<ProjectCollaborator>> getProjectCollaborators(
             @PathVariable("projectId") String projectId) {
         return CommonResponse.success(projectService.getProjectCollaborators(projectId));
+    }
+
+    @GetMapping("/{projectId}/members")
+    public CommonResponse<List<ProjectMemberDTO>> getProjectMembers(
+            @PathVariable("projectId") String projectId,
+            @RequestParam(value = "searchQuery", required = false) String searchQuery,
+            @RequestParam(value = "reviewSessionId", required = false) String reviewSessionId) {
+        return CommonResponse.success(projectService.getProjectMembers(projectId, searchQuery, reviewSessionId));
     }
 
     @PostMapping("/{projectId}/addCollaborator")

@@ -172,6 +172,88 @@
         }
       }
     },
+    "/api/review-session/{reviewSessionId}/decision" : {
+      "post" : {
+        "tags" : [ "review-session-controller" ],
+        "operationId" : "submitDecision",
+        "parameters" : [ {
+          "name" : "reviewSessionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReviewSessionDecisionDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseReviewSessionEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/review-session/create" : {
+      "post" : {
+        "tags" : [ "review-session-controller" ],
+        "operationId" : "createReviewSession",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReviewSessionCreateDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseReviewSessionEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/{projectId}/visibility" : {
       "post" : {
         "tags" : [ "project-controller" ],
@@ -2446,6 +2528,49 @@
         }
       }
     },
+    "/api/review-session/asset/{assetId}" : {
+      "get" : {
+        "tags" : [ "review-session-controller" ],
+        "operationId" : "getReviewSessionsByAsset",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListReviewSessionEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/project/{projectId}/stats" : {
       "get" : {
         "tags" : [ "project-controller" ],
@@ -2465,6 +2590,55 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseProjectStats"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/project/{projectId}/members" : {
+      "get" : {
+        "tags" : [ "project-controller" ],
+        "operationId" : "getProjectMembers",
+        "parameters" : [ {
+          "name" : "projectId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "searchQuery",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "reviewSessionId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListProjectMemberDTO"
                 }
               }
             }
@@ -2830,6 +3004,65 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseMetadataEntity"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/audit-logs/asset/{assetId}" : {
+      "get" : {
+        "tags" : [ "audit-log-controller" ],
+        "operationId" : "getAssetAuditLogs",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAuditLogItemDTO"
                 }
               }
             }
@@ -3484,6 +3717,220 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/UserDto"
+            }
+          }
+        }
+      },
+      "ReviewSessionDecisionDTO" : {
+        "type" : "object",
+        "properties" : {
+          "decision" : {
+            "$ref" : "#/components/schemas/ReviewSessionStatus"
+          },
+          "note" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReviewSessionStatus" : {
+        "type" : "string",
+        "enum" : [ "DRAFT", "IN_REVIEW", "REQUEST_CHANGES", "APPROVED" ]
+      },
+      "CommonResponseReviewSessionEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ReviewSessionEntity"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReviewMetrics" : {
+        "type" : "object",
+        "properties" : {
+          "totalAnnotations" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "openAnnotations" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "resolvedAnnotations" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalComments" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ReviewSessionEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isTrash" : {
+            "type" : "boolean"
+          },
+          "trashedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByEmail" : {
+            "type" : "string"
+          },
+          "updateBy" : {
+            "type" : "string"
+          },
+          "updateByEmail" : {
+            "type" : "string"
+          },
+          "isActive" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reviewSessionId" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ReviewSessionStatus"
+          },
+          "statusHistory" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReviewStatusHistory"
+            }
+          },
+          "reviewers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReviewerInfo"
+            }
+          },
+          "metrics" : {
+            "$ref" : "#/components/schemas/ReviewMetrics"
+          },
+          "completedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ReviewStatusHistory" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "$ref" : "#/components/schemas/ReviewSessionStatus"
+          },
+          "changedBy" : {
+            "type" : "string"
+          },
+          "changedByEmail" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "note" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReviewerInfo" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/ReviewerRole"
+          },
+          "invitedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastViewedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "hasCommented" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ReviewerRole" : {
+        "type" : "string",
+        "enum" : [ "REVIEWER", "APPROVER" ]
+      },
+      "ReviewSessionCreateDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reviewerIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
             }
           }
         }
@@ -6056,6 +6503,26 @@
           }
         }
       },
+      "CommonResponseListReviewSessionEntity" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReviewSessionEntity"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
       "CommonResponseProjectStats" : {
         "type" : "object",
         "properties" : {
@@ -6069,6 +6536,43 @@
             "type" : "string"
           },
           "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseListProjectMemberDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProjectMemberDTO"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProjectMemberDTO" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "avatar" : {
             "type" : "string"
           }
         }
@@ -6428,6 +6932,58 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FolderTreeItemDTO"
+            }
+          }
+        }
+      },
+      "AuditLogItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "iconType" : {
+            "type" : "string"
+          },
+          "action" : {
+            "type" : "string"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "timeAgo" : {
+            "type" : "string"
+          },
+          "actorName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponsePageResultAuditLogItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAuditLogItemDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultAuditLogItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditLogItemDTO"
             }
           }
         }
