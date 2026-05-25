@@ -163,8 +163,8 @@ const ImageReviewPage = () => {
       ? activeShape === 'rectangle'
         ? 'rectangle'
         : activeShape === 'circle'
-        ? 'circle'
-        : 'arrow'
+          ? 'circle'
+          : 'arrow'
       : null;
   const isPanActive = selectedTool === 'pan';
 
@@ -173,51 +173,75 @@ const ImageReviewPage = () => {
 
   return (
     <CommonLayout>
-    <div className="relative flex h-full overflow-hidden bg-card">
-      {/* ============================ Canvas Area ============================ */}
-      <div className="relative flex flex-1 flex-col overflow-hidden bg-background">
-        <CanvasHeader
-          imageName={currentImage.name}
-          currentIndex={currentImageIndex}
-          total={mockImages.length}
-          canGoPrev={canGoPrev}
-          canGoNext={canGoNext}
-          onPrev={handlePrevImage}
-          onNext={handleNextImage}
-        />
+      <div className="relative flex h-full overflow-hidden bg-card">
+        {/* ============================ Canvas Area ============================ */}
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-background">
+          <CanvasHeader
+            imageName={currentImage.name}
+            currentIndex={currentImageIndex}
+            total={mockImages.length}
+            canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
+            onPrev={handlePrevImage}
+            onNext={handleNextImage}
+          />
 
-        {/* Viewport */}
-        <div
-          ref={containerRef}
-          className="relative flex flex-1 items-center justify-center overflow-hidden"
-          style={{ cursor: viewportCursor }}
-        >
-          {containerWidth > 0 && containerHeight > 0 && (
-            <Stage
-              ref={stageRef}
-              width={containerWidth}
-              height={containerHeight}
-              onMouseDown={handleStageMouseDown}
-              onMouseMove={handleStageMouseMove}
-              onWheel={handleStageWheel}
-              scale={{ x: stageScale, y: stageScale }}
-              position={stagePosition}
-              draggable={selectedTool === 'pan'}
-              onDragEnd={handleStageDragEnd}
-            >
-              <Layer>
-                {bgImage && <KonvaImage image={bgImage} x={0} y={0} />}
+          {/* Viewport */}
+          <div
+            ref={containerRef}
+            className="relative flex flex-1 items-center justify-center overflow-hidden"
+            style={{ cursor: viewportCursor }}
+          >
+            {containerWidth > 0 && containerHeight > 0 && (
+              <Stage
+                ref={stageRef}
+                width={containerWidth}
+                height={containerHeight}
+                onMouseDown={handleStageMouseDown}
+                onMouseMove={handleStageMouseMove}
+                onWheel={handleStageWheel}
+                scale={{ x: stageScale, y: stageScale }}
+                position={stagePosition}
+                draggable={selectedTool === 'pan'}
+                onDragEnd={handleStageDragEnd}
+              >
+                <Layer>
+                  {bgImage && <KonvaImage image={bgImage} x={0} y={0} />}
 
-                {drawnShapes.map((shape) => {
-                  const isDraggable = selectedTool === 'select';
+                  {drawnShapes.map((shape) => {
+                    const isDraggable = selectedTool === 'select';
 
-                  if (shape.type === 'circle') {
+                    if (shape.type === 'circle') {
+                      return (
+                        <Circle
+                          key={shape.id}
+                          x={shape.x}
+                          y={shape.y}
+                          radius={shape.radius}
+                          rotation={shape.rotation ?? 0}
+                          stroke={shape.stroke}
+                          strokeWidth={shape.strokeWidth}
+                          draggable={isDraggable}
+                          onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
+                          onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
+                          ref={(node) => {
+                            shapeRefs.current[shape.id] = node;
+                          }}
+                          onDragEnd={(e) => handleDragEnd(shape.id, e)}
+                          onTransformEnd={(e) =>
+                            handleTransformEnd(shape.id, e.target as Konva.Shape)
+                          }
+                        />
+                      );
+                    }
+
                     return (
-                      <Circle
+                      <Rect
                         key={shape.id}
                         x={shape.x}
                         y={shape.y}
-                        radius={shape.radius}
+                        width={shape.width}
+                        height={shape.height}
                         rotation={shape.rotation ?? 0}
                         stroke={shape.stroke}
                         strokeWidth={shape.strokeWidth}
@@ -233,141 +257,116 @@ const ImageReviewPage = () => {
                         }
                       />
                     );
-                  }
+                  })}
 
-                  return (
-                    <Rect
-                      key={shape.id}
-                      x={shape.x}
-                      y={shape.y}
-                      width={shape.width}
-                      height={shape.height}
-                      rotation={shape.rotation ?? 0}
-                      stroke={shape.stroke}
-                      strokeWidth={shape.strokeWidth}
-                      draggable={isDraggable}
-                      onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
-                      onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
-                      ref={(node) => {
-                        shapeRefs.current[shape.id] = node;
-                      }}
-                      onDragEnd={(e) => handleDragEnd(shape.id, e)}
-                      onTransformEnd={(e) =>
-                        handleTransformEnd(shape.id, e.target as Konva.Shape)
-                      }
-                    />
-                  );
-                })}
+                  <Transformer
+                    ref={transformerRef}
+                    rotateEnabled={selectedTool === 'rotate'}
+                    enabledAnchors={[]}
+                    ignoreStroke
+                    keepRatio
+                  />
 
-                <Transformer
-                  ref={transformerRef}
-                  rotateEnabled={selectedTool === 'rotate'}
-                  enabledAnchors={[]}
-                  ignoreStroke
-                  keepRatio
-                />
+                  {isDrawing && startPoint && currentPoint && (
+                    <>
+                      {selectedTool === 'circle' && (
+                        <Circle
+                          {...getCircleProps(startPoint, currentPoint)}
+                          stroke={COLOR_PRIMARY}
+                          strokeWidth={DEFAULT_STROKE_SIZE}
+                          dash={[5, 5]}
+                          opacity={0.7}
+                        />
+                      )}
+                      {selectedTool === 'rect' && (
+                        <Rect
+                          {...getRectProps(startPoint, currentPoint)}
+                          stroke={COLOR_ACCENT}
+                          strokeWidth={DEFAULT_STROKE_SIZE}
+                          dash={[5, 5]}
+                          opacity={0.7}
+                        />
+                      )}
+                    </>
+                  )}
+                </Layer>
+              </Stage>
+            )}
 
-                {isDrawing && startPoint && currentPoint && (
-                  <>
-                    {selectedTool === 'circle' && (
-                      <Circle
-                        {...getCircleProps(startPoint, currentPoint)}
-                        stroke={COLOR_PRIMARY}
-                        strokeWidth={DEFAULT_STROKE_SIZE}
-                        dash={[5, 5]}
-                        opacity={0.7}
-                      />
-                    )}
-                    {selectedTool === 'rect' && (
-                      <Rect
-                        {...getRectProps(startPoint, currentPoint)}
-                        stroke={COLOR_ACCENT}
-                        strokeWidth={DEFAULT_STROKE_SIZE}
-                        dash={[5, 5]}
-                        opacity={0.7}
-                      />
-                    )}
-                  </>
-                )}
-              </Layer>
-            </Stage>
-          )}
+            {/* Bottom capsule controls */}
+            <CapsuleControls
+              zoomPercent={zoomPercent}
+              isPanActive={isPanActive}
+              isCommentActive={commentToolActive}
+              onTogglePan={handleTogglePan}
+              onToggleComment={handleToggleComment}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+            />
+          </div>
 
-          {/* Bottom capsule controls */}
-          <CapsuleControls
-            zoomPercent={zoomPercent}
-            isPanActive={isPanActive}
-            isCommentActive={commentToolActive}
-            onTogglePan={handleTogglePan}
-            onToggleComment={handleToggleComment}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-          />
         </div>
-
-      </div>
         {sidebarCollapsed && (
-            <Button
-                icon={<LeftOutlined />}
-                onClick={() => setSidebarCollapsed(false)}
-                title="Hide sidebar"
-                className="absolute right-[0px] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border-border bg-background text-foreground"
-            />
+          <Button
+            icon={<LeftOutlined />}
+            onClick={() => setSidebarCollapsed(false)}
+            title="Show sidebar"
+            className="absolute! right-2 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border-border/40! bg-card/70! text-foreground! shadow-sm backdrop-blur-sm hover:bg-card!"
+          />
         )}
 
-      {/* ============================ Right Sidebar ============================ */}
-      <aside
-        className={`flex flex-col overflow-hidden border-l border-border/40 bg-card transition-[width] duration-300 ${
-          sidebarCollapsed ? 'w-0' : 'w-80'
-        }`}
-      >
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          <CollapsibleSection
-            title="Shapes"
-            expanded={expandedSections.shapes}
-            onToggle={() => toggleSection('shapes')}
-          >
-            <ShapesPanel
-              shapes={shapes}
-              activeShapeId={activeShapeIdForUI}
-              onSelect={handleShapeSelect}
-            />
-          </CollapsibleSection>
+        {/* ============================ Right Sidebar ============================ */}
+        <aside
+          className={`flex flex-col overflow-hidden bg-card transition-[width] duration-300 ${sidebarCollapsed ? 'w-0 border-l-0' : 'w-80 border-l border-border/40'
+            }`}
+        >
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <CollapsibleSection
+              title="Shapes"
+              expanded={expandedSections.shapes}
+              onToggle={() => toggleSection('shapes')}
+            >
+              <ShapesPanel
+                shapes={shapes}
+                activeShapeId={activeShapeIdForUI}
+                onSelect={handleShapeSelect}
+              />
+            </CollapsibleSection>
 
-          <CollapsibleSection
-            title={`Comments (${mockComments.length})`}
-            expanded={expandedSections.comments}
-            onToggle={() => toggleSection('comments')}
-          >
-            <CommentsPanel comments={mockComments} onReply={handleReplyComment} />
-          </CollapsibleSection>
+            <CollapsibleSection
+              title={`Comments (${mockComments.length})`}
+              expanded={expandedSections.comments}
+              onToggle={() => toggleSection('comments')}
+            >
+              <CommentsPanel comments={mockComments} onReply={handleReplyComment} />
+            </CollapsibleSection>
 
-          <CollapsibleSection
-            title="Action Log"
-            expanded={expandedSections.actionLog}
-            onToggle={() => toggleSection('actionLog')}
-          >
-            <ActionLogPanel items={mockActionLog} />
-          </CollapsibleSection>
+            <CollapsibleSection
+              title="Action Log"
+              expanded={expandedSections.actionLog}
+              onToggle={() => toggleSection('actionLog')}
+            >
+              <ActionLogPanel items={mockActionLog} />
+            </CollapsibleSection>
 
-          <CollapsibleSection
-            title="Image Info"
-            expanded={expandedSections.imageInfo}
-            onToggle={() => toggleSection('imageInfo')}
-          >
-            <ImageInfoPanel image={currentImage} />
-          </CollapsibleSection>
-        </div>
-      </aside>
+            <CollapsibleSection
+              title="Image Info"
+              expanded={expandedSections.imageInfo}
+              onToggle={() => toggleSection('imageInfo')}
+            >
+              <ImageInfoPanel image={currentImage} />
+            </CollapsibleSection>
+          </div>
+        </aside>
         {!sidebarCollapsed && (
-            <Button
-                icon={<RightOutlined />}
-                onClick={() => setSidebarCollapsed(true)}
-                title="Hide sidebar"
-                className="absolute right-[336px] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border-border bg-card text-foreground"
-            />
+          <Button
+            icon={<RightOutlined />}
+            onClick={() => setSidebarCollapsed(true)}
+            title="Hide sidebar"
+            className="absolute right-[336px] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border-border bg-card text-foreground"
+          />
         )}
-    </div>
+      </div>
     </CommonLayout>
   );
 };

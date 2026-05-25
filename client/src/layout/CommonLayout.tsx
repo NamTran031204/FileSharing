@@ -7,12 +7,12 @@ interface ReviewLayoutProps {
 
 const CommonLayout = ({ children }: ReviewLayoutProps) => {
   return (
-    <div className="bg-background text-primary-dark min-h-screen overflow-hidden flex flex-col">
+    <div className="bg-background text-primary-dark h-screen overflow-hidden flex flex-col">
       {/* TopNavBar - Fixed Header */}
       <AppHeader />
 
       {/* Main Workspace Container */}
-      <main className="flex flex-1 pt-16 h-screen overflow-hidden">
+      <main className="flex flex-1 min-h-0 pt-16 overflow-hidden">
         {/* SideNavBar (Left) */}
         <AppSidebar />
 
