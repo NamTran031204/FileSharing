@@ -63,12 +63,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         assetRepo.findById(dto.getAssetId().trim())
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
 
-        // 2. Sinh annotationId moi
-        String annotationId = UUID.randomUUID().toString();
-
         // 3-8. Build entity
         AnnotationsEntity entity = AnnotationsEntity.builder()
-                .annotationId(annotationId)
                 .assetId(dto.getAssetId().trim())
                 .versionNumber(dto.getVersionNumber())
                 .commentBody(dto.getCommentBody())
@@ -79,7 +75,6 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 .region(dto.getRegion())
                 .status(AnnotationStatus.OPEN)
                 .parentCommentId(null)
-                .threadRootId(annotationId) // threadRootId = chinh annotationId vua tao
                 .build();
 
         // 7. buildAudit — isActive=true, isTrash=false, createdBy/At
@@ -102,19 +97,15 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         AnnotationsEntity parentAnnotation = getActiveAnnotationOrThrow(parentCommentId);
 
         // 2. Lay threadRootId tu annotation cha
-        String threadRootId = parentAnnotation.getThreadRootId();
+        String threadRootId = parentAnnotation.getThreadRootId() == null ? parentAnnotation.getAnnotationId() : parentAnnotation.getThreadRootId();
 
         // 3. Kiem tra annotation cha khong bi ARCHIVED
         if (parentAnnotation.getStatus() == AnnotationStatus.ARCHIVED) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Cannot reply to an archived comment");
         }
 
-        // 4. Sinh annotationId moi
-        String annotationId = UUID.randomUUID().toString();
-
         // 5-9. Build entity — ke thua assetId, versionNumber tu annotation cha
         AnnotationsEntity entity = AnnotationsEntity.builder()
-                .annotationId(annotationId)
                 .assetId(parentAnnotation.getAssetId())
                 .versionNumber(parentAnnotation.getVersionNumber())
                 .commentBody(dto.getCommentBody())

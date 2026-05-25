@@ -45,6 +45,6 @@ public class AnnotationsEntity extends EntityAuditBase {
 
     private String threadId;
     private String parentCommentId;      // null = root
-    private String threadRootId; // = annotationId neu la root
+    private String threadRootId; // = null neu la root
 
 }
