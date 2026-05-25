@@ -1,330 +1,2043 @@
 <!DOCTYPE html>
-
-<html class="light" lang="en"><head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>EtherGallery | Image Viewer</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-tertiary-container": "#d1ccff",
-                        "on-tertiary": "#ffffff",
-                        "primary-fixed-dim": "#c2c1ff",
-                        "inverse-on-surface": "#f1efff",
-                        "secondary-container": "#b5b1fe",
-                        "on-primary": "#ffffff",
-                        "surface-container-high": "#e7e6ff",
-                        "on-secondary-container": "#444085",
-                        "on-primary-fixed-variant": "#403f83",
-                        "surface-dim": "#d6d7ff",
-                        "error-container": "#ffdad6",
-                        "on-tertiary-fixed-variant": "#433e83",
-                        "on-background": "#0d1154",
-                        "surface-container-low": "#f4f2ff",
-                        "on-tertiary-fixed": "#170d56",
-                        "tertiary-fixed": "#e4dfff",
-                        "on-surface-variant": "#474650",
-                        "on-secondary-fixed-variant": "#423e83",
-                        "surface-container": "#eeecff",
-                        "inverse-surface": "#242969",
-                        "tertiary-fixed-dim": "#c5c0ff",
-                        "outline-variant": "#c8c5d2",
-                        "surface": "#fbf8ff",
-                        "outline": "#777681",
-                        "error": "#ba1a1a",
-                        "on-error": "#ffffff",
-                        "primary-container": "#535297",
-                        "secondary-fixed": "#e3dfff",
-                        "on-error-container": "#93000a",
-                        "tertiary": "#3f397e",
-                        "surface-variant": "#e0e0ff",
-                        "surface-bright": "#fbf8ff",
-                        "secondary-fixed-dim": "#c4c0ff",
-                        "inverse-primary": "#c2c1ff",
-                        "surface-tint": "#58579c",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-highest": "#e0e0ff",
-                        "on-surface": "#0d1154",
-                        "primary-fixed": "#e2dfff",
-                        "on-secondary-fixed": "#150d56",
-                        "tertiary-container": "#565198",
-                        "background": "#fbf8ff",
-                        "on-primary-fixed": "#130e56",
-                        "on-primary-container": "#ceccff",
-                        "secondary": "#5a569c",
-                        "primary": "#3b3a7e",
-                        "on-secondary": "#ffffff"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "fontFamily": {
-                        "headline": ["Inter"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                },
-            },
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Pro | Image Review Workspace</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            // Colors directly matched from client/src/index.css
+            background: 'hsl(240, 10%, 96%)',      /* #F3F2F7 */
+            card: 'hsl(0, 0%, 100%)',              /* #FFFFFF */
+            foreground: 'hsl(237, 45%, 30%)',      /* #2A2F6F */
+            'primary-dark': 'hsl(237, 45%, 30%)',  /* #2A2F6F */
+            primary: 'hsl(240, 30%, 46%)',         /* #535297 */
+            accent: 'hsl(246, 72%, 78%)',          /* #A6A0ED */
+            muted: 'hsl(252, 100%, 90%)',          /* #D2CAFF */
+            border: 'hsl(244, 30%, 80%)',          /* #C5C0E6 */
+            secondary: 'hsl(244, 30%, 61%)',       /* #7C78C1 */
+            destructive: 'hsl(0, 84.2%, 60.2%)',   /* #EF4444 */
+            'primary-foreground': 'hsl(0, 0%, 100%)',
+            'muted-foreground': 'hsl(244, 10%, 40%)'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif']
+          }
         }
-    </script>
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        body { font-family: 'Inter', sans-serif; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c8c5d2; border-radius: 10px; }
-    </style>
+      }
+    }
+  </script>
+  <!-- Google Fonts & Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- React and ReactDOM from CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel Standalone to compile JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: hsl(244, 30%, 80%);
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: hsl(246, 72%, 78%);
+    }
+    .canvas-shadow {
+      box-shadow: 0 25px 50px -12px rgba(13, 17, 84, 0.25);
+    }
+  </style>
 </head>
-<body class="bg-surface text-on-surface overflow-hidden">
-<!-- TopNavBar (Shared Component Identity) -->
-<header class="fixed top-0 w-full z-50 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center px-10 shadow-sm transition-all">
-    <div class="flex items-center gap-8">
-        <span class="text-2xl font-black tracking-tighter text-[#3b3a7e] dark:text-[#fbf8ff]">EtherGallery</span>
-        <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
-            <div class="flex items-center gap-2 text-on-surface-variant">
-                <span class="hover:text-primary transition-colors cursor-pointer">Dashboard</span>
-                <span class="material-symbols-outlined text-xs">chevron_right</span>
-                <span class="hover:text-primary transition-colors cursor-pointer">Marketing Campaign</span>
-                <span class="material-symbols-outlined text-xs">chevron_right</span>
-                <span class="text-primary font-semibold">Hero_Final.jpg</span>
+<body class="bg-background text-primary-dark h-screen overflow-hidden select-none">
+  <div id="root" class="h-full"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useMemo } = React;
+
+    // --- Mock Users ---
+    const mockUsers = [
+      { id: 1, name: 'Marcus K.', username: 'marcus', email: 'marcus@ethergallery.com', avatar: 'MK' },
+      { id: 2, name: 'Lena Chen', username: 'lena', email: 'lena@ethergallery.com', avatar: 'LC' },
+      { id: 3, name: 'Nam Nguyen', username: 'nam', email: 'nam@ethergallery.com', avatar: 'NN' },
+      { id: 4, name: 'Sarah Chen', username: 'sarah', email: 'sarah@ethergallery.com', avatar: 'SC' }
+    ];
+
+    // --- Mock Assets ---
+    const initialMockImages = [
+      {
+        id: 1,
+        name: 'hero-banner-desktop.jpg',
+        url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=800&q=80',
+        width: 1200,
+        height: 800,
+        size: '2.4 MB',
+        dimensions: '1920 × 1080',
+        uploadDate: '2026-05-25 14:30',
+        uploader: 'Nam Nguyen',
+        versions: [
+          { number: 3, label: 'v3 (Current)', date: '2026-05-25 14:30' },
+          { number: 2, label: 'v2', date: '2026-05-24 10:15' },
+          { number: 1, label: 'v1', date: '2026-05-22 16:45' }
+        ]
+      },
+      {
+        id: 2,
+        name: 'product-card-mobile.jpg',
+        url: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&h=800&q=80',
+        width: 600,
+        height: 800,
+        size: '1.8 MB',
+        dimensions: '750 × 1334',
+        uploadDate: '2026-05-20 11:20',
+        uploader: 'Marcus K.',
+        versions: [
+          { number: 2, label: 'v2 (Current)', date: '2026-05-20 11:20' },
+          { number: 1, label: 'v1', date: '2026-05-18 15:30' }
+        ]
+      },
+      {
+        id: 3,
+        name: 'footer-illustration.png',
+        url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&h=400&q=80',
+        width: 1200,
+        height: 400,
+        size: '450 KB',
+        dimensions: '1920 × 640',
+        uploadDate: '2026-05-19 16:45',
+        uploader: 'Sarah Chen',
+        versions: [
+          { number: 1, label: 'v1 (Current)', date: '2026-05-19 16:45' }
+        ]
+      }
+    ];
+
+    // Annotations specific to image versions
+    const initialAnnotations = [
+      // Image 1 - v3 annotations
+      {
+        id: 'ann_1',
+        imageId: 1,
+        version: 3,
+        type: 'rect',
+        x: 150,
+        y: 120,
+        width: 320,
+        height: 200,
+        color: '#f43f5e',
+        strokeWidth: 4,
+        comment: {
+          id: 'c_1',
+          author: 'Marcus K.',
+          avatar: 'MK',
+          time: '2 hours ago',
+          text: 'The lighting on the left curvature feels a bit too harsh compared to the reference.',
+          status: 'OPEN',
+          replies: [
+            { id: 'r_1', author: 'Lena Chen', avatar: 'LC', time: '1 hour ago', text: 'Agreed. Let\'s soften the gradients here.' }
+          ],
+          reactions: [{ emoji: '👍', count: 3 }, { emoji: '👀', count: 1 }]
+        }
+      },
+      {
+        id: 'ann_2',
+        imageId: 1,
+        version: 3,
+        type: 'circle',
+        x: 750,
+        y: 400,
+        radius: 70,
+        color: '#10b981',
+        strokeWidth: 4,
+        comment: {
+          id: 'c_2',
+          author: 'Lena Chen',
+          avatar: 'LC',
+          time: '3 hours ago',
+          text: 'The color saturation of the CTA elements looks excellent in this build.',
+          status: 'RESOLVED',
+          replies: [],
+          reactions: [{ emoji: '✅', count: 2 }]
+        }
+      },
+      // Image 1 - v2 annotations
+      {
+        id: 'ann_3',
+        imageId: 1,
+        version: 2,
+        type: 'rect',
+        x: 350,
+        y: 250,
+        width: 500,
+        height: 250,
+        color: '#f59e0b',
+        strokeWidth: 4,
+        comment: {
+          id: 'c_3',
+          author: 'Sarah Chen',
+          avatar: 'SC',
+          time: '1 day ago',
+          text: 'Check the center alignment. It looks slightly offset to the left.',
+          status: 'OPEN',
+          replies: [
+            { id: 'r_2', author: 'Nam Nguyen', avatar: 'NN', time: '18 hours ago', text: 'Will re-align in v3.' }
+          ],
+          reactions: []
+        }
+      },
+      // Image 1 - v1 annotations
+      {
+        id: 'ann_4',
+        imageId: 1,
+        version: 1,
+        type: 'pin',
+        x: 600,
+        y: 350,
+        color: '#535297',
+        strokeWidth: 4,
+        comment: {
+          id: 'c_4',
+          author: 'Nam Nguyen',
+          avatar: 'NN',
+          time: '3 days ago',
+          text: 'Initial design blockout. Open for feedback.',
+          status: 'RESOLVED',
+          replies: [],
+          reactions: []
+        }
+      }
+    ];
+
+    // SVGs for Icons
+    const Icons = {
+      Home: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      ),
+      Dashboard: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      ),
+      Folder: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      ),
+      Settings: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      ),
+      Help: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      ),
+      Plus: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      ),
+      Logout: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      ),
+      ArrowLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      ),
+      Check: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      ),
+      ChevronDown: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      ),
+      ChevronRight: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      ),
+      Download: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      ),
+      Diff: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      ),
+      More: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      ),
+      ZoomIn: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      ),
+      ZoomOut: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      ),
+      Undo: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+      ),
+      Redo: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 0-2.13-9.36L23 10"></path></svg>
+      ),
+      Eye: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      ),
+      EyeOff: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+      ),
+      Trash: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+      ),
+      Search: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      ),
+      Bell: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      ),
+      Pin: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      )
+    };
+
+    // --- Main Layout/App Component ---
+    const Workspace = () => {
+      // Images State
+      const [images, setImages] = useState(initialMockImages);
+      const [currentImgIdx, setCurrentImgIdx] = useState(0);
+      const currentImage = images[currentImgIdx];
+
+      // Annotations & Comments State
+      const [annotations, setAnnotations] = useState(initialAnnotations);
+      const [selectedVersion, setSelectedVersion] = useState(3);
+      
+      // UI States
+      const [uiState, setUiState] = useState('idle'); // idle, loading_annotations, drawing, awaiting_comment, syncing, error
+      const [activeTool, setActiveTool] = useState('select'); // select, rect, circle, arrow, text, pin, pan
+      const [activeColor, setActiveColor] = useState('#f43f5e');
+      const [strokeWidth, setStrokeWidth] = useState(4);
+      const [showAnnotations, setShowAnnotations] = useState(true);
+
+      // Viewport State
+      const [zoom, setZoom] = useState(100);
+      const [pan, setPan] = useState({ x: 0, y: 0 });
+      const [selectedShapeId, setSelectedShapeId] = useState(null);
+      
+      // Drawing states
+      const [isDrawing, setIsDrawing] = useState(false);
+      const [drawingShape, setDrawingShape] = useState(null);
+      const [pendingShape, setPendingShape] = useState(null);
+      
+      // Popups/Modals
+      const [commentPopupPos, setCommentPopupPos] = useState(null);
+      const [newCommentText, setNewCommentText] = useState('');
+      const [simulateError, setSimulateError] = useState(false);
+      const [showCompareModal, setShowCompareModal] = useState(false);
+      const [compareSliderPos, setCompareSliderPos] = useState(50);
+      const [mentionQuery, setMentionQuery] = useState(null);
+
+      // Sidebars State
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+      const [expandedSections, setExpandedSections] = useState({
+        shapes: true,
+        comments: true,
+        actionLog: true,
+        imageInfo: true
+      });
+      const [searchQuery, setSearchQuery] = useState('');
+      const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, OPEN, RESOLVED
+
+      // Action Logs
+      const [actionLogs, setActionLogs] = useState([
+        { id: 1, type: 'status', action: 'Workspace Loaded', details: 'Initialized Lumina Pro canvas', time: '5m ago' },
+        { id: 2, type: 'comment', action: 'Comment loaded', details: 'V3 comments synchronized', time: '5m ago' }
+      ]);
+
+      const [history, setHistory] = useState([]);
+      const [redoStack, setRedoStack] = useState([]);
+
+      const viewportRef = useRef(null);
+      const commentInputRef = useRef(null);
+
+      // Add a log entry helper
+      const addLog = (action, details = '', type = 'action') => {
+        setActionLogs(prev => [
+          {
+            id: Date.now(),
+            type,
+            action,
+            details,
+            time: 'Just now'
+          },
+          ...prev
+        ]);
+      };
+
+      // Review Status
+      const [reviewStatus, setReviewStatus] = useState('PENDING'); // PENDING, APPROVED, REQUEST_CHANGES
+
+      // Filtered annotations for the current version and current image
+      const versionAnnotations = useMemo(() => {
+        return annotations.filter(
+          ann => ann.imageId === currentImage.id && ann.version === selectedVersion
+        );
+      }, [annotations, currentImage.id, selectedVersion]);
+
+      // Filtered & searched comments based on filters
+      const filteredAnnotations = useMemo(() => {
+        return versionAnnotations.filter(ann => {
+          if (!ann.comment) return false;
+          
+          // Status filter
+          if (statusFilter === 'OPEN' && ann.comment.status !== 'OPEN') return false;
+          if (statusFilter === 'RESOLVED' && ann.comment.status !== 'RESOLVED') return false;
+          
+          // Search filter
+          if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            const textMatch = ann.comment.text.toLowerCase().includes(query);
+            const authorMatch = ann.comment.author.toLowerCase().includes(query);
+            const replyMatch = ann.comment.replies.some(r => r.text.toLowerCase().includes(query) || r.author.toLowerCase().includes(query));
+            return textMatch || authorMatch || replyMatch;
+          }
+          
+          return true;
+        });
+      }, [versionAnnotations, statusFilter, searchQuery]);
+
+      // Counts
+      const openCount = useMemo(() => {
+        return versionAnnotations.filter(ann => ann.comment && ann.comment.status === 'OPEN').length;
+      }, [versionAnnotations]);
+
+      const resolvedCount = useMemo(() => {
+        return versionAnnotations.filter(ann => ann.comment && ann.comment.status === 'RESOLVED').length;
+      }, [versionAnnotations]);
+
+      // --- Navigation handlers ---
+      const handlePrevImage = () => {
+        if (currentImgIdx > 0) {
+          setUiState('loading_annotations');
+          setTimeout(() => {
+            setCurrentImgIdx(prev => prev - 1);
+            setZoom(100);
+            setPan({ x: 0, y: 0 });
+            setSelectedShapeId(null);
+            setPendingShape(null);
+            setCommentPopupPos(null);
+            setUiState('idle');
+            addLog('Switched Image', 'Loaded previous asset in queue');
+          }, 300);
+        }
+      };
+
+      const handleNextImage = () => {
+        if (currentImgIdx < images.length - 1) {
+          setUiState('loading_annotations');
+          setTimeout(() => {
+            setCurrentImgIdx(prev => prev + 1);
+            setZoom(100);
+            setPan({ x: 0, y: 0 });
+            setSelectedShapeId(null);
+            setPendingShape(null);
+            setCommentPopupPos(null);
+            setUiState('idle');
+            addLog('Switched Image', 'Loaded next asset in queue');
+          }, 300);
+        }
+      };
+
+      // Switch Version
+      const handleVersionChange = (versionNum) => {
+        setUiState('loading_annotations');
+        setSelectedVersion(versionNum);
+        setSelectedShapeId(null);
+        setPendingShape(null);
+        setCommentPopupPos(null);
+        setTimeout(() => {
+          setUiState('idle');
+          addLog('Switched Version', `Changed to Version ${versionNum}`);
+        }, 500);
+      };
+
+      // Zoom helpers
+      const handleZoomIn = () => {
+        setZoom(prev => Math.min(prev + 25, 400));
+        addLog('Zoom In', `${zoom + 25}%`);
+      };
+
+      const handleZoomOut = () => {
+        setZoom(prev => Math.max(prev - 25, 25));
+        addLog('Zoom Out', `${zoom - 25}%`);
+      };
+
+      const handleZoomFit = () => {
+        if (!viewportRef.current) return;
+        const rect = viewportRef.current.getBoundingClientRect();
+        const scaleX = (rect.width - 40) / currentImage.width;
+        const scaleY = (rect.height - 40) / currentImage.height;
+        const bestScale = Math.min(scaleX, scaleY, 1);
+        setZoom(Math.round(bestScale * 100));
+        setPan({ x: 0, y: 0 });
+        addLog('Fit to Screen', `${Math.round(bestScale * 100)}% zoom`);
+      };
+
+      const handleZoomReset = () => {
+        setZoom(100);
+        setPan({ x: 0, y: 0 });
+        addLog('Reset Zoom', 'Set to 100% scale');
+      };
+
+      // Approval Logic
+      const handleApprove = () => {
+        setReviewStatus('APPROVED');
+        addLog('Asset Approved', 'Review status updated to APPROVED', 'status');
+      };
+
+      const handleRequestChanges = () => {
+        setReviewStatus('REQUEST_CHANGES');
+        addLog('Changes Requested', 'Review status updated to REQUEST_CHANGES', 'status');
+      };
+
+      // Canvas Drawing complete callback
+      const handleShapeComplete = (shape, clientPos) => {
+        // Position comment popup at client position
+        setCommentPopupPos(clientPos);
+        setNewCommentText('');
+        setUiState('awaiting_comment');
+      };
+
+      // Create new annotation from pending shape
+      const handlePostComment = (e) => {
+        e.preventDefault();
+        if (!newCommentText.trim() || !pendingShape) return;
+
+        setUiState('syncing');
+
+        setTimeout(() => {
+          if (simulateError) {
+            setUiState('error');
+            addLog('Network Sync Error', 'Simulated API failure', 'error');
+            return;
+          }
+
+          const newCommentId = 'c_' + Date.now();
+          const newAnnId = 'ann_' + Date.now();
+
+          const textWithMention = newCommentText;
+          
+          const newAnn = {
+            id: newAnnId,
+            imageId: currentImage.id,
+            version: selectedVersion,
+            type: pendingShape.type,
+            x: pendingShape.x,
+            y: pendingShape.y,
+            width: pendingShape.width,
+            height: pendingShape.height,
+            radius: pendingShape.radius,
+            x2: pendingShape.x2,
+            y2: pendingShape.y2,
+            text: pendingShape.type === 'text' ? textWithMention : undefined,
+            color: pendingShape.color,
+            strokeWidth: pendingShape.strokeWidth,
+            comment: {
+              id: newCommentId,
+              author: 'Curator', // Current user
+              avatar: 'C',
+              time: 'Just now',
+              text: textWithMention,
+              status: 'OPEN',
+              replies: [],
+              reactions: []
+            }
+          };
+
+          // Save shape
+          setAnnotations(prev => [...prev, newAnn]);
+          
+          // Save Undo State
+          setHistory(prev => [...prev, { action: 'add', annotation: newAnn }]);
+          setRedoStack([]);
+
+          setPendingShape(null);
+          setCommentPopupPos(null);
+          setNewCommentText('');
+          setSelectedShapeId(newAnnId);
+          setUiState('idle');
+          
+          addLog('Drawn shape', `Added ${pendingShape.type} shape with comment`, 'comment');
+        }, 800);
+      };
+
+      const handleCancelComment = () => {
+        setPendingShape(null);
+        setCommentPopupPos(null);
+        setNewCommentText('');
+        setUiState('idle');
+        addLog('Cancelled annotation');
+      };
+
+      // Undo/Redo logic
+      const handleUndo = () => {
+        if (history.length === 0) return;
+        const lastAction = history[history.length - 1];
+        
+        if (lastAction.action === 'add') {
+          // Remove shape
+          setAnnotations(prev => prev.filter(ann => ann.id !== lastAction.annotation.id));
+          setHistory(prev => prev.slice(0, -1));
+          setRedoStack(prev => [...prev, lastAction]);
+          addLog('Undo action', `Removed annotation #${lastAction.annotation.id}`);
+        }
+      };
+
+      const handleRedo = () => {
+        if (redoStack.length === 0) return;
+        const nextAction = redoStack[redoStack.length - 1];
+
+        if (nextAction.action === 'add') {
+          // Re-add shape
+          setAnnotations(prev => [...prev, nextAction.annotation]);
+          setRedoStack(prev => prev.slice(0, -1));
+          setHistory(prev => [...prev, nextAction]);
+          addLog('Redo action', `Restored annotation #${nextAction.annotation.id}`);
+        }
+      };
+
+      const handleDeleteAnnotation = (annId) => {
+        const deletedAnn = annotations.find(ann => ann.id === annId);
+        setAnnotations(prev => prev.filter(ann => ann.id !== annId));
+        setSelectedShapeId(null);
+        addLog('Deleted annotation', `Removed comment by ${deletedAnn?.comment?.author}`);
+      };
+
+      // Toggle Open/Resolved
+      const handleToggleStatus = (annId) => {
+        setAnnotations(prev => prev.map(ann => {
+          if (ann.id === annId && ann.comment) {
+            const nextStatus = ann.comment.status === 'OPEN' ? 'RESOLVED' : 'OPEN';
+            addLog(`Thread ${nextStatus.toLowerCase()}`, `Comment by ${ann.comment.author}`);
+            return {
+              ...ann,
+              comment: {
+                ...ann.comment,
+                status: nextStatus
+              }
+            };
+          }
+          return ann;
+        }));
+      };
+
+      // Reply logic
+      const [activeReplyBox, setActiveReplyBox] = useState(null);
+      const [replyText, setReplyText] = useState('');
+
+      const handleAddReply = (annId, e) => {
+        e.preventDefault();
+        if (!replyText.trim()) return;
+
+        setAnnotations(prev => prev.map(ann => {
+          if (ann.id === annId && ann.comment) {
+            const newReply = {
+              id: 'rep_' + Date.now(),
+              author: 'Curator',
+              avatar: 'C',
+              time: 'Just now',
+              text: replyText
+            };
+            addLog('Replied to comment', `Reply added in thread by ${ann.comment.author}`);
+            return {
+              ...ann,
+              comment: {
+                ...ann.comment,
+                replies: [...ann.comment.replies, newReply]
+              }
+            };
+          }
+          return ann;
+        }));
+
+        setReplyText('');
+        setActiveReplyBox(null);
+      };
+
+      // Zoom to fit shape on click
+      const focusOnShape = (shape) => {
+        if (!shape || !viewportRef.current) return;
+        const rect = viewportRef.current.getBoundingClientRect();
+        const vW = rect.width;
+        const vH = rect.height;
+
+        let sX = shape.x;
+        let sY = shape.y;
+        if (shape.type === 'rect') {
+          sX = shape.x + shape.width / 2;
+          sY = shape.y + shape.height / 2;
+        } else if (shape.type === 'arrow') {
+          sX = (shape.x + shape.x2) / 2;
+          sY = (shape.y + shape.y2) / 2;
+        } else if (shape.type === 'circle') {
+          sX = shape.x;
+          sY = shape.y;
+        }
+
+        const focusZoom = 120;
+        setZoom(focusZoom);
+
+        const nextPan = {
+          x: Math.round(vW / 2 - (sX * focusZoom / 100)),
+          y: Math.round(vH / 2 - (sY * focusZoom / 100))
+        };
+        setPan(nextPan);
+        setSelectedShapeId(shape.id);
+        addLog('Focussed on shape', `Zoomed to shape of type ${shape.type}`);
+      };
+
+      // Textarea input monitoring for @mentions
+      const handleCommentChange = (e) => {
+        const text = e.target.value;
+        setNewCommentText(text);
+
+        const words = text.split(/[\s\n]+/);
+        const lastWord = words[words.length - 1];
+        
+        if (lastWord && lastWord.startsWith('@')) {
+          setMentionQuery(lastWord.slice(1).toLowerCase());
+        } else {
+          setMentionQuery(null);
+        }
+      };
+
+      const handleInsertMention = (username) => {
+        const words = newCommentText.split(/\s+/);
+        words[words.length - 1] = `@${username} `;
+        setNewCommentText(words.join(' '));
+        setMentionQuery(null);
+        if (commentInputRef.current) {
+          commentInputRef.current.focus();
+        }
+      };
+
+      const filteredMentions = useMemo(() => {
+        if (mentionQuery === null) return [];
+        return mockUsers.filter(u => u.username.includes(mentionQuery) || u.name.toLowerCase().includes(mentionQuery));
+      }, [mentionQuery]);
+
+      return (
+        // Layout exactly matching CommonLayout.tsx
+        <div className="bg-background text-primary-dark h-screen overflow-hidden flex flex-col">
+          
+          {/* ================= FIXED TOP NAVBAR (AppHeader) ================= */}
+          <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 shadow-xl shadow-primary-dark/10 border-b border-border/20">
+            <div className="flex items-center gap-8">
+              <a href="#" className="flex items-center hover:opacity-90 transition-opacity">
+                <img src="./logo2k.png" alt="Lumina Pro Logo" className="h-10 w-auto object-contain" />
+              </a>
+              
+              {/* Breadcrumb Nav */}
+              <div className="flex items-center text-xs font-semibold text-muted-foreground tracking-wide bg-card py-1.5 px-3 rounded-lg border border-border/10 shadow-sm shadow-primary-dark/5">
+                <span className="hover:text-primary-dark cursor-pointer transition-colors">PROJECTS</span>
+                <span className="mx-2 text-border/70"><Icons.ChevronRight /></span>
+                <span className="hover:text-primary-dark cursor-pointer transition-colors">MARKETING CAMPAIGN</span>
+                <span className="mx-2 text-border/70"><Icons.ChevronRight /></span>
+                <span className="text-primary-dark font-black truncate max-w-[180px]">{currentImage.name}</span>
+              </div>
             </div>
-        </nav>
-    </div>
-    <div class="flex items-center gap-4">
-        <div class="flex items-center bg-surface-container px-3 py-1.5 rounded-full gap-2">
-            <span class="text-xs font-bold text-primary tracking-widest uppercase">v4</span>
-            <span class="material-symbols-outlined text-sm cursor-pointer hover:text-primary">expand_more</span>
-        </div>
-        <div class="flex items-center gap-3 ml-4">
-            <div class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer transition-colors">
-                <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
-            </div>
-            <div class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer transition-colors">
-                <span class="material-symbols-outlined text-on-surface-variant">chat</span>
-            </div>
-            <div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant ml-2">
-                <img class="h-full w-full object-cover" data-alt="close-up portrait of a professional curator in a minimalist art gallery setting, soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGOrDfJbWpoHdpY3rrZMrq5TCW_-YUtO2nHfrtDg-m9763x3kK1sMlCDzHeAG-NhOX59Eqc4PYcj1T3yx3-UEHi1R1XwvX8Wz0-AGUFg_fdv9MAYQ7aA9Tic8HGyv4dLsCb3gbgvn3trKyYnSImNjXrVw-xze12Z7Dw8Drk4TTOB41iatYlrFgD6OBAewYeAD_kOiYXVeX2WJxaBNo872uODNJxvAydFNTTa6VMeTI3cFAVgDxK5q55znThl99diHyXG9dVcfYBP4"/>
-            </div>
-        </div>
-    </div>
-</header>
-<!-- SideNavBar (Shared Component Logic) -->
-<aside class="fixed left-0 top-0 h-full w-16 hover:w-64 bg-[#f4f2ff] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-40 pt-20 flex flex-col gap-2 py-6 group overflow-hidden shadow-none border-r-0">
-    <div class="flex flex-col gap-2 px-3">
-        <!-- Navigation Items -->
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer group/item">
-            <span class="material-symbols-outlined">image</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Artworks</span>
-        </div>
-        <div class="flex items-center gap-4 p-3 text-[#3b3a7e] bg-white/60 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">grid_view</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Collections</span>
-        </div>
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">group_work</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Team Library</span>
-        </div>
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">analytics</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Analytics</span>
-        </div>
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">tune</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Settings</span>
-        </div>
-    </div>
-    <div class="mt-auto flex flex-col gap-2 px-3 pb-4">
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">help</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Support</span>
-        </div>
-        <div class="flex items-center gap-4 p-3 text-[#474650] hover:bg-white/40 rounded-xl cursor-pointer">
-            <span class="material-symbols-outlined">logout</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-sm">Sign Out</span>
-        </div>
-    </div>
-</aside>
-<!-- Main Content Canvas -->
-<main class="ml-16 pt-16 h-screen flex overflow-hidden">
-    <!-- Center Column: Image Player -->
-    <section class="flex-1 relative bg-surface flex flex-col items-center justify-center overflow-hidden">
-        <div class="w-full h-full relative p-8 flex items-center justify-center">
-            <!-- Image Container with Region Overlay -->
-            <div class="relative group max-w-full max-h-full shadow-2xl rounded-sm">
-                <img class="max-w-full max-h-[768px] object-contain" data-alt="sophisticated professional concept art of a futuristic architectural interior with ethereal lighting and organic flowing shapes in shades of lavender and indigo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwc361glmFw5AHO-gkri9NQhDXcY-G8d__sNqinCFAAMBxMLD023GDItL6Fq0UYdx7eKNMeMjtALnXLwsQm5ZQ3GqkLbLrciXm3ibCxbZGxKWbnwq_0vw8fnDzfyiy4W43zeu46WtfDD08F7KeqhtzWT5eLpMgpwjSyzBmiFgHHGDFO3oHWncVv5yY9V22-4UH73KOWQcXrAwwIgBqqmiHJz2sf6qwv3z9ugV7Ut0RmY9do2l7E87XgaLALt1Slfm09gyB5k9lPww"/>
-                <!-- Selected Region Simulation -->
-                <div class="absolute top-1/4 left-1/3 w-48 h-32 border-2 border-primary bg-primary/10 rounded-sm cursor-pointer group-hover:border-white transition-colors flex items-center justify-center">
-                    <div class="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 absolute -top-5 left-0 rounded-t-sm">ID: 082</div>
+
+            <div className="flex items-center gap-4">
+              {/* Review status badge */}
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase shadow-xs border ${
+                reviewStatus === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                reviewStatus === 'REQUEST_CHANGES' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                'bg-amber-100 text-amber-800 border-amber-200'
+              }`}>
+                {reviewStatus.replace('_', ' ')}
+              </span>
+
+              <div className="w-px h-6 bg-border/30"></div>
+
+              {/* Notifications */}
+              <button className="p-2 hover:bg-primary/10 rounded-lg transition-all text-primary active:opacity-80 scale-95" title="Notifications">
+                <Icons.Bell />
+              </button>
+
+              {/* User Avatar */}
+              <a href="#">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center font-bold text-white text-xs ring-2 ring-white/20 hover:ring-white/40 transition-all cursor-pointer">
+                  C
                 </div>
+              </a>
             </div>
-            <!-- Floating Player Controls -->
-            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 glass-panel flex items-center gap-1 p-1.5 rounded-2xl shadow-lg border border-white/40">
-                <button class="p-2.5 hover:bg-primary-fixed-dim rounded-xl transition-all active:scale-90 text-primary">
-                    <span class="material-symbols-outlined">zoom_in</span>
+          </nav>
+
+          {/* ================= MAIN CONTAINER (CommonLayout main area) ================= */}
+          <main className="flex flex-1 min-h-0 pt-16 overflow-hidden">
+            
+            {/* ================= LEFT SIDEBAR (AppSidebar) ================= */}
+            <aside className="hidden md:flex flex-col h-full py-6 px-4 gap-4 bg-background w-64 border-r border-border/10 shrink-0 select-none">
+              {/* Branding */}
+              <div className="flex flex-col gap-1 mb-4 px-2">
+                <span className="text-lg font-black text-primary-dark">ASSET</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                  Premium Tier
+                </span>
+              </div>
+
+              {/* Navigation buttons */}
+              <nav className="flex flex-col gap-1">
+                <button className="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-xs tracking-wide uppercase font-bold transition-all translate-x-1 duration-200 text-muted-foreground hover:text-primary-dark hover:bg-accent/10">
+                  <Icons.Home />
+                  <span>Home</span>
                 </button>
-                <button class="p-2.5 hover:bg-primary-fixed-dim rounded-xl transition-all active:scale-90 text-primary">
-                    <span class="material-symbols-outlined">zoom_out</span>
+                <button className="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-xs tracking-wide uppercase font-bold transition-all translate-x-1 duration-200 text-muted-foreground hover:text-primary-dark hover:bg-accent/10">
+                  <Icons.Dashboard />
+                  <span>Dashboard</span>
                 </button>
-                <div class="w-px h-6 bg-outline-variant/30 mx-1"></div>
-                <button class="px-4 py-2 text-xs font-bold text-primary hover:bg-primary-fixed-dim rounded-xl transition-all">FIT</button>
-                <button class="px-4 py-2 text-xs font-bold text-primary hover:bg-primary-fixed-dim rounded-xl transition-all">100%</button>
-                <div class="w-px h-6 bg-outline-variant/30 mx-1"></div>
-                <button class="p-2.5 hover:bg-primary-fixed-dim rounded-xl transition-all active:scale-90 text-primary">
-                    <span class="material-symbols-outlined">fullscreen</span>
+                {/* Active review workspace points to 'Projects' */}
+                <button className="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-xs tracking-wide uppercase font-bold transition-all translate-x-1 duration-200 text-primary-dark font-bold border-r-4 border-primary bg-accent/20">
+                  <Icons.Folder />
+                  <span>Projects</span>
                 </button>
-                <button class="p-2.5 hover:bg-primary-fixed-dim rounded-xl transition-all active:scale-90 text-primary">
-                    <span class="material-symbols-outlined">download</span>
+                <button className="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-xs tracking-wide uppercase font-bold transition-all translate-x-1 duration-200 text-muted-foreground hover:text-primary-dark hover:bg-accent/10">
+                  <Icons.Settings />
+                  <span>Settings</span>
                 </button>
-            </div>
-        </div>
-    </section>
-    <!-- Right Sidebars Container -->
-    <aside class="w-[380px] h-full flex flex-col bg-surface-container-low border-l-0">
-        <!-- Tool Panel -->
-        <div class="p-6 border-b-0 space-y-6">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-bold text-on-surface tracking-tight">MARKUP TOOLS</h3>
-                <div class="flex gap-1">
-                    <button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-xl">undo</span></button>
-                    <button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-xl">redo</span></button>
+                <button className="flex items-center gap-3 py-3 px-4 rounded-lg font-inter text-xs tracking-wide uppercase font-bold transition-all translate-x-1 duration-200 text-muted-foreground hover:text-primary-dark hover:bg-accent/10">
+                  <Icons.Help />
+                  <span>Help</span>
+                </button>
+              </nav>
+
+              {/* Sidebar bottom action */}
+              <div className="mt-auto px-2">
+                <button className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto flex items-center justify-center gap-2">
+                  <Icons.Plus />
+                  <span>New Project</span>
+                </button>
+
+                <div className="mt-4 pt-4 border-t border-border/30">
+                  <button className="flex items-center gap-3 py-2 px-2 text-muted-foreground hover:text-destructive transition-colors w-full uppercase text-[10px] font-black tracking-wider">
+                    <Icons.Logout />
+                    <span>Logout</span>
+                  </button>
                 </div>
-            </div>
-            <!-- Mode Selector -->
-            <div class="grid grid-cols-3 gap-2 p-1 bg-surface-container-high rounded-xl">
-                <button class="flex flex-col items-center gap-1 py-3 px-2 bg-surface-container-lowest text-primary rounded-lg shadow-sm border-0">
-                    <span class="material-symbols-outlined">near_me</span>
-                    <span class="text-[10px] font-bold tracking-wider">SELECT</span>
-                </button>
-                <button class="flex flex-col items-center gap-1 py-3 px-2 text-on-surface-variant hover:bg-white/40 rounded-lg transition-all">
-                    <span class="material-symbols-outlined">edit</span>
-                    <span class="text-[10px] font-bold tracking-wider">DRAW</span>
-                </button>
-                <button class="flex flex-col items-center gap-1 py-3 px-2 text-on-surface-variant hover:bg-white/40 rounded-lg transition-all">
-                    <span class="material-symbols-outlined">text_fields</span>
-                    <span class="text-[10px] font-bold tracking-wider">TEXT</span>
-                </button>
-            </div>
-            <!-- Shape Tools & Settings -->
-            <div class="space-y-4">
-                <div class="flex items-center gap-4">
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl bg-white text-primary shadow-sm border-0"><span class="material-symbols-outlined">rectangle</span></button>
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/60 text-on-surface-variant transition-all"><span class="material-symbols-outlined">circle</span></button>
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/60 text-on-surface-variant transition-all"><span class="material-symbols-outlined">gesture</span></button>
-                    <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/60 text-on-surface-variant transition-all ml-auto"><span class="material-symbols-outlined">delete</span></button>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[11px] font-bold text-on-surface-variant tracking-wider">
-                        <span>STROKE SIZE</span>
-                        <span>4px</span>
+              </div>
+            </aside>
+
+            {/* ================= WORKSPACE CONTENT (CommonLayout right children area) ================= */}
+            <section className="flex-1 flex flex-col bg-background overflow-hidden relative">
+              
+              {/* SUB HEADER / WORKSPACE ACTION BAR */}
+              <div className="h-14 bg-card border-b border-border/20 flex items-center justify-between px-6 z-10 shrink-0">
+                <div className="flex items-center gap-4">
+                  {/* Prev/Next Image Navigation */}
+                  <div className="flex items-center bg-background rounded-lg p-1 border border-border/30 shadow-xs">
+                    <button 
+                      onClick={handlePrevImage} 
+                      disabled={currentImgIdx === 0}
+                      className="p-1 hover:bg-card rounded disabled:opacity-40 disabled:hover:bg-transparent text-primary-dark transition-all cursor-pointer" 
+                      title="Previous Image"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span className="text-xs font-black text-primary-dark px-3 min-w-[50px] text-center select-none">
+                      {currentImgIdx + 1} / {images.length}
+                    </span>
+                    <button 
+                      onClick={handleNextImage} 
+                      disabled={currentImgIdx === images.length - 1}
+                      className="p-1 hover:bg-card rounded disabled:opacity-40 disabled:hover:bg-transparent text-primary-dark transition-all cursor-pointer" 
+                      title="Next Image"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </div>
+
+                  {/* Version Selector */}
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-border/30 hover:border-primary rounded-lg text-xs font-bold text-primary-dark transition-all cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      <span>v{selectedVersion}</span>
+                      <Icons.ChevronDown />
+                    </button>
+                    <div className="absolute left-0 top-full mt-1 w-44 bg-card border border-border/35 rounded-lg shadow-xl py-1 hidden group-hover:block z-30">
+                      {currentImage.versions.map(v => (
+                        <button
+                          key={v.number}
+                          onClick={() => handleVersionChange(v.number)}
+                          className={`w-full text-left px-4 py-2 text-xs font-bold hover:bg-background flex items-center justify-between ${selectedVersion === v.number ? 'text-primary font-black bg-background' : 'text-muted-foreground'}`}
+                        >
+                          <span>v{v.number} {v.number === currentImage.versions[0].number && '(Current)'}</span>
+                          {selectedVersion === v.number && <span className="text-primary"><Icons.Check /></span>}
+                        </button>
+                      ))}
                     </div>
-                    <input class="w-full h-1.5 bg-surface-container-high rounded-full appearance-none cursor-pointer accent-primary" max="20" min="1" type="range" value="4"/>
+                  </div>
+
+                  {/* A/B Compare Version Button */}
+                  <button 
+                    onClick={() => setShowCompareModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border border-accent/20 hover:bg-accent/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer shadow-xs"
+                    title="Compare with other version"
+                  >
+                    <Icons.Diff />
+                    <span>Compare</span>
+                  </button>
                 </div>
-            </div>
-        </div>
-        <!-- Feedback Panel -->
-        <div class="flex-1 flex flex-col min-h-0">
-            <div class="p-6 pb-2">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-on-surface tracking-tight">FEEDBACK</h3>
-                    <span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-md">8 ACTIVE</span>
+
+                {/* Status Decisions & Export */}
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={handleApprove}
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer"
+                  >
+                    <span className="bg-emerald-500 rounded-full p-0.5"><Icons.Check /></span>
+                    <span>Approve</span>
+                  </button>
+                  <button 
+                    onClick={handleRequestChanges}
+                    className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>Request Changes</span>
+                  </button>
+
+                  <div className="w-px h-6 bg-border/20"></div>
+
+                  <button className="p-2 hover:bg-primary/10 rounded-lg text-primary-dark transition-all cursor-pointer" title="Download Source Asset">
+                    <Icons.Download />
+                  </button>
+                  <button className="p-2 hover:bg-primary/10 rounded-lg text-primary-dark transition-all cursor-pointer" title="More Actions">
+                    <Icons.More />
+                  </button>
                 </div>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
-                    <input class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-0 rounded-xl text-xs placeholder:text-outline focus:ring-1 focus:ring-primary/40 transition-all" placeholder="Search comments..." type="text"/>
+              </div>
+
+              {/* REVIEW GRID WORKSPACE PANELS */}
+              <div className="flex-1 flex overflow-hidden relative">
+                
+                {/* VIEWPORT CONTAINER */}
+                <div className="flex-1 relative bg-zinc-950 flex flex-col items-center justify-center overflow-hidden">
+                  
+                  {/* Floating Toolbar on Canvas */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 bg-zinc-900/90 border border-zinc-800/80 p-1.5 rounded-2xl shadow-2xl z-10 glass-panel">
+                    <button 
+                      onClick={() => { setActiveTool('select'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'select' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Select Tool (V)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"></polygon><line x1="13" y1="13" x2="19" y2="19"></line></svg>
+                      <span className="text-[7px] font-black mt-0.5">SELECT</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('rect'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'rect' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Rectangle (R)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                      <span className="text-[7px] font-black mt-0.5">RECT</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('circle'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'circle' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Circle (O)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+                      <span className="text-[7px] font-black mt-0.5">CIRCLE</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('arrow'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'arrow' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Arrow (A)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      <span className="text-[7px] font-black mt-0.5">ARROW</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('text'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'text' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Text Note (T)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                      <span className="text-[7px] font-black mt-0.5">TEXT</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('pin'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'pin' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Pin Comment (P)"
+                    >
+                      <Icons.Pin />
+                      <span className="text-[7px] font-black mt-0.5">PIN</span>
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTool('pan'); setSelectedShapeId(null); }} 
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${activeTool === 'pan' ? 'bg-primary text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                      title="Pan Workspace (H)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.0" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      <span className="text-[7px] font-black mt-0.5">PAN</span>
+                    </button>
+
+                    <div className="h-px bg-zinc-800 my-1 mx-1.5"></div>
+                    
+                    {/* Delete Selected Shape */}
+                    <button 
+                      onClick={() => { if (selectedShapeId) handleDeleteAnnotation(selectedShapeId); }}
+                      disabled={!selectedShapeId}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 hover:bg-rose-950/80 hover:text-rose-400 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer"
+                      title="Delete Selected Shape (Del)"
+                    >
+                      <Icons.Trash />
+                    </button>
+
+                    {/* Undo / Redo */}
+                    <button 
+                      onClick={handleUndo} 
+                      disabled={history.length === 0}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer" 
+                      title="Undo"
+                    >
+                      <Icons.Undo />
+                    </button>
+                    <button 
+                      onClick={handleRedo} 
+                      disabled={redoStack.length === 0}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer" 
+                      title="Redo"
+                    >
+                      <Icons.Redo />
+                    </button>
+
+                    {/* Color picker dropdown */}
+                    <div className="relative group/color w-10 h-10 flex items-center justify-center cursor-pointer">
+                      <div className="w-5 h-5 rounded-full border border-white/50" style={{ backgroundColor: activeColor }}></div>
+                      <div className="absolute left-full top-0 ml-2 bg-zinc-900 border border-zinc-800 rounded-lg p-2 flex gap-1.5 shadow-2xl hidden group-hover/color:flex z-30">
+                        {['#f43f5e', '#10b981', '#f59e0b', '#0ea5e9', '#535297'].map(color => (
+                          <button
+                            key={color}
+                            onClick={() => { setActiveColor(color); addLog('Changed Color', `Stroke color set to ${color}`); }}
+                            className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${activeColor === color ? 'border-white scale-105' : 'border-transparent'}`}
+                            style={{ backgroundColor: color }}
+                          ></button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SVG DRAWING LAYER */}
+                  <Canvas
+                    imageUrl={currentImage.url}
+                    imageWidth={currentImage.width}
+                    imageHeight={currentImage.height}
+                    shapes={versionAnnotations}
+                    selectedTool={activeTool}
+                    activeColor={activeColor}
+                    strokeWidth={strokeWidth}
+                    zoom={zoom}
+                    pan={pan}
+                    setPan={setPan}
+                    isDrawing={isDrawing}
+                    setIsDrawing={setIsDrawing}
+                    drawingShape={drawingShape}
+                    setDrawingShape={setDrawingShape}
+                    pendingShape={pendingShape}
+                    setPendingShape={setPendingShape}
+                    selectedShapeId={selectedShapeId}
+                    setSelectedShapeId={setSelectedShapeId}
+                    showAnnotations={showAnnotations}
+                    onShapeComplete={handleShapeComplete}
+                    setZoom={setZoom}
+                    viewportRef={viewportRef}
+                    onAction={(msg) => addLog(msg)}
+                  />
+
+                  {/* BOTTOM FLOATING CAPSULE CONTROLS */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/95 border border-zinc-800/80 rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl z-10 text-white glass-panel">
+                    <button 
+                      onClick={() => { setActiveTool('pan'); addLog('Activated Pan Tool'); }}
+                      className={`p-1.5 hover:bg-zinc-800 rounded-lg transition-all cursor-pointer ${activeTool === 'pan' ? 'text-accent bg-zinc-800' : 'text-zinc-400'}`}
+                      title="Pan Mode"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </button>
+                    <div className="w-px h-5 bg-zinc-800"></div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleZoomOut} className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer" title="Zoom Out"><Icons.ZoomOut /></button>
+                      <span className="text-xs font-bold tracking-widest text-zinc-300 w-12 text-center select-none">{zoom}%</span>
+                      <button onClick={handleZoomIn} className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer" title="Zoom In"><Icons.ZoomIn /></button>
+                    </div>
+                    <div className="w-px h-5 bg-zinc-800"></div>
+
+                    <button 
+                      onClick={handleZoomFit} 
+                      className="px-2.5 py-1 text-[10px] font-black tracking-wider hover:bg-zinc-800 hover:text-white text-zinc-400 rounded-lg transition-all cursor-pointer"
+                    >
+                      FIT
+                    </button>
+                    <button 
+                      onClick={handleZoomReset} 
+                      className="px-2.5 py-1 text-[10px] font-black tracking-wider hover:bg-zinc-800 hover:text-white text-zinc-400 rounded-lg transition-all cursor-pointer"
+                    >
+                      100%
+                    </button>
+                    <div className="w-px h-5 bg-zinc-800"></div>
+
+                    <button 
+                      onClick={() => { setShowAnnotations(!showAnnotations); addLog((showAnnotations ? 'Hidden' : 'Shown') + ' annotations'); }} 
+                      className={`p-1.5 hover:bg-zinc-800 rounded-lg transition-all cursor-pointer ${showAnnotations ? 'text-accent' : 'text-zinc-500'}`}
+                      title={showAnnotations ? "Hide Annotations" : "Show Annotations"}
+                    >
+                      {showAnnotations ? <Icons.Eye /> : <Icons.EyeOff />}
+                    </button>
+                  </div>
+
+                  {/* COMMENTS POPUP OVERLAY */}
+                  {uiState === 'awaiting_comment' && commentPopupPos && (
+                    <div 
+                      className="absolute bg-card rounded-xl shadow-2xl border border-border p-4 w-72 z-30 flex flex-col gap-3"
+                      style={{
+                        top: Math.min(window.innerHeight - 250, Math.max(80, commentPopupPos.y - 120)),
+                        left: Math.min(window.innerWidth - 680, Math.max(100, commentPopupPos.x + 20))
+                      }}
+                    >
+                      <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                        <span className="text-xs font-black text-primary-dark uppercase tracking-wider">New Comment</span>
+                        <span className="text-[10px] font-bold bg-background text-primary px-2 py-0.5 rounded border border-border/10 uppercase">
+                          {pendingShape?.type}
+                        </span>
+                      </div>
+
+                      <form onSubmit={handlePostComment} className="flex flex-col gap-2 relative">
+                        <textarea
+                          ref={commentInputRef}
+                          value={newCommentText}
+                          onChange={handleCommentChange}
+                          placeholder="Type comment here... use @ to mention team"
+                          className="w-full text-xs bg-background border border-border/50 text-primary-dark rounded-lg p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none h-20 outline-none"
+                          required
+                          autoFocus
+                        />
+
+                        {/* @mention suggestions dropdown */}
+                        {mentionQuery !== null && filteredMentions.length > 0 && (
+                          <div className="absolute left-0 bottom-full mb-1 w-full bg-card border border-border rounded-lg shadow-xl py-1 z-40 max-h-36 overflow-y-auto custom-scrollbar">
+                            {filteredMentions.map(u => (
+                              <button
+                                key={u.id}
+                                type="button"
+                                onClick={() => handleInsertMention(u.username)}
+                                className="w-full text-left px-3 py-1.5 hover:bg-background flex items-center gap-2 text-xs text-primary-dark"
+                              >
+                                <span className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center font-bold text-[9px] text-primary-dark">{u.avatar}</span>
+                                <span>{u.name}</span>
+                                <span className="text-[10px] text-muted-foreground/60">@{u.username}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between py-1 border-t border-border/20 mt-1">
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={simulateError}
+                              onChange={(e) => setSimulateError(e.target.checked)}
+                              className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                            />
+                            <span className="text-[10px] font-bold text-muted-foreground">Simulate Sync Error</span>
+                          </label>
+                        </div>
+
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={handleCancelComment}
+                            className="flex-1 py-1.5 bg-background hover:bg-border/20 border border-border/40 rounded-lg text-primary-dark text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="flex-1 py-1.5 bg-primary hover:bg-secondary text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                          >
+                            Post
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Sync loading overlay */}
+                  {uiState === 'syncing' && (
+                    <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-xs flex items-center justify-center z-40">
+                      <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 text-white">
+                        <svg className="animate-spin h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-xs font-bold text-zinc-300">Synchronizing Annotation...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sync error display */}
+                  {uiState === 'error' && (
+                    <div className="absolute inset-0 bg-zinc-950/50 backdrop-blur-xs flex items-center justify-center z-40">
+                      <div className="bg-card border border-destructive/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center">
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <div>
+                          <h4 class="text-sm font-black text-primary-dark">Annotation Sync Failed</h4>
+                          <p class="text-xs text-muted-foreground mt-1 leading-relaxed">A database write failure or simulated network timeout occurred.</p>
+                        </div>
+                        <div className="flex gap-2 w-full mt-2">
+                          <button 
+                            onClick={() => { setUiState('awaiting_comment'); setSimulateError(false); }}
+                            className="flex-1 py-2 bg-background border border-border/40 hover:bg-border/20 text-primary-dark rounded-xl text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button 
+                            onClick={handlePostComment}
+                            className="flex-1 py-2 bg-primary hover:bg-secondary text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Retry Sync
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-            </div>
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 pt-2 space-y-4">
-                <!-- Feedback Item 1 -->
-                <div class="p-4 bg-surface-container-lowest rounded-2xl shadow-sm space-y-3 group cursor-pointer hover:bg-white transition-all border border-transparent hover:border-primary/10">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full overflow-hidden">
-                                <img class="w-full h-full object-cover" data-alt="professional male designer portrait in a bright studio environment, modern aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhh4g_d4hLdkWVmLr7Q--gunaCwtLYApYiRbzqBwB8OW8umQqWjQqrGqTrlijXOjoEHtMekPwp6PBjxYoikH3vzs4V8RcGpZ5D3wsHsAgUkAK2kGJJJkyDxvganBiJfsZxcCiz1u3KFGI26wz_gEjZJLzsjqEmHzku2rcSk8aQ7_2Fb4cD9FLAcy3TDRakGGxHX2BjHYD_G5ooINTZ6McI5H5T3vibUhRCmg5W1dYNIwgkmRUUpLsFtrZ9UWdSR4Xcok7TZkSaGvU"/>
+
+                {/* ================= RIGHT WORKSPACE SIDEBAR ================= */}
+                <aside className={`bg-card border-l border-border/30 flex flex-col h-full shrink-0 transition-all duration-300 relative z-10 ${
+                  sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-80'
+                }`}>
+                  
+                  {/* Sidebar toggle arrow button */}
+                  <button
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    className="absolute top-1/2 -left-3 -translate-y-1/2 w-6 h-10 bg-card border border-border border-r-0 hover:bg-background text-border hover:text-primary rounded-l-md flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer"
+                    title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                  >
+                    {sidebarCollapsed ? '◀' : '▶'}
+                  </button>
+
+                  <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+                    
+                    {/* SECTION: DRAWING TOOL SETTINGS */}
+                    <section className="border-b border-border/20 p-5">
+                      <div 
+                        className="flex items-center justify-between mb-3 cursor-pointer select-none"
+                        onClick={() => setExpandedSections(prev => ({ ...prev, shapes: !prev.shapes }))}
+                      >
+                        <h3 className="text-xs font-black text-primary-dark uppercase tracking-wider">Markup Tools</h3>
+                        <span className={`text-border transition-all ${expandedSections.shapes ? 'rotate-180' : ''}`}><Icons.ChevronDown /></span>
+                      </div>
+
+                      {expandedSections.shapes && (
+                        <div className="flex flex-col gap-4 mt-2">
+                          {/* Tool Grid buttons */}
+                          <div className="grid grid-cols-2 gap-2 bg-background p-1 rounded-xl border border-border/20">
+                            <button 
+                              onClick={() => { setActiveTool('rect'); setSelectedShapeId(null); }}
+                              className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTool === 'rect' ? 'bg-card text-primary shadow-xs border border-border/20' : 'text-muted-foreground hover:bg-card/40'}`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                              <span>Rectangle</span>
+                            </button>
+                            <button 
+                              onClick={() => { setActiveTool('circle'); setSelectedShapeId(null); }}
+                              className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTool === 'circle' ? 'bg-card text-primary shadow-xs border border-border/20' : 'text-muted-foreground hover:bg-card/40'}`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              <span>Circle</span>
+                            </button>
+                            <button 
+                              onClick={() => { setActiveTool('arrow'); setSelectedShapeId(null); }}
+                              className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTool === 'arrow' ? 'bg-card text-primary shadow-xs border border-border/20' : 'text-muted-foreground hover:bg-card/40'}`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                              <span>Arrow</span>
+                            </button>
+                            <button 
+                              onClick={() => { setActiveTool('text'); setSelectedShapeId(null); }}
+                              className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTool === 'text' ? 'bg-card text-primary shadow-xs border border-border/20' : 'text-muted-foreground hover:bg-card/40'}`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                              <span>Text Note</span>
+                            </button>
+                          </div>
+
+                          {/* Width control */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-black text-muted-foreground tracking-wider">
+                              <span>STROKE SIZE</span>
+                              <span>{strokeWidth}px</span>
                             </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-on-surface">Marcus K.</h4>
-                                <span class="text-[10px] text-outline">12m ago</span>
+                            <input 
+                              type="range" 
+                              min="1" 
+                              max="16" 
+                              value={strokeWidth} 
+                              onChange={(e) => setStrokeWidth(parseInt(e.target.value))}
+                              className="w-full h-1.5 bg-background rounded-full appearance-none cursor-pointer accent-primary border border-border/10"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </section>
+
+                    {/* SECTION: COMMENTS LIST */}
+                    <section className="border-b border-border/20 p-5 flex flex-col flex-1 min-h-0">
+                      <div 
+                        className="flex items-center justify-between mb-3 cursor-pointer select-none"
+                        onClick={() => setExpandedSections(prev => ({ ...prev, comments: !prev.comments }))}
+                      >
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xs font-black text-primary-dark uppercase tracking-wider">Feedback</h3>
+                          <span className="px-1.5 py-0.5 bg-accent/20 text-primary-dark text-[9px] font-black rounded-md">{openCount} OPEN</span>
+                        </div>
+                        <span className={`text-border transition-all ${expandedSections.comments ? 'rotate-180' : ''}`}><Icons.ChevronDown /></span>
+                      </div>
+
+                      {expandedSections.comments && (
+                        <div className="flex flex-col flex-1 min-h-0 gap-3 mt-2">
+                          
+                          {/* Search and filters */}
+                          <div className="space-y-2">
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-border"><Icons.Search /></span>
+                              <input
+                                type="text"
+                                placeholder="Search comments..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 bg-background border border-border/50 text-primary-dark rounded-lg text-xs placeholder:text-muted-foreground/60 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                              />
                             </div>
+                            
+                            <div className="flex gap-1.5 bg-background p-0.5 rounded-lg border border-border/40 text-[10px] font-bold">
+                              <button 
+                                onClick={() => setStatusFilter('ALL')}
+                                className={`flex-1 py-1 rounded text-center transition-all cursor-pointer ${statusFilter === 'ALL' ? 'bg-card text-primary-dark shadow-xs' : 'text-muted-foreground'}`}
+                              >
+                                All ({versionAnnotations.length})
+                              </button>
+                              <button 
+                                onClick={() => setStatusFilter('OPEN')}
+                                className={`flex-1 py-1 rounded text-center transition-all cursor-pointer ${statusFilter === 'OPEN' ? 'bg-card text-emerald-850 shadow-xs font-black' : 'text-muted-foreground'}`}
+                              >
+                                Open ({openCount})
+                              </button>
+                              <button 
+                                onClick={() => setStatusFilter('RESOLVED')}
+                                className={`flex-1 py-1 rounded text-center transition-all cursor-pointer ${statusFilter === 'RESOLVED' ? 'bg-card text-primary-dark shadow-xs' : 'text-muted-foreground'}`}
+                              >
+                                Resolved ({resolvedCount})
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Comments list viewport */}
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-3">
+                            {filteredAnnotations.length === 0 ? (
+                              <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
+                                <svg className="w-8 h-8 text-border" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                <span className="text-xs font-semibold">No comments found matching filter</span>
+                              </div>
+                            ) : (
+                              filteredAnnotations.map(ann => {
+                                const isSelected = selectedShapeId === ann.id;
+                                return (
+                                  <div 
+                                    key={ann.id}
+                                    onClick={() => focusOnShape(ann)}
+                                    className={`p-3.5 rounded-xl transition-all border cursor-pointer ${
+                                      isSelected ? 'bg-accent/15 border-accent shadow-xs' : 'bg-background border-border/20 hover:bg-background/70 hover:border-border/30'
+                                    }`}
+                                  >
+                                    {/* Header info */}
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-accent/30 flex items-center justify-center font-bold text-[9px] text-primary-dark">
+                                          {ann.comment.avatar}
+                                        </div>
+                                        <div>
+                                          <h4 className="text-xs font-bold text-primary-dark">{ann.comment.author}</h4>
+                                          <span className="text-[9px] text-muted-foreground/60">{ann.comment.time}</span>
+                                        </div>
+                                      </div>
+                                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border ${
+                                        ann.comment.status === 'OPEN' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-background text-muted-foreground border-border/30'
+                                      }`}>
+                                        {ann.comment.status}
+                                      </span>
+                                    </div>
+
+                                    {/* Comment text */}
+                                    <p className="text-xs text-primary-dark/80 mt-2.5 leading-relaxed font-semibold">
+                                      {ann.comment.text}
+                                    </p>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-between border-t border-border/20 mt-3 pt-2">
+                                      <div className="flex items-center gap-3">
+                                        <button 
+                                          onClick={(e) => { e.stopPropagation(); setActiveReplyBox(ann.id); }}
+                                          className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                                        >
+                                          Reply
+                                        </button>
+                                        <button 
+                                          onClick={(e) => { e.stopPropagation(); handleToggleStatus(ann.id); }}
+                                          className="text-[10px] font-bold text-muted-foreground hover:text-primary cursor-pointer"
+                                        >
+                                          {ann.comment.status === 'OPEN' ? 'Resolve' : 'Reopen'}
+                                        </button>
+                                      </div>
+                                      
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteAnnotation(ann.id); }}
+                                        className="text-border hover:text-destructive transition-colors cursor-pointer"
+                                        title="Delete Annotation Thread"
+                                      >
+                                        <Icons.Trash />
+                                      </button>
+                                    </div>
+
+                                    {/* Thread replies list */}
+                                    {ann.comment.replies.length > 0 && (
+                                      <div className="mt-2.5 pl-3 border-l-2 border-border/40 space-y-2">
+                                        {ann.comment.replies.map(reply => (
+                                          <div key={reply.id} className="text-[11px] text-primary-dark bg-card/60 border border-border/10 p-2 rounded shadow-2xs">
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="font-bold text-primary-dark">{reply.author}</span>
+                                              <span className="text-[8px] text-muted-foreground/60">• {reply.time}</span>
+                                            </div>
+                                            <p className="mt-0.5 leading-relaxed">{reply.text}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Reply form */}
+                                    {activeReplyBox === ann.id && (
+                                      <form 
+                                        onSubmit={(e) => handleAddReply(ann.id, e)}
+                                        className="mt-2.5 flex gap-1.5"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <input
+                                          type="text"
+                                          placeholder="Type reply..."
+                                          value={replyText}
+                                          onChange={(e) => setReplyText(e.target.value)}
+                                          className="flex-1 bg-card border border-border/50 rounded px-2 py-1 text-xs outline-none focus:border-primary text-primary-dark"
+                                          required
+                                          autoFocus
+                                        />
+                                        <button 
+                                          type="submit" 
+                                          className="px-2.5 py-1 bg-primary text-white text-xs font-bold rounded cursor-pointer hover:bg-secondary transition-all"
+                                        >
+                                          Post
+                                        </button>
+                                      </form>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
                         </div>
-                        <span class="text-[9px] font-black px-2 py-0.5 bg-secondary-container/20 text-secondary rounded uppercase tracking-tighter">OPEN</span>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="w-16 h-12 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0 border border-outline-variant/20">
-                            <img class="w-full h-full object-cover opacity-80" data-alt="close-up crop of architectural concept art with soft lavender and indigo gradients" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnF1gerDjlI9i8O8vjGrRK7rBvCSx2SLwgxvuMFPv9t3MjZ_mETex2pIKMX3oqEyzwPN4Hus1T6rDMUCnAADHqcO6hOcJpz3uZ2ZEouJW0lEjqnJj43mvR4a3pWmLPV7P4pQPhXdZkX7XSBwJdG5R1ZwWBOSaC0-xs-HkjC9dhbQ8_Wf23M1WNmMxDTvmSLb5V9tI-ha8ejj5QzlVxhqlE1c0GGVxcVgNd8g_M0xR3M-PAemTxFElcCWNAsCBImse2vRvzrXvLdpQ"/>
+                      )}
+                    </section>
+
+                    {/* SECTION: ACTION LOG */}
+                    <section className="border-b border-border/20 p-5 max-h-[220px] overflow-hidden flex flex-col">
+                      <div 
+                        className="flex items-center justify-between mb-2 cursor-pointer select-none"
+                        onClick={() => setExpandedSections(prev => ({ ...prev, actionLog: !prev.actionLog }))}
+                      >
+                        <h3 className="text-xs font-black text-primary-dark uppercase tracking-wider">Action Log</h3>
+                        <span className={`text-border transition-all ${expandedSections.actionLog ? 'rotate-180' : ''}`}><Icons.ChevronDown /></span>
+                      </div>
+
+                      {expandedSections.actionLog && (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar mt-2 pr-1 space-y-2">
+                          {actionLogs.map(log => (
+                            <div key={log.id} className="text-[11px] p-2 bg-background border border-border/20 rounded-lg flex gap-2">
+                              <span className="text-xs">
+                                {log.type === 'status' ? '⚙️' : log.type === 'error' ? '❌' : '💬'}
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-bold text-primary-dark">{log.action}</p>
+                                {log.details && <p className="text-[10px] text-muted-foreground/85">{log.details}</p>}
+                              </div>
+                              <span className="text-[9px] text-muted-foreground/60 whitespace-nowrap">{log.time}</span>
+                            </div>
+                          ))}
                         </div>
-                        <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2">The lighting on the left curvature feels a bit too harsh compared to the reference.</p>
-                    </div>
+                      )}
+                    </section>
+
+                    {/* SECTION: METADATA */}
+                    <section className="p-5">
+                      <div 
+                        className="flex items-center justify-between mb-3 cursor-pointer select-none"
+                        onClick={() => setExpandedSections(prev => ({ ...prev, imageInfo: !prev.imageInfo }))}
+                      >
+                        <h3 className="text-xs font-black text-primary-dark uppercase tracking-wider">Image Metadata</h3>
+                        <span className={`text-border transition-all ${expandedSections.imageInfo ? 'rotate-180' : ''}`}><Icons.ChevronDown /></span>
+                      </div>
+
+                      {expandedSections.imageInfo && (
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-2 text-xs">
+                          <div>
+                            <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider block">FILE SIZE</span>
+                            <span className="font-black text-primary-dark">{currentImage.size}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider block">DIMENSIONS</span>
+                            <span className="font-black text-primary-dark">{currentImage.dimensions}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider block">UPLOADED</span>
+                            <span className="font-black text-primary-dark">{currentImage.uploadDate}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider block">UPLOADER</span>
+                            <span className="font-black text-primary-dark">{currentImage.uploader}</span>
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  </div>
+                </aside>
+              </div>
+            </section>
+          </main>
+
+          {/* ================= COMPARE VISUAL MODAL OVERLAY ================= */}
+          {showCompareModal && (
+            <div className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-md flex items-center justify-center p-8">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+                
+                {/* Modal Header */}
+                <div className="p-4 border-b border-zinc-800 flex items-center justify-between text-white">
+                  <div>
+                    <h3 className="text-sm font-black tracking-wider uppercase">Visual A/B Comparison</h3>
+                    <p className="text-xs text-zinc-400">Comparing Version 2 (Left) with Version 3 (Right)</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowCompareModal(false)}
+                    className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all text-xs font-bold cursor-pointer"
+                  >
+                    Close Comparison
+                  </button>
                 </div>
-                <!-- Feedback Item 2 -->
-                <div class="p-4 bg-surface-container-low opacity-70 rounded-2xl space-y-3 group cursor-pointer hover:bg-white transition-all">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full overflow-hidden">
-                                <img class="w-full h-full object-cover" data-alt="smiling female creative director portrait with vibrant background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKjRlT82hVTb-zg-Xt58T0mBChioKZnMFnWEHPYJ-kg1Wop0coBNVahQx2m_1dM_36wrsmB-8Y75fgLkZZ54Cm__7Gjir2t_PzijmR3gRFOBRTAAzw9-v62bCG6V5g5osPPHD5rlXpdHVGHDUK4tFJUbw9DewqFQ5dl1cdAMAa9eBwZxfvVGxbFmtnuGNjRXnKLQxvS8nkXMwNkR5TOsK_gSEvQ1N2cnE8XzpC2doZe6HaRMgDtqKRczIrnqssig6gXzxZSKwhCaw"/>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-on-surface">Lena Chen</h4>
-                                <span class="text-[10px] text-outline">2h ago</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1 text-[9px] font-black text-tertiary">
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                            <span>RESOLVED</span>
-                        </div>
+
+                {/* Split slider */}
+                <div className="flex-1 relative bg-zinc-950 flex items-center justify-center overflow-hidden">
+                  <div 
+                    className="relative max-w-full max-h-full select-none"
+                    style={{
+                      width: currentImage.width,
+                      height: currentImage.height
+                    }}
+                  >
+                    <img 
+                      src={currentImage.url} 
+                      alt="Version 3" 
+                      className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                      draggable={false}
+                    />
+                    <div className="absolute top-4 right-4 bg-zinc-900/90 text-[10px] font-black text-accent border border-zinc-800 px-3 py-1 rounded-full z-10">
+                      VERSION 3 (NEW)
                     </div>
-                    <div class="flex gap-3">
-                        <div class="w-16 h-12 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0 border border-outline-variant/20">
-                            <img class="w-full h-full object-cover grayscale opacity-50" data-alt="zoomed in detail of purple architectural texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoXwXBdbYt2EuTWI_hF6H_Xg6GmMDtTSbsXzRZaqn1pZPQdG8I6Ibx72Piq2UVsTi-wm9esVv9yPtvGqbrab5TG1R3u4eIF9rDOQRbDFw0MfYtnkeLxwq5Cdzoj8WRE702tdqDzAhKMs-2TyUCP4a2Y593pP63-S2SdnI7vxhXSAI5VfrIYnro69ToutpTsl3xb2xSWkMopOt02ZBs5LA5GHUaXoJ0uHoOM-z5LxJnqMI15XMzbOgYwbQLfYX5dACXtwcX9GDD7z8"/>
-                        </div>
-                        <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2">Great work on the texture resolution here. Looks perfect for 4k print.</p>
+
+                    <div 
+                      className="absolute inset-0 overflow-hidden"
+                      style={{
+                        width: `${compareSliderPos}%`
+                      }}
+                    >
+                      <img 
+                        src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&h=800&q=80" 
+                        alt="Version 2" 
+                        className="absolute inset-0 object-contain pointer-events-none"
+                        style={{
+                          width: currentImage.width,
+                          height: currentImage.height,
+                          maxWidth: 'none'
+                        }}
+                        draggable={false}
+                      />
+                      <div className="absolute top-4 left-4 bg-zinc-900/90 text-[10px] font-black text-amber-500 border border-zinc-800 px-3 py-1 rounded-full z-10">
+                        VERSION 2 (OLD)
+                      </div>
                     </div>
+
+                    <div 
+                      className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-20 flex items-center justify-center"
+                      style={{
+                        left: `${compareSliderPos}%`
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white shadow-2xl border border-zinc-200 flex items-center justify-center text-xs font-bold text-slate-800 cursor-ew-resize -translate-x-1/2">
+                        ↔
+                      </div>
+                    </div>
+
+                    <input 
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={compareSliderPos}
+                      onChange={(e) => setCompareSliderPos(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-30"
+                    />
+                  </div>
                 </div>
-                <!-- Feedback Item 3 -->
-                <div class="p-4 bg-surface-container-lowest rounded-2xl shadow-sm space-y-3 group cursor-pointer hover:bg-white transition-all border border-transparent hover:border-primary/10">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-primary/10 text-primary flex items-center justify-center rounded-full">
-                                <span class="material-symbols-outlined text-sm">person</span>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-on-surface">Curator</h4>
-                                <span class="text-[10px] text-outline">4h ago</span>
-                            </div>
-                        </div>
-                        <span class="text-[9px] font-black px-2 py-0.5 bg-secondary-container/20 text-secondary rounded uppercase tracking-tighter">OPEN</span>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="w-16 h-12 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0 border border-outline-variant/20">
-                            <img class="w-full h-full object-cover" data-alt="detail of concept art showing organic shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEeCd9NO51FHZqjM3ZK9woJVKaorFN3B-Etgx6y1bd42wgVfgelBMt3yfKZ7EKU55pxDe8cOo4lbZV9sDgkXYQs1mCOWnTBqN-xp5XQs9OYscy3DZxE1lX5-yocW6rGXf0zdbQK-lGOFt7BB7--BhBAQDWQTTE_e_6M9TJTibmeFzGUk_t_1RuidWEkbROotWKXo6HvCJQJRxRT-m6-mS1ceTY77mAhoBC9zLndqmkCbZSFKQldw35798AYcUcC9egiT9AMQMroCU"/>
-                        </div>
-                        <p class="text-xs text-on-surface-variant leading-relaxed">Let's try a different color variant for this specific organic structure.</p>
-                    </div>
+
+                <div className="p-3 bg-zinc-950 border-t border-zinc-800 text-center text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                  Drag the slider line in the viewport left or right to compare details.
                 </div>
+              </div>
             </div>
-            <!-- Feedback Action -->
-            <div class="p-6 bg-surface-container border-t-0 flex gap-3">
-                <button class="flex-1 py-2.5 bg-gradient-to-tr from-primary to-primary-container text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition-all">POST COMMENT</button>
-                <button class="p-2.5 bg-white text-primary rounded-xl border border-primary/10 hover:bg-primary-fixed-dim transition-all">
-                    <span class="material-symbols-outlined">attachment</span>
-                </button>
-            </div>
+          )}
         </div>
-    </aside>
-</main>
-</body></html>
+      );
+    };
+
+    // --- Dynamic Arrow Drawing Canvas Subcomponent ---
+    const Canvas = ({
+      imageUrl,
+      imageWidth,
+      imageHeight,
+      shapes,
+      selectedTool,
+      activeColor,
+      strokeWidth,
+      zoom,
+      pan,
+      setPan,
+      isDrawing,
+      setIsDrawing,
+      drawingShape,
+      setDrawingShape,
+      pendingShape,
+      setPendingShape,
+      selectedShapeId,
+      setSelectedShapeId,
+      showAnnotations,
+      onShapeComplete,
+      setZoom,
+      viewportRef,
+      onAction
+    }) => {
+      const svgRef = useRef(null);
+      const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+      const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+      const [pStart, setPStart] = useState({ x: 0, y: 0 });
+
+      const getSVGCoords = (clientX, clientY) => {
+        if (!svgRef.current) return { x: 0, y: 0 };
+        const rect = svgRef.current.getBoundingClientRect();
+        const x = (clientX - rect.left) * (imageWidth / rect.width);
+        const y = (clientY - rect.top) * (imageHeight / rect.height);
+        return { x: Math.round(x), y: Math.round(y) };
+      };
+
+      const handleMouseDown = (e) => {
+        if (selectedTool === 'pan') {
+          setIsDraggingCanvas(true);
+          setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+          return;
+        }
+
+        if (selectedTool === 'select') {
+          const target = e.target;
+          const shapeId = target.getAttribute('data-shape-id');
+          if (shapeId) {
+            setSelectedShapeId(shapeId);
+            onAction('Selected shape: ' + shapeId);
+          } else {
+            setSelectedShapeId(null);
+          }
+          return;
+        }
+
+        if (['rect', 'circle', 'arrow', 'text', 'pin'].includes(selectedTool)) {
+          const coords = getSVGCoords(e.clientX, e.clientY);
+          setPStart(coords);
+          
+          if (selectedTool === 'pin') {
+            const newShape = {
+              id: 'temp_' + Date.now(),
+              type: 'pin',
+              x: coords.x,
+              y: coords.y,
+              color: activeColor,
+              strokeWidth: strokeWidth
+            };
+            setPendingShape(newShape);
+            onShapeComplete(newShape, { x: e.clientX, y: e.clientY });
+          } else if (selectedTool === 'text') {
+            const newShape = {
+              id: 'temp_' + Date.now(),
+              type: 'text',
+              x: coords.x,
+              y: coords.y,
+              text: 'Text Note', // default placeholder
+              color: activeColor,
+              fontSize: 16
+            };
+            setPendingShape(newShape);
+            onShapeComplete(newShape, { x: e.clientX, y: e.clientY });
+          } else {
+            setIsDrawing(true);
+            setDrawingShape({
+              type: selectedTool,
+              x: coords.x,
+              y: coords.y,
+              x2: coords.x,
+              y2: coords.y,
+              width: 0,
+              height: 0,
+              radius: 0,
+              color: activeColor,
+              strokeWidth: strokeWidth
+            });
+          }
+        }
+      };
+
+      const handleMouseMove = (e) => {
+        if (isDraggingCanvas) {
+          setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+          return;
+        }
+
+        if (isDrawing && drawingShape) {
+          const coords = getSVGCoords(e.clientX, e.clientY);
+          let updated = { ...drawingShape };
+          if (drawingShape.type === 'rect') {
+            updated.x = Math.min(pStart.x, coords.x);
+            updated.y = Math.min(pStart.y, coords.y);
+            updated.width = Math.abs(coords.x - pStart.x);
+            updated.height = Math.abs(coords.y - pStart.y);
+          } else if (drawingShape.type === 'circle') {
+            updated.radius = Math.round(Math.hypot(coords.x - pStart.x, coords.y - pStart.y));
+          } else if (drawingShape.type === 'arrow') {
+            updated.x2 = coords.x;
+            updated.y2 = coords.y;
+          }
+          setDrawingShape(updated);
+        }
+      };
+
+      const handleMouseUp = (e) => {
+        if (isDraggingCanvas) {
+          setIsDraggingCanvas(false);
+          return;
+        }
+
+        if (isDrawing && drawingShape) {
+          setIsDrawing(false);
+          const size = drawingShape.type === 'rect' ? Math.max(drawingShape.width, drawingShape.height) :
+                       drawingShape.type === 'circle' ? drawingShape.radius :
+                       drawingShape.type === 'arrow' ? Math.hypot(drawingShape.x2 - drawingShape.x, drawingShape.y2 - drawingShape.y) : 0;
+          
+          if (size > 10) {
+            const finalShape = {
+              ...drawingShape,
+              id: 'temp_' + Date.now()
+            };
+            setPendingShape(finalShape);
+            setDrawingShape(null);
+            onShapeComplete(finalShape, { x: e.clientX, y: e.clientY });
+          } else {
+            setDrawingShape(null);
+          }
+        }
+      };
+
+      const handleWheel = (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.05;
+        let nextZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
+        nextZoom = Math.min(400, Math.max(25, Math.round(nextZoom)));
+        setZoom(nextZoom);
+      };
+
+      useEffect(() => {
+        const viewport = viewportRef.current;
+        if (viewport) {
+          viewport.addEventListener('wheel', handleWheel, { passive: false });
+        }
+        return () => {
+          if (viewport) {
+            viewport.removeEventListener('wheel', handleWheel);
+          }
+        };
+      }, [zoom, viewportRef]);
+
+      const uniqueColors = Array.from(new Set([...shapes.map(s => s.color), activeColor]));
+
+      return (
+        <div
+          ref={viewportRef}
+          className={`relative w-full h-full overflow-hidden flex items-center justify-center bg-zinc-950 select-none ${
+            selectedTool === 'pan' ? (isDraggingCanvas ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
+          }`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
+          <div
+            className="relative transition-transform duration-75 ease-out origin-center"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+              width: imageWidth,
+              height: imageHeight
+            }}
+          >
+            <img
+              src={imageUrl}
+              alt="Canvas Asset"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none shadow-2xl border border-zinc-800"
+              draggable={false}
+            />
+
+            <svg
+              ref={svgRef}
+              viewBox={`0 0 ${imageWidth} ${imageHeight}`}
+              className="absolute inset-0 w-full h-full cursor-crosshair fill-none"
+              style={{ cursor: selectedTool === 'pan' ? 'inherit' : (selectedTool === 'select' ? 'default' : 'crosshair') }}
+            >
+              <defs>
+                {uniqueColors.map(color => (
+                  <marker
+                    key={color}
+                    id={`arrow-${color.replace('#', '')}`}
+                    viewBox="0 0 10 10"
+                    refX="6"
+                    refY="5"
+                    markerWidth="8"
+                    markerHeight="8"
+                    orient="auto-start-reverse"
+                  >
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill={color} />
+                  </marker>
+                ))}
+              </defs>
+
+              {showAnnotations && shapes.map(shape => {
+                const isSelected = selectedShapeId === shape.id;
+                const strokeColor = isSelected ? '#a6a0ed' : shape.color;
+                const strokeW = isSelected ? shape.strokeWidth + 3 : shape.strokeWidth;
+                
+                return (
+                  <g key={shape.id}>
+                    {shape.type === 'rect' && (
+                      <rect
+                        data-shape-id={shape.id}
+                        x={shape.x}
+                        y={shape.y}
+                        width={shape.width}
+                        height={shape.height}
+                        stroke={strokeColor}
+                        strokeWidth={strokeW}
+                        className="transition-all hover:stroke-indigo-400 cursor-pointer"
+                      />
+                    )}
+                    {shape.type === 'circle' && (
+                      <circle
+                        data-shape-id={shape.id}
+                        cx={shape.x}
+                        cy={shape.y}
+                        r={shape.radius}
+                        stroke={strokeColor}
+                        strokeWidth={strokeW}
+                        className="transition-all hover:stroke-indigo-400 cursor-pointer"
+                      />
+                    )}
+                    {shape.type === 'arrow' && (
+                      <line
+                        data-shape-id={shape.id}
+                        x1={shape.x}
+                        y1={shape.y}
+                        x2={shape.x2}
+                        y2={shape.y2}
+                        stroke={strokeColor}
+                        strokeWidth={strokeW}
+                        markerEnd={`url(#arrow-${shape.color.replace('#', '')})`}
+                        className="transition-all hover:stroke-indigo-400 cursor-pointer"
+                      />
+                    )}
+                    {shape.type === 'text' && (
+                      <g data-shape-id={shape.id} className="cursor-pointer">
+                        <rect
+                          x={shape.x - 6}
+                          y={shape.y - 4}
+                          width={shape.text.length * 8 + 12}
+                          height={24}
+                          rx={4}
+                          fill={shape.color}
+                          className="shadow-md"
+                        />
+                        <text
+                          x={shape.x}
+                          y={shape.y + 8}
+                          fill="#ffffff"
+                          fontSize={11}
+                          fontWeight="bold"
+                          dominantBaseline="middle"
+                          textAnchor="start"
+                        >
+                          {shape.text}
+                        </text>
+                      </g>
+                    )}
+                    {shape.type === 'pin' && (
+                      <g data-shape-id={shape.id} className="cursor-pointer">
+                        <circle
+                          cx={shape.x}
+                          cy={shape.y}
+                          r={14}
+                          fill={shape.color}
+                          stroke="white"
+                          strokeWidth={2}
+                          className="drop-shadow-lg"
+                        />
+                        <text
+                          x={shape.x}
+                          y={shape.y}
+                          fill="white"
+                          fontSize={10}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                        >
+                          💬
+                        </text>
+                      </g>
+                    )}
+                    {isSelected && shape.type !== 'text' && shape.type !== 'pin' && (
+                      <rect
+                        x={(shape.type === 'rect' ? shape.x : shape.type === 'circle' ? shape.x - shape.radius : Math.min(shape.x, shape.x2)) - 4}
+                        y={(shape.type === 'rect' ? shape.y : shape.type === 'circle' ? shape.y - shape.radius : Math.min(shape.y, shape.y2)) - 4}
+                        width={(shape.type === 'rect' ? shape.width : shape.type === 'circle' ? shape.radius * 2 : Math.abs(shape.x2 - shape.x)) + 8}
+                        height={(shape.type === 'rect' ? shape.height : shape.type === 'circle' ? shape.radius * 2 : Math.abs(shape.y2 - shape.y)) + 8}
+                        fill="none"
+                        stroke="#a6a0ed"
+                        strokeWidth={1.5}
+                        strokeDasharray="4,4"
+                      />
+                    )}
+                  </g>
+                );
+              })}
+
+              {isDrawing && drawingShape && (
+                <g>
+                  {drawingShape.type === 'rect' && (
+                    <rect
+                      x={drawingShape.x}
+                      y={drawingShape.y}
+                      width={drawingShape.width}
+                      height={drawingShape.height}
+                      stroke={activeColor}
+                      strokeWidth={strokeWidth}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                  {drawingShape.type === 'circle' && (
+                    <circle
+                      cx={drawingShape.x}
+                      cy={drawingShape.y}
+                      r={drawingShape.radius}
+                      stroke={activeColor}
+                      strokeWidth={strokeWidth}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                  {drawingShape.type === 'arrow' && (
+                    <line
+                      x1={drawingShape.x}
+                      y1={drawingShape.y}
+                      x2={drawingShape.x2}
+                      y2={drawingShape.y2}
+                      stroke={activeColor}
+                      strokeWidth={strokeWidth}
+                      markerEnd={`url(#arrow-${activeColor.replace('#', '')})`}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                </g>
+              )}
+
+              {pendingShape && (
+                <g>
+                  {pendingShape.type === 'rect' && (
+                    <rect
+                      x={pendingShape.x}
+                      y={pendingShape.y}
+                      width={pendingShape.width}
+                      height={pendingShape.height}
+                      stroke={pendingShape.color}
+                      strokeWidth={pendingShape.strokeWidth}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                  {pendingShape.type === 'circle' && (
+                    <circle
+                      cx={pendingShape.x}
+                      cy={pendingShape.y}
+                      r={pendingShape.radius}
+                      stroke={pendingShape.color}
+                      strokeWidth={pendingShape.strokeWidth}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                  {pendingShape.type === 'arrow' && (
+                    <line
+                      x1={pendingShape.x}
+                      y1={pendingShape.y}
+                      x2={pendingShape.x2}
+                      y2={pendingShape.y2}
+                      stroke={pendingShape.color}
+                      strokeWidth={pendingShape.strokeWidth}
+                      markerEnd={`url(#arrow-${pendingShape.color.replace('#', '')})`}
+                      strokeDasharray="4,4"
+                    />
+                  )}
+                  {pendingShape.type === 'pin' && (
+                    <circle
+                      cx={pendingShape.x}
+                      cy={pendingShape.y}
+                      r={14}
+                      fill={pendingShape.color}
+                      stroke="white"
+                      strokeWidth={2}
+                      strokeDasharray="3,3"
+                    />
+                  )}
+                </g>
+              )}
+            </svg>
+          </div>
+        </div>
+      );
+    };
+
+    // Render React Application
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<Workspace />);
+  </script>
+</body>
+</html>
