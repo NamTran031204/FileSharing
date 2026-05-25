@@ -1,18 +1,20 @@
 import {
-  type AnnotationsCreateUpdateDTO,
-  type AnnotationType,
-  type AnnotationTimeCode,
-  type AnnotationRegion,
-  type Shape,
-  type AnnotationPoint,
-  type AnnotationStatus,
+  type AnnotationIdDTO,
   type CommonResponseAnnotationsEntity,
   type AnnotationsEntity,
-  type PageRequestDtoAnnotationsFilterDTO,
-  type AnnotationsFilterDTO,
-  type CommonResponsePageResultAnnotationsEntity,
-  type PageResultAnnotationsEntity,
+  type AnnotationBody,
+  type UserMention,
+  type MediaType,
+  type AnnotationTimeCode,
+  type ShapeInfo,
+  type Shape,
+  type AnnotationStatus,
+  type AnnotationEditDTO,
   type CommonResponseString,
+  type AnnotationCreateDTO,
+  type CommonResponseAnnotationSummaryResponse,
+  type AnnotationSummaryResponse,
+  type CommonResponseListAnnotationsEntity,
   type IList,
   type List,
   type IListResult,
@@ -36,15 +38,15 @@ export class AnnotationsControllerService {
   /**
    *
    */
-  static updateDetail(
+  static resolve(
     params: {
       /** requestBody */
-      body?: AnnotationsCreateUpdateDTO;
+      body?: AnnotationIdDTO;
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/annotations/update-detail';
+      let url = basePath + '/api/annotation/resolve';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -58,15 +60,37 @@ export class AnnotationsControllerService {
   /**
    *
    */
-  static getPage(
+  static reopen(
     params: {
       /** requestBody */
-      body?: PageRequestDtoAnnotationsFilterDTO;
+      body?: AnnotationIdDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultAnnotationsEntity> {
+  ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/annotations/get-page';
+      let url = basePath + '/api/annotation/reopen';
+
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      let data = params.body;
+
+      configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static edit(
+    params: {
+      /** requestBody */
+      body?: AnnotationEditDTO;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseAnnotationsEntity> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/edit';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
@@ -82,16 +106,19 @@ export class AnnotationsControllerService {
    */
   static delete(
     params: {
-      /**  */
-      annotationId: string;
+      /** requestBody */
+      body?: AnnotationIdDTO;
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<CommonResponseString> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/annotations/delete/{annotationId}';
-      url = url.replace('{annotationId}', params['annotationId'] + '');
+      let url = basePath + '/api/annotation/delete';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      let data = params.body;
+
+      configs.data = data;
 
       axios(configs, resolve, reject);
     });
@@ -99,21 +126,84 @@ export class AnnotationsControllerService {
   /**
    *
    */
-  static createNew(
+  static create(
     params: {
       /** requestBody */
-      body?: AnnotationsCreateUpdateDTO;
+      body?: AnnotationCreateDTO;
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/annotations/create-new';
+      let url = basePath + '/api/annotation/create';
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
 
       let data = params.body;
 
       configs.data = data;
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static summary(
+    params: {
+      /**  */
+      assetId: string;
+      /**  */
+      versionNumber?: number;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseAnnotationSummaryResponse> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/summary';
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { assetId: params['assetId'], versionNumber: params['versionNumber'] };
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static listRootCommentByAsset(
+    params: {
+      /**  */
+      assetId: string;
+      /**  */
+      versionNumber: number;
+      /**  */
+      status?: AnnotationStatus;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseListAnnotationsEntity> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/list-root-comment-by-asset';
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { assetId: params['assetId'], versionNumber: params['versionNumber'], status: params['status'] };
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static listReplies(
+    params: {
+      /**  */
+      threadRootId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseListAnnotationsEntity> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/list-replies';
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { threadRootId: params['threadRootId'] };
 
       axios(configs, resolve, reject);
     });
@@ -129,10 +219,10 @@ export class AnnotationsControllerService {
     options: IRequestOptions = {}
   ): Promise<CommonResponseAnnotationsEntity> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/annotations/get-by-id/{annotationId}';
-      url = url.replace('{annotationId}', params['annotationId'] + '');
+      let url = basePath + '/api/annotation/get-by-id';
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { annotationId: params['annotationId'] };
 
       axios(configs, resolve, reject);
     });

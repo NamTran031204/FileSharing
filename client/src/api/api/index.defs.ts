@@ -1360,219 +1360,6 @@ export interface DownloadFileResponseDto {
   mimeType?: string;
 }
 
-export interface CommentAttachment {
-  /**  */
-  type?: CommentAttachmentType;
-
-  /**  */
-  fileId?: string;
-
-  /**  */
-  fileName?: string;
-
-  /**  */
-  fileSize?: string;
-}
-
-export interface CommentMessage {
-  /**  */
-  commentId?: string;
-
-  /**  */
-  replyToComment?: string;
-
-  /**  */
-  content?: string;
-
-  /**  */
-  mentions?: string[];
-
-  /**  */
-  attachments?: CommentAttachment[];
-
-  /**  */
-  createdBy?: string;
-
-  /**  */
-  createdByEmail?: string;
-
-  /**  */
-  createdByName?: string;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  editedAt?: Date;
-}
-
-export interface CommentThreadCreateUpdateDTO {
-  /**  */
-  threadId?: string;
-
-  /**  */
-  assetId?: string;
-
-  /**  */
-  versionNumber?: number;
-
-  /**  */
-  annotations?: string[];
-
-  /**  */
-  rootComment?: CommentMessage;
-
-  /**  */
-  replies?: CommentMessage[];
-
-  /**  */
-  status?: ThreadStatus;
-}
-
-export interface CommentThreadEntity {
-  /**  */
-  isTrash?: boolean;
-
-  /**  */
-  trashedAt?: Date;
-
-  /**  */
-  createdBy?: string;
-
-  /**  */
-  createdByEmail?: string;
-
-  /**  */
-  updateBy?: string;
-
-  /**  */
-  updateByEmail?: string;
-
-  /**  */
-  isActive?: boolean;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  updatedAt?: Date;
-
-  /**  */
-  threadId?: string;
-
-  /**  */
-  assetId?: string;
-
-  /**  */
-  versionNumber?: number;
-
-  /**  */
-  annotations?: string[];
-
-  /**  */
-  rootComment?: CommentMessage;
-
-  /**  */
-  replies?: CommentMessage[];
-
-  /**  */
-  replyCount?: number;
-
-  /**  */
-  participants?: string[];
-
-  /**  */
-  lastActivityAt?: Date;
-
-  /**  */
-  status?: ThreadStatus;
-
-  /**  */
-  resolvedAt?: Date;
-
-  /**  */
-  resolvedBy?: string;
-}
-
-export interface CommonResponseCommentThreadEntity {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: CommentThreadEntity;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface CommentThreadFilterDTO {
-  /**  */
-  assetId?: string;
-
-  /**  */
-  versionNumber?: number;
-
-  /**  */
-  annotationId?: string;
-
-  /**  */
-  participant?: string;
-
-  /**  */
-  createdBy?: string;
-
-  /**  */
-  keyword?: string;
-
-  /**  */
-  status?: ThreadStatus;
-
-  /**  */
-  fromLastActivityAt?: Date;
-
-  /**  */
-  toLastActivityAt?: Date;
-}
-
-export interface PageRequestDtoCommentThreadFilterDTO {
-  /**  */
-  maxResultCount?: number;
-
-  /**  */
-  skipCount?: number;
-
-  /**  */
-  sorting?: string;
-
-  /**  */
-  filter?: CommentThreadFilterDTO;
-}
-
-export interface CommonResponsePageResultCommentThreadEntity {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: PageResultCommentThreadEntity;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface PageResultCommentThreadEntity {
-  /**  */
-  totalCount?: string;
-
-  /**  */
-  data?: CommentThreadEntity[];
-}
-
 export interface MediaInfoDto {
   /**  */
   durationMs?: number;
@@ -1890,29 +1677,17 @@ export interface PageResultAssetSummaryDto {
   data?: AssetSummaryDto[];
 }
 
-export interface AnnotationPoint {
+export interface AnnotationIdDTO {
   /**  */
-  x?: number;
-
-  /**  */
-  y?: number;
+  annotationId?: string;
 }
 
-export interface AnnotationRegion {
+export interface AnnotationBody {
   /**  */
-  shape?: Shape;
+  body?: string;
 
   /**  */
-  points?: AnnotationPoint[];
-
-  /**  */
-  strokeColor?: string;
-
-  /**  */
-  strokeWidth?: number;
-
-  /**  */
-  fillColor?: string;
+  userMentions?: UserMention[];
 }
 
 export interface AnnotationTimeCode {
@@ -1921,35 +1696,6 @@ export interface AnnotationTimeCode {
 
   /**  */
   endMs?: string;
-}
-
-export interface AnnotationsCreateUpdateDTO {
-  /**  */
-  annotationId?: string;
-
-  /**  */
-  assetId?: string;
-
-  /**  */
-  versionNumber?: number;
-
-  /**  */
-  annotationType?: AnnotationType;
-
-  /**  */
-  timeCode?: AnnotationTimeCode;
-
-  /**  */
-  frameNumber?: number;
-
-  /**  */
-  region?: AnnotationRegion;
-
-  /**  */
-  status?: AnnotationStatus;
-
-  /**  */
-  threadId?: string;
 }
 
 export interface AnnotationsEntity {
@@ -1990,16 +1736,22 @@ export interface AnnotationsEntity {
   versionNumber?: number;
 
   /**  */
-  annotationType?: AnnotationType;
+  commentBody?: AnnotationBody;
+
+  /**  */
+  authorId?: string;
+
+  /**  */
+  mediaType?: MediaType;
 
   /**  */
   timeCode?: AnnotationTimeCode;
 
   /**  */
-  region?: AnnotationRegion;
+  frameNumber?: number;
 
   /**  */
-  frameNumber?: number;
+  region?: ShapeInfo[];
 
   /**  */
   status?: AnnotationStatus;
@@ -2012,6 +1764,12 @@ export interface AnnotationsEntity {
 
   /**  */
   threadId?: string;
+
+  /**  */
+  parentCommentId?: string;
+
+  /**  */
+  threadRootId?: string;
 }
 
 export interface CommonResponseAnnotationsEntity {
@@ -2028,7 +1786,79 @@ export interface CommonResponseAnnotationsEntity {
   message?: string;
 }
 
-export interface AnnotationsFilterDTO {
+export interface ShapeInfo {
+  /**  */
+  shapeId?: string;
+
+  /**  */
+  shape?: Shape;
+
+  /**  */
+  x?: number;
+
+  /**  */
+  y?: number;
+
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+
+  /**  */
+  radius?: number;
+
+  /**  */
+  x2?: number;
+
+  /**  */
+  y2?: number;
+
+  /**  */
+  text?: string;
+
+  /**  */
+  fontSize?: number;
+
+  /**  */
+  stroke?: string;
+
+  /**  */
+  strokeColor?: string;
+
+  /**  */
+  strokeWidth?: number;
+
+  /**  */
+  fillColor?: string;
+}
+
+export interface UserMention {
+  /**  */
+  userId?: string;
+
+  /**  */
+  userName?: string;
+
+  /**  */
+  start?: number;
+
+  /**  */
+  end?: number;
+}
+
+export interface AnnotationEditDTO {
+  /**  */
+  annotationId?: string;
+
+  /**  */
+  commentBody?: AnnotationBody;
+
+  /**  */
+  region?: ShapeInfo[];
+}
+
+export interface AnnotationCreateDTO {
   /**  */
   assetId?: string;
 
@@ -2036,70 +1866,22 @@ export interface AnnotationsFilterDTO {
   versionNumber?: number;
 
   /**  */
-  threadId?: string;
+  commentBody?: AnnotationBody;
 
   /**  */
-  annotationType?: AnnotationType;
+  mediaType?: MediaType;
 
   /**  */
-  status?: AnnotationStatus;
+  region?: ShapeInfo[];
 
   /**  */
-  createdBy?: string;
-
-  /**  */
-  createdByEmail?: string;
+  timeCode?: AnnotationTimeCode;
 
   /**  */
   frameNumber?: number;
 
   /**  */
-  fromStartMs?: string;
-
-  /**  */
-  toStartMs?: string;
-
-  /**  */
-  fromCreatedAt?: Date;
-
-  /**  */
-  toCreatedAt?: Date;
-}
-
-export interface PageRequestDtoAnnotationsFilterDTO {
-  /**  */
-  maxResultCount?: number;
-
-  /**  */
-  skipCount?: number;
-
-  /**  */
-  sorting?: string;
-
-  /**  */
-  filter?: AnnotationsFilterDTO;
-}
-
-export interface CommonResponsePageResultAnnotationsEntity {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: PageResultAnnotationsEntity;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface PageResultAnnotationsEntity {
-  /**  */
-  totalCount?: string;
-
-  /**  */
-  data?: AnnotationsEntity[];
+  parentCommentId?: string;
 }
 
 export interface CommonResponseProcessingJobEntity {
@@ -2689,6 +2471,60 @@ export interface CommonResponseAssetDetailResponseDto {
   message?: string;
 }
 
+export interface AnnotationSummaryResponse {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  totalThreads?: string;
+
+  /**  */
+  open?: string;
+
+  /**  */
+  resolved?: string;
+
+  /**  */
+  archived?: string;
+
+  /**  */
+  totalReplies?: string;
+
+  /**  */
+  participants?: string[];
+}
+
+export interface CommonResponseAnnotationSummaryResponse {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AnnotationSummaryResponse;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface CommonResponseListAnnotationsEntity {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AnnotationsEntity[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
   'ROLE_ADMIN' = 'ROLE_ADMIN',
@@ -2795,16 +2631,6 @@ export enum UploadStatus {
   'FAILED' = 'FAILED'
 }
 
-export enum CommentAttachmentType {
-  'IMAGE' = 'IMAGE',
-  'FILE' = 'FILE'
-}
-
-export enum ThreadStatus {
-  'OPEN' = 'OPEN',
-  'RESOLVED' = 'RESOLVED'
-}
-
 export enum AssetStatus {
   'DRAFT' = 'DRAFT',
   'IN_REVIEW' = 'IN_REVIEW',
@@ -2814,20 +2640,15 @@ export enum AssetStatus {
 
 export enum AnnotationStatus {
   'OPEN' = 'OPEN',
-  'RESOLVED' = 'RESOLVED'
-}
-
-export enum AnnotationType {
-  'TIMECODE' = 'TIMECODE',
-  'REGION' = 'REGION',
-  'FRAME_REGION' = 'FRAME_REGION'
+  'RESOLVED' = 'RESOLVED',
+  'ARCHIVED' = 'ARCHIVED'
 }
 
 export enum Shape {
-  'RECTANGLE' = 'RECTANGLE',
+  'RECT' = 'RECT',
   'CIRCLE' = 'CIRCLE',
-  'POLYGON' = 'POLYGON',
-  'FREEFORM' = 'FREEFORM',
+  'ARROW' = 'ARROW',
+  'TEXT' = 'TEXT',
   'DOT' = 'DOT'
 }
 
@@ -2857,7 +2678,8 @@ export enum RenditionStatus {
 
 export enum RenditionType {
   'HLS' = 'HLS',
-  'THUMBNAIL' = 'THUMBNAIL',
+  'IMAGE_THUMBNAIL' = 'IMAGE_THUMBNAIL',
+  'IMAGE_PREVIEW' = 'IMAGE_PREVIEW',
   'SPRITE' = 'SPRITE',
   'WAVEFORM' = 'WAVEFORM',
   'POSTER' = 'POSTER'
