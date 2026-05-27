@@ -8,17 +8,18 @@ import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
+import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.enums.UploadStatus;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
 import org.example.filesharing.jobs.kafka.EmailProducer;
-import org.example.filesharing.jobs.kafka.ImageEncodeProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
+import org.example.filesharing.services.ProcessingService;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -40,7 +41,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final PasswordEncoder passwordEncoder;
     private final EmailProducer emailProducer;
     private final VideoEncodeProducer videoEncodeProducer;
-    private final ImageEncodeProducer imageEncodeProducer;
+    private final ProcessingService processingService;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
@@ -99,7 +100,11 @@ public class MetadataServiceImpl implements MetadataService {
             if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
                 videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
             } else {
-                imageEncodeProducer.sendKafka(entity.getFileId(), entity.getObjectName());
+                processingService.createPendingJob(
+                        ProcessingJobCreateDTO.builder()
+                                .objectName(entity.getObjectName())
+                                .build()
+                );
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

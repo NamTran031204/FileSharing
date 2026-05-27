@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.processing.PlaybackDataResponseDto;
+import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import org.example.filesharing.entities.dtos.processing.ProcessingStatusResponseDto;
 import org.example.filesharing.entities.models.MediaRenditionEntity;
 import org.example.filesharing.entities.models.MetadataEntity;
@@ -22,6 +23,7 @@ import org.example.filesharing.repositories.ProcessingJobRepo;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProcessingService;
+import org.example.filesharing.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -37,6 +39,22 @@ public class ProcessingServiceImpl implements ProcessingService {
     private final MediaRenditionRepo mediaRenditionRepo;
     private final MetadataRepo metadataRepo;
     private final MinIoService minIoService;
+
+    @Override
+    public void createPendingJob(ProcessingJobCreateDTO job) {
+        ProcessingJobEntity ent = ProcessingJobEntity.builder()
+                .jobType(job.getJobType() != null ? job.getJobType() : null)
+                .objectName(job.getObjectName())
+                .metadataId(StringUtils.isNotNullOrBlank(job.getMetadataId()) ? job.getMetadataId() : null)
+                .assetId(StringUtils.isNotNullOrBlank(job.getAssetId()) ? job.getAssetId() : null)
+                .versionNumber(job.getVersionNumber() != null ? job.getVersionNumber() : null)
+                .status(ProcessingJobStatus.PENDING)
+                .priority(job.getPriority() != null ? job.getPriority() : 1)
+                .scheduledAt(Instant.now())
+                .build();
+
+        processingJobRepo.save(ent);
+    }
 
     @Override
     public ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber) {

@@ -1,11 +1,7 @@
 package com.file.service.filesharingimagecodec.job;
 
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
-import com.file.service.filesharingimagecodec.consumer.dto.ImageJobMessage;
 import com.file.service.filesharingimagecodec.enums.ProcessingJobStatus;
-import com.file.service.filesharingimagecodec.enums.ProcessingJobType;
-import com.file.service.filesharingimagecodec.job.queue.JobQueue;
-import com.file.service.filesharingimagecodec.model.ProcessingJobConfig;
 import com.file.service.filesharingimagecodec.model.ProcessingJobEntity;
 import com.file.service.filesharingimagecodec.model.ProcessingJobProgress;
 import com.file.service.filesharingimagecodec.model.ProcessingJobResult;
@@ -13,11 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -25,58 +26,24 @@ import java.util.Optional;
 public class JobService {
 
     private final JobRepository jobRepository;
-    private final JobQueue jobQueue;
     private final ImageProcessingConfig config;
+    private final MongoTemplate mongoTemplate;
 
-    /**
-     * tạo một job mới nếu nó chưa tồn tại (tính luỹ đẳng).
-     * @return true nếu job mới được tạo, false nếu đã tồn tại.
-     */
-    public boolean createJobIfAbsent(ImageJobMessage message) {
-        Optional<ProcessingJobEntity> existing = jobRepository.findById(message.getJobId());
-        if (existing.isPresent()) {
-            log.info("job {} da ton tai voi trang thai {}, bo qua trung lap",
-                    message.getJobId(), existing.get().getStatus());
-            return false;
-        }
-
-        ProcessingJobEntity job = ProcessingJobEntity.builder()
-                .jobId(message.getJobId())
-                .jobType(ProcessingJobType.GENERATE_THUMBNAILS)
-                .status(ProcessingJobStatus.PENDING)
-                .config(ProcessingJobConfig.builder()
-                        .maxThumbnails(message.getThumbnailWidth() > 0 ? message.getThumbnailWidth() : 200)
-                        .build())
-                .progress(ProcessingJobProgress.builder()
-                        .percent(0)
-                        .currentStep("QUEUED")
-                        .build())
-                .retryCount(0)
-                .maxRetries(config.getRetry().getMaxAttempts())
-                .scheduledAt(message.getSubmittedAt() != null ? message.getSubmittedAt() : Instant.now())
-                .build();
-
-        job.setAssetId(message.getInputKey());
-        job.setIsActive(true);
-
-        jobRepository.save(job);
-        log.info("da tao job anh moi: {}", message.getJobId());
-        return true;
-    }
-
-    public void markRunning(String jobId) {
-        jobRepository.findById(jobId).ifPresent(job -> {
-            job.setStatus(ProcessingJobStatus.PROCESSING);
-            job.setStartedAt(Instant.now());
-            job.setProgress(ProcessingJobProgress.builder()
-                    .percent(0)
-                    .currentStep("PROCESSING")
-                    .build());
-            job.setWorkerId(getWorkerId());
-            job.setWorkerHeartbeat(Instant.now());
-            jobRepository.save(job);
-            log.info("job {} duoc danh dau la PROCESSING", jobId);
-        });
+    // dam bao tinh persist va atomic hon
+    public ProcessingJobEntity setProcessingJob() {
+        log.info("choc xuong db");
+        return mongoTemplate.findAndModify(
+                Query.query(
+                                Criteria.where("status").is(ProcessingJobStatus.PENDING)
+                        ).with(Sort.by(Sort.Direction.ASC, "scheduleAt"))
+                        .limit(1),
+                new Update()
+                        .set("status", ProcessingJobStatus.PROCESSING)
+                        .set("workerId", getWorkerId())
+                        .set("startedAt", Instant.now()),
+                FindAndModifyOptions.options().returnNew(true),
+                ProcessingJobEntity.class
+        );
     }
 
     public void updateProgress(String jobId, int percent, String currentStep) {
@@ -125,7 +92,6 @@ public class JobService {
                         .currentStep("RETRY_PENDING")
                         .build());
                 jobRepository.save(job);
-                jobQueue.offer(jobId);
                 log.warn("job {} that bai (lan thu {}/{}), duoc dua vao hang doi lai: {}",
                         jobId, currentRetry + 1, maxRetries, error);
             } else {
@@ -157,12 +123,9 @@ public class JobService {
         });
     }
 
-    public Optional<ProcessingJobEntity> findById(String jobId) {
-        return jobRepository.findById(jobId);
-    }
-
     /**
      * khôi phục khi khởi động: đặt lại tất cả các job PROCESSING về PENDING.
+     * todo: didnhj nghia workerId sau do cho tim kiem theo workerId thay vi tim theo status nhu hien tai vi code lan nay la cho 1 VM
      */
     @EventListener(ApplicationReadyEvent.class)
     public void recoverRunningJobs() {
@@ -180,7 +143,6 @@ public class JobService {
                     .currentStep("RECOVERED")
                     .build());
             jobRepository.save(job);
-            jobQueue.offer(job.getJobId());
             log.info("da khoi phuc job {} → PENDING, da dua vao hang doi lai", job.getJobId());
         }
     }

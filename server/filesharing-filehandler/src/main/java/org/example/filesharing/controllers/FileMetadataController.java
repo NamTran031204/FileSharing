@@ -11,15 +11,12 @@ import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.jobs.kafka.ImageEncodeProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.utils.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,14 +32,6 @@ public class FileMetadataController {
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;
     private final VideoEncodeProducer videoEncodeProducer;
-    private final KafkaTemplate<String, Object> videoEncodeKafkaTemplate;
-    private final ImageEncodeProducer imageEncodeProducer;
-
-    @Value(value = "${kafka.topics.video_encode_topic:video_encode_topic}")
-    private String videoEncodeTopic;
-
-    @Value(value = "${kafka.topics.image_process_topic:image_process_topic}")
-    private String imageProcessTopic;
 
     @PostMapping("/upload-metadata")
     public CommonResponse<InitiateUploadResponseDto> startUpload(@RequestBody MetadataDTO metadataDTO) {

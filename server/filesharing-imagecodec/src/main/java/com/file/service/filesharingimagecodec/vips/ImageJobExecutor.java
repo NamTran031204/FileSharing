@@ -2,14 +2,12 @@ package com.file.service.filesharingimagecodec.vips;
 
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
 import com.file.service.filesharingimagecodec.job.JobService;
-import com.file.service.filesharingimagecodec.model.ProcessingJobEntity;
 import com.file.service.filesharingimagecodec.storage.MinioStorageClient;
 import com.file.service.filesharingimagecodec.storage.TempFileManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * trình thực thi xử lý ảnh cốt lõi. quản lý toàn bộ vòng đời:
  * tải xuống → VipsProcessor → tải lên → dọn dẹp.
- *
+ * <p>
  * hỗ trợ hai chế độ được điều khiển bởi image.processing.is-test:
  * - Production: tải xuống từ MinIO, tải kết quả lên MinIO
  * - Test: sử dụng ảnh cục bộ được mã hoá cứng, bỏ qua tải xuống/tải lên MinIO
@@ -45,7 +43,7 @@ public class ImageJobExecutor {
      * execute toàn bộ quy trình  cho một jobId.
      * method chạy trên một Virtual Thread do JobDispatcher phân phối.
      */
-    public void execute(String jobId) {
+    public void execute(String jobId, String objectName) {
         boolean isTest = config.isTest();
         int timeoutSeconds = config.getVips().getProcessingTimeoutSeconds();
 
@@ -53,7 +51,7 @@ public class ImageJobExecutor {
             CompletableFuture
                     .supplyAsync(() -> {
                         try {
-                            return doProcess(jobId, isTest);
+                            return doProcess(jobId, objectName, isTest);
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -77,28 +75,17 @@ public class ImageJobExecutor {
 
             // dọn dẹp tệp tạm thời khi thất bại (chỉ dành cho production)
             if (!isTest) {
-                try { tempFileManager.deleteJobDir(jobId); } catch (Exception ignored) {}
+                try {
+                    tempFileManager.deleteJobDir(jobId);
+                } catch (Exception ignored) {
+                }
             }
         }
     }
 
-    private List<VipsResult> doProcess(String jobId, boolean isTest) throws Exception {
-        // 1. đánh dấu job là PROCESSING
-        jobService.markRunning(jobId);
-
-        // 2. lấy chi tiết job cho các tuỳ chọn xử lý
-        ProcessingJobEntity job = jobService.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
-
-        int thumbnailWidth = 200;  // mặc định
+    private List<VipsResult> doProcess(String jobId, String objectName, boolean isTest) throws Exception {
+        int thumbnailWidth = 200;  // mặc định Todo: sau này có thể cho custom
         int quality = config.getOutput().getWebpQuality();
-
-        // trích xuất từ cấu hình job nếu có
-        if (job.getConfig() != null) {
-            if (job.getConfig().getMaxThumbnails() != null && job.getConfig().getMaxThumbnails() > 0) {
-                thumbnailWidth = job.getConfig().getMaxThumbnails();
-            }
-        }
 
         VipsOptions options = VipsOptions.builder()
                 .thumbnailWidth(thumbnailWidth)
@@ -127,22 +114,21 @@ public class ImageJobExecutor {
             log.info("[test] job {} hoan tat. dau ra tai: {}", jobId, outputDir);
 
         } else {
-            String inputKey = job.getAssetId();
-            log.info("[prod] job {}: inputKey={}", jobId, inputKey);
+            log.info("[prod] job {}: inputKey={}", jobId, objectName);
             jobService.updateProgress(jobId, 5, "DOWNLOADING");
 
-            boolean isLarge = storageClient.isLargeImage(inputKey);
+            boolean isLarge = storageClient.isLargeImage(objectName);
 
             if (isLarge) {
                 // ảnh lớn: tải xuống tệp tạm thời
-                String ext = extractExtension(inputKey);
+                String ext = extractExtension(objectName);
                 Path tempPath = Path.of(tempFileManager.createJobDir(jobId), "input." + ext);
-                storageClient.downloadToFile(inputKey, tempPath);
+                storageClient.downloadToFile(objectName, tempPath);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from file)");
                 results = vipsProcessor.processFromFile(tempPath.toString(), options);
             } else {
                 // ảnh nhỏ: tải xuống byte[]
-                byte[] inputBytes = storageClient.downloadToBytes(inputKey);
+                byte[] inputBytes = storageClient.downloadToBytes(objectName);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from memory)");
                 results = vipsProcessor.processFromBytes(inputBytes, options);
             }
@@ -158,16 +144,16 @@ public class ImageJobExecutor {
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("preview.webp not found in processing results"));
 
-            storageClient.uploadThumbnail(inputKey, thumb.getData(), thumb.getContentType());
+            storageClient.uploadThumbnail(objectName, thumb.getData(), thumb.getContentType());
             try {
-                storageClient.uploadPreview(inputKey, preview.getData(), preview.getContentType());
+                storageClient.uploadPreview(objectName, preview.getData(), preview.getContentType());
             } catch (Exception e) {
-                storageClient.rollbackThumbnail(inputKey);
+                storageClient.rollbackThumbnail(objectName);
                 throw e;
             }
 
-            jobService.markCompleted(jobId, List.of(inputKey), inputKey);
-            log.info("[prod] job {} hoan tat. objectKey: {}", jobId, inputKey);
+            jobService.markCompleted(jobId, List.of(objectName), objectName);
+            log.info("[prod] job {} hoan tat. objectKey: {}", jobId, objectName);
 
             // dọn dẹp temp dir
             tempFileManager.deleteJobDir(jobId);

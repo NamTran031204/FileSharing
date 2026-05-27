@@ -1,6 +1,6 @@
 package com.file.service.filesharingimagecodec.job;
 
-import com.file.service.filesharingimagecodec.job.queue.JobQueue;
+import com.file.service.filesharingimagecodec.model.ProcessingJobEntity;
 import com.file.service.filesharingimagecodec.vips.ImageJobExecutor;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -9,55 +9,53 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * thăm dò JobQueue mỗi 500ms và phân phối các job tới ImageJobExecutor
- * khi có một khe Bulkhead trống. các job chạy trên Virtual Threads.
+ * 5s kiểm tra slot còn lại trong bulkhead, nếu còn slots thì chiếm slots rồi chọc xuống db 1 lần để lấy ra job đã được lên lịch
+ * nếu db không trả về job, free slots đó
  */
 @Component
 @Slf4j
 public class JobDispatcher {
 
-    private final JobQueue jobQueue;
     private final Bulkhead bulkhead;
     private final ImageJobExecutor imageJobExecutor;
+    private final JobService jobService;
 
-    public JobDispatcher(JobQueue jobQueue,
-                         BulkheadRegistry bulkheadRegistry,
-                         ImageJobExecutor imageJobExecutor) {
-        this.jobQueue = jobQueue;
+    public JobDispatcher(BulkheadRegistry bulkheadRegistry,
+                         ImageJobExecutor imageJobExecutor,
+                         JobService jobService) {
         this.bulkhead = bulkheadRegistry.bulkhead("image-processor");
         this.imageJobExecutor = imageJobExecutor;
+        this.jobService = jobService;
     }
 
-    @Scheduled(fixedDelay = 500)
+    @Scheduled(fixedDelay = 5000)
     public void dispatch() {
         int availableSlots = bulkhead.getMetrics().getAvailableConcurrentCalls();
         if (availableSlots <= 0) {
             return;
         }
 
-        String jobId = jobQueue.poll();
-        if (jobId == null) {
-            return;
+        while (bulkhead.tryAcquirePermission()) {
+            ProcessingJobEntity job = jobService.setProcessingJob();
+
+            if (job == null) {
+                bulkhead.releasePermission();  // không có job, trả slot lại
+                break;
+            }
+
+            Thread.ofVirtual()
+                    .name("image-proc-" + job.getJobId())
+                    .start(() -> {
+                        try {
+                            log.info("dang phan phoi job anh {} cho trinh thuc thi", job.getJobId());
+                            imageJobExecutor.execute(job.getJobId(), job.getObjectName());
+                        } catch (Exception e) {
+                            log.error("loi khong duoc xu ly khi thuc thi job anh {}: {}", job.getJobId(), e.getMessage(), e);
+                        } finally {
+                            bulkhead.releasePermission();
+                        }
+                    });
         }
 
-        boolean permitted = bulkhead.tryAcquirePermission();
-        if (!permitted) {
-            jobQueue.putFirst(jobId);
-            log.debug("Bulkhead da day, tra job {} ve dau hang doi", jobId);
-            return;
-        }
-
-        Thread.ofVirtual()
-                .name("image-proc-" + jobId)
-                .start(() -> {
-                    try {
-                        log.info("dang phan phoi job anh {} cho trinh thuc thi", jobId);
-                        imageJobExecutor.execute(jobId);
-                    } catch (Exception e) {
-                        log.error("loi khong duoc xu ly khi thuc thi job anh {}: {}", jobId, e.getMessage(), e);
-                    } finally {
-                        bulkhead.releasePermission();
-                    }
-                });
     }
 }
