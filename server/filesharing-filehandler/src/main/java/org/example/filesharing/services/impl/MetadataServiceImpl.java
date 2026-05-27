@@ -10,6 +10,7 @@ import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import org.example.filesharing.entities.models.MetadataEntity;
+import org.example.filesharing.enums.ProcessingJobType;
 import org.example.filesharing.enums.UploadStatus;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.FileBusinessException;
@@ -103,6 +104,10 @@ public class MetadataServiceImpl implements MetadataService {
                 processingService.createPendingJob(
                         ProcessingJobCreateDTO.builder()
                                 .objectName(entity.getObjectName())
+                                .metadataId(entity.getFileId())
+                                .assetId(entity.getAssetId())
+                                .versionNumber(entity.getVersionNumber())
+                                .jobType(ProcessingJobType.TRANSCODE_IMAGE)
                                 .build()
                 );
             }
