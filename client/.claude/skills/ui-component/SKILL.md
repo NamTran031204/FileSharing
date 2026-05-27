@@ -1,6 +1,6 @@
 ---
 name: ui-component
-description: 'Tạo và kiểm tra React components tuân thủ "Lumina Pro" design system. Sử dụng khi: tạo UI mới, review component, fix design inconsistency với purple/lavender palette, đảm bảo màu sắc/spacing/typography đúng chuẩn. Hỗ trợ React 18, Tailwind v4, Ant Design 5.'
+description: 'Tạo và kiểm tra React components tuân thủ "Lumina Pro" design system. Sử dụng khi: tạo UI mới, review component, fix design inconsistency với purple/lavender palette, đảm bảo màu sắc/spacing/typography đúng chuẩn. Hỗ trợ React 18, Tailwind v4, Ant Design 5. LUÔN ưu tiên tái sử dụng core components từ src/components/core/ và utils từ src/utils/ trước khi tạo mới.'
 argument-hint: 'Tên component hoặc file path cần tạo/kiểm tra'
 ---
 
@@ -23,6 +23,93 @@ Skill này giúp tạo và kiểm tra React components tuân thủ hoàn toàn *
 - **Tailwind CSS v4** (với `@theme` custom tokens)
 - **Ant Design 5** (components chính)
 - **Design tokens** định nghĩa trong `src/index.css` - Tailwind tự động generate classes từ `@theme`
+
+---
+
+## Quy tắc ưu tiên: Core-First
+
+**Trước khi viết bất kỳ component nào**, kiểm tra bảng dưới. Nếu đã có sẵn → import và dùng, không tạo lại.
+
+### Core Components (`src/components/core/`)
+
+#### Layout
+| Component | Import path | Dùng khi |
+|---|---|---|
+| `AppHeader` | `@/components/core/layout/AppHeader` | Fixed top nav cho toàn app |
+| `AppSidebar` | `@/components/core/layout/AppSidebar` | Sidebar trái với nav + New Project button |
+| `CommonLayout` | `@/layout/CommonLayout` | Shell bọc ngoài mọi full page (đã bao gồm Header + Sidebar) |
+
+#### Common UI
+| Component | Import path | Dùng khi |
+|---|---|---|
+| `ActionDropdown` | `@/components/core/common/ActionDropdown` | Menu "⋯" / kebab trên card, row, table. Nhận `ActionDropdownItem[]` + `record`. Tích hợp sẵn permission check |
+| `BusyOverlay` | `@/components/core/common/BusyOverlay` | Overlay loading toàn màn hình — thêm 1 lần ở root, dùng `uiUtils.setBusy()` |
+| `RequiredPermission` | `@/components/core/common/RequiredPermission` | Bọc UI chỉ hiển thị khi user có permission. Props: `permissionName`, `fallback` |
+
+#### Forms
+| Component | Import path | Dùng khi |
+|---|---|---|
+| `CusCommonSelect` | `@/components/core/forms/CusCommonSelect` | Select có search tiếng Việt, async datasource. Nhận prop `datasource: SelectDataSource` |
+| `CusCommonDateRangeInput` | `@/components/core/forms/CusCommonDateRangeInput` | Date range picker có preset (Hôm nay, 7 ngày trước, v.v.) |
+| `FloatLabel` | `@/components/core/forms/FloatLabel` | Wrapper tạo floating label cho bất kỳ input nào |
+
+#### CRUD / Page Layout
+| Component | Import path | Dùng khi |
+|---|---|---|
+| `FolderAssetCommonCrudPage` | `@/components/core/crud/FolderAssetCommonCrudPage` | Full page có sidebar tree + toolbar + lưới folder/asset |
+| `FolderAssetBody` | `@/components/core/crud/FolderAssetBody` | Chỉ phần body: breadcrumb + lưới folder + lưới asset (không có shell page) |
+| `TopActions` | `@/components/core/crud/TopActions` | Nút action ở toolbar, có filter permission tự động. Nhận `TopActionConfig[]` |
+
+#### Grid
+| Component | Import path | Dùng khi |
+|---|---|---|
+| `SmartRow` | `@/components/core/grid/SmartRow` | Responsive Row với gap tự động theo breakpoint |
+| `ColSpanResponsive` | `@/components/core/grid/ColSpanResponsive` | Col tự điều chỉnh span theo màn hình |
+
+### Utils (`src/utils/`)
+
+| Util | Import | Exports chính |
+|---|---|---|
+| `uiUtils` | `@/utils/uiUtils` (default export) | `showSuccess(msg)`, `showError(msg)`, `showWarning(msg)`, `showInfor(msg)`, `showConfirm(props)` → `Promise<boolean>`, `setBusy()`, `clearBusy()` |
+| `permissionUtils` | `@/utils/permissionUtils` | `hasPermission()`, `canEdit()`, `canDelete()`, `canShare()`, `canAddUser()`, `isOwner()` |
+| `auth.utils` | `@/utils/auth.utils` | `checkPermissionUser(session, permissionName)` |
+| `date.util` | `@/utils/date.util` | `getDateRange(preset)`, `disableAfter()`, `disableBefore()`, `disableAfterAndAfterNow()`, v.v. |
+| `text.util` | `@/utils/text.util` | `toLowerCaseNonAccentVietnamese(str)` |
+| `FileViewUtil` | `@/utils/FileViewUtil` | Tiện ích xem file / kiểm tra loại file |
+
+### Ví dụ sử dụng đúng
+
+```tsx
+// ✅ Toast / confirm — dùng uiUtils, không tự tạo Modal hoặc antd.message
+import uiUtils from '@/utils/uiUtils';
+uiUtils.showSuccess('Lưu thành công');
+const confirmed = await uiUtils.showConfirm({ title: 'Xoá?', okLabel: 'Xoá' });
+
+// ✅ Action menu — dùng ActionDropdown, không tự tạo Dropdown + Menu
+import ActionDropdown, { type ActionDropdownItem } from '@/components/core/common/ActionDropdown';
+const actions: ActionDropdownItem<MyItem>[] = [
+  { title: 'edit', onClick: (r) => handleEdit(r) },
+  { title: 'remove', isDanger: true, onClick: (r) => handleDelete(r) },
+];
+<ActionDropdown actions={actions} record={item} />
+
+// ✅ Permission guard — dùng RequiredPermission, không tự check
+import RequiredPermission from '@/components/core/common/RequiredPermission';
+<RequiredPermission permissionName="MODIFY">
+  <Button>Chỉnh sửa</Button>
+</RequiredPermission>
+
+// ✅ Toolbar actions — dùng TopActions
+import TopActions, { type TopActionConfig } from '@/components/core/crud/TopActions';
+const topActions: TopActionConfig[] = [
+  { title: 'Thêm mới', type: 'primary', icon: <PlusOutlined />, onClick: handleAdd },
+];
+<TopActions topActions={topActions} />
+
+// ✅ Select với search — dùng CusCommonSelect
+import CusCommonSelect from '@/components/core/forms/CusCommonSelect';
+<CusCommonSelect datasource={{ data: options, isPending: loading }} onChange={setValue} />
+```
 
 ## Quy trình làm việc
 
