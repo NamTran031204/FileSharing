@@ -85,6 +85,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .assetId(trimToNull(dto.getAssetId()))
                 .versionNumber(dto.getVersionNumber())
                 .reviewSessionId(trimToNull(dto.getReviewSessionId()))
+                .projectId(resolveProjectId(dto))
                 .changes(dto.getChanges())
                 .requestInfo(dto.getRequestInfo())
                 .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : Instant.now())
@@ -192,6 +193,37 @@ public class AuditLogServiceImpl implements AuditLogService {
         entity.setIsActive(true);
         entity.setCreatedBy(actor.actorId);
         entity.setCreatedByEmail(actor.actorEmail);
+    }
+
+    private String resolveProjectId(AuditLogCreateDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        String targetId = trimToNull(dto.getTargetId());
+        if (dto.getTargetType() == AuditTargetType.PROJECT && targetId != null) {
+            return targetId;
+        }
+
+        String assetId = trimToNull(dto.getAssetId());
+        if (assetId == null && (dto.getTargetType() == AuditTargetType.ASSET || dto.getTargetType() == AuditTargetType.FILE)) {
+            assetId = targetId;
+        }
+        if (assetId != null) {
+            AssetEntity asset = assetRepo.findById(assetId).orElse(null);
+            if (asset != null) {
+                return asset.getProjectId();
+            }
+        }
+
+        if (dto.getTargetType() == AuditTargetType.FOLDER && targetId != null) {
+            FolderEntity folder = folderRepo.findById(targetId).orElse(null);
+            if (folder != null) {
+                return folder.getProjectId();
+            }
+        }
+
+        return null;
     }
 
     private AuditLogItemDTO toItemDto(AuditLogEntity log) {

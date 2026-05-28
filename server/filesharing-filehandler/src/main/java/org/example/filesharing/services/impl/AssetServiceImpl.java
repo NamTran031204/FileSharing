@@ -115,7 +115,14 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         String objectName = generateObjectName(fileName);
         InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
 
-        MetadataEntity version = buildMetadataVersion(request, savedAsset.getAssetId(), 1, objectName, upload.getUploadId());
+        MetadataEntity version = buildMetadataVersion(
+            request,
+            savedAsset.getAssetId(),
+            savedAsset.getProjectId(),
+            1,
+            objectName,
+            upload.getUploadId()
+        );
         metadataRepo.save(version);
 
         incrementProjectAssetCount(project, 1);
@@ -406,7 +413,14 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
 
         // todo: su dung service metadata
-        MetadataEntity version = buildMetadataVersion(request, asset.getAssetId(), nextVersionNumber, objectName, upload.getUploadId());
+        MetadataEntity version = buildMetadataVersion(
+            request,
+            asset.getAssetId(),
+            asset.getProjectId(),
+            nextVersionNumber,
+            objectName,
+            upload.getUploadId()
+        );
         metadataRepo.save(version);
 
         asset.setVersionCount(nextVersionNumber);
@@ -626,7 +640,14 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         return objectName;
     }
 
-    private MetadataEntity buildMetadataVersion(AssetCreateRequestDto request, String assetId, int versionNumber, String objectName, String uploadId) {
+        private MetadataEntity buildMetadataVersion(
+            AssetCreateRequestDto request,
+            String assetId,
+            String projectId,
+            int versionNumber,
+            String objectName,
+            String uploadId
+        ) {
         String currentUserId = auditService.getCurrentUserId();
         String currentUserEmail = auditService.getCurrentUserEmail();
 
@@ -643,6 +664,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .status(UploadStatus.UPLOADING)
                 .processingStatus(defaultProcessingStatus(request.getMediaType()))
                 .assetId(assetId)
+                .projectId(projectId)
                 .versionNumber(versionNumber)
                 .mediaType(request.getMediaType())
                 .isActive(true)

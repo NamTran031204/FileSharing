@@ -25,6 +25,7 @@ public class MetadataEntity {
     private String objectName;
 
     private String assetId;
+    private String projectId;
 
     private String downloadFileName;
 

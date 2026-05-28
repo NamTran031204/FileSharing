@@ -36,6 +36,7 @@ public class AuditLogEntity extends EntityAuditBase {
     private String assetId;
     private Integer versionNumber;
     private String reviewSessionId;
+    private String projectId;
 
     private AuditChanges changes;
     private AuditRequestInfo requestInfo;
