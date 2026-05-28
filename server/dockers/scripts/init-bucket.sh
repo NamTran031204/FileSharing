@@ -47,9 +47,15 @@ for BUCKET_NAME in "${BUCKET_NAMES[@]}"; do
     fi
 done
 
-# ========== BƯỚC 3: Generate Access Key ==========
+# ========== BƯỚC 3: Set public policy cho thumbnail-bucket ==========
 echo ""
-echo "[3/4] Đang tạo Service Account (Access Key)..."
+echo "[3/5] Đang set policy public cho 'thumbnail-bucket'..."
+mc anonymous set public ${ALIAS_NAME}/thumbnail-bucket
+echo "      ✓ thumbnail-bucket đã được set public (anonymous GET)."
+
+# ========== BƯỚC 4: Generate Access Key ==========
+echo ""
+echo "[4/5] Đang tạo Service Account (Access Key)..."
 
 # Tạo service account và lấy output JSON
 ACCESS_KEY_OUTPUT=$(mc admin user svcacct add ${ALIAS_NAME} ${MINIO_ROOT_USER} --json 2>/dev/null)
@@ -65,9 +71,9 @@ fi
 echo "      ✓ Access Key đã được tạo."
 echo "      Access Key: ${ACCESS_KEY}"
 
-# ========== BƯỚC 4: Ghi vào file ==========
+# ========== BƯỚC 5: Ghi vào file ==========
 echo ""
-echo "[4/4] Đang ghi credentials vào ${ACCESS_FILE}..."
+echo "[5/5] Đang ghi credentials vào ${ACCESS_FILE}..."
 
 # Tạo thư mục nếu chưa tồn tại
 mkdir -p "$(dirname ${ACCESS_FILE})"

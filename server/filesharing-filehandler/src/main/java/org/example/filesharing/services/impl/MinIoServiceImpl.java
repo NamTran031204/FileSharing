@@ -366,6 +366,18 @@ public class MinIoServiceImpl implements MinIoService {
         // => voi 1 file 4Gb thi expireTime se la 4 hours 30 minutes
     }
 
+    @Override
+    public String generatePresignedUrl(String bucket, String objectName, int expirySeconds) throws Exception {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
+                        .object(objectName)
+                        .expiry(expirySeconds, TimeUnit.SECONDS)
+                        .build()
+        );
+    }
+
     @lombok.Data
     @lombok.AllArgsConstructor
     @lombok.NoArgsConstructor

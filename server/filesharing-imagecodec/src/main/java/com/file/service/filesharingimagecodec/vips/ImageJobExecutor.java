@@ -2,6 +2,7 @@ package com.file.service.filesharingimagecodec.vips;
 
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
 import com.file.service.filesharingimagecodec.job.JobService;
+import com.file.service.filesharingimagecodec.kafka.ImageProcessResultProducer;
 import com.file.service.filesharingimagecodec.storage.MinioStorageClient;
 import com.file.service.filesharingimagecodec.storage.TempFileManager;
 import lombok.RequiredArgsConstructor;
@@ -38,12 +39,9 @@ public class ImageJobExecutor {
     private final JobService jobService;
     private final MinioStorageClient storageClient;
     private final TempFileManager tempFileManager;
+    private final ImageProcessResultProducer resultProducer;
 
-    /**
-     * execute toàn bộ quy trình  cho một jobId.
-     * method chạy trên một Virtual Thread do JobDispatcher phân phối.
-     */
-    public void execute(String jobId, String objectName) {
+    public void execute(String jobId, String objectName, String assetId, String metadataId) {
         boolean isTest = config.isTest();
         int timeoutSeconds = config.getVips().getProcessingTimeoutSeconds();
 
@@ -51,7 +49,7 @@ public class ImageJobExecutor {
             CompletableFuture
                     .supplyAsync(() -> {
                         try {
-                            return doProcess(jobId, objectName, isTest);
+                            return doProcess(jobId, objectName, assetId, metadataId, isTest);
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -68,12 +66,12 @@ public class ImageJobExecutor {
             } else if (isCorruptInput(cause)) {
                 log.error("job {} that bai — dau vao bi hong: {}", jobId, cause.getMessage());
                 jobService.markFailedPermanently(jobId, cause.getMessage());
+                resultProducer.sendFailed(jobId, assetId, metadataId, cause.getMessage());
             } else {
                 log.error("job {} that bai: {}", jobId, cause.getMessage(), cause);
                 jobService.markFailed(jobId, cause.getMessage());
             }
 
-            // dọn dẹp tệp tạm thời khi thất bại (chỉ dành cho production)
             if (!isTest) {
                 try {
                     tempFileManager.deleteJobDir(jobId);
@@ -83,8 +81,8 @@ public class ImageJobExecutor {
         }
     }
 
-    private List<VipsResult> doProcess(String jobId, String objectName, boolean isTest) throws Exception {
-        int thumbnailWidth = 200;  // mặc định Todo: sau này có thể cho custom
+    private List<VipsResult> doProcess(String jobId, String objectName, String assetId, String metadataId, boolean isTest) throws Exception {
+        int thumbnailWidth = 200; // mặc định Todo: sau này có thể cho custom
         int quality = config.getOutput().getWebpQuality();
 
         VipsOptions options = VipsOptions.builder()
@@ -120,14 +118,12 @@ public class ImageJobExecutor {
             boolean isLarge = storageClient.isLargeImage(objectName);
 
             if (isLarge) {
-                // ảnh lớn: tải xuống tệp tạm thời
                 String ext = extractExtension(objectName);
                 Path tempPath = Path.of(tempFileManager.createJobDir(jobId), "input." + ext);
                 storageClient.downloadToFile(objectName, tempPath);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from file)");
                 results = vipsProcessor.processFromFile(tempPath.toString(), options);
             } else {
-                // ảnh nhỏ: tải xuống byte[]
                 byte[] inputBytes = storageClient.downloadToBytes(objectName);
                 jobService.updateProgress(jobId, 20, "PROCESSING (from memory)");
                 results = vipsProcessor.processFromBytes(inputBytes, options);
@@ -152,10 +148,11 @@ public class ImageJobExecutor {
                 throw e;
             }
 
+            String thumbnailUrl = storageClient.buildThumbnailPublicUrl(objectName);
             jobService.markCompleted(jobId, List.of(objectName), objectName);
+            resultProducer.sendCompleted(jobId, assetId, metadataId, objectName, thumbnailUrl);
             log.info("[prod] job {} hoan tat. objectKey: {}", jobId, objectName);
 
-            // dọn dẹp temp dir
             tempFileManager.deleteJobDir(jobId);
         }
 

@@ -1,11 +1,10 @@
 import {
   FileImageOutlined,
   FilePdfOutlined,
-  MoreOutlined,
   PlayCircleFilled,
   VideoCameraOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
-import { Button } from 'antd';
 import type { MouseEvent } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
 
@@ -18,6 +17,7 @@ interface AssetCardProps<TRecord = unknown> {
   type: AssetType;
   thumbnailUrl?: string;
   durationLabel?: string;
+  processingStatus?: string;
   onClick?: () => void;
   actions?: ActionDropdownItem<TRecord>[];
   record?: TRecord;
@@ -31,6 +31,7 @@ const AssetCard = <TRecord,>({
   type,
   thumbnailUrl,
   durationLabel,
+  processingStatus,
   onClick,
   actions,
   record,
@@ -40,7 +41,9 @@ const AssetCard = <TRecord,>({
   const isDocument = type === 'doc';
   const isImage = type === 'image' || type === 'svg';
   const showThumbnail = Boolean(thumbnailUrl) && isImage;
-  const cardActions: ActionDropdownItem<TRecord>[] = actions ?? []
+  const isProcessing = processingStatus === 'PROCESSING';
+  const isFailed = processingStatus === 'FAILED';
+  const cardActions: ActionDropdownItem<TRecord>[] = actions ?? [];
   const hasActions = cardActions.length > 0;
 
   const typeLabel = (() => {
@@ -56,7 +59,43 @@ const AssetCard = <TRecord,>({
     e.preventDefault();
   };
 
-  console.log("canAccess", canAccess);
+  const renderPreview = () => {
+    if (showThumbnail) {
+      return (
+        <img
+          src={thumbnailUrl}
+          alt={name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+      );
+    }
+    if (isProcessing) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-2">
+          <div className="h-16 w-16 animate-pulse rounded-2xl bg-muted" />
+          <span className="text-[11px] font-medium text-muted-foreground">Đang xử lý...</span>
+        </div>
+      );
+    }
+    if (isFailed) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-2">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-destructive/10 shadow-lg">
+            <WarningOutlined className="text-3xl text-destructive" />
+          </div>
+          <span className="text-[11px] font-medium text-destructive">Xử lý thất bại</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-background shadow-lg shadow-primary-dark/10">
+          <PreviewIcon className="text-3xl text-secondary" />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -77,19 +116,7 @@ const AssetCard = <TRecord,>({
       )}
 
       <div className="relative h-48 w-full overflow-hidden bg-muted/40">
-        {showThumbnail ? (
-          <img
-            src={thumbnailUrl}
-            alt={name}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-background shadow-lg shadow-primary-dark/10">
-              <PreviewIcon className="text-3xl text-secondary" />
-            </div>
-          </div>
-        )}
+        {renderPreview()}
 
         {isVideo && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">

@@ -56,16 +56,19 @@ kafka:
     video_encode_topic: video_encode_topic
     video_encode_result_topic: video_encode_result_topic
     image_process_topic: image_process_topic
+    image_process_result_topic: image_process_result_topic
   authen: ${KAFKA_AUTH:false}
   username: ${KAFKA_USER:admin}
   password: ${KAFKA_PASS:adminKafka123}
 
 minio:
   endpoint: http://localhost:9000
-  access-key: LIK7J8E79HB2Q5J4E790
-  secret-key: cbW3F7L4hLe8vFj22uB0ZB0mh4H2BtEwfmj+aJ14
+  access-key: CE28BNCAFTPVW8RZLQXC
+  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
   buckets:
     files: file-sharing
+    thumbnails: thumbnail-bucket
+    image-preview: image-preview-bucket
 #  access-key: 5UVTKA00N1U9060FMZW0
 #  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 

@@ -109,19 +109,27 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     useEffect(() => {
         if (!projectId) return;
         sessionStore.setCurrentProject({ projectId, projectName: sessionStore.currentProjectName || projectId });
-        // Update sessionStore immediately from URL so pagination reaction uses the correct folderId
         sessionStore.setCurrentFolder(
             currentFolderId
                 ? ({ folderId: currentFolderId } as FolderEntity)
                 : undefined
         );
-        // If there was an active search, flag Effect C to skip the reset trigger
         if (searchQuery) searchSkipRef.current = true;
         setSearchQuery('');
         folderStore.setKeyword('');
         folderStore.setPage(1);
         void folderStore.fetchFolders(projectId, currentFolderId);
         void folderStore.fetchAssetsPage(projectId, currentFolderId);
+
+        if (currentFolderId) {
+            folderStore.subscribeToFolderSSE(currentFolderId);
+        } else {
+            folderStore.unsubscribeFromFolderSSE();
+        }
+
+        return () => {
+            folderStore.unsubscribeFromFolderSSE();
+        };
     }, [projectId, currentFolderId, folderStore, sessionStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -138,6 +146,15 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         }, 400);
         return () => clearTimeout(timer);
     }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleAssetClick = (summary: AssetSummaryDto) => {
+        const assetId = summary.asset?.assetId;
+        if (!assetId) return;
+        const mimeType = summary.latestVersion?.mimeType ?? '';
+        if (mimeType.startsWith('image/')) {
+            navigate(`/review/image-v2?assetId=${assetId}`);
+        }
+    };
 
     const handleFolderClick = (folder: FolderEntity) => {
         if (!folder.folderId || !projectId) return;
@@ -419,11 +436,15 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         versionLabel: version?.versionNumber != null ? `v${version.versionNumber}` : 'v?',
                         type: resolveAssetType(version?.mimeType),
                         durationLabel: formatDuration(version?.mediaInfo?.durationMs),
+                        // thumbnailUrl will be in generated types after next gen-api run
+                        thumbnailUrl: (version as Record<string, unknown>)?.thumbnailUrl as string | undefined,
+                        processingStatus: version?.processingStatus,
                     };
                 }}
                 folderActions={folderActions}
                 assetActions={assetActions}
                 onFolderClick={handleFolderClick}
+                onAssetClick={handleAssetClick}
                 getFolderKey={(folder) => folder.folderId ?? ''}
                 getAssetKey={(asset) => asset.asset?.assetId ?? ''}
                 emptyFoldersText={searchQuery ? 'No folders match your search.' : 'No sub-folders here.'}

@@ -19,4 +19,6 @@ public interface MinIoService {
     String uploadSmallFile(MultipartFile file, String objectName);
 
     void deleteFile(String objectName);
+
+    String generatePresignedUrl(String bucket, String objectName, int expirySeconds) throws Exception;
 }

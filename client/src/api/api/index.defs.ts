@@ -1268,6 +1268,9 @@ export interface MetadataEntity {
   assetId?: string;
 
   /**  */
+  projectId?: string;
+
+  /**  */
   downloadFileName?: string;
 
   /**  */
@@ -1293,6 +1296,9 @@ export interface MetadataEntity {
 
   /**  */
   shareToken?: string;
+
+  /**  */
+  thumbnailUrl?: string;
 
   /**  */
   status?: UploadStatus;
@@ -2114,6 +2120,9 @@ export interface ProcessingJobEntity {
   assetId?: string;
 
   /**  */
+  objectName?: string;
+
+  /**  */
   jobType?: ProcessingJobType;
 
   /**  */
@@ -2497,6 +2506,9 @@ export interface AuditLogEntity {
   reviewSessionId?: string;
 
   /**  */
+  projectId?: string;
+
+  /**  */
   changes?: AuditChanges;
 
   /**  */
@@ -2604,6 +2616,11 @@ export interface ProcessingStatusResponseDto {
   errorMessage?: string;
 }
 
+export interface SseEmitter {
+  /**  */
+  timeout?: string;
+}
+
 export interface CommonResponseFolderTreeResponseDTO {
   /**  */
   isSuccessful?: boolean;
@@ -2652,6 +2669,178 @@ export interface FolderTreeResponseDTO {
   tree?: FolderTreeItemDTO[];
 }
 
+export interface CommonResponseStorageStatsDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: StorageStatsDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface StorageByMediaTypeDTO {
+  /**  */
+  mediaType?: string;
+
+  /**  */
+  fileCount?: string;
+
+  /**  */
+  storageBytes?: number;
+}
+
+export interface StorageByProjectDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  projectName?: string;
+
+  /**  */
+  fileCount?: string;
+
+  /**  */
+  storageBytes?: number;
+}
+
+export interface StorageStatsDTO {
+  /**  */
+  totalStorageBytes?: number;
+
+  /**  */
+  byMediaType?: StorageByMediaTypeDTO[];
+
+  /**  */
+  byProject?: StorageByProjectDTO[];
+}
+
+export interface CommonResponseReviewStatsDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ReviewStatsDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ReviewByProjectDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  projectName?: string;
+
+  /**  */
+  pendingCount?: string;
+
+  /**  */
+  approvedCount?: string;
+
+  /**  */
+  changesRequestedCount?: string;
+}
+
+export interface ReviewStatsDTO {
+  /**  */
+  pendingCount?: string;
+
+  /**  */
+  approvedCount?: string;
+
+  /**  */
+  changesRequestedCount?: string;
+
+  /**  */
+  noReviewSessionCount?: string;
+
+  /**  */
+  byProject?: ReviewByProjectDTO[];
+}
+
+export interface CommonResponseListRecentActivityItemDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: RecentActivityItemDTO[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface RecentActivityItemDTO {
+  /**  */
+  logId?: string;
+
+  /**  */
+  actorId?: string;
+
+  /**  */
+  actorEmail?: string;
+
+  /**  */
+  action?: AuditAction;
+
+  /**  */
+  targetType?: AuditTargetType;
+
+  /**  */
+  targetId?: string;
+
+  /**  */
+  targetName?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  timestamp?: Date;
+}
+
+export interface CommonResponseDashboardOverviewDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: DashboardOverviewDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface DashboardOverviewDTO {
+  /**  */
+  totalProjects?: string;
+
+  /**  */
+  totalAssets?: string;
+
+  /**  */
+  totalFolders?: string;
+
+  /**  */
+  totalStorageBytes?: number;
+}
+
 export interface AuditLogItemDTO {
   /**  */
   iconType?: string;
@@ -2689,6 +2878,51 @@ export interface PageResultAuditLogItemDTO {
 
   /**  */
   data?: AuditLogItemDTO[];
+}
+
+export interface CommonResponseImageViewDataDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ImageViewDataDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface DimensionDto {
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+}
+
+export interface ImageViewDataDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  previewUrl?: string;
+
+  /**  */
+  thumbnailUrl?: string;
+
+  /**  */
+  originalUrl?: string;
+
+  /**  */
+  mimeType?: string;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+
+  /**  */
+  dimensions?: DimensionDto;
 }
 
 export interface AssetDetailResponseDto {
@@ -2916,10 +3150,8 @@ export enum ProcessingJobStatus {
 
 export enum ProcessingJobType {
   'TRANSCODE_HLS' = 'TRANSCODE_HLS',
-  'GENERATE_THUMBNAILS' = 'GENERATE_THUMBNAILS',
-  'GENERATE_SPRITE' = 'GENERATE_SPRITE',
-  'GENERATE_POSTER' = 'GENERATE_POSTER',
-  'GENERATE_WAVEFORM' = 'GENERATE_WAVEFORM',
+  'TRANSCODE_IMAGE' = 'TRANSCODE_IMAGE',
+  'TRANSCODE_RAW_IMAGE' = 'TRANSCODE_RAW_IMAGE',
   'VIRUS_SCAN' = 'VIRUS_SCAN'
 }
 

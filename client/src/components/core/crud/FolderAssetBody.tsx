@@ -17,6 +17,7 @@ export interface AssetCardData {
   type: AssetType;
   thumbnailUrl?: string;
   durationLabel?: string;
+  processingStatus?: string;
 }
 
 export interface FolderAssetBodyProps<TFolder, TAsset> {
@@ -185,6 +186,7 @@ const FolderAssetBody = <TFolder, TAsset>({
                   type={data.type}
                   thumbnailUrl={data.thumbnailUrl}
                   durationLabel={data.durationLabel}
+                  processingStatus={data.processingStatus}
                   record={asset}
                   actions={assetActions}
                   onClick={() => onAssetClick?.(asset)}

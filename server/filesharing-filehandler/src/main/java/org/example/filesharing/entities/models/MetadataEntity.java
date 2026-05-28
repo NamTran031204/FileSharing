@@ -41,6 +41,8 @@ public class MetadataEntity {
     private String uploadId;
     private String shareToken;
 
+    private String thumbnailUrl;
+
     private UploadStatus status;
     private ProcessingStatus processingStatus;
     private String processingError;

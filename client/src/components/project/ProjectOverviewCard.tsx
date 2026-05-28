@@ -6,6 +6,7 @@ import {
     VideoCameraOutlined,
 } from '@ant-design/icons';
 import {Avatar, Tag} from 'antd';
+import ActionDropdown, {type ActionDropdownItem} from "../core/common/ActionDropdown.tsx";
 
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED';
 
@@ -51,6 +52,14 @@ const ProjectOverviewCard = ({
     onClick,
 }: ProjectOverviewCardProps) => {
     const isActive = status === 'ACTIVE';
+
+    // const cardActions: ActionDropdownItem<TRecord>[] =
+    //     actions ??
+    //     [
+    //         { title: 'edit', titleCustom: 'Sửa' },
+    //         { title: 'remove', titleCustom: 'Xoá', isDanger: true },
+    //     ];
+    // const hasActions = cardActions.length > 0;
 
     return (
         <button
@@ -144,6 +153,18 @@ const ProjectOverviewCard = ({
                         <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Updated</p>
                         <p className="text-xs font-medium text-muted-foreground">{updatedAt}</p>
                     </div>
+
+                    {/*{hasActions && (*/}
+                    {/*    <div*/}
+                    {/*        className="absolute right-3 top-3 z-10 opacity-0 transition group-hover:opacity-100"*/}
+                    {/*        onClick={stopPropagation}*/}
+                    {/*    >*/}
+                    {/*        <ActionDropdown<TRecord>*/}
+                    {/*            actions={cardActions}*/}
+                    {/*            record={record}*/}
+                    {/*        />*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
             </div>
         </button>

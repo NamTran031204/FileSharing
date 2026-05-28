@@ -2915,6 +2915,41 @@
         }
       }
     },
+    "/api/folder/{folderId}/asset-status-stream" : {
+      "get" : {
+        "tags" : [ "image-data-controller" ],
+        "operationId" : "subscribeToFolderStatus",
+        "parameters" : [ {
+          "name" : "folderId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/event-stream" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SseEmitter"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/folder/get-tree/{projectId}" : {
       "get" : {
         "tags" : [ "folder-controller" ],
@@ -3020,6 +3055,124 @@
         }
       }
     },
+    "/api/dashboard/storage-stats" : {
+      "get" : {
+        "tags" : [ "dashboard-controller" ],
+        "operationId" : "getStorageStats",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseStorageStatsDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/dashboard/review-stats" : {
+      "get" : {
+        "tags" : [ "dashboard-controller" ],
+        "operationId" : "getReviewStats",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseReviewStatsDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/dashboard/recent-activities" : {
+      "get" : {
+        "tags" : [ "dashboard-controller" ],
+        "operationId" : "getRecentActivities",
+        "parameters" : [ {
+          "name" : "limit",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListRecentActivityItemDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/dashboard/overview" : {
+      "get" : {
+        "tags" : [ "dashboard-controller" ],
+        "operationId" : "getOverview",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseDashboardOverviewDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/audit-logs/asset/{assetId}" : {
       "get" : {
         "tags" : [ "audit-log-controller" ],
@@ -3063,6 +3216,41 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponsePageResultAuditLogItemDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/asset/{assetId}/image-data" : {
+      "get" : {
+        "tags" : [ "image-data-controller" ],
+        "operationId" : "getImageData",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseImageViewDataDto"
                 }
               }
             }
@@ -5136,6 +5324,9 @@
           "assetId" : {
             "type" : "string"
           },
+          "projectId" : {
+            "type" : "string"
+          },
           "downloadFileName" : {
             "type" : "string"
           },
@@ -5163,6 +5354,9 @@
             "type" : "string"
           },
           "shareToken" : {
+            "type" : "string"
+          },
+          "thumbnailUrl" : {
             "type" : "string"
           },
           "status" : {
@@ -6321,7 +6515,7 @@
       },
       "ProcessingJobType" : {
         "type" : "string",
-        "enum" : [ "TRANSCODE_HLS", "GENERATE_THUMBNAILS", "GENERATE_SPRITE", "GENERATE_POSTER", "GENERATE_WAVEFORM", "VIRUS_SCAN" ]
+        "enum" : [ "TRANSCODE_HLS", "TRANSCODE_IMAGE", "TRANSCODE_RAW_IMAGE", "VIRUS_SCAN" ]
       },
       "CommonResponseListMediaRenditionEntity" : {
         "type" : "object",
@@ -6733,6 +6927,9 @@
           "reviewSessionId" : {
             "type" : "string"
           },
+          "projectId" : {
+            "type" : "string"
+          },
           "changes" : {
             "$ref" : "#/components/schemas/AuditChanges"
           },
@@ -6875,6 +7072,15 @@
           }
         }
       },
+      "SseEmitter" : {
+        "type" : "object",
+        "properties" : {
+          "timeout" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "CommonResponseFolderTreeResponseDTO" : {
         "type" : "object",
         "properties" : {
@@ -6939,6 +7145,240 @@
           }
         }
       },
+      "CommonResponseStorageStatsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/StorageStatsDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "StorageByMediaTypeDTO" : {
+        "type" : "object",
+        "properties" : {
+          "mediaType" : {
+            "type" : "string"
+          },
+          "fileCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "storageBytes" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "StorageByProjectDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "projectName" : {
+            "type" : "string"
+          },
+          "fileCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "storageBytes" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "StorageStatsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "totalStorageBytes" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "byMediaType" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StorageByMediaTypeDTO"
+            }
+          },
+          "byProject" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StorageByProjectDTO"
+            }
+          }
+        }
+      },
+      "CommonResponseReviewStatsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ReviewStatsDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReviewByProjectDTO" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "type" : "string"
+          },
+          "projectName" : {
+            "type" : "string"
+          },
+          "pendingCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "approvedCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changesRequestedCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ReviewStatsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "pendingCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "approvedCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changesRequestedCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "noReviewSessionCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "byProject" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReviewByProjectDTO"
+            }
+          }
+        }
+      },
+      "CommonResponseListRecentActivityItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RecentActivityItemDTO"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "RecentActivityItemDTO" : {
+        "type" : "object",
+        "properties" : {
+          "logId" : {
+            "type" : "string"
+          },
+          "actorId" : {
+            "type" : "string"
+          },
+          "actorEmail" : {
+            "type" : "string"
+          },
+          "action" : {
+            "$ref" : "#/components/schemas/AuditAction"
+          },
+          "targetType" : {
+            "$ref" : "#/components/schemas/AuditTargetType"
+          },
+          "targetId" : {
+            "type" : "string"
+          },
+          "targetName" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "projectId" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseDashboardOverviewDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/DashboardOverviewDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DashboardOverviewDTO" : {
+        "type" : "object",
+        "properties" : {
+          "totalProjects" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalAssets" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalFolders" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalStorageBytes" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
       "AuditLogItemDTO" : {
         "type" : "object",
         "properties" : {
@@ -6988,6 +7428,62 @@
             "items" : {
               "$ref" : "#/components/schemas/AuditLogItemDTO"
             }
+          }
+        }
+      },
+      "CommonResponseImageViewDataDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ImageViewDataDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DimensionDto" : {
+        "type" : "object",
+        "properties" : {
+          "width" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "height" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ImageViewDataDto" : {
+        "type" : "object",
+        "properties" : {
+          "assetId" : {
+            "type" : "string"
+          },
+          "previewUrl" : {
+            "type" : "string"
+          },
+          "thumbnailUrl" : {
+            "type" : "string"
+          },
+          "originalUrl" : {
+            "type" : "string"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          },
+          "dimensions" : {
+            "$ref" : "#/components/schemas/DimensionDto"
           }
         }
       },

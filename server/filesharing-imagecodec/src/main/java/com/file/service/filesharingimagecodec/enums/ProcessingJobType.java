@@ -2,9 +2,7 @@ package com.file.service.filesharingimagecodec.enums;
 
 public enum ProcessingJobType {
     TRANSCODE_HLS,
-    GENERATE_THUMBNAILS,
-    GENERATE_SPRITE,
-    GENERATE_POSTER,
-    GENERATE_WAVEFORM,
+    TRANSCODE_IMAGE,
+    TRANSCODE_RAW_IMAGE,
     VIRUS_SCAN
 }

@@ -1,4 +1,4 @@
-import { action, computed, makeObservable, observable, reaction } from 'mobx';
+import { action, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
 import {
     type AssetDetailResponseDto,
     type AssetSummaryDto,
@@ -11,6 +11,13 @@ import { FolderControllerService } from '../api/api/FolderControllerService';
 import { AssetControllerService } from '../api/api/AssetControllerService';
 import { CommonPagingStore } from './CommonPagingStore.ts';
 import type SessionStore from './sessionStore';
+import { API_BASE, tokenManager } from '../api/baseApi.ts';
+
+interface SseAssetEvent {
+    assetId: string;
+    newStatus: string;
+    thumbnailUrl?: string;
+}
 
 type ActiveModal =
     | 'upload-asset'
@@ -64,6 +71,7 @@ class FolderAssetStore extends CommonPagingStore {
     nameSpaceLocale: string = 'folder';
     modalWidth: number = 900;
 
+    private _sseAbortController: AbortController | null = null;
     private readonly sessionStore: SessionStore;
 
     constructor(sessionStore: SessionStore) {
@@ -120,6 +128,9 @@ class FolderAssetStore extends CommonPagingStore {
             clearActionError: action,
             clearAllErrors: action,
             reset: action,
+            subscribeToFolderSSE: action,
+            unsubscribeFromFolderSSE: action,
+            applyAssetStatusUpdate: action,
         });
 
         reaction(
@@ -370,7 +381,71 @@ class FolderAssetStore extends CommonPagingStore {
         this.actionErrorMessage = null;
     }
 
+    subscribeToFolderSSE(folderId: string): void {
+        this.unsubscribeFromFolderSSE();
+
+        const token = tokenManager.getAccessToken();
+        const url = `${API_BASE}/folder/${folderId}/asset-status-stream`;
+        const controller = new AbortController();
+        this._sseAbortController = controller;
+
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        fetch(url, { headers, signal: controller.signal })
+            .then(response => {
+                if (!response.ok || !response.body) return;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                const processLine = (line: string) => {
+                    if (!line.startsWith('data:')) return;
+                    const json = line.slice(5).trim();
+                    if (!json) return;
+                    try {
+                        const event = JSON.parse(json) as SseAssetEvent;
+                        runInAction(() => this.applyAssetStatusUpdate(event));
+                    } catch { /* ignore malformed events */ }
+                };
+
+                const read = (): void => {
+                    reader.read().then(({ done, value }) => {
+                        if (done || controller.signal.aborted) return;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() ?? '';
+                        lines.forEach(processLine);
+                        read();
+                    }).catch(() => {});
+                };
+                read();
+            })
+            .catch(() => {});
+    }
+
+    unsubscribeFromFolderSSE(): void {
+        if (this._sseAbortController) {
+            this._sseAbortController.abort();
+            this._sseAbortController = null;
+        }
+    }
+
+    applyAssetStatusUpdate(event: SseAssetEvent): void {
+        const idx = this.assets.findIndex(a => a.asset?.assetId === event.assetId);
+        if (idx === -1) return;
+        const asset = this.assets[idx];
+        if (!asset.latestVersion) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (asset.latestVersion as any).processingStatus = event.newStatus;
+        if (event.thumbnailUrl !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (asset.latestVersion as any).thumbnailUrl = event.thumbnailUrl;
+        }
+    }
+
     reset(): void {
+        this.unsubscribeFromFolderSSE();
         this.folders = [];
         this.assets = [];
         this.selectedAsset = null;

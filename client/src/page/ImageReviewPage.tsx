@@ -2,11 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Circle, Image as KonvaImage, Layer, Rect, Stage, Transformer } from 'react-konva';
 import type Konva from 'konva';
 import useImage from 'use-image';
+import { useSearchParams } from 'react-router-dom';
 import CommonLayout from '../layout/CommonLayout';
 import { mockActionLog, mockComments, mockImages } from '../components/imageReview/mockData';
 import type { SidebarSectionState } from '../components/imageReview/types';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { MarkupMode, ShapeTool } from '../hooks/useKonvaCanvas';
+import baseApi from '../api/baseApi.ts';
+
+interface ImageViewData {
+  assetId?: string;
+  previewUrl?: string;
+  thumbnailUrl?: string;
+  mimeType?: string;
+  processingStatus?: string;
+  dimensions?: { width?: number; height?: number };
+}
 
 const COLOR_PRIMARY = 'hsl(var(--primary))';
 const COLOR_ACCENT = 'hsl(var(--accent))';
@@ -137,13 +148,33 @@ const IconX = () => (
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 const ImageReviewPage = () => {
+  const [searchParams] = useSearchParams();
+  const assetId = searchParams.get('assetId');
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const currentImage = mockImages[currentImageIndex];
+
+  const [imageViewData, setImageViewData] = useState<ImageViewData | null>(null);
+  const [isFetchingImage, setIsFetchingImage] = useState(false);
+
+  useEffect(() => {
+    if (!assetId) return;
+    setIsFetchingImage(true);
+    baseApi.get<ImageViewData>(`/asset/${assetId}/image-data`)
+        .then(data => setImageViewData(data))
+        .catch(() => setImageViewData(null))
+        .finally(() => setIsFetchingImage(false));
+  }, [assetId]);
+
+  // scaleX/scaleY: converts original image coords → preview image coords (used when saving annotations)
+  const [_scaleFactors, setScaleFactors] = useState<{ scaleX: number; scaleY: number } | null>(null);
+
+  const activePreviewUrl = imageViewData?.previewUrl ?? currentImage.url;
 
   const [activeMode, setActiveMode] = useState<MarkupMode>('select');
   const [activeShape, setActiveShape] = useState<ShapeTool>('rectangle');
 
-  const [bgImage] = useImage(currentImage.url);
+  const [bgImage] = useImage(activePreviewUrl);
 
   const {
     containerRef,
@@ -180,6 +211,18 @@ const ImageReviewPage = () => {
     worldWidth: bgImage?.width,
     worldHeight: bgImage?.height,
   });
+
+  // Compute scaleX/scaleY once the preview image loads and we have original dimensions
+  useEffect(() => {
+    if (!bgImage || !imageViewData?.dimensions?.width || !imageViewData?.dimensions?.height) {
+      setScaleFactors(null);
+      return;
+    }
+    setScaleFactors({
+      scaleX: bgImage.width / imageViewData.dimensions.width,
+      scaleY: bgImage.height / imageViewData.dimensions.height,
+    });
+  }, [bgImage, imageViewData]);
 
   // ── sidebar & section state ──────────────────────────────────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -541,6 +584,12 @@ const ImageReviewPage = () => {
               className="relative flex w-full flex-1 items-center justify-center overflow-hidden"
               style={{ cursor: viewportCursor }}
             >
+              {isFetchingImage && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+                  <div className="text-sm text-muted-foreground">Đang tải ảnh...</div>
+                </div>
+              )}
+
               {containerWidth > 0 && containerHeight > 0 && (
                 <Stage
                   ref={stageRef}

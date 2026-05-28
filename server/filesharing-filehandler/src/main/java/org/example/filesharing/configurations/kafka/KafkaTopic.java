@@ -19,6 +19,9 @@ public class KafkaTopic {
     @Value(value = "${kafka.topics.image_process_topic}")
     private String imageProcessTopic;
 
+    @Value(value = "${kafka.topics.image_process_result_topic}")
+    private String imageProcessResultTopic;
+
     @Bean
     public NewTopic emailSenderTopic() {
         return TopicBuilder.name(notificationEmailSender)
@@ -38,6 +41,14 @@ public class KafkaTopic {
     @Bean
     public NewTopic imageProcessTopic() {
         return TopicBuilder.name(imageProcessTopic)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic imageProcessResultTopic() {
+        return TopicBuilder.name(imageProcessResultTopic)
                 .partitions(1)
                 .replicas(1)
                 .build();

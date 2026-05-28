@@ -21,18 +21,25 @@ public class MinioStorageClient {
     private final String inputBucket;
     private final String thumbnailBucket;
     private final String imagePreviewBucket;
+    private final String minioEndpoint;
     private final long largeImageThresholdBytes;
 
     public MinioStorageClient(MinioClient minioClient,
                               @Value("${minio.buckets.files}") String inputBucket,
                               @Value("${minio.buckets.thumbnails}") String thumbnailBucket,
                               @Value("${minio.buckets.image-preview}") String imagePreviewBucket,
+                              @Value("${minio.endpoint}") String minioEndpoint,
                               ImageProcessingConfig config) {
         this.minioClient = minioClient;
         this.inputBucket = inputBucket;
         this.thumbnailBucket = thumbnailBucket;
         this.imagePreviewBucket = imagePreviewBucket;
+        this.minioEndpoint = minioEndpoint;
         this.largeImageThresholdBytes = config.getVips().getLargeImageThresholdMb() * 1024L * 1024L;
+    }
+
+    public String buildThumbnailPublicUrl(String objectKey) {
+        return minioEndpoint + "/" + thumbnailBucket + "/" + objectKey;
     }
 
     public long getObjectSize(String objectKey) throws Exception {

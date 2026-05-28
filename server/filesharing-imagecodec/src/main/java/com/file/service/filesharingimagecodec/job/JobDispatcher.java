@@ -48,7 +48,7 @@ public class JobDispatcher {
                     .start(() -> {
                         try {
                             log.info("dang phan phoi job anh {} cho trinh thuc thi", job.getJobId());
-                            imageJobExecutor.execute(job.getJobId(), job.getObjectName());
+                            imageJobExecutor.execute(job.getJobId(), job.getObjectName(), job.getAssetId(), job.getMetadataId());
                         } catch (Exception e) {
                             log.error("loi khong duoc xu ly khi thuc thi job anh {}: {}", job.getJobId(), e.getMessage(), e);
                         } finally {
