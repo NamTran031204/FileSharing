@@ -26,6 +26,7 @@
 	</properties>
 
 	<modules>
+		<module>filesharing-core</module>
 		<module>filesharing-filehandler</module>
 		<module>filesharing-notification</module>
 		<module>filesharing-videocodec</module>
