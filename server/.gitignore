@@ -2,4 +2,4 @@
 
 dockers/data/minio/.minio.sys
 
-dockers/data/minio/file-sharing
+dockers/data/minio

@@ -6,7 +6,9 @@ import org.example.filesharing.entities.dtos.annotations.*;
 import org.example.filesharing.entities.models.AnnotationsEntity;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.services.AnnotationsService;
+import org.example.filesharing.services.SseService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ import java.util.List;
 public class AnnotationsController {
 
     private final AnnotationsService annotationsService;
+    private final SseService sseService;
 
     @PostMapping("/create")
     public CommonResponse<AnnotationsEntity> createAnnotation(@RequestBody AnnotationCreateDTO dto) {
@@ -67,5 +70,15 @@ public class AnnotationsController {
             @RequestParam("assetId") String assetId,
             @RequestParam(value = "versionNumber", required = false) Integer versionNumber) {
         return CommonResponse.success(annotationsService.getSummary(assetId, versionNumber));
+    }
+
+    /**
+     * Subscribe to realtime annotation events for an asset (SSE).
+     * Client holds this connection open for the duration of the review session.
+     * Endpoint: GET /api/annotation/subscribe/{assetId}
+     */
+    @GetMapping("/subscribe/{assetId}")
+    public SseEmitter subscribeToAnnotations(@PathVariable String assetId) {
+        return sseService.subscribeToAnnotation(assetId);
     }
 }

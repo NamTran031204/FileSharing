@@ -1,32 +1,42 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { Circle, Image as KonvaImage, Layer, Rect, Stage, Transformer } from 'react-konva';
 import type Konva from 'konva';
 import useImage from 'use-image';
 import { useSearchParams } from 'react-router-dom';
 import CommonLayout from '../layout/CommonLayout';
-import { mockActionLog, mockComments, mockImages } from '../components/imageReview/mockData';
+import { mockActionLog } from '../components/imageReview/mockData';
 import type { SidebarSectionState } from '../components/imageReview/types';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { MarkupMode, ShapeTool } from '../hooks/useKonvaCanvas';
-import baseApi from '../api/baseApi.ts';
+import { useStore } from '../store';
 
-interface ImageViewData {
-  assetId?: string;
-  previewUrl?: string;
-  thumbnailUrl?: string;
-  mimeType?: string;
-  processingStatus?: string;
-  dimensions?: { width?: number; height?: number };
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function formatTime(isoDate?: string | null): string {
+  if (!isoDate) return '';
+  const d = new Date(isoDate);
+  const now = new Date();
+  const hours = Math.floor((now.getTime() - d.getTime()) / 3600000);
+  if (hours < 1) return 'Just now';
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString();
 }
 
-const COLOR_PRIMARY = 'hsl(var(--primary))';
-const COLOR_ACCENT = 'hsl(var(--accent))';
-const DEFAULT_STROKE_SIZE = 4;
+function formatBytes(bytes?: number | null): string {
+  if (!bytes) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
 
-// start mockup
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const DEFAULT_STROKE_SIZE = 4;
 const STROKE_COLORS = ['#f43f5e', '#10b981', '#f59e0b', '#0ea5e9', '#535297'] as const;
 type StrokeColor = (typeof STROKE_COLORS)[number];
-// end mockup
 
 // ─── Inline SVG icons ────────────────────────────────────────────────────────
 const IconSelect = () => (
@@ -147,33 +157,36 @@ const IconX = () => (
 );
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
-const ImageReviewPage = () => {
+const ImageReviewPage = observer(() => {
   const [searchParams] = useSearchParams();
   const assetId = searchParams.get('assetId');
+  const versionParam = searchParams.get('version');
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const currentImage = mockImages[currentImageIndex];
+  const { imageReviewStore: store } = useStore();
 
-  const [imageViewData, setImageViewData] = useState<ImageViewData | null>(null);
-  const [isFetchingImage, setIsFetchingImage] = useState(false);
-
+  // ── Init / cleanup ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!assetId) return;
-    setIsFetchingImage(true);
-    baseApi.get<ImageViewData>(`/asset/${assetId}/image-data`)
-        .then(data => setImageViewData(data))
-        .catch(() => setImageViewData(null))
-        .finally(() => setIsFetchingImage(false));
-  }, [assetId]);
+    store.init(assetId, versionParam ? parseInt(versionParam, 10) : undefined);
+    return () => store.destroy();
+  }, [assetId, versionParam, store]);
 
-  // scaleX/scaleY: converts original image coords → preview image coords (used when saving annotations)
-  const [_scaleFactors, setScaleFactors] = useState<{ scaleX: number; scaleY: number } | null>(null);
-
-  const activePreviewUrl = imageViewData?.previewUrl ?? currentImage.url;
+  // ── Version navigation ─────────────────────────────────────────────────────
+  const sortedVersions = [...store.versions].sort(
+    (a, b) => (a.versionNumber ?? 0) - (b.versionNumber ?? 0),
+  );
+  const currentVersionIdx = sortedVersions.findIndex(
+    v => v.versionNumber === store.currentVersionNumber,
+  );
+  const canGoPrev = currentVersionIdx > 0;
+  const canGoNext = currentVersionIdx < sortedVersions.length - 1;
 
   const [activeMode, setActiveMode] = useState<MarkupMode>('select');
   const [activeShape, setActiveShape] = useState<ShapeTool>('rectangle');
+  const [activeColor, setActiveColor] = useState<StrokeColor>('#f43f5e');
+  const [strokeSize, setStrokeSize] = useState(DEFAULT_STROKE_SIZE);
 
+  const activePreviewUrl = store.imageData?.previewUrl ?? '';
   const [bgImage] = useImage(activePreviewUrl);
 
   const {
@@ -212,19 +225,16 @@ const ImageReviewPage = () => {
     worldHeight: bgImage?.height,
   });
 
-  // Compute scaleX/scaleY once the preview image loads and we have original dimensions
+  // ── Scale factors: set in store after preview image loads ──────────────────
   useEffect(() => {
-    if (!bgImage || !imageViewData?.dimensions?.width || !imageViewData?.dimensions?.height) {
-      setScaleFactors(null);
-      return;
-    }
-    setScaleFactors({
-      scaleX: bgImage.width / imageViewData.dimensions.width,
-      scaleY: bgImage.height / imageViewData.dimensions.height,
-    });
-  }, [bgImage, imageViewData]);
+    if (!bgImage || !store.imageData?.dimensions?.width || !store.imageData?.dimensions?.height) return;
+    store.setScaleFactors(
+      bgImage.width / store.imageData.dimensions.width,
+      bgImage.height / store.imageData.dimensions.height,
+    );
+  }, [bgImage, store.imageData, store]);
 
-  // ── sidebar & section state ──────────────────────────────────────────────
+  // ── Sidebar & section state ────────────────────────────────────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<SidebarSectionState>({
     shapes: true,
@@ -232,42 +242,27 @@ const ImageReviewPage = () => {
     actionLog: true,
     imageInfo: true,
   });
-  const [showAnnotations, setShowAnnotations] = useState(true);
 
-  // ── search / filter state ────────────────────────────────────────────────
-  // @todo: need implement [comment resolved state from API]
+  // ── Local search query (UI-only, stacked on top of store filter) ───────────
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN' | 'RESOLVED'>('ALL');
 
-  // ── review status ────────────────────────────────────────────────────────
-  // @todo: need implement [review status from API]
-  const [reviewStatus] = useState<'PENDING' | 'APPROVED' | 'REQUEST_CHANGES'>('PENDING');
+  // ── Reply state ────────────────────────────────────────────────────────────
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
-  // start mockup
-
-  // ── active stroke color ──────────────────────────────────────────────────
-  const [activeColor, setActiveColor] = useState<StrokeColor>('#f43f5e');
-
-  // ── stroke size ──────────────────────────────────────────────────────────
-  const [strokeSize, setStrokeSize] = useState(DEFAULT_STROKE_SIZE);
-
-  // ── compare modal state ──────────────────────────────────────────────────
+  // ── Compare modal ──────────────────────────────────────────────────────────
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareSliderPos, setCompareSliderPos] = useState(50);
 
-  // ── comment popup state (shown after finishing a shape) ──────────────────
-  const [commentPopup, setCommentPopup] = useState<{
-    x: number;
-    y: number;
-    shapeType: string;
-  } | null>(null);
+  // ── Comment popup (after shape draw) ──────────────────────────────────────
+  const [commentPopup, setCommentPopup] = useState<{ x: number; y: number } | null>(null);
   const [commentText, setCommentText] = useState('');
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingShapeIdRef = useRef<string | null>(null);
 
-  // viewport container ref for Fit calculation
   const viewportDivRef = useRef<HTMLDivElement>(null);
 
-  // ── zoom fit / zoom 100% ─────────────────────────────────────────────────
+  // ── Zoom fit / zoom 100% ───────────────────────────────────────────────────
   const handleZoomFit = useCallback(() => {
     if (!bgImage || containerWidth <= 0 || containerHeight <= 0) return;
     const scaleX = containerWidth / bgImage.width;
@@ -289,11 +284,11 @@ const ImageReviewPage = () => {
     });
   }, [bgImage, containerWidth, containerHeight, setStageScale, setStagePosition]);
 
-  // ── comment popup: open after isDrawing finishes (mousedown second click) ─
-  // We watch isDrawing going false → if a shape was just finalised, show popup
+  // ── Comment popup: fires when isDrawing transitions true→false ─────────────
   const prevIsDrawing = useRef(false);
   useEffect(() => {
     if (prevIsDrawing.current && !isDrawing && (selectedTool === 'rect' || selectedTool === 'circle')) {
+      pendingShapeIdRef.current = drawnShapes[drawnShapes.length - 1]?.id ?? null;
       const stage = stageRef.current;
       const pos = stage?.getPointerPosition();
       if (pos) {
@@ -301,64 +296,82 @@ const ImageReviewPage = () => {
         setCommentPopup({
           x: (rect?.left ?? 0) + pos.x,
           y: (rect?.top ?? 0) + pos.y,
-        } as { x: number; y: number; shapeType: string });
+        });
         setCommentText('');
         setTimeout(() => commentInputRef.current?.focus(), 50);
       }
     }
     prevIsDrawing.current = isDrawing;
-  }, [isDrawing, selectedTool, stageRef]);
+  }, [isDrawing, selectedTool, stageRef, drawnShapes]);
 
   const handleCloseCommentPopup = () => {
+    if (pendingShapeIdRef.current) {
+      const id = pendingShapeIdRef.current;
+      setDrawnShapes(prev => prev.filter(s => s.id !== id));
+      pendingShapeIdRef.current = null;
+    }
     setCommentPopup(null);
     setCommentText('');
   };
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-    // @todo: need implement [save comment to API]
-    console.log('[mockup] new comment:', commentText);
-    setCommentPopup(null);
-    setCommentText('');
+    if (!commentText.trim() || !assetId) return;
+    const pendingShapeId = pendingShapeIdRef.current;
+    const pendingShape = pendingShapeId ? drawnShapes.find(s => s.id === pendingShapeId) : null;
+    const shapes = pendingShape ? [pendingShape] : [];
+    const result = await store.createAnnotation(commentText.trim(), shapes);
+    if (result) {
+      if (pendingShapeId) {
+        setDrawnShapes(prev => prev.filter(s => s.id !== pendingShapeId));
+      }
+      pendingShapeIdRef.current = null;
+      setCommentPopup(null);
+      setCommentText('');
+    }
   };
 
-  // end mockup
+  const handleSubmitReply = async (e: React.FormEvent, threadRootId: string) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+    const result = await store.addReply(threadRootId, replyText.trim());
+    if (result) {
+      setReplyText('');
+      setReplyingToId(null);
+    }
+  };
 
-  // ── tool mode sync → useKonvaCanvas ─────────────────────────────────────
+  // ── Tool mode sync → useKonvaCanvas ───────────────────────────────────────
   useEffect(() => {
     if (activeMode === 'select') { setSelectedTool('select'); return; }
     if (activeMode === 'text')   { setSelectedTool('pan');    return; }
     if (activeMode === 'draw') {
-      if (activeShape === 'circle')    setSelectedTool('circle');
+      if (activeShape === 'circle')        setSelectedTool('circle');
       else if (activeShape === 'rectangle') setSelectedTool('rect');
       else setSelectedTool('rotate');
     }
   }, [activeMode, activeShape, setSelectedTool]);
 
-  // ── image navigation ─────────────────────────────────────────────────────
-  const canGoPrev = currentImageIndex > 0;
-  const canGoNext = currentImageIndex < mockImages.length - 1;
-
-  const handlePrevImage = () => {
+  // ── Version navigation handlers ────────────────────────────────────────────
+  const handlePrevVersion = () => {
     if (!canGoPrev) return;
-    setCurrentImageIndex((p) => p - 1);
+    store.switchVersion(sortedVersions[currentVersionIdx - 1].versionNumber!);
     setDrawnShapes([]);
     setSelectedShapeId(null);
   };
 
-  const handleNextImage = () => {
+  const handleNextVersion = () => {
     if (!canGoNext) return;
-    setCurrentImageIndex((p) => p + 1);
+    store.switchVersion(sortedVersions[currentVersionIdx + 1].versionNumber!);
     setDrawnShapes([]);
     setSelectedShapeId(null);
   };
 
-  // ── section accordion ────────────────────────────────────────────────────
+  // ── Section accordion ──────────────────────────────────────────────────────
   const toggleSection = (section: keyof SidebarSectionState) =>
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
 
-  // ── toolbar tool selection ───────────────────────────────────────────────
+  // ── Toolbar tool selection ─────────────────────────────────────────────────
   const handleToolClick = (tool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan') => {
     if (tool === 'select')      setActiveMode('select');
     else if (tool === 'pan')    setActiveMode('text');
@@ -368,7 +381,7 @@ const ImageReviewPage = () => {
     setSelectedShapeId(null);
   };
 
-  // ── derived UI values ────────────────────────────────────────────────────
+  // ── Derived UI values ──────────────────────────────────────────────────────
   const activeTool =
     selectedTool === 'pan'    ? 'pan'
     : selectedTool === 'select' ? 'select'
@@ -381,24 +394,23 @@ const ImageReviewPage = () => {
     : selectedTool === 'pan'  ? 'grab'
     : 'crosshair';
 
+  const reviewStatus = store.reviewStatus;
   const reviewStatusClass =
-    reviewStatus === 'APPROVED'        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    reviewStatus === 'APPROVED'         ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
     : reviewStatus === 'REQUEST_CHANGES' ? 'bg-rose-100 text-rose-800 border-rose-200'
     : 'bg-amber-100 text-amber-800 border-amber-200';
 
-  // ── comment filter logic ─────────────────────────────────────────────────
-  const filteredComments = mockComments.filter((c) => {
-    if (statusFilter === 'RESOLVED') return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return c.text?.toLowerCase().includes(q) || c.author?.toLowerCase().includes(q);
-    }
-    return true;
+  // ── Filtered comments (store filter + local search) ────────────────────────
+  const displayedAnnotations = store.filteredAnnotations.filter(ann => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      ann.commentBody?.body?.toLowerCase().includes(q) ||
+      (ann.authorName ?? ann.authorId ?? '').toLowerCase().includes(q)
+    );
   });
-  const openCount = mockComments.length;
-  const resolvedCount = 0;
 
-  // ────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
   return (
     <CommonLayout>
       <div className="flex h-full flex-col overflow-hidden bg-[hsl(240,10%,96%)]">
@@ -407,47 +419,62 @@ const ImageReviewPage = () => {
         <div className="z-10 flex h-14 shrink-0 items-center justify-between border-b border-[hsl(244,30%,80%)]/20 bg-white px-6">
           <div className="flex items-center gap-4">
 
-            {/* Prev/Next navigation */}
+            {/* Version prev/next navigation */}
             <div className="flex items-center rounded-lg border border-[hsl(244,30%,80%)]/30 bg-[hsl(240,10%,96%)] p-1 shadow-xs">
               <button
-                onClick={handlePrevImage}
+                onClick={handlePrevVersion}
                 disabled={!canGoPrev}
                 className="rounded p-1 text-[hsl(237,45%,30%)] transition-all hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                title="Previous Image"
+                title="Previous Version"
               >
                 <IconChevronLeft />
               </button>
               <span className="min-w-[50px] select-none px-3 text-center text-xs font-black text-[hsl(237,45%,30%)]">
-                {currentImageIndex + 1} / {mockImages.length}
+                {sortedVersions.length > 0 ? `${currentVersionIdx + 1} / ${sortedVersions.length}` : '— / —'}
               </span>
               <button
-                onClick={handleNextImage}
+                onClick={handleNextVersion}
                 disabled={!canGoNext}
                 className="rounded p-1 text-[hsl(237,45%,30%)] transition-all hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                title="Next Image"
+                title="Next Version"
               >
                 <IconChevronRight />
               </button>
             </div>
 
-            {/* Version selector — @todo: need implement [version selector] */}
+            {/* Version selector dropdown */}
             <div className="group relative">
               <button className="flex cursor-pointer items-center gap-2 rounded-lg border border-[hsl(244,30%,80%)]/30 bg-[hsl(240,10%,96%)] px-3 py-1.5 text-xs font-bold text-[hsl(237,45%,30%)] transition-all hover:border-[hsl(240,30%,46%)]">
                 <IconClock />
-                <span>v3</span>
+                <span>v{store.currentVersionNumber}</span>
                 <IconChevronDown />
               </button>
               <div className="absolute left-0 top-full z-30 mt-1 hidden w-44 rounded-lg border border-[hsl(244,30%,80%)]/35 bg-white py-1 shadow-xl group-hover:block">
-                {['v3 (Current)', 'v2', 'v1'].map((v, i) => (
-                  <button key={v} className={`flex w-full items-center justify-between px-4 py-2 text-left text-xs font-bold hover:bg-[hsl(240,10%,96%)] ${i === 0 ? 'text-[hsl(240,30%,46%)]' : 'text-[hsl(244,10%,40%)]'}`}>
-                    <span>{v}</span>
-                    {i === 0 && <IconCheck />}
+                {sortedVersions.slice().reverse().map(v => (
+                  <button
+                    key={v.versionNumber}
+                    onClick={() => {
+                      store.switchVersion(v.versionNumber!);
+                      setDrawnShapes([]);
+                      setSelectedShapeId(null);
+                    }}
+                    className={`flex w-full items-center justify-between px-4 py-2 text-left text-xs font-bold hover:bg-[hsl(240,10%,96%)] ${
+                      v.versionNumber === store.currentVersionNumber
+                        ? 'text-[hsl(240,30%,46%)]'
+                        : 'text-[hsl(244,10%,40%)]'
+                    }`}
+                  >
+                    <span>v{v.versionNumber}{v.versionNumber === store.currentVersionNumber ? ' (Current)' : ''}</span>
+                    {v.versionNumber === store.currentVersionNumber && <IconCheck />}
                   </button>
                 ))}
+                {sortedVersions.length === 0 && (
+                  <div className="px-4 py-2 text-xs text-[hsl(244,10%,40%)]">Loading…</div>
+                )}
               </div>
             </div>
 
-            {/* start mockup — Compare button opens modal */}
+            {/* Compare button */}
             <button
               onClick={() => setShowCompareModal(true)}
               className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[hsl(246,72%,78%)]/20 bg-[hsl(246,72%,78%)]/10 px-3 py-1.5 text-xs font-bold text-[hsl(240,30%,46%)] shadow-xs transition-all hover:bg-[hsl(246,72%,78%)]/20"
@@ -455,7 +482,6 @@ const ImageReviewPage = () => {
               <IconDiff />
               <span>Compare</span>
             </button>
-            {/* end mockup */}
 
           </div>
 
@@ -465,14 +491,20 @@ const ImageReviewPage = () => {
               {reviewStatus.replace('_', ' ')}
             </span>
 
-            {/* @todo: need implement [approve action] */}
-            <button className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700">
+            <button
+              onClick={() => store.approveReview()}
+              disabled={store.isReviewLoading}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-60"
+            >
               <span className="rounded-full bg-emerald-500 p-0.5"><IconCheck /></span>
               <span>Approve</span>
             </button>
 
-            {/* @todo: need implement [request changes action] */}
-            <button className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-700">
+            <button
+              onClick={() => store.requestChanges()}
+              disabled={store.isReviewLoading}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-700 disabled:opacity-60"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -482,8 +514,10 @@ const ImageReviewPage = () => {
 
             <div className="h-6 w-px bg-[hsl(244,30%,80%)]/20" />
 
-            {/* @todo: need implement [download asset] */}
-            <button className="cursor-pointer rounded-lg p-2 text-[hsl(237,45%,30%)] transition-all hover:bg-[hsl(240,30%,46%)]/10" title="Download Source Asset">
+            <button
+              className="cursor-pointer rounded-lg p-2 text-[hsl(237,45%,30%)] transition-all hover:bg-[hsl(240,30%,46%)]/10"
+              title="Download Source Asset"
+            >
               <IconDownload />
             </button>
             <button className="cursor-pointer rounded-lg p-2 text-[hsl(237,45%,30%)] transition-all hover:bg-[hsl(240,30%,46%)]/10" title="More Actions">
@@ -500,8 +534,6 @@ const ImageReviewPage = () => {
 
             {/* Floating left toolbar */}
             <div className="absolute left-4 top-4 z-10 flex flex-col gap-1.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/90 p-1.5 shadow-2xl">
-
-              {/* Tool buttons */}
               {(
                 [
                   { id: 'select', Icon: IconSelect, label: 'SELECT', title: 'Select (V)' },
@@ -528,35 +560,26 @@ const ImageReviewPage = () => {
 
               <div className="mx-1.5 my-1 h-px bg-zinc-800" />
 
-              {/* @todo: need implement [delete shape] */}
               <button
                 title="Delete Selected (Del)"
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-rose-950/80 hover:text-rose-400"
               >
                 <IconTrash />
               </button>
-
-              {/* @todo: need implement [undo] */}
               <button title="Undo" className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-800 hover:text-white">
                 <IconUndo />
               </button>
-
-              {/* @todo: need implement [redo] */}
               <button title="Redo" className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-800 hover:text-white">
                 <IconRedo />
               </button>
 
-              {/* start mockup — Color picker swatch */}
+              {/* Color picker swatch */}
               <div className="group/color relative flex h-10 w-10 cursor-pointer items-center justify-center">
-                <div
-                  className="h-5 w-5 rounded-full border border-white/50"
-                  style={{ backgroundColor: activeColor }}
-                />
-                {/* Dropdown palette — shown on hover */}
+                <div className="h-5 w-5 rounded-full border border-white/50" style={{ backgroundColor: activeColor }} />
                 <div className="absolute left-full top-0 z-30 ml-2 hidden flex-col gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 p-2 shadow-2xl group-hover/color:flex">
                   <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-zinc-500">COLOR</span>
                   <div className="flex gap-1.5">
-                    {STROKE_COLORS.map((c) => (
+                    {STROKE_COLORS.map(c => (
                       <button
                         key={c}
                         onClick={() => setActiveColor(c)}
@@ -570,23 +593,20 @@ const ImageReviewPage = () => {
                   </div>
                 </div>
               </div>
-              {/* end mockup */}
-
             </div>
 
             {/* Konva canvas viewport */}
             <div
-              ref={(el) => {
-                // assign both containerRef (from hook) and our local viewportDivRef
+              ref={el => {
                 (containerRef as React.RefCallback<HTMLDivElement>)(el);
                 (viewportDivRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
               }}
               className="relative flex w-full flex-1 items-center justify-center overflow-hidden"
               style={{ cursor: viewportCursor }}
             >
-              {isFetchingImage && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
-                  <div className="text-sm text-muted-foreground">Đang tải ảnh...</div>
+              {(store.isImageLoading || store.isInitialLoading) && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/60">
+                  <div className="text-sm text-zinc-400">Loading image…</div>
                 </div>
               )}
 
@@ -606,9 +626,45 @@ const ImageReviewPage = () => {
                   <Layer>
                     {bgImage && <KonvaImage image={bgImage} x={0} y={0} />}
 
-                    {/* start mockup — shapes visibility gated by showAnnotations */}
-                    {showAnnotations && drawnShapes.map((shape) => {
-                    {/* end mockup */}
+                    {/* Saved annotation shapes (from store) */}
+                    {store.showAnnotations && store.allKonvaShapes.map(shape => {
+                      const isHl = !store.highlightedAnnotationId ||
+                        shape.annotationId === store.highlightedAnnotationId;
+                      const opacity = isHl ? 1 : 0.35;
+                      const onClick = () =>
+                        store.setHighlightedAnnotation(
+                          store.highlightedAnnotationId === shape.annotationId
+                            ? null
+                            : (shape.annotationId ?? null),
+                        );
+                      if (shape.type === 'circle') {
+                        return (
+                          <Circle
+                            key={shape.id}
+                            x={shape.x} y={shape.y}
+                            radius={shape.radius}
+                            stroke={shape.stroke}
+                            strokeWidth={shape.strokeWidth}
+                            opacity={opacity}
+                            onClick={onClick}
+                          />
+                        );
+                      }
+                      return (
+                        <Rect
+                          key={shape.id}
+                          x={shape.x} y={shape.y}
+                          width={shape.width} height={shape.height}
+                          stroke={shape.stroke}
+                          strokeWidth={shape.strokeWidth}
+                          opacity={opacity}
+                          onClick={onClick}
+                        />
+                      );
+                    })}
+
+                    {/* Locally drawn shapes (pending save) */}
+                    {drawnShapes.map(shape => {
                       const isDraggable = selectedTool === 'select';
                       if (shape.type === 'circle') {
                         return (
@@ -622,9 +678,9 @@ const ImageReviewPage = () => {
                             draggable={isDraggable}
                             onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
                             onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
-                            ref={(node) => { shapeRefs.current[shape.id] = node; }}
-                            onDragEnd={(e) => handleDragEnd(shape.id, e)}
-                            onTransformEnd={(e) => handleTransformEnd(shape.id, e.target as Konva.Shape)}
+                            ref={node => { shapeRefs.current[shape.id] = node; }}
+                            onDragEnd={e => handleDragEnd(shape.id, e)}
+                            onTransformEnd={e => handleTransformEnd(shape.id, e.target as Konva.Shape)}
                           />
                         );
                       }
@@ -639,9 +695,9 @@ const ImageReviewPage = () => {
                           draggable={isDraggable}
                           onClick={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
                           onTap={() => selectedTool === 'select' && setSelectedShapeId(shape.id)}
-                          ref={(node) => { shapeRefs.current[shape.id] = node; }}
-                          onDragEnd={(e) => handleDragEnd(shape.id, e)}
-                          onTransformEnd={(e) => handleTransformEnd(shape.id, e.target as Konva.Shape)}
+                          ref={node => { shapeRefs.current[shape.id] = node; }}
+                          onDragEnd={e => handleDragEnd(shape.id, e)}
+                          onTransformEnd={e => handleTransformEnd(shape.id, e.target as Konva.Shape)}
                         />
                       );
                     })}
@@ -654,15 +710,13 @@ const ImageReviewPage = () => {
                       keepRatio
                     />
 
-                    {/* Live drawing preview — uses activeColor from mockup state */}
+                    {/* Live drawing preview */}
                     {isDrawing && startPoint && currentPoint && (
                       <>
                         {selectedTool === 'circle' && (
                           <Circle
                             {...getCircleProps(startPoint, currentPoint)}
-                            // start mockup
                             stroke={activeColor}
-                            // end mockup
                             strokeWidth={strokeSize}
                             dash={[5, 5]}
                             opacity={0.7}
@@ -671,9 +725,7 @@ const ImageReviewPage = () => {
                         {selectedTool === 'rect' && (
                           <Rect
                             {...getRectProps(startPoint, currentPoint)}
-                            // start mockup
                             stroke={activeColor}
-                            // end mockup
                             strokeWidth={strokeSize}
                             dash={[5, 5]}
                             opacity={0.7}
@@ -686,7 +738,7 @@ const ImageReviewPage = () => {
               )}
             </div>
 
-            {/* start mockup — Comment popup overlay (after shape draw) */}
+            {/* Comment popup overlay (after shape draw) */}
             {commentPopup && (
               <div
                 className="fixed z-50 w-72 rounded-xl border border-[hsl(244,30%,80%)] bg-white p-4 shadow-2xl"
@@ -708,11 +760,14 @@ const ImageReviewPage = () => {
                   <textarea
                     ref={commentInputRef}
                     value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
+                    onChange={e => setCommentText(e.target.value)}
                     placeholder="Type a comment… use @ to mention"
                     rows={3}
                     className="w-full resize-none rounded-lg border border-[hsl(244,30%,80%)]/50 bg-[hsl(240,10%,96%)] p-2.5 text-xs text-[hsl(237,45%,30%)] outline-none transition-all placeholder:text-[hsl(244,10%,40%)]/50 focus:border-[hsl(240,30%,46%)] focus:ring-1 focus:ring-[hsl(240,30%,46%)]/20"
                   />
+                  {store.annotationError && (
+                    <p className="text-[10px] text-red-500">{store.annotationError}</p>
+                  )}
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -723,20 +778,18 @@ const ImageReviewPage = () => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 rounded-lg bg-[hsl(240,30%,46%)] py-1.5 text-xs font-bold text-white transition-all hover:bg-[hsl(244,30%,61%)]"
+                      disabled={store.isSaving}
+                      className="flex-1 rounded-lg bg-[hsl(240,30%,46%)] py-1.5 text-xs font-bold text-white transition-all hover:bg-[hsl(244,30%,61%)] disabled:opacity-60"
                     >
-                      Post
+                      {store.isSaving ? 'Saving…' : 'Post'}
                     </button>
                   </div>
                 </form>
               </div>
             )}
-            {/* end mockup */}
 
             {/* Bottom floating capsule controls */}
             <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/95 px-5 py-2.5 text-white shadow-2xl">
-
-              {/* Pan toggle */}
               <button
                 onClick={() => handleToolClick(activeTool === 'pan' ? 'select' : 'pan')}
                 title="Pan Mode"
@@ -747,7 +800,6 @@ const ImageReviewPage = () => {
 
               <div className="h-5 w-px bg-zinc-800" />
 
-              {/* Zoom controls — connected to useKonvaCanvas handlers */}
               <div className="flex items-center gap-2">
                 <button onClick={handleZoomOut} title="Zoom Out" className="rounded-lg p-1.5 text-zinc-400 transition-all hover:bg-zinc-800 hover:text-white">
                   <IconZoomOut />
@@ -762,7 +814,6 @@ const ImageReviewPage = () => {
 
               <div className="h-5 w-px bg-zinc-800" />
 
-              {/* start mockup — Fit & 100% zoom buttons */}
               <button
                 onClick={handleZoomFit}
                 title="Fit to screen"
@@ -780,20 +831,17 @@ const ImageReviewPage = () => {
 
               <div className="h-5 w-px bg-zinc-800" />
 
-              {/* Annotation visibility toggle */}
               <button
-                onClick={() => setShowAnnotations((v) => !v)}
-                title={showAnnotations ? 'Hide Annotations' : 'Show Annotations'}
-                className={`rounded-lg p-1.5 transition-all hover:bg-zinc-800 ${showAnnotations ? 'text-[hsl(246,72%,78%)]' : 'text-zinc-500'}`}
+                onClick={() => store.toggleAnnotationVisibility()}
+                title={store.showAnnotations ? 'Hide Annotations' : 'Show Annotations'}
+                className={`rounded-lg p-1.5 transition-all hover:bg-zinc-800 ${store.showAnnotations ? 'text-[hsl(246,72%,78%)]' : 'text-zinc-500'}`}
               >
-                {showAnnotations ? <IconEye /> : <IconEyeOff />}
+                {store.showAnnotations ? <IconEye /> : <IconEyeOff />}
               </button>
-              {/* end mockup */}
-
             </div>
           </div>
 
-          {/* Nút ẩn sidebar khi đang mở */}
+          {/* Sidebar toggle buttons */}
           {!sidebarCollapsed && (
             <button
               onClick={() => setSidebarCollapsed(true)}
@@ -803,8 +851,6 @@ const ImageReviewPage = () => {
               <IconChevronRight />
             </button>
           )}
-
-          {/* Nút hiện sidebar khi đã collapse */}
           {sidebarCollapsed && (
             <button
               onClick={() => setSidebarCollapsed(false)}
@@ -823,7 +869,7 @@ const ImageReviewPage = () => {
           >
             <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: 'thin' }}>
 
-              {/* ─ Markup Tools ────────────────────────────────────────── */}
+              {/* ─ Markup Tools ─────────────────────────────────────────── */}
               <section className="border-b border-[hsl(244,30%,80%)]/20 p-5">
                 <div
                   className="mb-3 flex cursor-pointer select-none items-center justify-between"
@@ -837,13 +883,12 @@ const ImageReviewPage = () => {
 
                 {expandedSections.shapes && (
                   <div className="mt-2 flex flex-col gap-4">
-                    {/* Tool grid — connected to handleToolClick */}
                     <div className="grid grid-cols-2 gap-2 rounded-xl border border-[hsl(244,30%,80%)]/20 bg-[hsl(240,10%,96%)] p-1">
                       {[
                         { id: 'rect'   as const, label: 'Rectangle', dot: 'bg-rose-500'    },
                         { id: 'circle' as const, label: 'Circle',    dot: 'bg-emerald-500' },
                         { id: 'arrow'  as const, label: 'Arrow',     dot: 'bg-amber-500'   },
-                      ].map((t) => (
+                      ].map(t => (
                         <button
                           key={t.id}
                           onClick={() => handleToolClick(t.id)}
@@ -859,7 +904,6 @@ const ImageReviewPage = () => {
                       ))}
                     </div>
 
-                    {/* start mockup — Stroke size slider (live state) */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] font-black tracking-wider text-[hsl(244,10%,40%)]">
                         <span>STROKE SIZE</span>
@@ -868,16 +912,15 @@ const ImageReviewPage = () => {
                       <input
                         type="range" min="1" max="16"
                         value={strokeSize}
-                        onChange={(e) => setStrokeSize(Number(e.target.value))}
+                        onChange={e => setStrokeSize(Number(e.target.value))}
                         className="h-1.5 w-full cursor-pointer appearance-none rounded-full border border-[hsl(244,30%,80%)]/10 bg-[hsl(240,10%,96%)] accent-[hsl(240,30%,46%)]"
                       />
                     </div>
 
-                    {/* Color swatches (mirrored from toolbar for convenience) */}
                     <div className="space-y-2">
                       <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(244,10%,40%)]">STROKE COLOR</span>
                       <div className="flex gap-2">
-                        {STROKE_COLORS.map((c) => (
+                        {STROKE_COLORS.map(c => (
                           <button
                             key={c}
                             onClick={() => setActiveColor(c)}
@@ -889,13 +932,11 @@ const ImageReviewPage = () => {
                         ))}
                       </div>
                     </div>
-                    {/* end mockup */}
-
                   </div>
                 )}
               </section>
 
-              {/* ─ Feedback / Comments ─────────────────────────────────── */}
+              {/* ─ Feedback / Comments ──────────────────────────────────── */}
               <section className="flex min-h-0 flex-1 flex-col border-b border-[hsl(244,30%,80%)]/20 p-5">
                 <div
                   className="mb-3 flex cursor-pointer select-none items-center justify-between"
@@ -904,7 +945,7 @@ const ImageReviewPage = () => {
                   <div className="flex items-center gap-2">
                     <h3 className="text-xs font-black uppercase tracking-wider text-[hsl(237,45%,30%)]">Feedback</h3>
                     <span className="rounded-md bg-[hsl(246,72%,78%)]/20 px-1.5 py-0.5 text-[9px] font-black text-[hsl(237,45%,30%)]">
-                      {openCount} OPEN
+                      {store.openCount} OPEN
                     </span>
                   </div>
                   <span className={`text-[hsl(244,30%,80%)] transition-transform ${expandedSections.comments ? 'rotate-180' : ''}`}>
@@ -914,8 +955,7 @@ const ImageReviewPage = () => {
 
                 {expandedSections.comments && (
                   <div className="mt-2 flex min-h-0 flex-1 flex-col gap-3">
-
-                    {/* start mockup — search & filter tabs (wired to state) */}
+                    {/* Search & filter tabs */}
                     <div className="space-y-2">
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(244,30%,80%)]">
@@ -925,31 +965,44 @@ const ImageReviewPage = () => {
                           type="text"
                           placeholder="Search comments..."
                           value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onChange={e => setSearchQuery(e.target.value)}
                           className="w-full rounded-lg border border-[hsl(244,30%,80%)]/50 bg-[hsl(240,10%,96%)] py-1.5 pl-9 pr-3 text-xs text-[hsl(237,45%,30%)] placeholder:text-[hsl(244,10%,40%)]/60 outline-none transition-all focus:border-[hsl(240,30%,46%)] focus:ring-1 focus:ring-[hsl(240,30%,46%)]/20"
                         />
                       </div>
                       <div className="flex gap-1.5 rounded-lg border border-[hsl(244,30%,80%)]/40 bg-[hsl(240,10%,96%)] p-0.5 text-[10px] font-bold">
-                        {(['ALL', 'OPEN', 'RESOLVED'] as const).map((f) => (
+                        {(['ALL', 'OPEN', 'RESOLVED'] as const).map(f => (
                           <button
                             key={f}
-                            onClick={() => setStatusFilter(f)}
+                            onClick={() => store.setActiveFilter(f)}
                             className={`flex-1 cursor-pointer rounded py-1 text-center transition-all ${
-                              statusFilter === f
+                              store.activeFilter === f
                                 ? 'bg-white text-[hsl(237,45%,30%)] shadow-xs'
                                 : 'text-[hsl(244,10%,40%)]'
                             }`}
                           >
-                            {f === 'ALL' ? `All (${mockComments.length})` : f === 'OPEN' ? `Open (${openCount})` : `Resolved (${resolvedCount})`}
+                            {f === 'ALL'
+                              ? `All (${store.annotations.length})`
+                              : f === 'OPEN'
+                              ? `Open (${store.openCount})`
+                              : `Resolved (${store.resolvedCount})`}
                           </button>
                         ))}
                       </div>
                     </div>
-                    {/* end mockup */}
+
+                    {/* Annotation error */}
+                    {store.annotationError && (
+                      <p className="rounded-lg bg-rose-50 p-2 text-[10px] text-rose-600">{store.annotationError}</p>
+                    )}
+
+                    {/* Loading state */}
+                    {store.isAnnotationsLoading && (
+                      <div className="py-4 text-center text-xs text-[hsl(244,10%,40%)]">Loading comments…</div>
+                    )}
 
                     {/* Comments list */}
                     <div className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                      {filteredComments.length === 0 ? (
+                      {!store.isAnnotationsLoading && displayedAnnotations.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 py-8 text-center text-[hsl(244,10%,40%)]">
                           <svg className="h-8 w-8 text-[hsl(244,30%,80%)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -957,41 +1010,156 @@ const ImageReviewPage = () => {
                           <span className="text-xs font-semibold">No comments found</span>
                         </div>
                       ) : (
-                        filteredComments.map((comment) => (
-                          <div key={comment.id} className="cursor-pointer rounded-xl border border-[hsl(244,30%,80%)]/20 bg-[hsl(240,10%,96%)] p-3.5 transition-all hover:border-[hsl(244,30%,80%)]/30">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(246,72%,78%)]/30 text-[9px] font-bold text-[hsl(237,45%,30%)]">
-                                  {comment.author?.slice(0, 2).toUpperCase() ?? 'U'}
+                        displayedAnnotations.map(ann => {
+                          const isHighlighted = store.highlightedAnnotationId === ann.annotationId;
+                          const isOpen = ann.status === 'OPEN';
+                          const authorInitials = (ann.authorName ?? ann.authorId ?? 'U').slice(0, 2).toUpperCase();
+                          const isExpanded = store.expandedThreadIds.has(ann.annotationId ?? '');
+
+                          return (
+                            <div
+                              key={ann.annotationId}
+                              onClick={() => store.setHighlightedAnnotation(isHighlighted ? null : (ann.annotationId ?? null))}
+                              className={`cursor-pointer rounded-xl border bg-[hsl(240,10%,96%)] p-3.5 transition-all hover:border-[hsl(244,30%,80%)]/30 ${
+                                isHighlighted
+                                  ? 'border-[hsl(240,30%,46%)] ring-1 ring-[hsl(240,30%,46%)]/20'
+                                  : 'border-[hsl(244,30%,80%)]/20'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(246,72%,78%)]/30 text-[9px] font-bold text-[hsl(237,45%,30%)]">
+                                    {authorInitials}
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xs font-bold text-[hsl(237,45%,30%)]">
+                                      {ann.authorName ?? ann.authorId ?? 'Unknown'}
+                                    </h4>
+                                    <span className="text-[9px] text-[hsl(244,10%,40%)]/60">
+                                      {formatTime(ann.createdAt)}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4 className="text-xs font-bold text-[hsl(237,45%,30%)]">{comment.author}</h4>
-                                  <span className="text-[9px] text-[hsl(244,10%,40%)]/60">{comment.time}</span>
+                                {isOpen ? (
+                                  <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black text-emerald-800">OPEN</span>
+                                ) : (
+                                  <span className="rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[8px] font-black text-zinc-500">RESOLVED</span>
+                                )}
+                              </div>
+
+                              <p
+                                className="mt-2.5 text-xs font-semibold leading-relaxed text-[hsl(237,45%,30%)]/80"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {ann.commentBody?.body}
+                              </p>
+
+                              {/* Replies (if expanded) */}
+                              {isExpanded && ann.replies.length > 0 && (
+                                <div className="mt-3 space-y-2 border-t border-[hsl(244,30%,80%)]/20 pt-2">
+                                  {ann.replies.map(reply => (
+                                    <div key={reply.annotationId} className="flex gap-2">
+                                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(246,72%,78%)]/20 text-[8px] font-bold text-[hsl(237,45%,30%)]">
+                                        {(reply.authorName ?? reply.authorId ?? 'U').slice(0, 2).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <span className="text-[9px] font-bold text-[hsl(237,45%,30%)]">
+                                          {reply.authorName ?? reply.authorId ?? 'Unknown'}
+                                        </span>
+                                        <p className="text-[10px] text-[hsl(237,45%,30%)]/75">{reply.commentBody?.body}</p>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
+                              )}
+
+                              {/* Reply form */}
+                              {replyingToId === ann.annotationId && (
+                                <form
+                                  onSubmit={e => handleSubmitReply(e, ann.annotationId ?? '')}
+                                  onClick={e => e.stopPropagation()}
+                                  className="mt-3 flex flex-col gap-1.5 border-t border-[hsl(244,30%,80%)]/20 pt-2"
+                                >
+                                  <textarea
+                                    value={replyText}
+                                    onChange={e => setReplyText(e.target.value)}
+                                    placeholder="Write a reply…"
+                                    rows={2}
+                                    autoFocus
+                                    className="w-full resize-none rounded-lg border border-[hsl(244,30%,80%)]/50 bg-white p-2 text-xs text-[hsl(237,45%,30%)] outline-none focus:border-[hsl(240,30%,46%)]"
+                                  />
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setReplyingToId(null)}
+                                      className="flex-1 rounded-lg border border-[hsl(244,30%,80%)]/40 py-1 text-[10px] font-bold text-[hsl(237,45%,30%)]"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="submit"
+                                      disabled={store.isSaving}
+                                      className="flex-1 rounded-lg bg-[hsl(240,30%,46%)] py-1 text-[10px] font-bold text-white disabled:opacity-60"
+                                    >
+                                      Send
+                                    </button>
+                                  </div>
+                                </form>
+                              )}
+
+                              <div
+                                className="mt-3 flex items-center justify-between border-t border-[hsl(244,30%,80%)]/20 pt-2"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => setReplyingToId(ann.annotationId ?? null)}
+                                    className="cursor-pointer text-[10px] font-bold text-[hsl(240,30%,46%)] hover:underline"
+                                  >
+                                    Reply
+                                  </button>
+                                  {ann.replies.length > 0 && (
+                                    <button
+                                      onClick={() => store.toggleThreadExpanded(ann.annotationId ?? '')}
+                                      className="cursor-pointer text-[10px] font-bold text-[hsl(244,10%,40%)] hover:text-[hsl(240,30%,46%)]"
+                                    >
+                                      {isExpanded ? 'Hide' : `${ann.replies.length} repl${ann.replies.length === 1 ? 'y' : 'ies'}`}
+                                    </button>
+                                  )}
+                                  {isOpen ? (
+                                    <button
+                                      onClick={() => store.resolveAnnotation(ann.annotationId ?? '')}
+                                      className="cursor-pointer text-[10px] font-bold text-[hsl(244,10%,40%)] hover:text-[hsl(240,30%,46%)]"
+                                    >
+                                      Resolve
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => store.reopenAnnotation(ann.annotationId ?? '')}
+                                      className="cursor-pointer text-[10px] font-bold text-[hsl(244,10%,40%)] hover:text-[hsl(240,30%,46%)]"
+                                    >
+                                      Reopen
+                                    </button>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => store.deleteAnnotation(ann.annotationId ?? '')}
+                                  className="text-[hsl(244,30%,80%)] transition-colors hover:text-[hsl(0,84.2%,60.2%)]"
+                                  title="Delete"
+                                >
+                                  <IconTrash />
+                                </button>
                               </div>
-                              {/* @todo: need implement [comment resolved status from API] */}
-                              <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black text-emerald-800">OPEN</span>
                             </div>
-                            <p className="mt-2.5 text-xs font-semibold leading-relaxed text-[hsl(237,45%,30%)]/80">{comment.text}</p>
-                            <div className="mt-3 flex items-center justify-between border-t border-[hsl(244,30%,80%)]/20 pt-2">
-                              <div className="flex items-center gap-3">
-                                {/* @todo: need implement [reply to comment] */}
-                                <button className="cursor-pointer text-[10px] font-bold text-[hsl(240,30%,46%)] hover:underline">Reply</button>
-                                {/* @todo: need implement [toggle comment status] */}
-                                <button className="cursor-pointer text-[10px] font-bold text-[hsl(244,10%,40%)] hover:text-[hsl(240,30%,46%)]">Resolve</button>
-                              </div>
-                              {/* @todo: need implement [delete comment] */}
-                              <button className="text-[hsl(244,30%,80%)] transition-colors hover:text-[hsl(0,84.2%,60.2%)]" title="Delete"><IconTrash /></button>
-                            </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </div>
                 )}
               </section>
 
-              {/* ─ Action Log ──────────────────────────────────────────── */}
+              {/* ─ Action Log ────────────────────────────────────────────── */}
               <section className="flex max-h-[220px] flex-col overflow-hidden border-b border-[hsl(244,30%,80%)]/20 p-5">
                 <div
                   className="mb-2 flex cursor-pointer select-none items-center justify-between"
@@ -1004,7 +1172,7 @@ const ImageReviewPage = () => {
                 </div>
                 {expandedSections.actionLog && (
                   <div className="mt-2 flex-1 space-y-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                    {mockActionLog.map((log) => (
+                    {mockActionLog.map(log => (
                       <div key={log.id} className="flex gap-2 rounded-lg border border-[hsl(244,30%,80%)]/20 bg-[hsl(240,10%,96%)] p-2 text-[11px]">
                         <span className="text-xs">{log.icon}</span>
                         <div className="flex-1">
@@ -1018,7 +1186,7 @@ const ImageReviewPage = () => {
                 )}
               </section>
 
-              {/* ─ Image Metadata ──────────────────────────────────────── */}
+              {/* ─ Image Metadata ─────────────────────────────────────────── */}
               <section className="p-5">
                 <div
                   className="mb-3 flex cursor-pointer select-none items-center justify-between"
@@ -1032,11 +1200,30 @@ const ImageReviewPage = () => {
                 {expandedSections.imageInfo && (
                   <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3 text-xs">
                     {[
-                      { label: 'FILE NAME',  value: currentImage.name },
-                      { label: 'SIZE',       value: currentImage.size ?? '—' },
-                      { label: 'DIMENSIONS', value: currentImage.dimensions ?? '—' },
-                      { label: 'UPLOADED',   value: currentImage.uploadDate ?? '—' },
-                      { label: 'UPLOADER',   value: currentImage.uploader ?? '—' },
+                      {
+                        label: 'FILE NAME',
+                        value: store.assetDetail?.asset?.name ?? store.imageData?.fileName ?? '—',
+                      },
+                      {
+                        label: 'SIZE',
+                        value: formatBytes(store.assetDetail?.latestVersion?.fileSize),
+                      },
+                      {
+                        label: 'DIMENSIONS',
+                        value: store.imageData?.dimensions?.width && store.imageData?.dimensions?.height
+                          ? `${store.imageData.dimensions.width} × ${store.imageData.dimensions.height} px`
+                          : '—',
+                      },
+                      {
+                        label: 'UPLOADED',
+                        value: store.assetDetail?.latestVersion?.createdAt
+                          ? new Date(store.assetDetail.latestVersion.createdAt).toLocaleDateString()
+                          : '—',
+                      },
+                      {
+                        label: 'UPLOADER',
+                        value: (store.assetDetail?.latestVersion as Record<string, unknown>)?.createdBy as string ?? '—',
+                      },
                     ].map(({ label, value }) => (
                       <div key={label}>
                         <span className="block text-[9px] font-bold uppercase tracking-wider text-[hsl(244,10%,40%)]/70">{label}</span>
@@ -1052,12 +1239,10 @@ const ImageReviewPage = () => {
         </div>
       </div>
 
-      {/* start mockup — A/B Compare Modal */}
+      {/* A/B Compare Modal */}
       {showCompareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-8 backdrop-blur-md">
           <div className="flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 shadow-2xl">
-
-            {/* Modal header */}
             <div className="flex items-center justify-between border-b border-zinc-800 p-4 text-white">
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wider">Visual A/B Comparison</h3>
@@ -1071,37 +1256,37 @@ const ImageReviewPage = () => {
               </button>
             </div>
 
-            {/* Split-view canvas */}
             <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-zinc-950 select-none">
-              {/* Right layer — "new" version (full width) */}
+              {/* Right layer — current version */}
               <img
-                src={currentImage.url}
+                src={store.imageData?.previewUrl ?? ''}
                 alt="Version A"
                 className="pointer-events-none absolute inset-0 h-full w-full object-contain"
                 draggable={false}
               />
               <div className="absolute right-4 top-4 z-10 rounded-full border border-zinc-800 bg-zinc-900/90 px-3 py-1 text-[10px] font-black text-[hsl(246,72%,78%)]">
-                VERSION A (NEW)
+                v{store.currentVersionNumber} (CURRENT)
               </div>
 
-              {/* Left layer — "old" version, clipped by slider % */}
-              <div
-                className="absolute inset-0 overflow-hidden"
-                style={{ width: `${compareSliderPos}%` }}
-              >
+              {/* Left layer — previous version (clipped by slider) */}
+              <div className="absolute inset-0 overflow-hidden" style={{ width: `${compareSliderPos}%` }}>
                 <img
-                  src={mockImages[Math.max(0, currentImageIndex - 1)]?.url ?? currentImage.url}
+                  src={
+                    sortedVersions[currentVersionIdx - 1]
+                      ? store.imageData?.previewUrl ?? ''
+                      : store.imageData?.previewUrl ?? ''
+                  }
                   alt="Version B"
                   className="pointer-events-none h-full object-contain"
                   style={{ width: `${(100 / compareSliderPos) * 100}%`, maxWidth: 'none' }}
                   draggable={false}
                 />
                 <div className="absolute left-4 top-4 z-10 rounded-full border border-zinc-800 bg-zinc-900/90 px-3 py-1 text-[10px] font-black text-amber-400">
-                  VERSION B (OLD)
+                  v{sortedVersions[currentVersionIdx - 1]?.versionNumber ?? store.currentVersionNumber} (PREV)
                 </div>
               </div>
 
-              {/* Slider divider line + handle */}
+              {/* Slider divider */}
               <div
                 className="absolute bottom-0 top-0 z-20 flex w-0.5 cursor-ew-resize items-center justify-center bg-white"
                 style={{ left: `${compareSliderPos}%` }}
@@ -1111,11 +1296,10 @@ const ImageReviewPage = () => {
                 </div>
               </div>
 
-              {/* Transparent range input — drives compareSliderPos */}
               <input
                 type="range" min="0" max="100"
                 value={compareSliderPos}
-                onChange={(e) => setCompareSliderPos(Number(e.target.value))}
+                onChange={e => setCompareSliderPos(Number(e.target.value))}
                 className="absolute inset-0 z-30 h-full w-full cursor-ew-resize opacity-0"
               />
             </div>
@@ -1126,10 +1310,9 @@ const ImageReviewPage = () => {
           </div>
         </div>
       )}
-      {/* end mockup */}
 
     </CommonLayout>
   );
-};
+});
 
 export default ImageReviewPage;

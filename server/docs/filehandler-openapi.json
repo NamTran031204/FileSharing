@@ -3423,6 +3423,41 @@
         }
       }
     },
+    "/api/annotation/subscribe/{assetId}" : {
+      "get" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "subscribeToAnnotations",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SseEmitter"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/annotation/list-root-comment-by-asset" : {
       "get" : {
         "tags" : [ "annotations-controller" ],

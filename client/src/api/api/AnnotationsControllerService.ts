@@ -14,6 +14,7 @@ import {
   type AnnotationCreateDTO,
   type CommonResponseAnnotationSummaryResponse,
   type AnnotationSummaryResponse,
+  type SseEmitter,
   type CommonResponseListAnnotationsEntity,
   type IList,
   type List,
@@ -162,6 +163,25 @@ export class AnnotationsControllerService {
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
       configs.params = { assetId: params['assetId'], versionNumber: params['versionNumber'] };
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static subscribe(
+    params: {
+      /**  */
+      assetId: string;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<SseEmitter> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/subscribe/{assetId}';
+      url = url.replace('{assetId}', params['assetId'] + '');
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
 
       axios(configs, resolve, reject);
     });

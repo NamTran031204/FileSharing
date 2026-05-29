@@ -10,6 +10,7 @@ import org.example.filesharing.repositories.AnnotationsRepo;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.services.AnnotationsService;
 import org.example.filesharing.services.AuditService;
+import org.example.filesharing.services.SseService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.Sort;
@@ -27,6 +28,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private final AnnotationsRepo annotationsRepo;
     private final AssetRepo assetRepo;
     private final AuditService auditService;
+    private final SseService sseService;
 
     private static final Sort SORT_BY_CREATED_AT_ASC = Sort.by(Sort.Direction.ASC, "createdAt");
 
@@ -88,6 +90,15 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         //     // TODO: gui notification
         // }
 
+        // Broadcast realtime SSE event to all reviewers on this asset
+        sseService.publishAnnotationEvent(saved.getAssetId(), AnnotationSseEventDTO.builder()
+                .eventType("CREATED")
+                .assetId(saved.getAssetId())
+                .annotationId(saved.getAnnotationId())
+                .actorId(auditService.getCurrentUserId())
+                .annotation(saved)
+                .build());
+
         // 10. Tra ve
         return saved;
     }
@@ -133,6 +144,15 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 11. TODO: gui notification cho authorId cua root comment
         // notify parentAnnotation root author about new reply
 
+        // Broadcast realtime SSE event
+        sseService.publishAnnotationEvent(saved.getAssetId(), AnnotationSseEventDTO.builder()
+                .eventType("CREATED")
+                .assetId(saved.getAssetId())
+                .annotationId(saved.getAnnotationId())
+                .actorId(auditService.getCurrentUserId())
+                .annotation(saved)
+                .build());
+
         // 12. Tra ve
         return saved;
     }
@@ -177,7 +197,17 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // }
 
         // 8. Luu va tra ve
-        return annotationsRepo.save(entity);
+        AnnotationsEntity edited = annotationsRepo.save(entity);
+
+        sseService.publishAnnotationEvent(edited.getAssetId(), AnnotationSseEventDTO.builder()
+                .eventType("UPDATED")
+                .assetId(edited.getAssetId())
+                .annotationId(edited.getAnnotationId())
+                .actorId(currentUserId)
+                .annotation(edited)
+                .build());
+
+        return edited;
     }
 
     // ================================================================
@@ -213,7 +243,17 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         buildAudit(entity, false);
 
         // 10. Luu va tra ve
-        return annotationsRepo.save(entity);
+        AnnotationsEntity resolved = annotationsRepo.save(entity);
+
+        sseService.publishAnnotationEvent(resolved.getAssetId(), AnnotationSseEventDTO.builder()
+                .eventType("RESOLVED")
+                .assetId(resolved.getAssetId())
+                .annotationId(resolved.getAnnotationId())
+                .actorId(auditService.getCurrentUserId())
+                .annotation(resolved)
+                .build());
+
+        return resolved;
     }
 
     // ================================================================
@@ -249,7 +289,17 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         buildAudit(entity, false);
 
         // 9. Luu va tra ve
-        return annotationsRepo.save(entity);
+        AnnotationsEntity reopened = annotationsRepo.save(entity);
+
+        sseService.publishAnnotationEvent(reopened.getAssetId(), AnnotationSseEventDTO.builder()
+                .eventType("REOPENED")
+                .assetId(reopened.getAssetId())
+                .annotationId(reopened.getAnnotationId())
+                .actorId(auditService.getCurrentUserId())
+                .annotation(reopened)
+                .build());
+
+        return reopened;
     }
 
     // ================================================================
@@ -320,6 +370,10 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             throw new UserBusinessException(ErrorCode.FORBIDDEN, "Only the author can delete this annotation");
         }
 
+        // Capture identifiers before soft-delete for SSE event
+        String deletedAssetId = entity.getAssetId();
+        String deletedAnnotationId = entity.getAnnotationId();
+
         if (entity.getParentCommentId() != null) {
             // 4. Neu la reply: soft delete chi reply do
             softDeleteAudit(entity);
@@ -338,6 +392,14 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 annotationsRepo.saveAll(replies);
             }
         }
+
+        sseService.publishAnnotationEvent(deletedAssetId, AnnotationSseEventDTO.builder()
+                .eventType("DELETED")
+                .assetId(deletedAssetId)
+                .annotationId(deletedAnnotationId)
+                .actorId(currentUserId)
+                .annotation(null)
+                .build());
 
         // 6. Tra ve thong bao thanh cong
         return "Annotation deleted successfully";
