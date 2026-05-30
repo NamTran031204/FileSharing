@@ -14,6 +14,7 @@ import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
 import ImageReviewPage from "../page/ImageReviewPage.tsx";
 import FolderAssetPage from "../page/FolderAssetPage.tsx";
+import DashboardPage from "../page/DashboardPage.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -96,6 +97,13 @@ export const ROUTER_CONFIG: AppRoute[] = [
         name: 'Image Review V2',
         element: <ImageReviewPage/>,
         isShow: false,
+    },
+    {
+        path: '/dashboard',
+        name: 'Dashboard',
+        element: <DashboardPage/>,
+        isProtected: true,
+        isShow: true,
     },
     {
         path: '/projects',
