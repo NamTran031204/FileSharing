@@ -14,6 +14,10 @@ import org.example.filesharing.services.SseService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private final AssetRepo assetRepo;
     private final AuditService auditService;
     private final SseService sseService;
+    private final MongoTemplate mongoTemplate;
 
     private static final Sort SORT_BY_CREATED_AT_ASC = Sort.by(Sort.Direction.ASC, "createdAt");
 
@@ -77,6 +82,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 .region(dto.getRegion())
                 .status(AnnotationStatus.OPEN)
                 .parentCommentId(null)
+                .replyCount(0)
                 .build();
 
         // 7. buildAudit — isActive=true, isTrash=false, createdBy/At
@@ -136,12 +142,19 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 9. Luu document
         AnnotationsEntity saved = annotationsRepo.save(entity);
 
-        // 10. TODO: gui notification cho userMentions
+        // 10. Tang replyCount cua root comment len 1 (atomic)
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(threadRootId)),
+                new Update().inc("replyCount", 1),
+                AnnotationsEntity.class
+        );
+
+        // 11. TODO: gui notification cho userMentions
         // if (dto.getCommentBody() != null && dto.getCommentBody().getUserMentions() != null) {
         //     // TODO: gui notification
         // }
 
-        // 11. TODO: gui notification cho authorId cua root comment
+        // 12. TODO: gui notification cho authorId cua root comment
         // notify parentAnnotation root author about new reply
 
         // Broadcast realtime SSE event
@@ -153,7 +166,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 .annotation(saved)
                 .build());
 
-        // 12. Tra ve
+        // 13. Tra ve
         return saved;
     }
 
@@ -378,6 +391,13 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             // 4. Neu la reply: soft delete chi reply do
             softDeleteAudit(entity);
             annotationsRepo.save(entity);
+
+            // Giam replyCount cua root comment di 1 (atomic)
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(entity.getThreadRootId())),
+                    new Update().inc("replyCount", -1),
+                    AnnotationsEntity.class
+            );
         } else {
             // 5. Neu la root comment: soft delete root + toan bo replies
             softDeleteAudit(entity);

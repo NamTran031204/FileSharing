@@ -398,13 +398,17 @@ class ImageReviewStore {
       if (!response?.isSuccessful) throw new Error(response?.message ?? 'Lưu annotation thất bại');
       const created = response.data!;
       runInAction(() => {
-        this.annotations.push(this._wrapAnnotation(created));
-        this.pendingShapes = [];
-        // Optimistically update open count
-        if (this.summary) {
-          (this.summary as Record<string, unknown>).open =
-            String(this.openCount + 1);
+        const alreadyExists = this.annotations.some(
+          a => a.annotationId === created.annotationId,
+        );
+        if (!alreadyExists) {
+          this.annotations.push(this._wrapAnnotation(created));
+          if (this.summary) {
+            (this.summary as Record<string, unknown>).open =
+              String(this.openCount + 1);
+          }
         }
+        this.pendingShapes = [];
       });
       return created;
     } catch (err: unknown) {
@@ -438,7 +442,10 @@ class ImageReviewStore {
       runInAction(() => {
         const root = this.annotations.find(a => a.annotationId === threadRootId);
         if (root) {
-          root.replies = [...root.replies, reply];
+          const replyExists = root.replies.some(r => r.annotationId === reply.annotationId);
+          if (!replyExists) {
+            root.replies = [...root.replies, reply];
+          }
           root.isRepliesLoaded = true;
         }
       });

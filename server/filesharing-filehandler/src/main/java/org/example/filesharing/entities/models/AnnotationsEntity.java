@@ -47,4 +47,6 @@ public class AnnotationsEntity extends EntityAuditBase {
     private String parentCommentId;      // null = root
     private String threadRootId; // = null neu la root
 
+    private Integer replyCount; // tong so reply hien co (chi root comment moi co gia tri nay)
+
 }

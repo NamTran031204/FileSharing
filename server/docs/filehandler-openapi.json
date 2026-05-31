@@ -6213,6 +6213,10 @@
           },
           "threadRootId" : {
             "type" : "string"
+          },
+          "replyCount" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
