@@ -9,8 +9,11 @@ import org.example.filesharing.entities.dtos.dashboard.StorageStatsDTO;
 import org.example.filesharing.entities.models.AssetEntity;
 import org.example.filesharing.entities.models.AuditLogEntity;
 import org.example.filesharing.entities.models.FolderEntity;
+import org.example.filesharing.entities.models.MetadataEntity;
 import org.example.filesharing.entities.models.ProjectEntity;
 import org.example.filesharing.enums.ReviewSessionStatus;
+import org.example.filesharing.repositories.AssetRepo;
+import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.DashboardService;
 import org.example.filesharing.utils.StringUtils;
@@ -35,11 +38,12 @@ public class DashboardServiceImpl implements DashboardService {
 
     private static final int DEFAULT_LIMIT = 10;
     private static final int MAX_LIMIT = 50;
-    private static final String COLLECTION_METADATA = "metadata";
     private static final String COLLECTION_REVIEW_SESSIONS = "review_sessions";
 
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
+    private final AssetRepo assetRepo;
+    private final MetadataRepo metadataRepo;
 
     @Override
     public DashboardOverviewDTO getOverview() {
@@ -234,70 +238,100 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private double aggregateTotalStorage(List<String> projectIds) {
-        Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("isActive").is(true).and("isTrash").ne(true)),
-                Aggregation.lookup("asset", "assetId", "assetId", "asset"),
-                Aggregation.unwind("asset"),
-                Aggregation.match(Criteria.where("asset.projectId").in(projectIds)),
-                Aggregation.group().sum("fileSize").as("totalStorage")
-        );
-
-        AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, COLLECTION_METADATA, Document.class);
-        Document result = results.getUniqueMappedResult();
-        if (result == null) {
+        List<AssetEntity> assets = fetchActiveAssets(projectIds);
+        if (assets.isEmpty()) {
             return 0;
         }
-        return toDouble(result.get("totalStorage"));
+        List<MetadataEntity> allMetadata = fetchMetadataForAssets(assets);
+        return allMetadata.stream()
+                .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+                .sum();
     }
 
     private List<StorageStatsDTO.StorageByMediaTypeDTO> aggregateStorageByMediaType(List<String> projectIds) {
-        Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("isActive").is(true).and("isTrash").ne(true)),
-                Aggregation.lookup("asset", "assetId", "assetId", "asset"),
-                Aggregation.unwind("asset"),
-                Aggregation.match(Criteria.where("asset.projectId").in(projectIds)),
-                Aggregation.group("mediaType")
-                        .count().as("fileCount")
-                        .sum("fileSize").as("storageBytes"),
-                Aggregation.project("fileCount", "storageBytes").and("_id").as("mediaType")
-        );
+        List<AssetEntity> assets = fetchActiveAssets(projectIds);
+        if (assets.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<MetadataEntity> allMetadata = fetchMetadataForAssets(assets);
 
-        AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, COLLECTION_METADATA, Document.class);
+        Map<String, List<MetadataEntity>> byMediaType = new HashMap<>();
+        for (MetadataEntity m : allMetadata) {
+            String mediaType = m.getMediaType() != null ? m.getMediaType().name() : "UNKNOWN";
+            byMediaType.computeIfAbsent(mediaType, k -> new ArrayList<>()).add(m);
+        }
+
         List<StorageStatsDTO.StorageByMediaTypeDTO> response = new ArrayList<>();
-        for (Document doc : results.getMappedResults()) {
+        for (Map.Entry<String, List<MetadataEntity>> entry : byMediaType.entrySet()) {
+            double storageBytes = entry.getValue().stream()
+                    .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+                    .sum();
             response.add(StorageStatsDTO.StorageByMediaTypeDTO.builder()
-                    .mediaType(valueAsString(doc.get("mediaType")))
-                    .fileCount(toLong(doc.get("fileCount")))
-                    .storageBytes(toDouble(doc.get("storageBytes")))
+                    .mediaType(entry.getKey())
+                    .fileCount((long) entry.getValue().size())
+                    .storageBytes(storageBytes)
                     .build());
         }
         return response;
     }
 
     private List<StorageStatsDTO.StorageByProjectDTO> aggregateStorageByProject(List<String> projectIds, Map<String, String> projectNameMap) {
-        Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("isActive").is(true).and("isTrash").ne(true)),
-                Aggregation.lookup("asset", "assetId", "assetId", "asset"),
-                Aggregation.unwind("asset"),
-                Aggregation.match(Criteria.where("asset.projectId").in(projectIds)),
-                Aggregation.group("asset.projectId")
-                        .count().as("fileCount")
-                        .sum("fileSize").as("storageBytes"),
-                Aggregation.project("fileCount", "storageBytes").and("_id").as("projectId")
-        );
+        List<AssetEntity> assets = fetchActiveAssets(projectIds);
+        if (assets.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, COLLECTION_METADATA, Document.class);
+        Map<String, String> assetToProject = new HashMap<>();
+        for (AssetEntity asset : assets) {
+            assetToProject.put(asset.getAssetId(), asset.getProjectId());
+        }
+
+        List<MetadataEntity> allMetadata = fetchMetadataForAssets(assets);
+
+        Map<String, List<MetadataEntity>> metadataByProject = new HashMap<>();
+        for (MetadataEntity m : allMetadata) {
+            String projectId = assetToProject.get(m.getAssetId());
+            if (projectId != null) {
+                metadataByProject.computeIfAbsent(projectId, k -> new ArrayList<>()).add(m);
+            }
+        }
+
         List<StorageStatsDTO.StorageByProjectDTO> response = new ArrayList<>();
-        for (Document doc : results.getMappedResults()) {
-            String projectId = valueAsString(doc.get("projectId"));
+        for (String projectId : projectIds) {
+            List<MetadataEntity> projectMetadata = metadataByProject.getOrDefault(projectId, Collections.emptyList());
+            if (projectMetadata.isEmpty()) {
+                continue;
+            }
+            double storageBytes = projectMetadata.stream()
+                    .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+                    .sum();
             response.add(StorageStatsDTO.StorageByProjectDTO.builder()
                     .projectId(projectId)
                     .projectName(projectNameMap.get(projectId))
-                    .fileCount(toLong(doc.get("fileCount")))
-                    .storageBytes(toDouble(doc.get("storageBytes")))
+                    .fileCount((long) projectMetadata.size())
+                    .storageBytes(storageBytes)
                     .build());
         }
         return response;
+    }
+
+    private List<AssetEntity> fetchActiveAssets(List<String> projectIds) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("projectId").in(projectIds));
+        query.addCriteria(Criteria.where("isActive").is(true));
+        query.addCriteria(Criteria.where("isTrash").ne(true));
+        return mongoTemplate.find(query, AssetEntity.class);
+    }
+
+    private List<MetadataEntity> fetchMetadataForAssets(List<AssetEntity> assets) {
+        List<String> assetIds = assets.stream()
+                .map(AssetEntity::getAssetId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (assetIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return metadataRepo.findByAssetIdIn(assetIds);
     }
 
     private Map<String, ReviewCounter> aggregateReviewCounts(List<String> projectIds) {
@@ -377,13 +411,6 @@ public class DashboardServiceImpl implements DashboardService {
     private long toLong(Object value) {
         if (value instanceof Number number) {
             return number.longValue();
-        }
-        return 0;
-    }
-
-    private double toDouble(Object value) {
-        if (value instanceof Number number) {
-            return number.doubleValue();
         }
         return 0;
     }

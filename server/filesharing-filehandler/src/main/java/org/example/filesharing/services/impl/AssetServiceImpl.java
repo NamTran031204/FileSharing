@@ -401,8 +401,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     }
 
     AssetCreateResponseDto createNewVersion(AssetCreateRequestDto request, AssetEntity asset) {
-        MediaType mediaType = request.getMediaType() != null ? request.getMediaType() : MediaType.fromMime(request.getMimeType());
-        if (mediaType != asset.getMediaType()) {
+        MediaType computedMediaType = MediaType.fromMime(request.getMimeType());
+        if (computedMediaType != asset.getMediaType()) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "mediaType must match original version");
         }
 
@@ -594,6 +594,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
 
+        // mediaType is required for backward compatibility, but server computes it from mimeType
         if (request.getMediaType() == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "mediaType is required");
         }
@@ -651,6 +652,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         String currentUserId = auditService.getCurrentUserId();
         String currentUserEmail = auditService.getCurrentUserEmail();
 
+        MediaType resolvedMediaType = MediaType.fromMime(request.getMimeType());
         MetadataEntity metadata = MetadataEntity.builder()
                 .fileName(request.getFileName())
                 .downloadFileName(request.getFileName() + "v" + versionNumber)
@@ -662,11 +664,11 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .ownerEmail(currentUserEmail)
                 .uploadId(uploadId)
                 .status(UploadStatus.UPLOADING)
-                .processingStatus(defaultProcessingStatus(request.getMediaType()))
+                .processingStatus(defaultProcessingStatus(resolvedMediaType))
                 .assetId(assetId)
                 .projectId(projectId)
                 .versionNumber(versionNumber)
-                .mediaType(request.getMediaType())
+                .mediaType(resolvedMediaType)
                 .isActive(true)
                 .isTrash(false)
                 .build();

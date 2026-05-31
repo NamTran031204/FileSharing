@@ -13,4 +13,6 @@ public interface AssetRepo extends MongoRepository<AssetEntity, String> {
 
 	Optional<AssetEntity> findByAssetNameAndFolderIdAndProjectIdAndIsActiveTrue(String assetName, String folderId, String projectId);
 
+	List<AssetEntity> findByProjectIdAndIsActiveTrueAndIsTrashFalse(String projectId);
+
 }

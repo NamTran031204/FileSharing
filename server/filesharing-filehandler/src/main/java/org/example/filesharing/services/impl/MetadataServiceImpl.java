@@ -50,6 +50,8 @@ public class MetadataServiceImpl implements MetadataService {
             String currentUserId = auditService.getCurrentUserId();
             String currentUserEmail = auditService.getCurrentUserEmail();
 
+            org.example.filesharing.enums.MediaType mediaType = org.example.filesharing.enums.MediaType.fromMime(metadataDTO.getMimeType());
+
             MetadataEntity metadataEntity = MetadataEntity.builder()
                     .fileName(metadataDTO.getFileName())
                     .objectName(metadataDTO.getObjectName())
@@ -60,6 +62,7 @@ public class MetadataServiceImpl implements MetadataService {
                     .ownerId(currentUserId)
                     .uploadId(uploadId)
                     .status(UploadStatus.UPLOADING)
+                    .mediaType(mediaType)
                     .isActive(true)
                     .isTrash(false)
                     .build();

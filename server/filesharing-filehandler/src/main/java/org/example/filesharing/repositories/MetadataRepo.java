@@ -21,6 +21,8 @@ public interface MetadataRepo extends MongoRepository<MetadataEntity, String> {
 
     List<MetadataEntity> findByAssetId(String assetId);
 
+    List<MetadataEntity> findByAssetIdIn(List<String> assetIds);
+
     Optional<MetadataEntity> findFirstByAssetIdOrderByVersionNumberAsc(String assetId);
 
     long countByAssetIdAndIsTrashFalse(String assetId);
