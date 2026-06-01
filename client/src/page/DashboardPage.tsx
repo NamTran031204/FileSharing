@@ -22,7 +22,6 @@ import type {
 import { AuditAction } from '../api/api/index.defs';
 import { useStore } from '../store';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
@@ -83,7 +82,6 @@ const BAR_COLORS = [
   'bg-[var(--color-muted)]',
 ];
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
   label: string;
@@ -91,7 +89,6 @@ interface StatCardProps {
   icon: React.ReactNode;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   <div className="bg-[var(--color-card)] rounded-xl p-8 canvas-shadow relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
@@ -105,7 +102,6 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   </div>
 );
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 const DashboardPage: React.FC = observer(() => {
   const { sessionStore } = useStore();
@@ -143,7 +139,6 @@ const DashboardPage: React.FC = observer(() => {
     void fetchAll();
   }, []);
 
-  // ── Derived: donut chart ──
   const byMediaType = storageStats?.byMediaType ?? [];
   const totalBytes = storageStats?.totalStorageBytes ?? 0;
 
@@ -165,7 +160,6 @@ const DashboardPage: React.FC = observer(() => {
           )`,
         };
 
-  // ── Derived: project storage bars ──
   const projectStorageItems = (storageStats?.byProject ?? []).map((p, i) => ({
     name: p.projectName ?? p.projectId ?? '—',
     files: Number(p.fileCount ?? 0),

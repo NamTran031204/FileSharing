@@ -39,7 +39,6 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
     const fileDetailModalRef = useRef<FileDetailModalRef>(null);
     const shareFileModalRef = useRef<ShareFileModalRef>(null);
 
-    // Lấy quyền của user hiện tại từ file entity
     const fileAppPermission = file.publishUserPermission || FileAppPermission.PUBLIC;
 
     useEffect(() => {
@@ -73,7 +72,6 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         setIsOpen(!isOpen);
     };
 
-    // Handlers cho từng option
     const handleDetail = () => {
         setIsOpen(false);
         fileDetailModalRef.current?.open(file);
@@ -127,7 +125,6 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         fileDetailModalRef.current?.open(file);
     };
 
-    // Dynamic menu options based on isTrashItem and fileAppPermission
     const menuOptions: MenuOption[] = isTrashItem
         ? [
             {
@@ -138,7 +135,6 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
             },
         ]
         : [
-            // Base (PUBLIC): Chi tiết + Tải xuống
             {
                 key: 'detail',
                 label: 'Chi tiết',

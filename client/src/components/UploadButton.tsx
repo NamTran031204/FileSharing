@@ -56,7 +56,6 @@ export default function UploadButton() {
         setUploadedObjectName(null);
 
         try {
-            // TODO: chinh lai ownerId sau khi cau hinh xong Spring Security
             const objectName = await uploadService.uploadFile(
                 file,
                 {

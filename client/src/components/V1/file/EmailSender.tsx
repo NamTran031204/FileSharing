@@ -13,7 +13,6 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
     const [loading, setLoading] = useState(false);
     const [currentFile, setCurrentFile] = useState<MetadataEntity | null>(null);
 
-    // Form state
     const [email, setEmail] = useState('');
     const [permissions, setPermissions] = useState<ObjectPermission[]>([ObjectPermission.READ]);
     const [emailError, setEmailError] = useState<string | null>(null);
@@ -44,7 +43,6 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
     };
 
     const handleSend = async () => {
-        // Validation
         if (!email.trim()) {
             setEmailError('Email không được để trống');
             return;
@@ -69,7 +67,6 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
         try {
             const uploadLink = `http//localhost:5173/preview/${currentFile.shareToken}`;
 
-            // Map to DTO
             const requestData: EmailSenderRequestDto = {
                 toEmail: email,
                 objectPermission: permissions,

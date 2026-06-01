@@ -38,7 +38,6 @@ const RegisterPage = () => {
                     text: `[${error.code}]: ${error.message}`
                 })
             } else {
-                // Error không xác định
                 setMessage({
                     type: 'error',
                     text: 'internal server error',

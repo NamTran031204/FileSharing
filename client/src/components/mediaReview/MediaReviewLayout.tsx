@@ -50,21 +50,18 @@ const MediaReviewLayout = observer(({
   onCompare,
   imageData,
 }: MediaReviewLayoutProps) => {
-  // ── Generic review UI state (owned here, not by the page) ─────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<SidebarSectionState>(DEFAULT_SECTIONS);
   const [searchQuery, setSearchQuery] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!assetId) return;
     reviewStore.init(assetId, versionParam ? parseInt(versionParam, 10) : undefined);
     return () => reviewStore.destroy();
   }, [assetId, versionParam, reviewStore]);
 
-  // ── Version navigation ────────────────────────────────────────────────────
   const sortedVersions = [...reviewStore.versions].sort(
     (a, b) => (a.versionNumber ?? 0) - (b.versionNumber ?? 0),
   );
@@ -83,7 +80,6 @@ const MediaReviewLayout = observer(({
     if (currentVersionIdx < sortedVersions.length - 1) handleVersionSelect(sortedVersions[currentVersionIdx + 1].versionNumber!);
   };
 
-  // ── Annotation display (search filter on top of store filter) ─────────────
   const displayedAnnotations: AnnotationWithShapes[] = (reviewStore.filteredAnnotations as AnnotationWithShapes[]).filter(ann => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -93,7 +89,6 @@ const MediaReviewLayout = observer(({
     );
   });
 
-  // ── Reply submission ──────────────────────────────────────────────────────
   const handleSubmitReply = async (e: React.FormEvent, threadRootId: string) => {
     e.preventDefault();
     if (!replyText.trim()) return;
@@ -125,10 +120,7 @@ const MediaReviewLayout = observer(({
       />
 
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Media player slot */}
         {children}
-
-        {/* Sidebar collapse toggles */}
         {!sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(true)}

@@ -39,7 +39,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 setMode('view');
                 setIsOpen(true);
 
-                // Set form values
                 form.setFieldsValue({
                     fileName: file.fileName,
                     mimeType: file.mimeType,
@@ -51,7 +50,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                     visibility: file.visibility,
                 });
 
-                // Initialize user permissions và lưu bản gốc
                 const permissions = file.userFilePermissions || [];
                 setUserPermissions(permissions);
                 setOriginalPermissions(permissions);
@@ -109,7 +107,6 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                     userFilePermissions: userPermissions,
                 };
 
-                // Gọi API và nhận response
                 const updatedFile = await userFileApiResource.updateFileDetail(currentFile.fileId, updateData);
 
                 setCurrentFile(updatedFile);

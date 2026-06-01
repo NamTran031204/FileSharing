@@ -177,7 +177,6 @@ const CusCommonDateRangeInput = (props: OrdDateRangeInputProps) => {
         );
     }
 
-    // normal mode
     return (
         <div className="flex w-full gap-2" id={id}>
             <div className="flex-1">
@@ -196,5 +195,4 @@ const CusCommonDateRangeInput = (props: OrdDateRangeInputProps) => {
 };
 
 export default CusCommonDateRangeInput;
-// Ensure dayjs side effect (locale, etc.) — placeholder import to avoid unused import elision
 void dayjs;

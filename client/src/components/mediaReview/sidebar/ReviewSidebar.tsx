@@ -30,10 +30,8 @@ export interface ReviewSidebarProps {
   expandedSections: SidebarSections;
   onToggleSection: (section: keyof SidebarSections) => void;
 
-  // Markup tools (image-specific for now)
   markupTools: MarkupToolsProps;
 
-  // Comments
   displayedAnnotations: AnnotationWithShapes[];
   allAnnotationsCount: number;
   activeFilter: AnnotationFilter;
@@ -58,7 +56,6 @@ export interface ReviewSidebarProps {
   onReopen: (id: string) => void;
   onDelete: (id: string) => void;
 
-  // Asset info
   isVersionMetadataLoading: boolean;
   currentVersionMetadata: MetadataEntity | null;
   assetDetail: AssetDetailResponseDto | null;

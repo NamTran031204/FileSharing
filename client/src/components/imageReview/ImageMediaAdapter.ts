@@ -16,8 +16,6 @@ export class ImageMediaAdapter implements MediaAdapter {
 
   focusAnnotation(annotationId: string): void {
     this.setHighlighted(annotationId);
-    // Optional: pan canvas to the shape's position using stageRef
-    // (pan logic can be added here without changing the sidebar)
   }
 
   buildRegion(localShapes: KonvaShapeData[]): ShapeInfo[] {

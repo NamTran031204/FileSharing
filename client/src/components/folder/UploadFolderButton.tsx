@@ -47,7 +47,6 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
 
     const projectId = sessionStore.currentProjectId;
 
-    // Local UI state: only folder selection & browser API
     const [selectedFolderName, setSelectedFolderName] = useState<string | null>(null);
     const [folderManifest, setFolderManifest] = useState<FolderManifest | null>(null);
     const [parseError, setParseError] = useState<string | null>(null);
@@ -132,7 +131,6 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
             setSelectedFolderName(rootName);
             setFolderManifest(manifest);
 
-            // Create folder job immediately so the UI has a status to display
             const id = uploadManagerStore.createFolderJob(manifest, {
                 projectId,
                 parentFolderId: parentFolderId,

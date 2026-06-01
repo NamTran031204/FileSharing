@@ -19,7 +19,6 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
 
     const isEditMode = mode === 'edit';
 
-    // Fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -46,7 +45,6 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
     }, [form]);
 
     const handleFileSelectFromChild = (file: File | null) => {
-        // file có thể là File object (upload mới) hoặc null (xóa ảnh/giữ nguyên)
         setPendingAvatarFile(file);
     };
 
@@ -55,7 +53,6 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
     };
 
     const handleCancel = () => {
-        // Reset form về giá trị ban đầu
         form.setFieldsValue({
             publicUserName: userInfo?.publicUserName,
             email: userInfo?.email,

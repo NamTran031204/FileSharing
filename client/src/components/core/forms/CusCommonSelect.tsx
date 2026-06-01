@@ -29,7 +29,6 @@ const CusCommonSelect = (props: ICusCommonSelectProp) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const selectRef = useRef<RefSelectProps>(null);
 
-  // Re-mount Select khi resize để fix lỗi dropdown position
   const handleResize = useMemo(
     () => debounce(() => setForceUpdate(Date.now()), 300),
     [],

@@ -28,7 +28,6 @@ export default function DownloadButton(props: DownloadButtonProps) {
             startDownload();
         }
         return () => {
-            // Không reset hasStartedRef ở đây để tránh chạy lại khi Strict Mode remount
         };
     }, [autoStart]);
 

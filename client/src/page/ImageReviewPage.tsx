@@ -19,10 +19,8 @@ const ImageReviewPage = observer(() => {
   const assetId = searchParams.get('assetId') ?? '';
   const versionParam = searchParams.get('version');
 
-  // ── Image loading ───────────────────────────────────────────────────────
   const [bgImage] = useImage(store.imageData?.previewUrl ?? '');
 
-  // ── Canvas state ────────────────────────────────────────────────────────
   const {
     containerRef, containerWidth, containerHeight,
     stageRef, transformerRef, shapeRefs,
@@ -35,7 +33,6 @@ const ImageReviewPage = observer(() => {
     zoomPercent,
   } = useKonvaCanvas({ worldWidth: bgImage?.width, worldHeight: bgImage?.height });
 
-  // ── Image-specific state ────────────────────────────────────────────────
   const [activeMode, setActiveMode] = useState<MarkupMode>('select');
   const [activeShape, setActiveShape] = useState<ShapeTool>('rectangle');
   const [activeColor, setActiveColor] = useState<StrokeColor>('#f43f5e');
@@ -43,22 +40,18 @@ const ImageReviewPage = observer(() => {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareSliderPos, setCompareSliderPos] = useState(50);
 
-  // ── Comment popup state ─────────────────────────────────────────────────
   const [commentPopup, setCommentPopup] = useState<{ x: number; y: number } | null>(null);
   const [commentText, setCommentText] = useState('');
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const pendingShapeIdRef = useRef<string | null>(null);
   const viewportDivRef = useRef<HTMLDivElement>(null);
 
-  // ── Image-specific init: MediaReviewLayout only calls core.init(), so we
-  //    fetch image data separately and reset player on unmount.
   useEffect(() => {
     if (!assetId) return;
     store.player.fetchImageData(assetId);
     return () => store.player.reset();
   }, [assetId, store.player]);
 
-  // ── Scale factors: set after image loads ────────────────────────────────
   useEffect(() => {
     if (!bgImage || !store.imageData?.dimensions?.width || !store.imageData?.dimensions?.height) return;
     store.setScaleFactors(
@@ -67,7 +60,6 @@ const ImageReviewPage = observer(() => {
     );
   }, [bgImage, store.imageData, store]);
 
-  // ── Comment popup: triggers when drawing completes ──────────────────────
   const prevIsDrawing = useRef(false);
   useEffect(() => {
     if (prevIsDrawing.current && !isDrawing && (selectedTool === 'rect' || selectedTool === 'circle')) {
@@ -84,7 +76,6 @@ const ImageReviewPage = observer(() => {
     prevIsDrawing.current = isDrawing;
   }, [isDrawing, selectedTool, stageRef, drawnShapes]);
 
-  // ── Tool mode sync ──────────────────────────────────────────────────────
   useEffect(() => {
     if (activeMode === 'select') { setSelectedTool('select'); return; }
     if (activeMode === 'text')   { setSelectedTool('pan');    return; }
@@ -95,7 +86,6 @@ const ImageReviewPage = observer(() => {
     }
   }, [activeMode, activeShape, setSelectedTool]);
 
-  // ── Stable adapter (MediaAdapter.focusAnnotation → canvas highlight) ────
   const adapterRef = useRef<ImageMediaAdapter | null>(null);
   if (!adapterRef.current) {
     adapterRef.current = new ImageMediaAdapter(
@@ -105,7 +95,6 @@ const ImageReviewPage = observer(() => {
     );
   }
 
-  // ── Zoom callbacks ──────────────────────────────────────────────────────
   const handleZoomFit = useCallback(() => {
     if (!bgImage || containerWidth <= 0 || containerHeight <= 0) return;
     const fitScale = Math.min(containerWidth / bgImage.width, containerHeight / bgImage.height) * 0.9;
@@ -125,7 +114,6 @@ const ImageReviewPage = observer(() => {
     });
   }, [bgImage, containerWidth, containerHeight, setStageScale, setStagePosition]);
 
-  // ── Comment popup handlers ──────────────────────────────────────────────
   const handleCloseCommentPopup = () => {
     if (pendingShapeIdRef.current) {
       const id = pendingShapeIdRef.current;
@@ -151,7 +139,6 @@ const ImageReviewPage = observer(() => {
     }
   };
 
-  // ── Toolbar tool selection ──────────────────────────────────────────────
   const handleToolClick = (tool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan') => {
     if (tool === 'select')      setActiveMode('select');
     else if (tool === 'pan')    setActiveMode('text');

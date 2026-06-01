@@ -96,16 +96,13 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [filterUser, setFilterUser] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
 
-    // Ref to skip the search debounce effect when a folder/project navigation resets the query
     const searchSkipRef = useRef(false);
 
-    // Effect A — fetch tree once per project; re-fetch after mutations via handleMutationSuccess
     useEffect(() => {
         if (!projectId) return;
         void folderStore.fetchTree(projectId);
     }, [projectId, folderStore]);
 
-    // Effect B — re-fetch folders & assets whenever project or folder changes
     useEffect(() => {
         if (!projectId) return;
         sessionStore.setCurrentProject({ projectId, projectName: sessionStore.currentProjectName || projectId });
@@ -186,7 +183,6 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         void folderStore.fetchAssetsPage(projectId, currentFolderId);
     };
 
-    // Called after upload / delete mutations: also re-syncs the folder tree
     const handleMutationSuccess = () => {
         if (!projectId) return;
         void folderStore.fetchFolders(projectId, currentFolderId);
@@ -194,7 +190,6 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         void folderStore.fetchTree(projectId);
     };
 
-    // build breadcrumb path client-side from flat treeItems using ancestorIds
     const breadcrumbFolders = useMemo((): FolderTreeItemDTO[] => {
         if (!currentFolderId) return [];
         const map = new Map(folderStore.treeItems.map((i) => [i.folderId!, i]));
@@ -436,7 +431,6 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         versionLabel: version?.versionNumber != null ? `v${version.versionNumber}` : 'v?',
                         type: resolveAssetType(version?.mimeType),
                         durationLabel: formatDuration(version?.mediaInfo?.durationMs),
-                        // thumbnailUrl will be in generated types after next gen-api run
                         thumbnailUrl: (version as Record<string, unknown>)?.thumbnailUrl as string | undefined,
                         processingStatus: version?.processingStatus,
                     };

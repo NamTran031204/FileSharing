@@ -53,13 +53,6 @@ const ProjectOverviewCard = ({
 }: ProjectOverviewCardProps) => {
     const isActive = status === 'ACTIVE';
 
-    // const cardActions: ActionDropdownItem<TRecord>[] =
-    //     actions ??
-    //     [
-    //         { title: 'edit', titleCustom: 'Sửa' },
-    //         { title: 'remove', titleCustom: 'Xoá', isDanger: true },
-    //     ];
-    // const hasActions = cardActions.length > 0;
 
     return (
         <button

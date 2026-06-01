@@ -36,7 +36,6 @@ const FilePreviewPage = () => {
             try {
                 setLoading(true);
 
-                // Kiểm tra trạng thái đăng nhập
                 const accessToken = tokenManager.getAccessToken();
                 const isLoggedIn = !!accessToken;
 
