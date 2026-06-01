@@ -10,20 +10,10 @@ import type { SidebarSectionState } from '../components/imageReview/types';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { MarkupMode, ShapeTool } from '../hooks/useKonvaCanvas';
 import { useStore } from '../store';
+import { formatRelativeTime } from '../utils/date.util';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatTime(isoDate?: string | null): string {
-  if (!isoDate) return '';
-  const d = new Date(isoDate);
-  const now = new Date();
-  const hours = Math.floor((now.getTime() - d.getTime()) / 3600000);
-  if (hours < 1) return 'Just now';
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString();
-}
 
 function formatBytes(bytes?: number | null): string {
   if (!bytes) return '—';
@@ -1036,7 +1026,7 @@ const ImageReviewPage = observer(() => {
                                       {ann.authorName ?? ann.authorId ?? 'Unknown'}
                                     </h4>
                                     <span className="text-[9px] text-[hsl(244,10%,40%)]/60">
-                                      {formatTime(ann.createdAt)}
+                                      {formatRelativeTime(ann.createdAt)}
                                     </span>
                                   </div>
                                 </div>
@@ -1118,12 +1108,12 @@ const ImageReviewPage = observer(() => {
                                   >
                                     Reply
                                   </button>
-                                  {ann.replies.length > 0 && (
+                                  {(ann.replyCount ?? 0) > 0 && (
                                     <button
                                       onClick={() => store.toggleThreadExpanded(ann.annotationId ?? '')}
                                       className="cursor-pointer text-[10px] font-bold text-[hsl(244,10%,40%)] hover:text-[hsl(240,30%,46%)]"
                                     >
-                                      {isExpanded ? 'Hide' : `${ann.replies.length} repl${ann.replies.length === 1 ? 'y' : 'ies'}`}
+                                      {isExpanded ? 'Hide' : `${ann.replyCount ?? 0} repl${(ann.replyCount ?? 0) === 1 ? 'y' : 'ies'}`}
                                     </button>
                                   )}
                                   {isOpen ? (
@@ -1202,32 +1192,44 @@ const ImageReviewPage = observer(() => {
                     {[
                       {
                         label: 'FILE NAME',
-                        value: store.assetDetail?.asset?.name ?? store.imageData?.fileName ?? '—',
+                        value: store.isVersionMetadataLoading
+                          ? '...'
+                          : (store.currentVersionMetadata?.fileName ?? store.assetDetail?.asset?.name ?? '—'),
                       },
                       {
                         label: 'SIZE',
-                        value: formatBytes(store.assetDetail?.latestVersion?.fileSize),
+                        value: store.isVersionMetadataLoading
+                          ? '...'
+                          : formatBytes(store.currentVersionMetadata?.fileSize),
                       },
                       {
                         label: 'DIMENSIONS',
-                        value: store.imageData?.dimensions?.width && store.imageData?.dimensions?.height
-                          ? `${store.imageData.dimensions.width} × ${store.imageData.dimensions.height} px`
-                          : '—',
+                        value: store.isVersionMetadataLoading
+                          ? '...'
+                          : (store.currentVersionMetadata?.mediaInfo?.width && store.currentVersionMetadata?.mediaInfo?.height
+                            ? `${store.currentVersionMetadata.mediaInfo.width} × ${store.currentVersionMetadata.mediaInfo.height} px`
+                            : (store.imageData?.dimensions?.width && store.imageData?.dimensions?.height
+                              ? `${store.imageData.dimensions.width} × ${store.imageData.dimensions.height} px`
+                              : '—')),
                       },
                       {
                         label: 'UPLOADED',
-                        value: store.assetDetail?.latestVersion?.createdAt
-                          ? new Date(store.assetDetail.latestVersion.createdAt).toLocaleDateString()
-                          : '—',
+                        value: store.isVersionMetadataLoading
+                          ? '...'
+                          : (store.currentVersionMetadata?.creationTimestamp
+                            ? new Date(store.currentVersionMetadata.creationTimestamp).toLocaleDateString()
+                            : '—'),
                       },
                       {
                         label: 'UPLOADER',
-                        value: (store.assetDetail?.latestVersion as Record<string, unknown>)?.createdBy as string ?? '—',
+                        value: store.isVersionMetadataLoading
+                          ? '...'
+                          : (store.currentVersionMetadata?.ownerEmail ?? '—'),
                       },
                     ].map(({ label, value }) => (
-                      <div key={label}>
+                      <div key={label} className="min-w-0">
                         <span className="block text-[9px] font-bold uppercase tracking-wider text-[hsl(244,10%,40%)]/70">{label}</span>
-                        <span className="font-black text-[hsl(237,45%,30%)]">{value}</span>
+                        <span className="block truncate font-black text-[hsl(237,45%,30%)]" title={value}>{value}</span>
                       </div>
                     ))}
                   </div>

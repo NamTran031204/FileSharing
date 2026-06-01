@@ -26,4 +26,13 @@ public class AnnotationSseEventDTO {
 
     /** Full annotation — null when eventType = DELETED */
     private AnnotationsEntity annotation;
+
+    /** Display name of the actor — resolved from UserEntity at publish time (CREATED events only) */
+    private String authorName;
+
+    /** Updated replyCount of the root annotation — populated only for reply CREATED / DELETED events */
+    private Integer replyCount;
+
+    /** threadRootId of the root annotation affected — populated only for reply CREATED / DELETED events */
+    private String threadRootId;
 }

@@ -1,19 +1,25 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.dtos.annotations.*;
 import org.example.filesharing.entities.models.AnnotationsEntity;
+import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.exceptions.ErrorCode;
 import org.example.filesharing.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AnnotationsRepo;
 import org.example.filesharing.repositories.AssetRepo;
+import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AnnotationsService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.SseService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -25,6 +31,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> implements AnnotationsService {
@@ -34,6 +41,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private final AuditService auditService;
     private final SseService sseService;
     private final MongoTemplate mongoTemplate;
+    private final UserRepo userRepo;
 
     private static final Sort SORT_BY_CREATED_AT_ASC = Sort.by(Sort.Direction.ASC, "createdAt");
 
@@ -96,16 +104,20 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         //     // TODO: gui notification
         // }
 
-        // Broadcast realtime SSE event to all reviewers on this asset
-        sseService.publishAnnotationEvent(saved.getAssetId(), AnnotationSseEventDTO.builder()
+        // Broadcast realtime SSE event to all reviewers on this asset (after transaction commit)
+        String actorId = auditService.getCurrentUserId();
+        AnnotationSseEventDTO createdEvent = AnnotationSseEventDTO.builder()
                 .eventType("CREATED")
                 .assetId(saved.getAssetId())
                 .annotationId(saved.getAnnotationId())
-                .actorId(auditService.getCurrentUserId())
+                .actorId(actorId)
+                .authorName(resolveAuthorName(actorId))
                 .annotation(saved)
-                .build());
+                .build();
+        publishSseAfterCommit(saved.getAssetId(), createdEvent);
 
-        // 10. Tra ve
+        // 10. Tra ve — enrich authorName so the REST response includes the display name
+        enrichWithAuthorName(saved);
         return saved;
     }
 
@@ -142,10 +154,11 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 9. Luu document
         AnnotationsEntity saved = annotationsRepo.save(entity);
 
-        // 10. Tang replyCount cua root comment len 1 (atomic)
-        mongoTemplate.updateFirst(
+        // 10. Tang replyCount cua root comment len 1 (atomic), lay gia tri moi de gui SSE
+        AnnotationsEntity updatedRoot = mongoTemplate.findAndModify(
                 Query.query(Criteria.where("_id").is(threadRootId)),
                 new Update().inc("replyCount", 1),
+                FindAndModifyOptions.options().returnNew(true),
                 AnnotationsEntity.class
         );
 
@@ -157,16 +170,22 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 12. TODO: gui notification cho authorId cua root comment
         // notify parentAnnotation root author about new reply
 
-        // Broadcast realtime SSE event
-        sseService.publishAnnotationEvent(saved.getAssetId(), AnnotationSseEventDTO.builder()
+        // Broadcast realtime SSE event — dinh kem replyCount chinh xac tu DB (after transaction commit)
+        String replyActorId = auditService.getCurrentUserId();
+        AnnotationSseEventDTO replyCreatedEvent = AnnotationSseEventDTO.builder()
                 .eventType("CREATED")
                 .assetId(saved.getAssetId())
                 .annotationId(saved.getAnnotationId())
-                .actorId(auditService.getCurrentUserId())
+                .actorId(replyActorId)
+                .authorName(resolveAuthorName(replyActorId))
                 .annotation(saved)
-                .build());
+                .replyCount(updatedRoot != null ? updatedRoot.getReplyCount() : null)
+                .threadRootId(threadRootId)
+                .build();
+        publishSseAfterCommit(saved.getAssetId(), replyCreatedEvent);
 
-        // 13. Tra ve
+        // 13. Tra ve — enrich authorName so the REST response includes the display name
+        enrichWithAuthorName(saved);
         return saved;
     }
 
@@ -212,13 +231,14 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 8. Luu va tra ve
         AnnotationsEntity edited = annotationsRepo.save(entity);
 
-        sseService.publishAnnotationEvent(edited.getAssetId(), AnnotationSseEventDTO.builder()
+        AnnotationSseEventDTO updatedEvent = AnnotationSseEventDTO.builder()
                 .eventType("UPDATED")
                 .assetId(edited.getAssetId())
                 .annotationId(edited.getAnnotationId())
                 .actorId(currentUserId)
                 .annotation(edited)
-                .build());
+                .build();
+        publishSseAfterCommit(edited.getAssetId(), updatedEvent);
 
         return edited;
     }
@@ -258,13 +278,14 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 10. Luu va tra ve
         AnnotationsEntity resolved = annotationsRepo.save(entity);
 
-        sseService.publishAnnotationEvent(resolved.getAssetId(), AnnotationSseEventDTO.builder()
+        AnnotationSseEventDTO resolvedEvent = AnnotationSseEventDTO.builder()
                 .eventType("RESOLVED")
                 .assetId(resolved.getAssetId())
                 .annotationId(resolved.getAnnotationId())
                 .actorId(auditService.getCurrentUserId())
                 .annotation(resolved)
-                .build());
+                .build();
+        publishSseAfterCommit(resolved.getAssetId(), resolvedEvent);
 
         return resolved;
     }
@@ -304,13 +325,14 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // 9. Luu va tra ve
         AnnotationsEntity reopened = annotationsRepo.save(entity);
 
-        sseService.publishAnnotationEvent(reopened.getAssetId(), AnnotationSseEventDTO.builder()
+        AnnotationSseEventDTO reopenedEvent = AnnotationSseEventDTO.builder()
                 .eventType("REOPENED")
                 .assetId(reopened.getAssetId())
                 .annotationId(reopened.getAnnotationId())
                 .actorId(auditService.getCurrentUserId())
                 .annotation(reopened)
-                .build());
+                .build();
+        publishSseAfterCommit(reopened.getAssetId(), reopenedEvent);
 
         return reopened;
     }
@@ -386,18 +408,23 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         // Capture identifiers before soft-delete for SSE event
         String deletedAssetId = entity.getAssetId();
         String deletedAnnotationId = entity.getAnnotationId();
+        String replyThreadRootId = null;
+        Integer updatedReplyCount = null;
 
         if (entity.getParentCommentId() != null) {
             // 4. Neu la reply: soft delete chi reply do
+            replyThreadRootId = entity.getThreadRootId();
             softDeleteAudit(entity);
             annotationsRepo.save(entity);
 
-            // Giam replyCount cua root comment di 1 (atomic)
-            mongoTemplate.updateFirst(
-                    Query.query(Criteria.where("_id").is(entity.getThreadRootId())),
+            // Giam replyCount cua root comment di 1 (atomic), lay gia tri moi de gui SSE
+            AnnotationsEntity updatedRoot = mongoTemplate.findAndModify(
+                    Query.query(Criteria.where("_id").is(replyThreadRootId)),
                     new Update().inc("replyCount", -1),
+                    FindAndModifyOptions.options().returnNew(true),
                     AnnotationsEntity.class
             );
+            updatedReplyCount = updatedRoot != null ? updatedRoot.getReplyCount() : null;
         } else {
             // 5. Neu la root comment: soft delete root + toan bo replies
             softDeleteAudit(entity);
@@ -413,13 +440,16 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             }
         }
 
-        sseService.publishAnnotationEvent(deletedAssetId, AnnotationSseEventDTO.builder()
+        AnnotationSseEventDTO deletedEvent = AnnotationSseEventDTO.builder()
                 .eventType("DELETED")
                 .assetId(deletedAssetId)
                 .annotationId(deletedAnnotationId)
                 .actorId(currentUserId)
                 .annotation(null)
-                .build());
+                .replyCount(updatedReplyCount)
+                .threadRootId(replyThreadRootId)
+                .build();
+        publishSseAfterCommit(deletedAssetId, deletedEvent);
 
         // 6. Tra ve thong bao thanh cong
         return "Annotation deleted successfully";
@@ -438,12 +468,15 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // query: parentCommentId = null, isActive = true, sap xep theo createdAt ASC
+        List<AnnotationsEntity> results;
         if (status != null) {
-            return annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
+            results = annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
                     assetId.trim(), versionNumber, status, SORT_BY_CREATED_AT_ASC);
+        } else {
+            results = annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrue(
+                    assetId.trim(), versionNumber, SORT_BY_CREATED_AT_ASC);
         }
-        return annotationsRepo.findByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrue(
-                assetId.trim(), versionNumber, SORT_BY_CREATED_AT_ASC);
+        return enrichWithAuthorNames(results);
     }
 
     // ================================================================
@@ -463,8 +496,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 4-6. Query replies, sap xep theo createdAt ASC
-        return annotationsRepo.findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(
-                threadRootId.trim(), SORT_BY_CREATED_AT_ASC);
+        return enrichWithAuthorNames(annotationsRepo.findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(
+                threadRootId.trim(), SORT_BY_CREATED_AT_ASC));
     }
 
     // ================================================================
@@ -535,6 +568,29 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     }
 
     // ================================================================
+    //  3.11. Dem so luong root comments theo trang thai
+    // ================================================================
+    @Override
+    public AnnotationCountsDTO getCounts(String assetId, Integer versionNumber) {
+        if (StringUtils.isNullOrBlank(assetId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
+        }
+        if (versionNumber == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
+        }
+        long openCount = annotationsRepo
+                .countByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
+                        assetId.trim(), versionNumber, AnnotationStatus.OPEN);
+        long resolvedCount = annotationsRepo
+                .countByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
+                        assetId.trim(), versionNumber, AnnotationStatus.RESOLVED);
+        return AnnotationCountsDTO.builder()
+                .openCount(openCount)
+                .resolvedCount(resolvedCount)
+                .build();
+    }
+
+    // ================================================================
     //  Helper
     // ================================================================
     private AnnotationsEntity getActiveAnnotationOrThrow(String annotationId) {
@@ -543,5 +599,55 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                         ErrorCode.NOT_FOUND,
                         "Cannot find active annotation with id: " + annotationId
                 ));
+    }
+
+    /** Resolve publicUserName from UserEntity; falls back to "Unknown" if not found. */
+    private String resolveAuthorName(String userId) {
+        if (userId == null) return "Unknown";
+        return userRepo.findById(userId)
+                .map(UserEntity::getPublicUserName)
+                .orElse("Unknown");
+    }
+
+    /** Set authorName on a single entity (single DB lookup). */
+    private void enrichWithAuthorName(AnnotationsEntity entity) {
+        if (entity != null) {
+            entity.setAuthorName(resolveAuthorName(entity.getAuthorId()));
+        }
+    }
+
+    /** Batch-resolve authorName for a list to avoid N+1 queries. */
+    private List<AnnotationsEntity> enrichWithAuthorNames(List<AnnotationsEntity> entities) {
+        if (entities == null || entities.isEmpty()) return entities;
+        List<String> ids = entities.stream()
+                .map(AnnotationsEntity::getAuthorId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<String, String> nameMap = new HashMap<>();
+        userRepo.findAllById(ids).forEach(u -> nameMap.put(u.getUserId(), u.getPublicUserName()));
+        entities.forEach(e -> e.setAuthorName(
+                e.getAuthorId() != null ? nameMap.getOrDefault(e.getAuthorId(), "Unknown") : "Unknown"
+        ));
+        return entities;
+    }
+
+    /**
+     * Publish SSE event after the current transaction commits.
+     * Falls back to immediate publish when no transaction is active.
+     */
+    private void publishSseAfterCommit(String assetId, AnnotationSseEventDTO eventDto) {
+        log.info("[SSE] Queuing {} event assetId={} annotationId={}",
+                eventDto.getEventType(), assetId, eventDto.getAnnotationId());
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sseService.publishAnnotationEvent(assetId, eventDto);
+                }
+            });
+        } else {
+            sseService.publishAnnotationEvent(assetId, eventDto);
+        }
     }
 }

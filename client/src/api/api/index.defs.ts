@@ -1937,6 +1937,12 @@ export interface AnnotationsEntity {
 
   /**  */
   threadRootId?: string;
+
+  /**  */
+  replyCount?: number;
+
+  /**  */
+  authorName?: string;
 }
 
 export interface CommonResponseAnnotationsEntity {

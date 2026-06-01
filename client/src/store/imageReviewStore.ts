@@ -33,6 +33,7 @@ export interface AnnotationWithShapes extends AnnotationsEntity {
   konvaShapes: KonvaShapeData[];
   replies: AnnotationsEntity[];
   isRepliesLoaded: boolean;
+  authorName?: string;
 }
 
 interface AnnotationSseEvent {
@@ -40,7 +41,10 @@ interface AnnotationSseEvent {
   assetId: string;
   annotationId: string;
   actorId: string;
+  authorName?: string;
   annotation: AnnotationsEntity | null;
+  replyCount?: number;
+  threadRootId?: string;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -61,6 +65,10 @@ class ImageReviewStore {
   // ── Version list ───────────────────────────────────────────────────────────
   versions: MetadataEntity[] = [];
   isVersionsLoading: boolean = false;
+
+  // ── Current version metadata ───────────────────────────────────────────────
+  currentVersionMetadata: MetadataEntity | null = null;
+  isVersionMetadataLoading: boolean = false;
 
   // ── Annotations ────────────────────────────────────────────────────────────
   annotations: AnnotationWithShapes[] = [];
@@ -103,6 +111,8 @@ class ImageReviewStore {
       assetDetail: observable,
       versions: observable,
       isVersionsLoading: observable,
+      currentVersionMetadata: observable,
+      isVersionMetadataLoading: observable,
       annotations: observable,
       isAnnotationsLoading: observable,
       annotationError: observable,
@@ -138,6 +148,7 @@ class ImageReviewStore {
       fetchImageData: action,
       fetchAssetDetail: action,
       fetchVersionList: action,
+      fetchCurrentVersionMetadata: action,
       fetchAnnotations: action,
       fetchAnnotationSummary: action,
       fetchReplies: action,
@@ -225,6 +236,7 @@ class ImageReviewStore {
       this.fetchAnnotations(),
       this.fetchAnnotationSummary(),
       this.fetchReviewSession(),
+      this.fetchCurrentVersionMetadata(),
     ]);
 
     // Phase 3: subscribe SSE for realtime annotation updates
@@ -238,6 +250,7 @@ class ImageReviewStore {
     this.imageData = null;
     this.assetDetail = null;
     this.versions = [];
+    this.currentVersionMetadata = null;
     this.summary = null;
     this.reviewSession = null;
     this.pendingShapes = [];
@@ -302,6 +315,22 @@ class ImageReviewStore {
     } catch { /* non-blocking */ }
     finally {
       runInAction(() => { this.isVersionsLoading = false; });
+    }
+  }
+
+  async fetchCurrentVersionMetadata(): Promise<void> {
+    runInAction(() => { this.isVersionMetadataLoading = true; });
+    try {
+      const response = await AssetVersionControllerService.version({
+        assetId: this.assetId,
+        versionNumber: this.currentVersionNumber,
+      });
+      if (response?.isSuccessful) {
+        runInAction(() => { this.currentVersionMetadata = response.data ?? null; });
+      }
+    } catch { /* non-blocking */ }
+    finally {
+      runInAction(() => { this.isVersionMetadataLoading = false; });
     }
   }
 
@@ -403,13 +432,10 @@ class ImageReviewStore {
         );
         if (!alreadyExists) {
           this.annotations.push(this._wrapAnnotation(created));
-          if (this.summary) {
-            (this.summary as Record<string, unknown>).open =
-              String(this.openCount + 1);
-          }
         }
         this.pendingShapes = [];
       });
+      this.fetchAnnotationSummary();
       return created;
     } catch (err: unknown) {
       runInAction(() => {
@@ -518,6 +544,7 @@ class ImageReviewStore {
           this.annotations[idx] = { ...this.annotations[idx], ...updated };
         }
       });
+      this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
         this.annotationError = err instanceof Error ? err.message : 'Resolve thất bại';
@@ -538,6 +565,7 @@ class ImageReviewStore {
           this.annotations[idx] = { ...this.annotations[idx], ...updated };
         }
       });
+      this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
         this.annotationError = err instanceof Error ? err.message : 'Reopen thất bại';
@@ -551,9 +579,9 @@ class ImageReviewStore {
         body: { annotationId },
       });
       if (!response?.isSuccessful) throw new Error(response?.message ?? 'Xóa thất bại');
+      const wasRoot = this.annotations.some(a => a.annotationId === annotationId);
       runInAction(() => {
-        const isRoot = this.annotations.some(a => a.annotationId === annotationId);
-        if (isRoot) {
+        if (wasRoot) {
           this.annotations = this.annotations.filter(a => a.annotationId !== annotationId);
         } else {
           for (const ann of this.annotations) {
@@ -563,6 +591,7 @@ class ImageReviewStore {
           }
         }
       });
+      if (wasRoot) this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
         this.annotationError = err instanceof Error ? err.message : 'Xóa thất bại';
@@ -618,6 +647,7 @@ class ImageReviewStore {
       this.annotations = [];
       this.summary = null;
       this.reviewSession = null;
+      this.currentVersionMetadata = null;
       this.highlightedAnnotationId = null;
       this.expandedThreadIds = new Set();
     });
@@ -625,6 +655,7 @@ class ImageReviewStore {
       this.fetchAnnotations(),
       this.fetchAnnotationSummary(),
       this.fetchReviewSession(),
+      this.fetchCurrentVersionMetadata(),
     ]);
   }
 
@@ -680,9 +711,8 @@ class ImageReviewStore {
   // ─── SSE ───────────────────────────────────────────────────────────────────
 
   /** Subscribe to realtime annotation events for the current asset.
-   *  Uses fetch + AbortController (same pattern as folderAssetStore) since
-   *  EventSource does not support Authorization headers.
-   *  Requires backend endpoint: GET /api/annotation/subscribe/{assetId}
+   *  Uses fetch + AbortController (EventSource does not support Authorization headers).
+   *  Implements SSE spec-compliant multi-line data parsing and exponential-backoff reconnect.
    */
   subscribeAnnotationSSE(): void {
     this.unsubscribeAnnotationSSE();
@@ -695,36 +725,73 @@ class ImageReviewStore {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    fetch(url, { headers, signal: controller.signal })
-      .then(response => {
-        if (!response.ok || !response.body) return;
+    let retryDelay = 1000;
+
+    const connect = async (): Promise<void> => {
+      try {
+        console.log('[SSE] Connecting:', url);
+        const response = await fetch(url, { headers, signal: controller.signal });
+
+        if (!response.ok || !response.body) {
+          console.warn('[SSE] Bad response status:', response.status);
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        retryDelay = 1000;
+        console.log('[SSE] Connected for assetId:', this.assetId);
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '';
+        let lineBuffer = '';
+        // Accumulates data: lines within one SSE event block (SSE spec §9.2.6)
+        let dataLines: string[] = [];
 
-        const processLine = (line: string) => {
-          if (!line.startsWith('data:')) return;
-          const json = line.slice(5).trim();
-          if (!json) return;
-          try {
-            const event = JSON.parse(json) as AnnotationSseEvent;
-            runInAction(() => this.handleSseAnnotationEvent(event));
-          } catch { /* ignore malformed events */ }
-        };
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || controller.signal.aborted) {
+            console.log('[SSE] Stream ended, done=', done);
+            break;
+          }
 
-        const read = (): void => {
-          reader.read().then(({ done, value }) => {
-            if (done || controller.signal.aborted) return;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() ?? '';
-            lines.forEach(processLine);
-            read();
-          }).catch(() => {});
-        };
-        read();
-      })
-      .catch(() => {});
+          lineBuffer += decoder.decode(value, { stream: true });
+          // Handle both \n and \r\n line endings
+          const parts = lineBuffer.split(/\r?\n/);
+          lineBuffer = parts.pop() ?? '';
+
+          for (const line of parts) {
+            if (line.startsWith('data:')) {
+              // Strip exactly one leading space per SSE spec, then accumulate
+              dataLines.push(line.slice(5).replace(/^ /, ''));
+            } else if (line === '' || line === '\r') {
+              // Blank line = end of event block → dispatch
+              if (dataLines.length > 0) {
+                const json = dataLines.join('\n');
+                dataLines = [];
+                try {
+                  const event = JSON.parse(json) as AnnotationSseEvent;
+                  console.log('[SSE] Event received:', event.eventType, event.annotationId);
+                  runInAction(() => this.handleSseAnnotationEvent(event));
+                } catch {
+                  console.warn('[SSE] Parse error, raw:', json.slice(0, 300));
+                }
+              }
+            }
+            // Skip event:, id:, retry: lines
+          }
+        }
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.warn('[SSE] Connection error, reconnecting in', retryDelay, 'ms:', err);
+      }
+
+      if (!controller.signal.aborted) {
+        await new Promise<void>(resolve => setTimeout(resolve, retryDelay));
+        retryDelay = Math.min(retryDelay * 2, 30_000);
+        void connect();
+      }
+    };
+
+    void connect();
   }
 
   unsubscribeAnnotationSSE(): void {
@@ -735,27 +802,37 @@ class ImageReviewStore {
   }
 
   handleSseAnnotationEvent(event: AnnotationSseEvent): void {
-    const { eventType, annotationId, annotation } = event;
+    const {
+      eventType,
+      annotationId,
+      annotation,
+      authorName: eventAuthorName,
+      replyCount: eventReplyCount,
+      threadRootId: eventThreadRootId,
+    } = event;
 
     switch (eventType) {
       case 'CREATED': {
         if (!annotation) break;
         if (annotation.parentCommentId) {
-          // Reply — add to parent thread's replies only if already expanded/loaded
           const threadRootId = annotation.threadRootId ?? annotation.parentCommentId;
           const root = this.annotations.find(a => a.annotationId === threadRootId);
-          if (root && root.isRepliesLoaded) {
+          if (root) {
             const replyExists = root.replies.some(r => r.annotationId === annotationId);
-            if (!replyExists) root.replies = [...root.replies, annotation];
+            if (!replyExists && root.isRepliesLoaded) {
+              root.replies = [...root.replies, annotation];
+            }
+            if (eventReplyCount != null) {
+              root.replyCount = eventReplyCount;
+            }
           }
         } else {
-          // Root comment
+          // Root comment — only accept events matching the currently viewed version
+          if (annotation.versionNumber !== this.currentVersionNumber) break;
           const exists = this.annotations.some(a => a.annotationId === annotationId);
           if (!exists) {
-            this.annotations.push(this._wrapAnnotation(annotation));
-            if (this.summary) {
-              (this.summary as Record<string, unknown>).open = String(this.openCount + 1);
-            }
+            this.annotations.push(this._wrapAnnotation(annotation, eventAuthorName));
+            this.fetchAnnotationSummary();
           }
         }
         break;
@@ -801,17 +878,23 @@ class ImageReviewStore {
             resolvedBy: annotation.resolvedBy,
           };
         }
+        this.fetchAnnotationSummary();
         break;
       }
       case 'DELETED': {
         const isRoot = this.annotations.some(a => a.annotationId === annotationId);
         if (isRoot) {
           this.annotations = this.annotations.filter(a => a.annotationId !== annotationId);
+          this.fetchAnnotationSummary();
         } else {
           for (const ann of this.annotations) {
             const before = ann.replies.length;
             ann.replies = ann.replies.filter(r => r.annotationId !== annotationId);
             if (ann.replies.length !== before) break;
+          }
+          if (eventThreadRootId && eventReplyCount != null) {
+            const root = this.annotations.find(a => a.annotationId === eventThreadRootId);
+            if (root) root.replyCount = eventReplyCount;
           }
         }
         break;
@@ -821,9 +904,10 @@ class ImageReviewStore {
 
   // ─── Private helpers ───────────────────────────────────────────────────────
 
-  private _wrapAnnotation(a: AnnotationsEntity): AnnotationWithShapes {
+  private _wrapAnnotation(a: AnnotationsEntity, authorName?: string): AnnotationWithShapes {
     return {
       ...a,
+      authorName: authorName ?? a.authorName,
       konvaShapes: annotationRegionToKonva(a.region, this.scaleFactors, a.annotationId),
       replies: [],
       isRepliesLoaded: false,

@@ -3578,6 +3578,49 @@
         }
       }
     },
+    "/api/annotation/counts" : {
+      "get" : {
+        "tags" : [ "annotations-controller" ],
+        "operationId" : "getCounts",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAnnotationCountsDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/admin/processing/job/{jobId}" : {
       "get" : {
         "tags" : [ "admin-processing-controller" ],
@@ -6217,6 +6260,9 @@
           "replyCount" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "authorName" : {
+            "type" : "string"
           }
         }
       },
@@ -7620,6 +7666,36 @@
             "items" : {
               "$ref" : "#/components/schemas/AnnotationsEntity"
             }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AnnotationCountsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "openCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "resolvedCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CommonResponseAnnotationCountsDTO" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AnnotationCountsDTO"
           },
           "code" : {
             "type" : "string"

@@ -8,6 +8,7 @@ import org.example.filesharing.entities.models.base.EntityAuditBase;
 import org.example.filesharing.enums.AnnotationStatus;
 import org.example.filesharing.enums.MediaType;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -48,5 +49,8 @@ public class AnnotationsEntity extends EntityAuditBase {
     private String threadRootId; // = null neu la root
 
     private Integer replyCount; // tong so reply hien co (chi root comment moi co gia tri nay)
+
+    @Transient
+    private String authorName; // resolved at service layer, not stored in MongoDB
 
 }

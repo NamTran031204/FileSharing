@@ -27,4 +27,6 @@ public interface AnnotationsService {
     AnnotationsEntity getById(String annotationId);
 
     AnnotationSummaryResponse getSummary(String assetId, Integer versionNumber);
+
+    AnnotationCountsDTO getCounts(String assetId, Integer versionNumber);
 }

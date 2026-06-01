@@ -37,4 +37,8 @@ public interface AnnotationsRepo extends MongoRepository<AnnotationsEntity, Stri
 
     // tat ca annotation cua asset (khong loc version)
     List<AnnotationsEntity> findByAssetIdAndIsActiveTrue(String assetId);
+
+    // dem root comments theo status (khong load documents vao memory)
+    long countByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
+            String assetId, Integer versionNumber, AnnotationStatus status);
 }

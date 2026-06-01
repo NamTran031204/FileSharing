@@ -80,17 +80,21 @@ public class SseService {
     public void publishAnnotationEvent(String assetId, Object eventData) {
         if (assetId == null) return;
         CopyOnWriteArrayList<SseEmitter> emitters = annotationEmitters.get(assetId);
-        if (emitters == null || emitters.isEmpty()) return;
+        if (emitters == null || emitters.isEmpty()) {
+            log.info("[SSE] No subscribers for assetId={}, event dropped", assetId);
+            return;
+        }
 
+        log.info("[SSE] Broadcasting annotation event to assetId={}, subscribers={}", assetId, emitters.size());
         List<SseEmitter> dead = new ArrayList<>();
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("annotation-update").data(eventData));
             } catch (IOException e) {
-                log.debug("Dead annotation SSE emitter for asset {}, removing", assetId);
+                log.info("[SSE] Dead emitter for assetId={}, removing", assetId);
                 dead.add(emitter);
             } catch (Exception e) {
-                log.warn("Unexpected error publishing annotation SSE for asset {}", assetId, e);
+                log.warn("[SSE] Unexpected error for assetId={}", assetId, e);
                 dead.add(emitter);
             }
         }

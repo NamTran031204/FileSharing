@@ -1,4 +1,7 @@
 import dayjs, { type Dayjs } from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 export interface DateRangeDto {
   startDate?: Dayjs | null;
@@ -11,6 +14,40 @@ export type DateRangePreset =
   | '7_ngay_truoc'
   | 'thang_nay'
   | 'thang_truoc';
+
+/**
+ * Parse a backend date value to a dayjs object.
+ * Handles:
+ *  - ISO-8601 string  → "2025-05-31T10:30:45.123456789Z"  (from fixed JacksonConfig)
+ *  - Epoch seconds    → 1748612345.123  (legacy, before WRITE_DATES_AS_TIMESTAMPS was disabled)
+ *  - Epoch ms         → 1748612345123   (standard JS timestamp)
+ *  - Date object      → passed through
+ */
+export function parseBackendDate(value: string | number | Date | null | undefined): dayjs.Dayjs | null {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number') {
+    // epoch seconds (< 1e11) vs epoch milliseconds
+    const ms = value < 1e11 ? value * 1000 : value;
+    return dayjs(ms);
+  }
+  return dayjs(value);
+}
+
+/**
+ * Format a backend date as a relative time string.
+ * Returns: "Just now" | "2h ago" | "3d ago" | locale date string
+ */
+export function formatRelativeTime(value: string | number | Date | null | undefined): string {
+  const d = parseBackendDate(value);
+  if (!d || !d.isValid()) return '';
+  const diffMs = dayjs().diff(d);
+  const hours = Math.floor(diffMs / 3_600_000);
+  if (hours < 1) return 'Just now';
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.format('DD/MM/YYYY');
+}
 
 export const getDateRange = (opt: DateRangePreset | string): DateRangeDto => {
   const now = dayjs();

@@ -72,6 +72,13 @@ public class AnnotationsController {
         return CommonResponse.success(annotationsService.getSummary(assetId, versionNumber));
     }
 
+    @GetMapping("/counts")
+    public CommonResponse<AnnotationCountsDTO> getCounts(
+            @RequestParam("assetId") String assetId,
+            @RequestParam("versionNumber") Integer versionNumber) {
+        return CommonResponse.success(annotationsService.getCounts(assetId, versionNumber));
+    }
+
     /**
      * Subscribe to realtime annotation events for an asset (SSE).
      * Client holds this connection open for the duration of the review session.
