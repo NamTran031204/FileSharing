@@ -13,6 +13,7 @@ import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
 import ProjectMain from "../page/ProjectMain.tsx";
 import ImageReviewPage from "../page/ImageReviewPage.tsx";
+import VideoReviewPage from "../page/VideoReviewPage.tsx";
 import FolderAssetPage from "../page/FolderAssetPage.tsx";
 import DashboardPage from "../page/DashboardPage.tsx";
 
@@ -96,6 +97,12 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/review/image-v2',
         name: 'Image Review V2',
         element: <ImageReviewPage/>,
+        isShow: false,
+    },
+    {
+        path: '/review/video',
+        name: 'Video Review',
+        element: <VideoReviewPage/>,
         isShow: false,
     },
     {

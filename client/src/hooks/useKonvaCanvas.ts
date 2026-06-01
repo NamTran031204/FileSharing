@@ -314,6 +314,7 @@ const useKonvaCanvas = (options: UseKonvaCanvasOptions) => {
     transformerRef,
     shapeRefs,
     stageScale,
+    setStageScale,
     stagePosition,
     setStagePosition,
     selectedTool,
