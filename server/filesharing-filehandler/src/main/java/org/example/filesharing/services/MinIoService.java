@@ -21,4 +21,8 @@ public interface MinIoService {
     void deleteFile(String objectName);
 
     String generatePresignedUrl(String bucket, String objectName, int expirySeconds) throws Exception;
+
+    String getHlsObjectContent(String objectKey);
+
+    java.io.InputStream getHlsSegmentStream(String objectKey) throws Exception;
 }

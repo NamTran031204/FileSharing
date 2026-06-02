@@ -148,7 +148,9 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         const assetId = summary.asset?.assetId;
         if (!assetId) return;
         const mimeType = summary.latestVersion?.mimeType ?? '';
-        if (mimeType.startsWith('image/')) {
+        if (mimeType.startsWith('video/')) {
+            navigate(`/review/video?assetId=${assetId}`);
+        } else if (mimeType.startsWith('image/')) {
             navigate(`/review/image-v2?assetId=${assetId}`);
         }
     };

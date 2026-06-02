@@ -1,5 +1,6 @@
 package org.example.filesharing.services.impl;
 
+import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,9 @@ public class MinIoServiceImpl implements MinIoService {
     private final Integer CHUNK_SIZE = 5 * 1024 * 1024;
     @Value("${minio.buckets.files}")
     private String bucketName;
+
+    @Value("${minio.buckets.hls}")
+    private String hlsBucketName;
 
     @Override
     public InitiateUploadResponseDto initiateMultipartUpload(String objectName, Double fileSize) {
@@ -374,6 +379,31 @@ public class MinIoServiceImpl implements MinIoService {
                         .bucket(bucket)
                         .object(objectName)
                         .expiry(expirySeconds, TimeUnit.SECONDS)
+                        .build()
+        );
+    }
+
+    @Override
+    public String getHlsObjectContent(String objectKey) {
+        try (InputStream stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(hlsBucketName)
+                        .object(objectKey)
+                        .build()
+        )) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("Failed to read HLS object '{}' from bucket '{}'", objectKey, hlsBucketName, e);
+            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to read HLS manifest");
+        }
+    }
+
+    @Override
+    public InputStream getHlsSegmentStream(String objectKey) throws Exception {
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(hlsBucketName)
+                        .object(objectKey)
                         .build()
         );
     }

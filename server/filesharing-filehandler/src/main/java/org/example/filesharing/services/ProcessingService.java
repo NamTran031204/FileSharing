@@ -6,6 +6,7 @@ import org.example.filesharing.entities.dtos.processing.ProcessingStatusResponse
 import org.example.filesharing.entities.models.MediaRenditionEntity;
 import org.example.filesharing.entities.models.ProcessingJobEntity;
 
+import java.io.InputStream;
 import java.util.List;
 
 public interface ProcessingService {
@@ -21,4 +22,8 @@ public interface ProcessingService {
     ProcessingJobEntity getJob(String jobId);
 
     ProcessingJobEntity cancelJob(String jobId);
+
+    String getHlsManifest(String assetId, Integer versionNumber);
+
+    InputStream getHlsSegment(String assetId, Integer versionNumber, String filename) throws Exception;
 }

@@ -26,6 +26,7 @@ import org.example.filesharing.services.ProcessingService;
 import org.example.filesharing.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
 
@@ -160,6 +161,52 @@ public class ProcessingServiceImpl implements ProcessingService {
         });
 
         return saved;
+    }
+
+    @Override
+    public String getHlsManifest(String assetId, Integer versionNumber) {
+        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+
+        if (version.getProcessingStatus() != ProcessingStatus.READY) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "video is not ready for playback");
+        }
+
+        MediaRenditionEntity rendition = mediaRenditionRepo
+                .findFirstByMetadataIdAndRenditionType(version.getFileId(), RenditionType.HLS)
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.NOT_FOUND, "HLS rendition not found"));
+
+        String rawM3u8 = minIoService.getHlsObjectContent(rendition.getManifestKey());
+        return rewriteSegmentRefs(rawM3u8);
+    }
+
+    @Override
+    public InputStream getHlsSegment(String assetId, Integer versionNumber, String filename) throws Exception {
+        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+
+        MediaRenditionEntity rendition = mediaRenditionRepo
+                .findFirstByMetadataIdAndRenditionType(version.getFileId(), RenditionType.HLS)
+                .orElseThrow(() -> new FileBusinessException(ErrorCode.NOT_FOUND, "HLS rendition not found"));
+
+        String objectKey = rendition.getSegmentPathPrefix() + filename;
+        return minIoService.getHlsSegmentStream(objectKey);
+    }
+
+    // Rewrites relative segment refs (seg_000.ts) to backend proxy paths (segment/seg_000.ts)
+    // so hls.js resolves them relative to the manifest URL's directory.
+    private String rewriteSegmentRefs(String rawM3u8) {
+        StringBuilder result = new StringBuilder();
+        for (String line : rawM3u8.lines().toList()) {
+            String trimmed = line.trim();
+            if (!trimmed.startsWith("#") && !trimmed.isEmpty() && trimmed.endsWith(".ts")) {
+                String filename = trimmed.contains("/")
+                        ? trimmed.substring(trimmed.lastIndexOf('/') + 1)
+                        : trimmed;
+                result.append("segment/").append(filename).append("\n");
+            } else {
+                result.append(line).append("\n");
+            }
+        }
+        return result.toString();
     }
 
     private String resolveDownloadUrl(MetadataEntity version) {

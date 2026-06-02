@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class AnnotationTimeCode {
-    private Long startMs;
-    private Long endMs;
+    private Double startMs;
+    private Double endMs;
 }

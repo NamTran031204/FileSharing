@@ -340,6 +340,7 @@ export class ReviewCoreStore {
   async createAnnotation(
     commentText: string,
     region: ShapeInfo[],
+    timeCode?: { startMs: number; endMs: number },
   ): Promise<AnnotationsEntity | null> {
     runInAction(() => { this.isSaving = true; });
     try {
@@ -350,7 +351,9 @@ export class ReviewCoreStore {
           commentBody: { body: commentText, userMentions: [] },
           mediaType: this.mediaType,
           region,
-          timeCode: undefined,
+          timeCode: timeCode
+            ? { startMs: String(timeCode.startMs), endMs: String(timeCode.endMs) }
+            : undefined,
           frameNumber: undefined,
           parentCommentId: undefined,
         },

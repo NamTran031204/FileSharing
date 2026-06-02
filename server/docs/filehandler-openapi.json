@@ -2406,6 +2406,99 @@
         }
       }
     },
+    "/api/versions/{assetId}/{versionNumber}/hls/segment/{filename}" : {
+      "get" : {
+        "tags" : [ "playback-controller" ],
+        "operationId" : "getHlsSegment",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "filename",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StreamingResponseBody"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/versions/{assetId}/{versionNumber}/hls/manifest" : {
+      "get" : {
+        "tags" : [ "playback-controller" ],
+        "operationId" : "getHlsManifest",
+        "parameters" : [ {
+          "name" : "assetId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "versionNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/vnd.apple.mpegurl" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/users" : {
       "get" : {
         "tags" : [ "user-controller" ],
@@ -6164,12 +6257,12 @@
         "type" : "object",
         "properties" : {
           "startMs" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "number",
+            "format" : "double"
           },
           "endMs" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "number",
+            "format" : "double"
           }
         }
       },
@@ -6784,6 +6877,9 @@
             "type" : "string"
           }
         }
+      },
+      "StreamingResponseBody" : {
+        "type" : "object"
       },
       "CommonResponseListReviewSessionEntity" : {
         "type" : "object",
