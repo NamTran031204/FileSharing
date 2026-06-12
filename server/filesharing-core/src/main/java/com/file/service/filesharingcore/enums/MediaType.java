@@ -1,7 +1,8 @@
 package com.file.service.filesharingcore.enums;
 
-import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.exceptions.specException.FileBusinessException;
+
+import com.file.service.filesharingcore.exceptions.ErrorCode;
+import com.file.service.filesharingcore.exceptions.specException.FileBusinessException;
 
 public enum MediaType {
     IMAGE, VIDEO, DESIGN;

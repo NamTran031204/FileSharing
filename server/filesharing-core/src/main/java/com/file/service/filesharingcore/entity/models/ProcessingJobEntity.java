@@ -1,12 +1,12 @@
 package com.file.service.filesharingcore.entity.models;
 
+import com.file.service.filesharingcore.entity.models.base.EntityAuditBase;
+import com.file.service.filesharingcore.entity.models.processing.ProcessingJobConfig;
+import com.file.service.filesharingcore.entity.models.processing.ProcessingJobProgress;
+import com.file.service.filesharingcore.entity.models.processing.ProcessingJobResult;
+import com.file.service.filesharingcore.enums.ProcessingJobStatus;
+import com.file.service.filesharingcore.enums.ProcessingJobType;
 import lombok.*;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.entities.models.processing.ProcessingJobConfig;
-import org.example.filesharing.entities.models.processing.ProcessingJobProgress;
-import org.example.filesharing.entities.models.processing.ProcessingJobResult;
-import org.example.filesharing.enums.ProcessingJobStatus;
-import org.example.filesharing.enums.ProcessingJobType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

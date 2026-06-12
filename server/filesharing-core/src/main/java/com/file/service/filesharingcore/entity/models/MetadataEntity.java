@@ -1,9 +1,9 @@
 package com.file.service.filesharingcore.entity.models;
 
+import com.file.service.filesharingcore.enums.MediaType;
+import com.file.service.filesharingcore.enums.ProcessingStatus;
+import com.file.service.filesharingcore.enums.UploadStatus;
 import lombok.*;
-import org.example.filesharing.enums.MediaType;
-import org.example.filesharing.enums.ProcessingStatus;
-import org.example.filesharing.enums.UploadStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;

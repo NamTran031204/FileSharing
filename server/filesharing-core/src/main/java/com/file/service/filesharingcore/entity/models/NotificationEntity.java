@@ -1,10 +1,10 @@
 package com.file.service.filesharingcore.entity.models;
 
+import com.file.service.filesharingcore.entity.models.base.EntityAuditBase;
+import com.file.service.filesharingcore.entity.models.notification.NotificationContext;
+import com.file.service.filesharingcore.entity.models.notification.NotificationDelivery;
+import com.file.service.filesharingcore.enums.NotificationType;
 import lombok.*;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.entities.models.notification.NotificationContext;
-import org.example.filesharing.entities.models.notification.NotificationDelivery;
-import org.example.filesharing.enums.NotificationType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

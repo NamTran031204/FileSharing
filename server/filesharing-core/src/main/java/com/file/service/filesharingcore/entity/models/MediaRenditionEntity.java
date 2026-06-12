@@ -1,10 +1,10 @@
 package com.file.service.filesharingcore.entity.models;
 
+import com.file.service.filesharingcore.entity.models.base.EntityAuditBase;
+import com.file.service.filesharingcore.entity.models.metadata.RenditionResolution;
+import com.file.service.filesharingcore.enums.RenditionStatus;
+import com.file.service.filesharingcore.enums.RenditionType;
 import lombok.*;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.entities.models.metadata.RenditionResolution;
-import org.example.filesharing.enums.RenditionStatus;
-import org.example.filesharing.enums.RenditionType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

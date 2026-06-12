@@ -5,7 +5,6 @@ import com.file.service.filesharingcore.exceptions.specException.CommonException
 import com.file.service.filesharingcore.exceptions.specException.FileBusinessException;
 import com.file.service.filesharingcore.exceptions.specException.UserBusinessException;
 import com.mongodb.*;
-import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -88,19 +87,6 @@ public class GlobalExceptionHandler {
         log.error("MethodArgumentNotValidException: ", ex);
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
-                .body(response);
-    }
-
-    @ExceptionHandler(MessagingException.class)
-    public ResponseEntity<CommonResponse<Object>> handleMailMessagingException(MessagingException ex, WebRequest request) {
-        CommonResponse<Object> response = CommonResponse.fail(
-                ErrorCode.MAIL_MESSAGING_ERROR,
-                ex.getMessage()
-        );
-
-        log.error("Internal Error: ", ex);
-        return ResponseEntity
-                .status(ErrorCode.MAIL_MESSAGING_ERROR.getHttpStatus())
                 .body(response);
     }
 

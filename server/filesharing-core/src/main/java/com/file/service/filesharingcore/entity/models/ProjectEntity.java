@@ -1,11 +1,11 @@
 package com.file.service.filesharingcore.entity.models;
 
+import com.file.service.filesharingcore.entity.models.base.EntityAuditBase;
+import com.file.service.filesharingcore.entity.models.project.ProjectCollaborator;
+import com.file.service.filesharingcore.entity.models.project.ProjectStats;
+import com.file.service.filesharingcore.enums.ProjectStatus;
+import com.file.service.filesharingcore.enums.permission.GrantedVisibility;
 import lombok.*;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
-import org.example.filesharing.entities.models.project.ProjectStats;
-import org.example.filesharing.enums.ProjectStatus;
-import org.example.filesharing.enums.permission.GrantedVisibility;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
