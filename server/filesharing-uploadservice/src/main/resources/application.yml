@@ -1,0 +1,36 @@
+spring:
+  application:
+    name:
+      filesharing-uploadservice
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: CE28BNCAFTPVW8RZLQXC
+  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
+  buckets:
+    files: file-sharing
+
+springdoc:
+  api-docs:
+    enabled: true
+    output-file: docs/filehandler-openapi.jsons
+    path: /v3/api-docs
+    resolve-schema-properties: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    filter: true
+  paths-to-exclude: /api/auth/**
+  packages-to-scan: org.example.filesharing.controllers
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  show-actuator: false
+  writer-with-default-pretty-printer: true
+  # C?u hình ?? gi? nguyên tên method làm operationId
+  override-with-generic-response: false
+  use-management-port: false
+  # S? d?ng tên method làm operationId
+  operationsSorter: method
