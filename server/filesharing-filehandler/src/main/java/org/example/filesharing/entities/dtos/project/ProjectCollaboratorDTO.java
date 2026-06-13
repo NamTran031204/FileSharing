@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.project;
 
 import lombok.Data;
-import org.example.filesharing.enums.permission.GrantedProjectRole;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectRole;
 
 @Data
 public class ProjectCollaboratorDTO {

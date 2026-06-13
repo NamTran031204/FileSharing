@@ -1,9 +1,9 @@
 package org.example.filesharing.entities.dtos.metadata;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.metadata.UserFilePermission;
-import org.example.filesharing.enums.objectPermission.ObjectPermission;
-import org.example.filesharing.enums.objectPermission.ObjectVisibility;
+import com.file.service.filesharing.core.entity.models.metadata.UserFilePermission;
+import com.file.service.filesharing.core.enums.objectPermission.ObjectPermission;
+import com.file.service.filesharing.core.enums.objectPermission.ObjectVisibility;
 
 import java.util.List;
 

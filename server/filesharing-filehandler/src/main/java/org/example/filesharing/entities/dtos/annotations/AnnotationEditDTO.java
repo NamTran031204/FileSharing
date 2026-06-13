@@ -1,8 +1,8 @@
 package org.example.filesharing.entities.dtos.annotations;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.annotation.AnnotationBody;
-import org.example.filesharing.entities.models.annotation.ShapeInfo;
+import com.file.service.filesharing.core.entity.models.annotation.AnnotationBody;
+import com.file.service.filesharing.core.entity.models.annotation.ShapeInfo;
 
 import java.util.List;
 

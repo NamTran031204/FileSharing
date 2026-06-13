@@ -1,10 +1,10 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.review.ReviewSessionCreateDTO;
 import org.example.filesharing.entities.dtos.review.ReviewSessionDecisionDTO;
-import org.example.filesharing.entities.models.ReviewSessionEntity;
+import com.file.service.filesharing.core.entity.models.ReviewSessionEntity;
 import org.example.filesharing.services.ReviewSessionService;
 import org.springframework.web.bind.annotation.*;
 

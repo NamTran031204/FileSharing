@@ -1,7 +1,7 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.folder.FolderArchiveResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderChangeVisibilityRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
@@ -10,7 +10,7 @@ import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
-import org.example.filesharing.entities.models.FolderEntity;
+import com.file.service.filesharing.core.entity.models.FolderEntity;
 
 public interface FolderService {
     FolderEntity createNewFolder(FolderCreateRequestDTO request);

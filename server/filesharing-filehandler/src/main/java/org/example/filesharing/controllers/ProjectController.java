@@ -1,9 +1,9 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.CommonResponse;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogFilterDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCheckInputDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
@@ -16,10 +16,10 @@ import org.example.filesharing.entities.dtos.project.ProjectVisibilityUpdateDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenCreateDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenCreateResponseDTO;
 import org.example.filesharing.entities.dtos.project.ShareTokenInfoDTO;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
-import org.example.filesharing.entities.models.project.ProjectStats;
-import org.example.filesharing.entities.models.AuditLogEntity;
-import org.example.filesharing.entities.models.ProjectEntity;
+import com.file.service.filesharing.core.entity.models.project.ProjectCollaborator;
+import com.file.service.filesharing.core.entity.models.project.ProjectStats;
+import com.file.service.filesharing.core.entity.models.AuditLogEntity;
+import com.file.service.filesharing.core.entity.models.ProjectEntity;
 import org.example.filesharing.services.ProjectService;
 import org.springframework.web.bind.annotation.*;
 

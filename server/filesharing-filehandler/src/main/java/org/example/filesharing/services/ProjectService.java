@@ -1,15 +1,15 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogFilterDTO;
 import org.example.filesharing.entities.dtos.project.*;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
-import org.example.filesharing.entities.models.project.ProjectStats;
-import org.example.filesharing.entities.models.AuditLogEntity;
-import org.example.filesharing.entities.models.ProjectEntity;
-import org.example.filesharing.enums.ProjectStatus;
-import org.example.filesharing.enums.permission.GrantedVisibility;
+import com.file.service.filesharing.core.entity.models.project.ProjectCollaborator;
+import com.file.service.filesharing.core.entity.models.project.ProjectStats;
+import com.file.service.filesharing.core.entity.models.AuditLogEntity;
+import com.file.service.filesharing.core.entity.models.ProjectEntity;
+import com.file.service.filesharing.core.enums.ProjectStatus;
+import com.file.service.filesharing.core.enums.permission.GrantedVisibility;
 
 import java.util.List;
 

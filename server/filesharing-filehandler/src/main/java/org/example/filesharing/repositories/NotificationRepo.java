@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.NotificationEntity;
+import com.file.service.filesharing.core.entity.models.NotificationEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

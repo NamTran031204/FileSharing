@@ -1,7 +1,7 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.ProcessingJobEntity;
-import org.example.filesharing.enums.ProcessingJobStatus;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
+import com.file.service.filesharing.core.enums.ProcessingJobStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

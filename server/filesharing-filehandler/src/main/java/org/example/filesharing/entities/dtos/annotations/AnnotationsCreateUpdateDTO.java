@@ -1,10 +1,10 @@
 package org.example.filesharing.entities.dtos.annotations;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.annotation.ShapeInfo;
-import org.example.filesharing.entities.models.annotation.AnnotationTimeCode;
-import org.example.filesharing.enums.AnnotationStatus;
-import org.example.filesharing.enums.AnnotationType;
+import com.file.service.filesharing.core.entity.models.annotation.ShapeInfo;
+import com.file.service.filesharing.core.entity.models.annotation.AnnotationTimeCode;
+import com.file.service.filesharing.core.enums.AnnotationStatus;
+import com.file.service.filesharing.core.enums.AnnotationType;
 
 @Data
 public class AnnotationsCreateUpdateDTO {

@@ -2,9 +2,9 @@ package org.example.filesharing.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.CommonResponse;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.user.UpdateUserRequestDto;
 import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;

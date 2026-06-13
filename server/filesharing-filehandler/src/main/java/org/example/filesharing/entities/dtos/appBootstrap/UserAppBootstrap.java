@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.appBootstrap;
 
 import lombok.Data;
-import org.example.filesharing.enums.auth.UserGrantedRole;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 
 import java.util.List;
 import java.util.Map;

@@ -1,7 +1,7 @@
 package com.file.service.filesharingvideocodec.job;
 
-import com.file.service.filesharingvideocodec.enums.ProcessingJobStatus;
-import com.file.service.filesharingvideocodec.model.ProcessingJobEntity;
+import com.file.service.filesharing.core.enums.ProcessingJobStatus;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

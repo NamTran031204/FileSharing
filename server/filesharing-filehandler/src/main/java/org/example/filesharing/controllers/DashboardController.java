@@ -1,7 +1,7 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.dashboard.DashboardOverviewDTO;
 import org.example.filesharing.entities.dtos.dashboard.RecentActivityItemDTO;
 import org.example.filesharing.entities.dtos.dashboard.ReviewStatsDTO;

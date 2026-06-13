@@ -2,8 +2,8 @@ package org.example.filesharing.entities.dtos.processing;
 
 import lombok.Builder;
 import lombok.Data;
-import org.example.filesharing.enums.ProcessingJobStatus;
-import org.example.filesharing.enums.ProcessingJobType;
+import com.file.service.filesharing.core.enums.ProcessingJobStatus;
+import com.file.service.filesharing.core.enums.ProcessingJobType;
 
 import java.time.Instant;
 

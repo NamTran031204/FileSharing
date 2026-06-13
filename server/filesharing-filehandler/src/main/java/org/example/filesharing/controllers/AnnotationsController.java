@@ -1,10 +1,10 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.annotations.*;
-import org.example.filesharing.entities.models.AnnotationsEntity;
-import org.example.filesharing.enums.AnnotationStatus;
+import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
+import com.file.service.filesharing.core.enums.AnnotationStatus;
 import org.example.filesharing.services.AnnotationsService;
 import org.example.filesharing.services.SseService;
 import org.springframework.web.bind.annotation.*;

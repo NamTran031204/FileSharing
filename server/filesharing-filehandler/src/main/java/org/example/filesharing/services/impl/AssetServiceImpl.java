@@ -1,22 +1,23 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.asset.*;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
-import org.example.filesharing.entities.models.*;
-import org.example.filesharing.entities.models.folder.FolderPermission;
-import org.example.filesharing.entities.models.folder.FolderStats;
-import org.example.filesharing.entities.models.project.ProjectStats;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.enums.*;
-import org.example.filesharing.enums.auth.UserGrantedRole;
-import org.example.filesharing.enums.permission.GrantedProjectPermission;
-import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.exceptions.specException.FileBusinessException;
-import org.example.filesharing.exceptions.specException.UserBusinessException;
+import com.file.service.filesharing.core.entity.models.*;
+import org.example.filesharing.entities.models.UserEntity;
+import com.file.service.filesharing.core.entity.models.folder.FolderPermission;
+import com.file.service.filesharing.core.entity.models.folder.FolderStats;
+import com.file.service.filesharing.core.entity.models.project.ProjectStats;
+import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
+import com.file.service.filesharing.core.enums.*;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
+import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.MetadataRepo;
@@ -27,7 +28,7 @@ import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.ProjectPermissionResolver;
-import org.example.filesharing.utils.StringUtils;
+import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -40,8 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 
-import static org.example.filesharing.utils.StringUtils.requireNormalized;
-import static org.example.filesharing.utils.StringUtils.trimToNull;
+import static com.file.service.filesharing.core.utils.StringUtils.requireNormalized;
+import static com.file.service.filesharing.core.utils.StringUtils.trimToNull;
 
 @Service
 @RequiredArgsConstructor

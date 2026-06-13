@@ -1,8 +1,8 @@
 package org.example.filesharing.entities.dtos.notification;
 
 import lombok.Data;
-import org.example.filesharing.enums.DeliveryStatus;
-import org.example.filesharing.enums.NotificationType;
+import com.file.service.filesharing.core.enums.DeliveryStatus;
+import com.file.service.filesharing.core.enums.NotificationType;
 
 import java.time.Instant;
 

@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
-import org.example.filesharing.entities.models.AssetEntity;
-import org.example.filesharing.entities.models.MetadataEntity;
+import com.file.service.filesharing.core.entity.models.AssetEntity;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
 
 @Data
 @Builder

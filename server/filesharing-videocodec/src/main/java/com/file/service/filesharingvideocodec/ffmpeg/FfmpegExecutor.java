@@ -2,7 +2,7 @@ package com.file.service.filesharingvideocodec.ffmpeg;
 
 import com.file.service.filesharingvideocodec.config.VideoEncodingConfig;
 import com.file.service.filesharingvideocodec.job.JobService;
-import com.file.service.filesharingvideocodec.model.ProcessingJobEntity;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 import com.file.service.filesharingvideocodec.storage.MinioUploader;
 import com.file.service.filesharingvideocodec.storage.TempFileManager;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.CommonResponse;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogItemDTO;
 import org.example.filesharing.services.AuditLogService;
 import org.springframework.web.bind.annotation.*;

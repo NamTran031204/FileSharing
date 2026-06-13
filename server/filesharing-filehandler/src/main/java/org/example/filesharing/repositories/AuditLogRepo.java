@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.AuditLogEntity;
+import com.file.service.filesharing.core.entity.models.AuditLogEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

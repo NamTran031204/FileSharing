@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.file;
 
 import lombok.Data;
-import org.example.filesharing.enums.UploadStatus;
+import com.file.service.filesharing.core.enums.UploadStatus;
 
 import java.time.Instant;
 

@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.entities.models.processing.ProcessingJobProgress;
-import org.example.filesharing.enums.ProcessingJobStatus;
-import org.example.filesharing.enums.ProcessingStatus;
+import com.file.service.filesharing.core.entity.models.processing.ProcessingJobProgress;
+import com.file.service.filesharing.core.enums.ProcessingJobStatus;
+import com.file.service.filesharing.core.enums.ProcessingStatus;
 
 @Data
 @NoArgsConstructor

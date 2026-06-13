@@ -1,7 +1,7 @@
 package org.example.filesharing.utils;
 
-import org.example.filesharing.enums.permission.GrantedProjectPermission;
-import org.example.filesharing.enums.permission.GrantedProjectRole;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectRole;
 
 import java.util.List;
 

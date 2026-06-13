@@ -1,10 +1,10 @@
 package org.example.filesharing.entities.dtos.annotations;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.annotation.AnnotationBody;
-import org.example.filesharing.entities.models.annotation.AnnotationTimeCode;
-import org.example.filesharing.entities.models.annotation.ShapeInfo;
-import org.example.filesharing.enums.MediaType;
+import com.file.service.filesharing.core.entity.models.annotation.AnnotationBody;
+import com.file.service.filesharing.core.entity.models.annotation.AnnotationTimeCode;
+import com.file.service.filesharing.core.entity.models.annotation.ShapeInfo;
+import com.file.service.filesharing.core.enums.MediaType;
 
 import java.util.List;
 

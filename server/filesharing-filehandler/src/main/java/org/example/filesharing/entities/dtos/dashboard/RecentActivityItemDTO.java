@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.AuditAction;
-import org.example.filesharing.enums.AuditTargetType;
+import com.file.service.filesharing.core.enums.AuditAction;
+import com.file.service.filesharing.core.enums.AuditTargetType;
 
 import java.time.Instant;
 

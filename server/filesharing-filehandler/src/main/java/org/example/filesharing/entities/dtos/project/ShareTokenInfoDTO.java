@@ -2,7 +2,7 @@ package org.example.filesharing.entities.dtos.project;
 
 import lombok.Builder;
 import lombok.Data;
-import org.example.filesharing.enums.permission.GrantedVisibility;
+import com.file.service.filesharing.core.enums.permission.GrantedVisibility;
 
 import java.time.Instant;
 

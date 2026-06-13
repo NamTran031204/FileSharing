@@ -1,0 +1,17 @@
+package com.file.service.filesharing.core.entity.models.auditlog;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Map;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AuditChanges {
+    private Map<String, Object> before;
+    private Map<String, Object> after;
+}

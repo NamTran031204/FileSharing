@@ -2,11 +2,11 @@ package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.asset.ImageViewDataDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
-import org.example.filesharing.entities.models.MetadataEntity;
-import org.example.filesharing.enums.ProcessingStatus;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
+import com.file.service.filesharing.core.enums.ProcessingStatus;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.SseService;

@@ -1,6 +1,6 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.MetadataEntity;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

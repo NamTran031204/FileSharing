@@ -2,18 +2,18 @@ package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
 import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
-import org.example.filesharing.entities.models.MetadataEntity;
-import org.example.filesharing.enums.ProcessingJobType;
-import org.example.filesharing.enums.UploadStatus;
-import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.exceptions.specException.FileBusinessException;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
+import com.file.service.filesharing.core.enums.ProcessingJobType;
+import com.file.service.filesharing.core.enums.UploadStatus;
+import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import org.example.filesharing.jobs.kafka.EmailProducer;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
@@ -50,7 +50,7 @@ public class MetadataServiceImpl implements MetadataService {
             String currentUserId = auditService.getCurrentUserId();
             String currentUserEmail = auditService.getCurrentUserEmail();
 
-            org.example.filesharing.enums.MediaType mediaType = org.example.filesharing.enums.MediaType.fromMime(metadataDTO.getMimeType());
+            com.file.service.filesharing.core.enums.MediaType mediaType = com.file.service.filesharing.core.enums.MediaType.fromMime(metadataDTO.getMimeType());
 
             MetadataEntity metadataEntity = MetadataEntity.builder()
                     .fileName(metadataDTO.getFileName())
@@ -93,15 +93,15 @@ public class MetadataServiceImpl implements MetadataService {
         }
 
         entity.setStatus(UploadStatus.COMPLETED);
-        if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
-            entity.setProcessingStatus(org.example.filesharing.enums.ProcessingStatus.PENDING);
+        if (entity.getMediaType() == com.file.service.filesharing.core.enums.MediaType.VIDEO) {
+            entity.setProcessingStatus(com.file.service.filesharing.core.enums.ProcessingStatus.PENDING);
         } else if (entity.getMediaType() != null) {
-            entity.setProcessingStatus(org.example.filesharing.enums.ProcessingStatus.READY);
+            entity.setProcessingStatus(com.file.service.filesharing.core.enums.ProcessingStatus.READY);
         }
         metadataRepo.save(entity);
 
         try {
-            if (entity.getMediaType() == org.example.filesharing.enums.MediaType.VIDEO) {
+            if (entity.getMediaType() == com.file.service.filesharing.core.enums.MediaType.VIDEO) {
                 videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
             } else {
                 processingService.createPendingJob(

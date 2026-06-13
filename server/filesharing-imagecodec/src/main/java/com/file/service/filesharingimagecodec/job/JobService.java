@@ -1,10 +1,10 @@
 package com.file.service.filesharingimagecodec.job;
 
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
-import com.file.service.filesharingimagecodec.enums.ProcessingJobStatus;
-import com.file.service.filesharingimagecodec.model.ProcessingJobEntity;
-import com.file.service.filesharingimagecodec.model.ProcessingJobProgress;
-import com.file.service.filesharingimagecodec.model.ProcessingJobResult;
+import com.file.service.filesharing.core.enums.ProcessingJobStatus;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
+import com.file.service.filesharing.core.entity.models.processing.ProcessingJobProgress;
+import com.file.service.filesharing.core.entity.models.processing.ProcessingJobResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;

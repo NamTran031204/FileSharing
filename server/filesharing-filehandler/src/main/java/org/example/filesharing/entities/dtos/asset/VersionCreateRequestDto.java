@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.AssetStatus;
-import org.example.filesharing.enums.MediaType;
+import com.file.service.filesharing.core.enums.AssetStatus;
+import com.file.service.filesharing.core.enums.MediaType;
 
 @Data
 @Builder

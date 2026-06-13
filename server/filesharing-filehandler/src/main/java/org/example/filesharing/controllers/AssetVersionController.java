@@ -1,14 +1,14 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.CommonResponse;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.asset.AssetCreateRequestDto;
 import org.example.filesharing.entities.dtos.asset.AssetCreateResponseDto;
 import org.example.filesharing.entities.dtos.asset.VersionFilterRequestDto;
 import org.example.filesharing.entities.dtos.asset.VersionUpdateRequestDto;
-import org.example.filesharing.entities.models.MetadataEntity;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import org.example.filesharing.services.AssetService;
 import org.springframework.web.bind.annotation.*;
 

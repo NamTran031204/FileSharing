@@ -1,7 +1,7 @@
 package org.example.filesharing.configurations;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.enums.auth.UserGrantedRole;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import org.example.filesharing.filters.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

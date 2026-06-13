@@ -2,20 +2,20 @@ package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.chunk.AbortUploadRequestDto;
 import org.example.filesharing.entities.dtos.chunk.CompleteUploadRequest;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
-import org.example.filesharing.entities.models.MetadataEntity;
-import org.example.filesharing.exceptions.ErrorCode;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
+import com.file.service.filesharing.core.exceptions.ErrorCode;
 import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
-import org.example.filesharing.utils.StringUtils;
+import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -122,7 +122,7 @@ public class FileMetadataController {
         MetadataEntity entity = metadataRepo.findByObjectName(objectName.trim())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid object name: " + objectName));
 
-        if (entity.getMediaType() != org.example.filesharing.enums.MediaType.VIDEO) {
+        if (entity.getMediaType() != com.file.service.filesharing.core.enums.MediaType.VIDEO) {
             return CommonResponse.fail(ErrorCode.BAD_REQUEST, "Only video can be encoded");
         }
 

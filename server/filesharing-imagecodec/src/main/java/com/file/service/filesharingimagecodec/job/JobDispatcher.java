@@ -1,6 +1,6 @@
 package com.file.service.filesharingimagecodec.job;
 
-import com.file.service.filesharingimagecodec.model.ProcessingJobEntity;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 import com.file.service.filesharingimagecodec.vips.ImageJobExecutor;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;

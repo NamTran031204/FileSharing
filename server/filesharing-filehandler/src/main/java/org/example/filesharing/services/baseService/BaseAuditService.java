@@ -1,6 +1,6 @@
 package org.example.filesharing.services.baseService;
 
-import org.example.filesharing.entities.models.base.EntityAuditBase;
+import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
 import org.example.filesharing.services.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

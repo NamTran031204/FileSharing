@@ -1,10 +1,10 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.notification.NotificationCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.notification.NotificationFilterDTO;
-import org.example.filesharing.entities.models.NotificationEntity;
+import com.file.service.filesharing.core.entity.models.NotificationEntity;
 
 public interface NotificationService {
     NotificationEntity createNewNotification(NotificationCreateUpdateDTO dto);

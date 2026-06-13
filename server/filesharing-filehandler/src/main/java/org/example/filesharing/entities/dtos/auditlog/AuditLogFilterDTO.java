@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.auditlog;
 
 import lombok.Data;
-import org.example.filesharing.enums.AuditAction;
+import com.file.service.filesharing.core.enums.AuditAction;
 
 import java.time.Instant;
 

@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.entities.models.folder.FolderStats;
-import org.example.filesharing.enums.FolderVisibility;
+import com.file.service.filesharing.core.entity.models.folder.FolderStats;
+import com.file.service.filesharing.core.enums.FolderVisibility;
 
 import java.util.List;
 

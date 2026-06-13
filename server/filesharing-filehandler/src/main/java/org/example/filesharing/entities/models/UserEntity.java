@@ -2,10 +2,10 @@ package org.example.filesharing.entities.models;
 
 import lombok.*;
 import org.example.filesharing.entities.models.user.AuthProviderInfo;
-import org.example.filesharing.entities.models.base.EntityAuditBase;
-import org.example.filesharing.enums.auth.AuthProvider;
-import org.example.filesharing.enums.auth.UserGrantedRole;
-import org.example.filesharing.enums.auth.UserRole;
+import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
+import com.file.service.filesharing.core.enums.auth.AuthProvider;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
+import com.file.service.filesharing.core.enums.auth.UserRole;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;

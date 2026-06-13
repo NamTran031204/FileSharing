@@ -1,12 +1,12 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
-import org.example.filesharing.entities.models.MetadataEntity;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.FolderEntity;
-import org.example.filesharing.enums.FolderVisibility;
+import com.file.service.filesharing.core.entity.models.FolderEntity;
+import com.file.service.filesharing.core.enums.FolderVisibility;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 

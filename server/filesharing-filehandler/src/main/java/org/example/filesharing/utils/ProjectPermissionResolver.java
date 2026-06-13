@@ -1,14 +1,14 @@
 package org.example.filesharing.utils;
 
-import org.example.filesharing.entities.models.FolderEntity;
-import org.example.filesharing.entities.models.ProjectEntity;
+import com.file.service.filesharing.core.entity.models.FolderEntity;
+import com.file.service.filesharing.core.entity.models.ProjectEntity;
 import org.example.filesharing.entities.models.UserEntity;
-import org.example.filesharing.entities.models.folder.FolderPermission;
-import org.example.filesharing.entities.models.project.ProjectCollaborator;
-import org.example.filesharing.enums.FolderVisibility;
-import org.example.filesharing.enums.permission.GrantedProjectPermission;
-import org.example.filesharing.enums.permission.GrantedProjectRole;
-import org.example.filesharing.enums.permission.GrantedVisibility;
+import com.file.service.filesharing.core.entity.models.folder.FolderPermission;
+import com.file.service.filesharing.core.entity.models.project.ProjectCollaborator;
+import com.file.service.filesharing.core.enums.FolderVisibility;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectRole;
+import com.file.service.filesharing.core.enums.permission.GrantedVisibility;
 import org.example.filesharing.repositories.FolderRepo;
 
 import java.time.Instant;

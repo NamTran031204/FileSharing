@@ -1,8 +1,8 @@
 package org.example.filesharing.services;
 
 import org.example.filesharing.entities.dtos.annotations.*;
-import org.example.filesharing.entities.models.AnnotationsEntity;
-import org.example.filesharing.enums.AnnotationStatus;
+import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
+import com.file.service.filesharing.core.enums.AnnotationStatus;
 
 import java.util.List;
 

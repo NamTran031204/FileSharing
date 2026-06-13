@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.auth.UserGrantedRole;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 
 import java.util.List;
 

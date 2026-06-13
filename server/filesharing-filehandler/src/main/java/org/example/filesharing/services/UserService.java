@@ -1,7 +1,7 @@
 package org.example.filesharing.services;
 
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auth.UserLoginRequestDto;
 import org.example.filesharing.entities.dtos.auth.UserLoginResponseDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterRequestDto;

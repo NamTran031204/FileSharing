@@ -1,22 +1,22 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.notification.NotificationCreateUpdateDTO;
 import org.example.filesharing.entities.dtos.notification.NotificationFilterDTO;
-import org.example.filesharing.entities.models.notification.NotificationContext;
-import org.example.filesharing.entities.models.notification.NotificationDelivery;
-import org.example.filesharing.entities.models.NotificationEntity;
-import org.example.filesharing.enums.DeliveryStatus;
-import org.example.filesharing.exceptions.ErrorCode;
-import org.example.filesharing.exceptions.specException.FileBusinessException;
-import org.example.filesharing.exceptions.specException.UserBusinessException;
+import com.file.service.filesharing.core.entity.models.notification.NotificationContext;
+import com.file.service.filesharing.core.entity.models.notification.NotificationDelivery;
+import com.file.service.filesharing.core.entity.models.NotificationEntity;
+import com.file.service.filesharing.core.enums.DeliveryStatus;
+import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
+import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.NotificationRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.NotificationService;
 import org.example.filesharing.services.baseService.BaseAuditService;
-import org.example.filesharing.utils.StringUtils;
+import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,8 +29,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static org.example.filesharing.utils.StringUtils.requireNormalized;
-import static org.example.filesharing.utils.StringUtils.trimToNull;
+import static com.file.service.filesharing.core.utils.StringUtils.requireNormalized;
+import static com.file.service.filesharing.core.utils.StringUtils.trimToNull;
 
 @Service
 @RequiredArgsConstructor

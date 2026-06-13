@@ -1,9 +1,9 @@
 package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
-import org.example.filesharing.entities.PageRequestDto;
-import org.example.filesharing.entities.PageResult;
+import com.file.service.filesharing.core.entity.CommonResponse;
+import com.file.service.filesharing.core.entity.PageRequestDto;
+import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.folder.FolderArchiveResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderChangeVisibilityRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
@@ -12,7 +12,7 @@ import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderUpdateRequestDTO;
-import org.example.filesharing.entities.models.FolderEntity;
+import com.file.service.filesharing.core.entity.models.FolderEntity;
 import org.example.filesharing.services.FolderService;
 import org.springframework.web.bind.annotation.*;
 

@@ -2,14 +2,14 @@ package org.example.filesharing.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.auth.UserLoginRequestDto;
 import org.example.filesharing.entities.dtos.auth.UserLoginResponseDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterRequestDto;
 import org.example.filesharing.entities.dtos.auth.UserRegisterResponseDto;
 import org.example.filesharing.entities.models.user.AuthProviderInfo;
-import org.example.filesharing.entities.models.MetadataEntity;
-import org.example.filesharing.enums.auth.AuthProvider;
+import com.file.service.filesharing.core.entity.models.MetadataEntity;
+import com.file.service.filesharing.core.enums.auth.AuthProvider;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.UserService;
 import org.springframework.web.bind.annotation.*;

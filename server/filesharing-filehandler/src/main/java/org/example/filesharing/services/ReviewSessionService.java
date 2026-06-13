@@ -2,7 +2,7 @@ package org.example.filesharing.services;
 
 import org.example.filesharing.entities.dtos.review.ReviewSessionCreateDTO;
 import org.example.filesharing.entities.dtos.review.ReviewSessionDecisionDTO;
-import org.example.filesharing.entities.models.ReviewSessionEntity;
+import com.file.service.filesharing.core.entity.models.ReviewSessionEntity;
 
 import java.util.List;
 

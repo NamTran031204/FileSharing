@@ -1,9 +1,9 @@
 package org.example.filesharing.entities.dtos.notification;
 
 import lombok.Data;
-import org.example.filesharing.entities.models.notification.NotificationContext;
-import org.example.filesharing.entities.models.notification.NotificationDelivery;
-import org.example.filesharing.enums.NotificationType;
+import com.file.service.filesharing.core.entity.models.notification.NotificationContext;
+import com.file.service.filesharing.core.entity.models.notification.NotificationDelivery;
+import com.file.service.filesharing.core.enums.NotificationType;
 
 import java.time.Instant;
 

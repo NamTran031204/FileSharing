@@ -1,7 +1,7 @@
 package org.example.filesharing.entities.dtos.project;
 
 import lombok.Data;
-import org.example.filesharing.enums.ProjectStatus;
+import com.file.service.filesharing.core.enums.ProjectStatus;
 
 import java.time.Instant;
 

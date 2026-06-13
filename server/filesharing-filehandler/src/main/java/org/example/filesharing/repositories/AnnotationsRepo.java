@@ -1,7 +1,7 @@
 package org.example.filesharing.repositories;
 
-import org.example.filesharing.entities.models.AnnotationsEntity;
-import org.example.filesharing.enums.AnnotationStatus;
+import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
+import com.file.service.filesharing.core.enums.AnnotationStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

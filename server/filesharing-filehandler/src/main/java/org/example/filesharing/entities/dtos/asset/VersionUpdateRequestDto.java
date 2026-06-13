@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.ProcessingStatus;
-import org.example.filesharing.enums.objectPermission.ObjectPermission;
-import org.example.filesharing.enums.objectPermission.ObjectVisibility;
+import com.file.service.filesharing.core.enums.ProcessingStatus;
+import com.file.service.filesharing.core.enums.objectPermission.ObjectPermission;
+import com.file.service.filesharing.core.enums.objectPermission.ObjectVisibility;
 
 @Data
 @Builder

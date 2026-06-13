@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.enums.ProcessingStatus;
+import com.file.service.filesharing.core.enums.ProcessingStatus;
 
 @Data
 @NoArgsConstructor

@@ -3,8 +3,8 @@ package org.example.filesharing.services;
 import org.example.filesharing.entities.dtos.processing.PlaybackDataResponseDto;
 import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import org.example.filesharing.entities.dtos.processing.ProcessingStatusResponseDto;
-import org.example.filesharing.entities.models.MediaRenditionEntity;
-import org.example.filesharing.entities.models.ProcessingJobEntity;
+import com.file.service.filesharing.core.entity.models.MediaRenditionEntity;
+import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 
 import java.io.InputStream;
 import java.util.List;

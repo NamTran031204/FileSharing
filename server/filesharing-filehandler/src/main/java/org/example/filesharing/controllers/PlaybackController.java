@@ -2,9 +2,9 @@ package org.example.filesharing.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.filesharing.entities.CommonResponse;
+import com.file.service.filesharing.core.entity.CommonResponse;
 import org.example.filesharing.entities.dtos.processing.PlaybackDataResponseDto;
-import org.example.filesharing.entities.models.MediaRenditionEntity;
+import com.file.service.filesharing.core.entity.models.MediaRenditionEntity;
 import org.example.filesharing.services.ProcessingService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

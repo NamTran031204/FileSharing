@@ -29,8 +29,6 @@ springdoc:
   default-consumes-media-type: application/json
   show-actuator: false
   writer-with-default-pretty-printer: true
-  # C?u hình ?? gi? nguyên tên method làm operationId
   override-with-generic-response: false
   use-management-port: false
-  # S? d?ng tên method làm operationId
   operationsSorter: method

@@ -1,8 +1,8 @@
 package org.example.filesharing.entities.dtos.annotations;
 
 import lombok.Data;
-import org.example.filesharing.enums.AnnotationStatus;
-import org.example.filesharing.enums.AnnotationType;
+import com.file.service.filesharing.core.enums.AnnotationStatus;
+import com.file.service.filesharing.core.enums.AnnotationType;
 
 import java.time.Instant;
 
