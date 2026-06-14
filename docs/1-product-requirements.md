@@ -15,10 +15,9 @@ Xây dựng nền tảng review media cho creative agency và freelancer studio,
 3. Giảm lỗi sửa sai version xuống dưới 5% tổng lượt chỉnh sửa
 4. Duy trì trải nghiệm xem mượt cho video review ở điều kiện mạng trung bình
 
-## 4. Non-goals (Phase 2)
-1. Không làm real-time co-editing kiểu Figma multi-cursor
+## 4. Non-goals
+1. Không làm real-time co-editing kiểu Figma multi-cursor riêng lẻ, mà sẽ tích hợp vào cơ chế voice meeting mà sẽ triển khai trong tương lai
 2. Không làm DAM đầy đủ (AI tagging, advanced search toàn hệ thống)
-3. Không tối ưu cho live streaming sự kiện
 
 ## 5. Persona chính
 1. Media Producer (Editor/Designer/Photographer)
