@@ -7,3 +7,11 @@ ans.md
 .idea/inspectionProfiles/
 
 /.gemini
+
+# File/folder được backup thủ công qua script-backup (giữ dữ liệu, không track git)
+/CLAUDE.md
+/CONTEXTOPS-GUIDE.md
+/CONTEXTOPS.md
+/huong_dan_thuc_hien_quy_trinh_BA.md
+/.claude/
+/client/.claude/
