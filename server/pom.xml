@@ -25,6 +25,7 @@
 		<openapi.version>2.7.0</openapi.version>
 		<jwt.version>0.12.6</jwt.version>
 		<apachecommon.version>1.4.0</apachecommon.version>
+		<aws.sdk.version>2.31.78</aws.sdk.version>
 	</properties>
 
 	<modules>
@@ -88,6 +89,13 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-exec</artifactId>
 				<version>${apachecommon.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws.sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

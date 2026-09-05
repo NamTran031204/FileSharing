@@ -63,8 +63,8 @@ kafka:
 
 minio:
   endpoint: http://localhost:9000
-  access-key: CE28BNCAFTPVW8RZLQXC
-  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
+  access-key: 80D3DS419TKB0T3OOU5U
+  secret-key: YepE6i5JTnk4+YpDpeHwSy0RDD7K618JUz9jgwph
   buckets:
     files: file-sharing
     thumbnails: thumbnail-bucket

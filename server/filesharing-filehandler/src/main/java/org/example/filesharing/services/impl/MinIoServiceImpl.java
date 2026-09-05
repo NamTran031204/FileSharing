@@ -6,35 +6,44 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MinIoService;
+import org.example.filesharing.services.StorageService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class MinIoServiceImpl implements MinIoService {
     private static final long MAX_DIRECT_UPLOAD_SIZE = 5 * 1024 * 1024;
+
+    // TTL đồng nhất cho lô part URL của luồng legacy E7 (user duyệt 2026-09-01):
+    // clamp(partCount * 60s, 1h, 6h) — thay cho calculateExpireTime(partNumber) cũ.
+    private static final long LEGACY_PART_URL_TTL_STEP_SECONDS = 60L;
+    private static final long LEGACY_PART_URL_TTL_MIN_SECONDS = 3600L;
+    private static final long LEGACY_PART_URL_TTL_MAX_SECONDS = 21600L;
+
     private final MinioClient minioClient;
-    private final OkHttpClient httpClient = new OkHttpClient();
     private final MetadataRepo metadataRepo;
+    private final StorageService storageService;
+    private final S3Presigner uploadPresigner;
     private final Integer CHUNK_SIZE = 5 * 1024 * 1024;
     @Value("${minio.buckets.files}")
     private String bucketName;
@@ -42,68 +51,39 @@ public class MinIoServiceImpl implements MinIoService {
     @Value("${minio.buckets.hls}")
     private String hlsBucketName;
 
+    public MinIoServiceImpl(MinioClient minioClient,
+                             MetadataRepo metadataRepo,
+                             StorageService storageService,
+                             @Qualifier("uploadPresigner") S3Presigner uploadPresigner) {
+        this.minioClient = minioClient;
+        this.metadataRepo = metadataRepo;
+        this.storageService = storageService;
+        this.uploadPresigner = uploadPresigner;
+    }
+
     @Override
     public InitiateUploadResponseDto initiateMultipartUpload(String objectName, Double fileSize) {
         if (objectName == null || objectName.isBlank()) {
             throw new IllegalArgumentException("Object name cannot be null or empty");
         }
         try {
-            Map<String, String> queryParams = new HashMap<>();
-            queryParams.put("uploads", "");
+            String uploadId = storageService.createMultipartUpload(objectName);
 
-            String initiateUrl = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.POST)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(10, TimeUnit.MINUTES)
-                            .extraQueryParams(queryParams)
-                            .build()
-            );
+            int numberOfPart = fileSize.intValue() / CHUNK_SIZE + 1;
+            long ttlSeconds = clampLegacyPartUrlTtl(numberOfPart);
 
-            Request request = new Request.Builder()
-                    .url(initiateUrl)
-                    .post(RequestBody.create(new byte[0]))
-                    .build();
+            log.info("Number of parts: {}", numberOfPart);
 
-            try (Response response = httpClient.newCall(request).execute()) {
-
-                // validate
-                if (!response.isSuccessful()) {
-                    String errorBody = response.body() != null ? response.body().string() : "Unknown error";
-                    log.error("Failed to initiate multipart upload: {} - {}", response.code(), errorBody);
-                    throw new RuntimeException("Failed to initiate multipart upload: " + response.code() + " - " + errorBody);
-                }
-
-                if (response.body() == null) {
-                    throw new RuntimeException("Empty response body from MinIO");
-                }
-
-                String xmlResponse = response.body().string();
-
-                log.info("Initiated multipart upload for object: {} - Response: {}", objectName, xmlResponse);
-
-                String uploadId = extractUploadIdFromXml(xmlResponse);
-
-                Map<Integer, String> partUrls = new HashMap<>();
-                int numberOfPart = fileSize.intValue() / CHUNK_SIZE + 1;
-
-                log.info("Number of parts: {}", numberOfPart);
-
-                for (int i = 1; i <= numberOfPart; i++) {
-                    String url = getPresignedUrlForPart(objectName, uploadId, i);
-                    partUrls.put(i, url);
-                }
-                return InitiateUploadResponseDto.builder()
-                        .uploadId(uploadId)
-                        .partUrl(partUrls)
-                        .build();
+            Map<Integer, String> partUrls = new HashMap<>();
+            for (int i = 1; i <= numberOfPart; i++) {
+                partUrls.put(i, presignLegacyPart(objectName, uploadId, i, ttlSeconds));
             }
+            return InitiateUploadResponseDto.builder()
+                    .uploadId(uploadId)
+                    .partUrl(partUrls)
+                    .build();
         } catch (IllegalArgumentException e) {
             throw e;
-        } catch (Exception e) {
-            log.error("Failed to initiate multipart upload for object: {}", objectName, e);
-            throw new RuntimeException("Failed to initiate multipart upload: " + e.getMessage(), e);
         }
     }
 
@@ -119,25 +99,29 @@ public class MinIoServiceImpl implements MinIoService {
             throw new IllegalArgumentException("Part number must be between 1 and 10000");
         }
 
+        return presignLegacyPart(objectName, uploadId, partNumber, clampLegacyPartUrlTtl(1));
+    }
+
+    private long clampLegacyPartUrlTtl(int partCount) {
+        long ttl = (long) partCount * LEGACY_PART_URL_TTL_STEP_SECONDS;
+        return Math.max(LEGACY_PART_URL_TTL_MIN_SECONDS, Math.min(LEGACY_PART_URL_TTL_MAX_SECONDS, ttl));
+    }
+
+    private String presignLegacyPart(String objectName, String uploadId, int partNumber, long ttlSeconds) {
         try {
-            Map<String, String> queryParams = new HashMap<>();
-            queryParams.put("uploadId", uploadId);
-            queryParams.put("partNumber", String.valueOf(partNumber));
-
-            log.info("queryParams for part {}: {}", partNumber, queryParams);
-
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.PUT)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(calculateExpireTime(partNumber), TimeUnit.SECONDS)
-                            .extraQueryParams(queryParams)
-                            .build()
-            );
-        } catch (Exception e) {
+            UploadPartRequest uploadPartRequest = UploadPartRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectName)
+                    .uploadId(uploadId)
+                    .partNumber(partNumber)
+                    .build();
+            var presigned = uploadPresigner.presignUploadPart(b -> b
+                    .signatureDuration(Duration.ofSeconds(ttlSeconds))
+                    .uploadPartRequest(uploadPartRequest));
+            return presigned.url().toString();
+        } catch (SdkException e) {
             log.error("Failed to create pre-signed URL for part {} of object: {}", partNumber, objectName, e);
-            throw new RuntimeException("Lỗi khi tạo URL upload part", e);
+            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to presign part url");
         }
     }
 
@@ -153,69 +137,21 @@ public class MinIoServiceImpl implements MinIoService {
             throw new IllegalArgumentException("Parts list cannot be null or empty");
         }
 
-        try {
-            parts.sort((a, b) -> Integer.compare(a.getPartNumber(), b.getPartNumber()));
+        parts.sort((a, b) -> Integer.compare(a.getPartNumber(), b.getPartNumber()));
 
-            for (int i = 0; i < parts.size(); i++) {
-                if (parts.get(i).getPartNumber() != i + 1) {
-                    log.warn("Part numbers are not sequential. Expected: {}, Got: {}",
-                            i + 1, parts.get(i).getPartNumber());
-                }
+        for (int i = 0; i < parts.size(); i++) {
+            if (parts.get(i).getPartNumber() != i + 1) {
+                log.warn("Part numbers are not sequential. Expected: {}, Got: {}",
+                        i + 1, parts.get(i).getPartNumber());
             }
-
-            Map<String, String> queryParams = new HashMap<>();
-            queryParams.put("uploadId", uploadId);
-
-            String completeUrl = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.POST)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(10, TimeUnit.MINUTES)
-                            .extraQueryParams(queryParams)
-                            .build()
-            );
-
-            String xmlBody = buildCompleteMultipartUploadXml(parts);
-
-            RequestBody requestBody = RequestBody.create(
-                    xmlBody,
-                    MediaType.parse("application/xml")
-            );
-
-            Request request = new Request.Builder()
-                    .url(completeUrl)
-                    .post(requestBody)
-                    .build();
-
-            log.info("Complete multipart upload xml: {}", xmlBody);
-            log.info("Complete multipart upload completeUrl: {}", completeUrl);
-
-            try (Response response = httpClient.newCall(request).execute()) {
-                String responseBody = response.body() != null ? response.body().string() : "";
-
-                if (!response.isSuccessful()) {
-                    log.error("Failed to complete multipart upload: {} - {}", response.code(), responseBody);
-                    throw new RuntimeException("Failed to complete multipart upload: " + response.code() + " - " + responseBody);
-                }
-
-                if (!responseBody.contains("<ETag>")) {
-                    log.error("Complete upload response missing ETag. Response: {}", responseBody);
-                    throw new RuntimeException("Invalid complete upload response - missing ETag");
-                }
-
-                log.info("Successfully completed multipart upload for object: {}", objectName);
-                log.debug("Complete response: {}", responseBody);
-
-                if (!response.isSuccessful()) {
-                    throw new RuntimeException("Failed to complete multipart upload: " + response.code());
-                }
-            }
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi complete upload", e);
         }
+
+        java.util.List<StorageService.CompletedPartSpec> specs = parts.stream()
+                .map(p -> new StorageService.CompletedPartSpec(p.getPartNumber(), p.getEtag()))
+                .toList();
+
+        storageService.completeMultipartUpload(objectName, uploadId, specs);
+        log.info("Successfully completed multipart upload for object: {}", objectName);
     }
 
     @Override
@@ -227,36 +163,8 @@ public class MinIoServiceImpl implements MinIoService {
             throw new IllegalArgumentException("Upload ID cannot be null or empty");
         }
 
-        try {
-            Map<String, String> queryParams = new HashMap<>();
-            queryParams.put("uploadId", uploadId);
-
-            String abortUrl = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.DELETE)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(10, TimeUnit.MINUTES)
-                            .extraQueryParams(queryParams)
-                            .build()
-            );
-
-            Request request = new Request.Builder()
-                    .url(abortUrl)
-                    .delete()
-                    .build();
-
-            log.info("Abort multipart upload: {}", abortUrl);
-            log.info("Abort request: {}", request);
-
-            try (Response response = httpClient.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new RuntimeException("Failed to abort multipart upload: " + response.code());
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi abort upload", e);
-        }
+        storageService.abortMultipartUpload(objectName, uploadId);
+        log.info("Successfully aborted multipart upload for object: {}", objectName);
     }
 
     @Override
@@ -331,28 +239,6 @@ public class MinIoServiceImpl implements MinIoService {
             log.error("Failed to delete file '{}' from bucket '{}'", objectName, bucketName, e);
             throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to delete file: " + e.getMessage());
         }
-    }
-
-    private String extractUploadIdFromXml(String xml) {
-        Pattern pattern = Pattern.compile("<UploadId>(.*?)</UploadId>");
-        Matcher matcher = pattern.matcher(xml);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        throw new RuntimeException("Cannot extract UploadId from XML response");
-    }
-
-    private String buildCompleteMultipartUploadXml(java.util.List<PartInfo> parts) {
-        StringBuilder xml = new StringBuilder();
-        xml.append("<CompleteMultipartUpload>");
-        for (PartInfo part : parts) {
-            xml.append("<Part>");
-            xml.append("<PartNumber>").append(part.getPartNumber()).append("</PartNumber>");
-            xml.append("<ETag>").append(part.getEtag()).append("</ETag>");
-            xml.append("</Part>");
-        }
-        xml.append("</CompleteMultipartUpload>");
-        return xml.toString();
     }
 
     // tra ve so giay
