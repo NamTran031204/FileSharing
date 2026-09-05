@@ -36,6 +36,7 @@ public class MongoIndexBootstrapConfig {
             applyProcessingJobsIndexes();
             applyAuditLogsIndexes();
             applyNotificationsIndexes();
+            applyUploadSessionsIndexes();
 
             log.info("Mongo indexes bootstrap completed.");
         };
@@ -211,5 +212,25 @@ public class MongoIndexBootstrapConfig {
                 .on("createdAt", Sort.Direction.DESC));
         ops.createIndex(new Index().on("expiresAt", Sort.Direction.ASC).expire(Duration.ZERO));
         ops.createIndex(new Index().on("deliveryStatus.email", Sort.Direction.ASC));
+    }
+
+    private void applyUploadSessionsIndexes() {
+        IndexOperations ops = mongoTemplate.indexOps("upload_sessions");
+        ops.createIndex(new Index()
+                .on("expiresAt", Sort.Direction.ASC)
+                .named("idx_upload_sessions_ttl")
+                .expire(Duration.ofSeconds(172800)));
+        ops.createIndex(new Index()
+                .on("ownerId", Sort.Direction.ASC)
+                .on("status", Sort.Direction.ASC)
+                .named("idx_upload_sessions_owner_status"));
+        ops.createIndex(new Index()
+                .on("status", Sort.Direction.ASC)
+                .on("expiresAt", Sort.Direction.ASC)
+                .named("idx_upload_sessions_status_expires"));
+        ops.createIndex(new Index()
+                .on("uploadId", Sort.Direction.ASC)
+                .named("idx_upload_sessions_upload_id")
+                .sparse());
     }
 }

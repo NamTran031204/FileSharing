@@ -37,6 +37,14 @@ public enum ErrorCode {
     FOLDER_PARENT_NOT_FOUND("5404", "Parent folder not found", HttpStatus.NOT_FOUND),
     FOLDER_NOT_IN_TRASH("5405", "Folder is not in trash", HttpStatus.BAD_REQUEST),
 
+    SESSION_NOT_FOUND("5501", "Upload session not found", HttpStatus.NOT_FOUND),
+    UPLOAD_INCOMPLETE("5502", "Upload is incomplete", HttpStatus.BAD_REQUEST),
+    SIZE_MISMATCH("5503", "Uploaded size does not match declared size", HttpStatus.BAD_REQUEST),
+    CHECKSUM_MISMATCH("5504", "Part checksum mismatch", HttpStatus.BAD_REQUEST),
+    SESSION_INVALID_STATE("5505", "Upload session is not in a valid state", HttpStatus.CONFLICT),
+    SESSION_LIMIT_EXCEEDED("5506", "Too many concurrent upload sessions", HttpStatus.TOO_MANY_REQUESTS),
+    FILE_NOT_READY("5507", "File is not ready for download", HttpStatus.CONFLICT),
+
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),
 

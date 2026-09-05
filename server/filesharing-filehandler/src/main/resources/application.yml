@@ -79,6 +79,14 @@ minio:
 #  access-key: 5UVTKA00N1U9060FMZW0
 #  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
+upload:
+  max-file-size: 53687091200
+  part-url-ttl: 900s
+  max-threads: 6
+  session-idle-ttl: 86400s
+  max-sessions-per-user: 20
+  verify-etag-md5: true
+
 application:
   security:
     jwt:
