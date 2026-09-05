@@ -47,10 +47,3 @@ export interface ShapeOption {
 }
 
 export type ReviewTool = 'pan' | 'comment' | null;
-
-export interface SidebarSectionState {
-  shapes: boolean;
-  comments: boolean;
-  actionLog: boolean;
-  imageInfo: boolean;
-}

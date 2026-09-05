@@ -1,23 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { ReviewCoreStore } from '../../store/review/ReviewCoreStore';
 import type { AnnotationWithShapes } from '../../store/review/ImagePlayerStore';
 import type { MediaAdapter } from './bridge/MediaAdapter';
-import { ReviewHeader } from './layout/ReviewHeader';
+import { ReviewTopBar } from './layout/ReviewTopBar';
+import type { ReviewParticipant } from './layout/ReviewTopBar';
+import { LayersPanel } from './sidebar/LayersPanel';
 import { ReviewSidebar } from './sidebar/ReviewSidebar';
-import { IconChevronLeft, IconChevronRight } from '../imageReview/icons/ReviewIcons';
-import type { SidebarSectionState } from '../imageReview/types';
+import type { ReviewSidebarTab } from './sidebar/ReviewSidebar';
+import { MediaType } from '../../api/api/index.defs';
 import type { ImageViewDataDto } from '../../api/api/index.defs';
-
-interface MarkupToolsConfig {
-  activeTool: string;
-  activeColor: string;
-  strokeSize: number;
-  onToolClick: (tool: 'rect' | 'circle' | 'arrow') => void;
-  onColorChange: (c: string) => void;
-  onStrokeSizeChange: (size: number) => void;
-}
+import { useStore } from '../../store';
 
 export interface MediaReviewLayoutProps {
   children: ReactNode;
@@ -27,17 +22,17 @@ export interface MediaReviewLayoutProps {
   versionParam?: string | null;
   /** Called after version switch so the caller can clear drawn shapes etc. */
   onVersionChange?: () => void;
-  /** Markup tools config passed from ImagePlayer (image-specific) */
-  markupTools?: MarkupToolsConfig;
-  /** Opens the A/B compare modal (image-specific) */
+  /** Opens the A/B compare modal (image-specific). Undefined disables the Compare button. */
   onCompare?: () => void;
+  /** Undefined disables the Download button — no source download endpoint wired yet. */
+  onDownload?: () => void;
   /** imageData for the AssetInfoSection dimensions fallback */
   imageData?: ImageViewDataDto | null;
+  /** Slot phải của topbar: Image → zoom%, Video → "Viewing as …" + badge HLS */
+  topBarRight?: ReactNode;
+  /** Override cho nút back — mặc định: history-back nếu có, ngược lại về trang project */
+  onBack?: () => void;
 }
-
-const DEFAULT_SECTIONS: SidebarSectionState = {
-  shapes: true, comments: true, actionLog: true, imageInfo: true,
-};
 
 const MediaReviewLayout = observer(({
   children,
@@ -46,12 +41,19 @@ const MediaReviewLayout = observer(({
   assetId,
   versionParam,
   onVersionChange,
-  markupTools,
   onCompare,
+  onDownload,
   imageData,
+  topBarRight,
+  onBack,
 }: MediaReviewLayoutProps) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<SidebarSectionState>(DEFAULT_SECTIONS);
+  const { sessionStore } = useStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<ReviewSidebarTab>('comments');
   const [searchQuery, setSearchQuery] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -99,65 +101,58 @@ const MediaReviewLayout = observer(({
     }
   };
 
-  const toggleSection = (section: keyof SidebarSectionState) =>
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  const handleHighlightToggle = (id: string | null) => {
+    reviewStore.setHighlightedAnnotation(id);
+    if (id) mediaAdapter.focusAnnotation(id);
+  };
+
+  // Participants — derive from annotation authors, không gọi API mới (quyết định A.2.1).
+  const participants = useMemo<ReviewParticipant[]>(() => {
+    const seen = new Map<string, ReviewParticipant>();
+    for (const a of reviewStore.annotations) {
+      const name = a.authorName ?? a.authorId;
+      if (!name || seen.has(name)) continue;
+      seen.set(name, { key: name, name, initials: name.slice(0, 2).toUpperCase() });
+    }
+    return [...seen.values()];
+  }, [reviewStore.annotations]);
+
+  const fileName =
+    reviewStore.currentVersionMetadata?.fileName ??
+    (reviewStore.assetDetail?.asset as { name?: string } | undefined)?.name;
+
+  const handleBack = onBack ?? (() => {
+    if (location.key !== 'default') navigate(-1);
+    else navigate(`/projects/${sessionStore.currentProjectId}`);
+  });
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[hsl(240,10%,96%)]">
-      <ReviewHeader
-        versions={reviewStore.versions}
-        currentVersionNumber={reviewStore.currentVersionNumber}
-        canGoPrev={currentVersionIdx > 0}
-        canGoNext={currentVersionIdx < sortedVersions.length - 1}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onSelectVersion={handleVersionSelect}
-        onCompare={onCompare ?? (() => {})}
-        reviewStatus={reviewStore.reviewStatus}
-        isReviewLoading={reviewStore.isReviewLoading}
-        onApprove={() => reviewStore.approveReview()}
-        onRequestChanges={() => reviewStore.requestChanges()}
+    <div className="flex h-full flex-col overflow-hidden bg-[var(--color-background)]">
+      <ReviewTopBar
+        projectName={sessionStore.currentProjectName}
+        fileName={fileName}
+        participants={participants}
+        onBack={handleBack}
+        right={topBarRight}
       />
 
-      <div className="relative flex flex-1 overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        <LayersPanel
+          collapsed={leftCollapsed}
+          onToggleCollapsed={() => setLeftCollapsed(v => !v)}
+          annotations={reviewStore.filteredAnnotations}
+          highlightedAnnotationId={reviewStore.highlightedAnnotationId}
+          onHighlightToggle={handleHighlightToggle}
+          variant={mediaAdapter.mediaType === MediaType.VIDEO ? 'video' : 'image'}
+        />
+
         {children}
-        {!sidebarCollapsed && (
-          <button
-            onClick={() => setSidebarCollapsed(true)}
-            title="Hide sidebar"
-            className="absolute right-[336px] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-[hsl(244,30%,80%)] bg-white text-[hsl(237,45%,30%)] shadow-sm transition-all hover:bg-[hsl(240,10%,96%)]"
-          >
-            <IconChevronRight />
-          </button>
-        )}
-        {sidebarCollapsed && (
-          <button
-            onClick={() => setSidebarCollapsed(false)}
-            title="Show sidebar"
-            className="absolute right-2 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-[hsl(244,30%,80%)]/40 bg-white/70 text-[hsl(237,45%,30%)] shadow-sm backdrop-blur-sm transition-all hover:bg-white"
-          >
-            <IconChevronLeft />
-          </button>
-        )}
 
         <ReviewSidebar
-          sidebarCollapsed={sidebarCollapsed}
-          expandedSections={expandedSections}
-          onToggleSection={toggleSection}
-          markupTools={markupTools ? {
-            ...markupTools,
-            isExpanded: expandedSections.shapes,
-            onToggleSection: () => toggleSection('shapes'),
-          } : {
-            activeTool: '',
-            activeColor: '#f43f5e',
-            strokeSize: 4,
-            isExpanded: false,
-            onToolClick: () => {},
-            onColorChange: () => {},
-            onStrokeSizeChange: () => {},
-            onToggleSection: () => toggleSection('shapes'),
-          }}
+          collapsed={rightCollapsed}
+          onToggleCollapsed={() => setRightCollapsed(v => !v)}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
           displayedAnnotations={displayedAnnotations}
           allAnnotationsCount={(reviewStore.annotations as AnnotationWithShapes[]).length}
           activeFilter={reviewStore.activeFilter}
@@ -173,10 +168,7 @@ const MediaReviewLayout = observer(({
           replyText={replyText}
           onFilterChange={f => reviewStore.setActiveFilter(f)}
           onSearchChange={setSearchQuery}
-          onHighlightToggle={id => {
-            reviewStore.setHighlightedAnnotation(id);
-            if (id) mediaAdapter.focusAnnotation(id);
-          }}
+          onHighlightToggle={handleHighlightToggle}
           onToggleExpand={id => reviewStore.toggleThreadExpanded(id)}
           onReplyOpen={id => setReplyingToId(id || null)}
           onReplyTextChange={setReplyText}
@@ -188,6 +180,19 @@ const MediaReviewLayout = observer(({
           currentVersionMetadata={reviewStore.currentVersionMetadata}
           assetDetail={reviewStore.assetDetail}
           imageData={imageData ?? null}
+          versions={reviewStore.versions}
+          currentVersionNumber={reviewStore.currentVersionNumber}
+          canGoPrev={currentVersionIdx > 0}
+          canGoNext={currentVersionIdx < sortedVersions.length - 1}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onSelectVersion={handleVersionSelect}
+          reviewStatus={reviewStore.reviewStatus}
+          isReviewLoading={reviewStore.isReviewLoading}
+          onApprove={() => reviewStore.approveReview()}
+          onRequestChanges={() => reviewStore.requestChanges()}
+          onCompare={onCompare}
+          onDownload={onDownload}
         />
       </div>
     </div>

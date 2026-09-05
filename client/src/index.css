@@ -16,6 +16,11 @@
   /* Additional Variants based on spec context */
   --color-primary-foreground: hsl(0 0% 100%);
   --color-muted-foreground: hsl(244 10% 40%);
+
+  /* Review workspace — dark canvas surfaces */
+  --color-canvas: hsl(252 47% 13%);          /* #171130 - nền canvas review */
+  --color-canvas-elevated: hsl(252 40% 18%); /* toolbar/capsule nổi trên canvas */
+  --color-canvas-border: hsl(252 30% 28%);   /* viền các khối nổi */
 }
 
 @layer utilities {

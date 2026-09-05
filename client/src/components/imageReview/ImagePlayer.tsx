@@ -2,7 +2,7 @@ import { Circle, Image as KonvaImage, Layer, Rect, Stage, Transformer } from 're
 import type Konva from 'konva';
 import type { KonvaShapeData } from '../../utils/coordinateTransform';
 import type { StrokeColor } from './constants';
-import { LeftToolbar } from './LeftToolbar';
+import { FloatingMarkupToolbar } from '../mediaReview/FloatingMarkupToolbar';
 import { BottomCapsuleControls } from './BottomCapsuleControls';
 
 type ToolId = 'select' | 'rect' | 'circle' | 'arrow' | 'pan';
@@ -113,8 +113,8 @@ export function ImagePlayer({
   } = canvas;
 
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-zinc-950">
-      <LeftToolbar
+    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[var(--color-canvas)]">
+      <FloatingMarkupToolbar
         activeTool={activeTool}
         activeColor={activeColor}
         onToolClick={onToolClick}
@@ -131,8 +131,8 @@ export function ImagePlayer({
         style={{ cursor: viewportCursor }}
       >
         {(isImageLoading || isInitialLoading) && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/60">
-            <div className="text-sm text-zinc-400">Loading image…</div>
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-canvas)]/60">
+            <div className="text-sm text-white/70">Loading image…</div>
           </div>
         )}
 

@@ -23,17 +23,17 @@ export function CommentPopupOverlay({
 }: CommentPopupOverlayProps) {
   return (
     <div
-      className="fixed z-50 w-72 rounded-xl border border-[hsl(244,30%,80%)] bg-white p-4 shadow-2xl"
+      className="fixed z-50 w-72 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-2xl"
       style={{
         top: Math.min(window.innerHeight - 260, Math.max(80, position.y - 120)),
         left: Math.min(window.innerWidth - 320, Math.max(60, position.x + 16)),
       }}
     >
-      <div className="mb-3 flex items-center justify-between border-b border-[hsl(244,30%,80%)]/30 pb-2">
-        <span className="text-xs font-black uppercase tracking-wider text-[hsl(237,45%,30%)]">New Comment</span>
+      <div className="mb-3 flex items-center justify-between border-b border-[var(--color-border)]/30 pb-2">
+        <span className="text-xs font-black uppercase tracking-wider text-[var(--color-foreground)]">New Comment</span>
         <button
           onClick={onClose}
-          className="rounded p-0.5 text-[hsl(244,10%,40%)] hover:text-[hsl(237,45%,30%)]"
+          className="rounded p-0.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
         >
           <IconX />
         </button>
@@ -45,23 +45,23 @@ export function CommentPopupOverlay({
           onChange={e => onTextChange(e.target.value)}
           placeholder="Type a comment… use @ to mention"
           rows={3}
-          className="w-full resize-none rounded-lg border border-[hsl(244,30%,80%)]/50 bg-[hsl(240,10%,96%)] p-2.5 text-xs text-[hsl(237,45%,30%)] outline-none transition-all placeholder:text-[hsl(244,10%,40%)]/50 focus:border-[hsl(240,30%,46%)] focus:ring-1 focus:ring-[hsl(240,30%,46%)]/20"
+          className="w-full resize-none rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-background)] p-2.5 text-xs text-[var(--color-foreground)] outline-none transition-all placeholder:text-[var(--color-muted-foreground)]/50 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/20"
         />
         {annotationError && (
-          <p className="text-[10px] text-red-500">{annotationError}</p>
+          <p className="text-[10px] text-[var(--color-destructive)]">{annotationError}</p>
         )}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-[hsl(244,30%,80%)]/40 bg-[hsl(240,10%,96%)] py-1.5 text-xs font-bold text-[hsl(237,45%,30%)] transition-all hover:bg-[hsl(244,30%,80%)]/20"
+            className="flex-1 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-background)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-border)]/20"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="flex-1 rounded-lg bg-[hsl(240,30%,46%)] py-1.5 text-xs font-bold text-white transition-all hover:bg-[hsl(244,30%,61%)] disabled:opacity-60"
+            className="flex-1 rounded-lg bg-[var(--color-primary)] py-1.5 text-xs font-bold text-white transition-all hover:bg-[var(--color-secondary)] disabled:opacity-60"
           >
             {isSaving ? 'Saving…' : 'Post'}
           </button>

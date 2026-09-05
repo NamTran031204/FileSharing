@@ -2,11 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import useImage from 'use-image';
 import { useSearchParams } from 'react-router-dom';
-import CommonLayout from '../layout/CommonLayout';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { MarkupMode, ShapeTool } from '../hooks/useKonvaCanvas';
 import { useStore } from '../store';
-import { DEFAULT_STROKE_SIZE } from '../components/imageReview/constants';
 import type { StrokeColor } from '../components/imageReview/constants';
 import { ImagePlayer } from '../components/imageReview/ImagePlayer';
 import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverlay';
@@ -36,7 +34,6 @@ const ImageReviewPage = observer(() => {
   const [activeMode, setActiveMode] = useState<MarkupMode>('select');
   const [activeShape, setActiveShape] = useState<ShapeTool>('rectangle');
   const [activeColor, setActiveColor] = useState<StrokeColor>('#f43f5e');
-  const [strokeSize, setStrokeSize] = useState(DEFAULT_STROKE_SIZE);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareSliderPos, setCompareSliderPos] = useState(50);
 
@@ -164,23 +161,16 @@ const ImageReviewPage = observer(() => {
   const currentVersionIdx = sortedVersions.findIndex(v => v.versionNumber === store.currentVersionNumber);
 
   return (
-    <CommonLayout>
+    <div className="flex h-screen flex-col overflow-hidden">
       <MediaReviewLayout
         reviewStore={store.core}
         mediaAdapter={adapterRef.current}
         assetId={assetId}
         versionParam={versionParam}
         onVersionChange={() => { setDrawnShapes([]); setSelectedShapeId(null); }}
-        markupTools={{
-          activeTool,
-          activeColor,
-          strokeSize,
-          onToolClick: (tool) => handleToolClick(tool),
-          onColorChange: (c) => setActiveColor(c as StrokeColor),
-          onStrokeSizeChange: setStrokeSize,
-        }}
         onCompare={() => setShowCompareModal(true)}
         imageData={store.imageData}
+        topBarRight={<span>{zoomPercent}%</span>}
       >
         <ImagePlayer
           bgImage={bgImage}
@@ -291,7 +281,7 @@ const ImageReviewPage = observer(() => {
           </div>
         </div>
       )}
-    </CommonLayout>
+    </div>
   );
 });
 

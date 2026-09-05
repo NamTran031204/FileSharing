@@ -3,16 +3,21 @@ import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useSearchParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Circle } from 'react-konva';
-import CommonLayout from '../layout/CommonLayout';
 import { ReviewCoreStore } from '../store/review/ReviewCoreStore';
 import type { AnnotationCore } from '../store/review/ReviewCoreStore';
-import { MediaType } from '../api/api/index.defs';
+import { MediaType, ProcessingStatus, UserGrantedRole } from '../api/api/index.defs';
 import type { MediaAdapter } from '../components/mediaReview/bridge/MediaAdapter';
 import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
 import HlsVideoPlayer from '../components/mediaReview/HlsVideoPlayer';
 import type { HlsVideoPlayerHandle } from '../components/mediaReview/HlsVideoPlayer';
-import VideoAnnotationTimeline from '../components/mediaReview/VideoAnnotationTimeline';
+import type { LoopRegion } from '../components/mediaReview/VideoAnnotationTimeline';
 import type { VideoAnnotation } from '../components/mediaReview/videoAnnotationTypes';
+import { FloatingMarkupToolbar } from '../components/mediaReview/FloatingMarkupToolbar';
+import { VideoBottomCapsuleControls } from '../components/videoReview/VideoBottomCapsuleControls';
+import { StreamHealthPanel } from '../components/videoReview/StreamHealthPanel';
+import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverlay';
+import type { StrokeColor } from '../components/imageReview/constants';
+import { useStore } from '../store';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { Shape } from '../hooks/useKonvaCanvas';
 import { buildShapeInfoList } from '../utils/coordinateTransform';
@@ -76,29 +81,8 @@ function storeAnnToShape(ann: AnnotationCore): Shape | null {
   };
 }
 
-// toolbar
-const IconSelect = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 4l7 18 3-7 7-3L4 4z" strokeLinejoin="round" />
-  </svg>
-);
-const IconRect = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-  </svg>
-);
-const IconCircle = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="9" />
-  </svg>
-);
-const IconPan = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M12 12v.01" strokeLinecap="round" />
-  </svg>
-);
-
 const VideoReviewPage = observer(() => {
+  const { sessionStore } = useStore();
   const [searchParams] = useSearchParams();
   const assetId = searchParams.get('assetId') ?? '';
   const versionParam = searchParams.get('version');
@@ -109,9 +93,11 @@ const VideoReviewPage = observer(() => {
   const [currentMs, setCurrentMs] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [durationMs, setDurationMs] = useState(0);
+  const [loopRegion, setLoopRegion] = useState<LoopRegion | null>(null);
 
   const [videoAnnotations, setVideoAnnotations] = useState<VideoAnnotation[]>([]);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+  const [activeColor, setActiveColor] = useState<StrokeColor>('#f43f5e');
 
   const [commentPopup, setCommentPopup] = useState<{ x: number; y: number } | null>(null);
   const [commentText, setCommentText] = useState('');
@@ -140,6 +126,9 @@ const VideoReviewPage = observer(() => {
 
   const handlePlayerTimeUpdate = (ms: number) => {
     setCurrentMs(ms);
+    if (loopRegion && ms >= loopRegion.outMs) {
+      playerRef.current?.seek(loopRegion.inMs);
+    }
   };
   const handlePlayerDurationChange = (ms: number) => {
     setDurationMs(ms);
@@ -148,6 +137,13 @@ const VideoReviewPage = observer(() => {
     setIsPaused(paused);
     if (!paused) setSelectedTool('pan');
   };
+
+  // Loop/trim mặc định bao trọn video — kéo IN/OUT để thu hẹp vùng lặp (client-side, xem TODO §5-4).
+  useEffect(() => {
+    if (durationMs > 0 && loopRegion === null) {
+      setLoopRegion({ inMs: 0, outMs: durationMs });
+    }
+  }, [durationMs, loopRegion]);
 
   useEffect(() => {
     const store = coreStoreRef.current;
@@ -261,10 +257,12 @@ const VideoReviewPage = observer(() => {
     }
   };
 
-  const handleToolClick = (tool: 'select' | 'rect' | 'circle' | 'pan') => {
-    if (tool === 'select')  setSelectedTool('select');
+  const handleToolClick = (tool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan') => {
+    if (tool === 'select')      setSelectedTool('select');
     else if (tool === 'rect')   setSelectedTool('rect');
     else if (tool === 'circle') setSelectedTool('circle');
+    // useKonvaCanvas không có tool 'arrow' riêng — map như Image (ImageReviewPage.tsx) để hành vi đồng nhất.
+    else if (tool === 'arrow')  setSelectedTool('rotate');
     else setSelectedTool('pan');
     setSelectedShapeId(null);
   };
@@ -279,6 +277,15 @@ const VideoReviewPage = observer(() => {
     playerRef.current?.seek(ms);
   };
 
+  const store = coreStoreRef.current;
+
+  const displayTool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan' =
+    selectedTool === 'pan'    ? 'pan'
+    : selectedTool === 'select' ? 'select'
+    : selectedTool === 'rect'   ? 'rect'
+    : selectedTool === 'circle' ? 'circle'
+    : 'arrow';
+
   const stageInteractive = isPaused && (selectedTool === 'rect' || selectedTool === 'circle' || selectedTool === 'select');
 
   const visibleIds = new Set(
@@ -286,13 +293,11 @@ const VideoReviewPage = observer(() => {
       .filter(a => currentMs >= a.startMs && currentMs <= a.endMs)
       .map(a => a.id),
   );
-  const renderedShapes = drawnShapes.filter(s => visibleIds.has(s.id));
+  const renderedShapes = store.showAnnotations ? drawnShapes.filter(s => visibleIds.has(s.id)) : [];
 
   const previewShape = isDrawing && startPoint && currentPoint
     ? { startPoint, currentPoint, tool: selectedTool }
     : null;
-
-  const store = coreStoreRef.current;
 
   const adapterRef = useRef<MediaAdapter>({
     mediaType: MediaType.VIDEO,
@@ -308,211 +313,172 @@ const VideoReviewPage = observer(() => {
     buildRegion: (_shapes) => [],
   });
 
+  const isReady = store.currentVersionMetadata?.processingStatus === ProcessingStatus.READY;
+  const viewingAsAdmin = sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_ADMIN);
+
   return (
-    <CommonLayout>
+    <div className="flex h-screen flex-col overflow-hidden">
       <MediaReviewLayout
         reviewStore={store}
         mediaAdapter={adapterRef.current}
         assetId={assetId}
         versionParam={versionParam}
+        // TODO(api/design): Compare cho Video Review chưa có tính năng thật (nút hiện disabled, quyết định B.3-2).
+        // Cần 1 vòng thiết kế UI riêng + xác nhận API so sánh 2 version video (side-by-side hoặc A/B) trước khi triển khai.
+        topBarRight={
+          <span className="flex items-center gap-2">
+            <span>Viewing as {viewingAsAdmin ? 'Admin' : 'Customer'}</span>
+            <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[9px] font-black text-[var(--color-foreground)]">HLS</span>
+          </span>
+        }
       >
-        {/* Outer container — measured by useKonvaCanvas for canvas sizing */}
-        <div ref={containerRef} className="relative flex flex-1 overflow-hidden bg-zinc-950">
+        {/* Outer container — measured by HlsVideoPlayer for letterbox-free content sizing */}
+        <div className="relative flex flex-1 overflow-hidden bg-[var(--color-canvas)]">
           <HlsVideoPlayer
             ref={playerRef}
             assetId={store.assetId || assetId}
             versionNumber={store.currentVersionNumber}
             processingStatus={store.currentVersionMetadata?.processingStatus}
+            contentRef={containerRef}
             onTimeUpdate={handlePlayerTimeUpdate}
             onDurationChange={handlePlayerDurationChange}
             onPauseChange={handlePlayerPauseChange}
-            timelineContent={
-              <VideoAnnotationTimeline
-                durationMs={durationMs}
-                currentMs={currentMs}
-                annotations={videoAnnotations}
-                selectedId={selectedShapeId}
-                onSeek={handleSeek}
-                onMarkerClick={handleMarkerClick}
-              />
-            }
-          />
-
-          {containerWidth > 0 && containerHeight > 0 && (
-            <div
-              className="absolute inset-0"
-              style={{ pointerEvents: stageInteractive ? 'auto' : 'none' }}
-            >
-              <Stage
-                ref={stageRef}
-                width={containerWidth}
-                height={containerHeight}
-                scaleX={stageScale}
-                scaleY={stageScale}
-                x={stagePosition.x}
-                y={stagePosition.y}
-                onMouseDown={handleStageMouseDown}
-                onMouseMove={handleStageMouseMove}
-                onWheel={handleStageWheel}
-                style={{ cursor: selectedTool === 'pan' ? 'grab' : selectedTool === 'select' ? 'default' : 'crosshair' }}
+          >
+            {containerWidth > 0 && containerHeight > 0 && (
+              <div
+                className="absolute inset-0"
+                style={{ pointerEvents: stageInteractive ? 'auto' : 'none' }}
               >
-                <Layer>
-                  {renderedShapes.map(s => {
-                    const isSelected = s.id === selectedShapeId;
-                    const strokeColor = isSelected ? 'var(--color-primary)' : s.stroke;
-                    if (s.type === 'rect') {
-                      const rs = s as Shape & { width: number; height: number };
+                <Stage
+                  ref={stageRef}
+                  width={containerWidth}
+                  height={containerHeight}
+                  scaleX={stageScale}
+                  scaleY={stageScale}
+                  x={stagePosition.x}
+                  y={stagePosition.y}
+                  onMouseDown={handleStageMouseDown}
+                  onMouseMove={handleStageMouseMove}
+                  onWheel={handleStageWheel}
+                  style={{ cursor: selectedTool === 'pan' ? 'grab' : selectedTool === 'select' ? 'default' : 'crosshair' }}
+                >
+                  <Layer>
+                    {renderedShapes.map(s => {
+                      const isSelected = s.id === selectedShapeId;
+                      const strokeColor = isSelected ? 'var(--color-primary)' : s.stroke;
+                      if (s.type === 'rect') {
+                        const rs = s as Shape & { width: number; height: number };
+                        return (
+                          <Rect
+                            key={s.id}
+                            x={rs.x}
+                            y={rs.y}
+                            width={rs.width}
+                            height={rs.height}
+                            rotation={rs.rotation ?? 0}
+                            stroke={strokeColor}
+                            strokeWidth={rs.strokeWidth}
+                            fill="transparent"
+                            onClick={() => setSelectedShapeId(s.id)}
+                          />
+                        );
+                      }
+                      const cs = s as Shape & { radius: number };
                       return (
-                        <Rect
+                        <Circle
                           key={s.id}
-                          x={rs.x}
-                          y={rs.y}
-                          width={rs.width}
-                          height={rs.height}
-                          rotation={rs.rotation ?? 0}
+                          x={cs.x}
+                          y={cs.y}
+                          radius={cs.radius}
+                          rotation={cs.rotation ?? 0}
                           stroke={strokeColor}
-                          strokeWidth={rs.strokeWidth}
+                          strokeWidth={cs.strokeWidth}
                           fill="transparent"
                           onClick={() => setSelectedShapeId(s.id)}
                         />
                       );
-                    }
-                    const cs = s as Shape & { radius: number };
-                    return (
-                      <Circle
-                        key={s.id}
-                        x={cs.x}
-                        y={cs.y}
-                        radius={cs.radius}
-                        rotation={cs.rotation ?? 0}
-                        stroke={strokeColor}
-                        strokeWidth={cs.strokeWidth}
-                        fill="transparent"
-                        onClick={() => setSelectedShapeId(s.id)}
-                      />
-                    );
-                  })}
+                    })}
 
-                  {previewShape && previewShape.tool === 'rect' && (() => {
-                    const { x, y, width, height } = getRectProps(previewShape.startPoint, previewShape.currentPoint);
-                    return (
-                      <Rect
-                        x={x} y={y} width={width} height={height}
-                        stroke="rgba(255,255,255,0.8)" strokeWidth={2}
-                        fill="rgba(255,255,255,0.08)"
-                        dash={[6, 3]}
-                        listening={false}
-                      />
-                    );
-                  })()}
-                  {previewShape && previewShape.tool === 'circle' && (() => {
-                    const { x, y, radius } = getCircleProps(previewShape.startPoint, previewShape.currentPoint);
-                    return (
-                      <Circle
-                        x={x} y={y} radius={radius}
-                        stroke="rgba(255,255,255,0.8)" strokeWidth={2}
-                        fill="rgba(255,255,255,0.08)"
-                        dash={[6, 3]}
-                        listening={false}
-                      />
-                    );
-                  })()}
-                </Layer>
-              </Stage>
-            </div>
-          )}
+                    {previewShape && previewShape.tool === 'rect' && (() => {
+                      const { x, y, width, height } = getRectProps(previewShape.startPoint, previewShape.currentPoint);
+                      return (
+                        <Rect
+                          x={x} y={y} width={width} height={height}
+                          stroke={activeColor} strokeWidth={2}
+                          fill="rgba(255,255,255,0.08)"
+                          dash={[6, 3]}
+                          listening={false}
+                        />
+                      );
+                    })()}
+                    {previewShape && previewShape.tool === 'circle' && (() => {
+                      const { x, y, radius } = getCircleProps(previewShape.startPoint, previewShape.currentPoint);
+                      return (
+                        <Circle
+                          x={x} y={y} radius={radius}
+                          stroke={activeColor} strokeWidth={2}
+                          fill="rgba(255,255,255,0.08)"
+                          dash={[6, 3]}
+                          listening={false}
+                        />
+                      );
+                    })()}
+                  </Layer>
+                </Stage>
+              </div>
+            )}
+          </HlsVideoPlayer>
 
-          {/* Drawing toolbar — only visible when video is paused */}
+          {/* Markup toolbar — chỉ hiện khi video đang pause (giữ nguyên hành vi cũ) */}
           {isPaused && (
-            <div className="absolute left-3 top-3 z-30 flex flex-col gap-1 rounded-lg p-1"
-              style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              {(
-                [
-                  { key: 'select', label: 'Select', Icon: IconSelect },
-                  { key: 'rect',   label: 'Rectangle', Icon: IconRect },
-                  { key: 'circle', label: 'Circle', Icon: IconCircle },
-                  { key: 'pan',    label: 'Pan', Icon: IconPan },
-                ] as const
-              ).map(({ key, label, Icon }) => {
-                const active = selectedTool === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    title={label}
-                    onClick={() => handleToolClick(key)}
-                    className="flex h-8 w-8 items-center justify-center rounded transition-colors"
-                    style={{
-                      color: active ? 'var(--color-primary)' : 'rgba(255,255,255,0.7)',
-                      background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Icon />
-                  </button>
-                );
-              })}
-            </div>
+            <FloatingMarkupToolbar
+              activeTool={displayTool}
+              activeColor={activeColor}
+              onToolClick={handleToolClick}
+              onColorChange={setActiveColor}
+            />
           )}
+
+          {isReady && (
+            <VideoBottomCapsuleControls
+              playerRef={playerRef}
+              isPaused={isPaused}
+              currentMs={currentMs}
+              durationMs={durationMs}
+              annotations={videoAnnotations}
+              selectedAnnotationId={selectedShapeId}
+              onMarkerClick={handleMarkerClick}
+              onSeek={handleSeek}
+              showAnnotations={store.showAnnotations}
+              onToggleAnnotations={() => store.toggleAnnotationVisibility()}
+              loopRegion={loopRegion}
+              onLoopRegionChange={setLoopRegion}
+            />
+          )}
+
+          {/* TODO(role-gating): đang hiển thị Stream Health cho MỌI user để dựng UI trước (quyết định B.3-3).
+              Role có sẵn: UserGrantedRole = ROLE_USER | ROLE_ADMIN | ROLE_SA (api/api/index.defs.ts:3010),
+              check bằng sessionStore.isGrantedRole(UserGrantedRole.ROLE_ADMIN).
+              ReviewerRole (REVIEWER | APPROVER) là khái niệm khác, không dùng cho gating này.
+              Cần chốt với BA: "Admin" trong mockup = ROLE_ADMIN hệ thống hay vai trò riêng của review session? */}
+          {isReady && <StreamHealthPanel playerRef={playerRef} />}
         </div>
 
         {/* Comment popup — appears after drawing a shape */}
         {commentPopup && (
-          <div
-            className="fixed z-50 w-64 rounded-xl p-3 shadow-xl"
-            style={{
-              left: commentPopup.x + 8,
-              top: commentPopup.y + 8,
-              background: 'var(--color-card)',
-              border: '1px solid var(--color-border)',
-            }}
-          >
-            <form onSubmit={handleSubmitComment} className="flex flex-col gap-2">
-              <textarea
-                ref={commentInputRef}
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSubmitComment(e as unknown as React.FormEvent); } }}
-                placeholder="Add a comment…"
-                rows={3}
-                className="w-full resize-none rounded-lg p-2 text-sm outline-none"
-                style={{
-                  background: 'var(--color-background)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-foreground)',
-                }}
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleCloseCommentPopup}
-                  className="rounded-lg px-3 py-1 text-xs"
-                  style={{ background: 'transparent', color: 'var(--color-muted-foreground)', cursor: 'pointer', border: 'none' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className="rounded-lg px-3 py-1 text-xs font-medium"
-                  style={{
-                    background: 'var(--color-primary)',
-                    color: 'var(--color-primary-foreground)',
-                    cursor: commentText.trim() ? 'pointer' : 'not-allowed',
-                    opacity: commentText.trim() ? 1 : 0.5,
-                    border: 'none',
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
+          <CommentPopupOverlay
+            position={commentPopup}
+            commentText={commentText}
+            isSaving={store.isSaving}
+            annotationError={store.annotationError}
+            textareaRef={commentInputRef}
+            onTextChange={setCommentText}
+            onSubmit={handleSubmitComment}
+            onClose={handleCloseCommentPopup}
+          />
         )}
       </MediaReviewLayout>
-    </CommonLayout>
+    </div>
   );
 });
 
