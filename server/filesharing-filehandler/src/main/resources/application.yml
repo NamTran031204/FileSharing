@@ -70,6 +70,12 @@ minio:
     thumbnails: thumbnail-bucket
     image-preview: image-preview-bucket
     hls: hls-bucket
+  svc-upload:
+    access-key: ${MINIO_SVC_UPLOAD_ACCESS_KEY:svcuploadfsharing}
+    secret-key: ${MINIO_SVC_UPLOAD_SECRET_KEY:ChangeMe_UploadSecret_2026}
+  svc-download:
+    access-key: ${MINIO_SVC_DOWNLOAD_ACCESS_KEY:svcdownloadfsharing}
+    secret-key: ${MINIO_SVC_DOWNLOAD_SECRET_KEY:ChangeMe_DownloadSecret_2026}
 #  access-key: 5UVTKA00N1U9060FMZW0
 #  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
