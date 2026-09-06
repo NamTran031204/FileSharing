@@ -207,6 +207,110 @@ export interface PageResultUserDto {
   data?: UserDto[];
 }
 
+export interface PartUrlBatchRequestDto {
+  /**  */
+  partNumbers?: number[];
+}
+
+export interface CommonResponsePartUrlBatchResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PartUrlBatchResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PartUrlBatchResponseDto {
+  /**  */
+  sessionId?: string;
+
+  /**  */
+  urls?: object;
+
+  /**  */
+  urlExpiresAt?: Date;
+
+  /**  */
+  expiresAt?: Date;
+}
+
+export interface CompleteUploadSessionRequestDto {
+  /**  */
+  parts?: CompletedPartDto[];
+}
+
+export interface CompletedPartDto {
+  /**  */
+  partNumber?: number;
+
+  /**  */
+  etag?: string;
+
+  /**  */
+  md5?: string;
+}
+
+export interface CommonResponseUploadResourceResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: UploadResourceResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface UploadResourceResponseDto {
+  /**  */
+  sessionId?: string;
+
+  /**  */
+  assetId?: string;
+
+  /**  */
+  fileId?: string;
+
+  /**  */
+  versionNumber?: number;
+
+  /**  */
+  objectName?: string;
+
+  /**  */
+  fileName?: string;
+
+  /**  */
+  fileSize?: string;
+
+  /**  */
+  etag?: string;
+
+  /**  */
+  mimeType?: string;
+
+  /**  */
+  mediaType?: MediaType;
+
+  /**  */
+  uploadStatus?: UploadStatus;
+
+  /**  */
+  processingStatus?: ProcessingStatus;
+
+  /**  */
+  completedAt?: Date;
+}
+
 export interface ReviewSessionDecisionDTO {
   /**  */
   decision?: ReviewSessionStatus;
@@ -1518,13 +1622,16 @@ export interface DownloadFileResponseDto {
   url?: string;
 
   /**  */
-  fileSize?: number;
+  fileSize?: string;
 
   /**  */
   fileName?: string;
 
   /**  */
   mimeType?: string;
+
+  /**  */
+  contentType?: string;
 }
 
 export interface MediaInfoDto {
@@ -1621,7 +1728,7 @@ export interface AssetCreateRequestDto {
   mimeType?: string;
 
   /**  */
-  fileSize?: number;
+  fileSize?: string;
 
   /**  */
   mediaType?: MediaType;
@@ -1650,7 +1757,7 @@ export interface AssetCreateResponseDto {
   version?: MetadataEntity;
 
   /**  */
-  upload?: InitiateUploadResponseDto;
+  upload?: UploadSessionInitResponseDto;
 }
 
 export interface AssetEntity {
@@ -1733,6 +1840,35 @@ export interface CommonResponseAssetCreateResponseDto {
 
   /**  */
   message?: string;
+}
+
+export interface UploadSessionInitResponseDto {
+  /**  */
+  sessionId?: string;
+
+  /**  */
+  uploadMode?: UploadMode;
+
+  /**  */
+  partSize?: string;
+
+  /**  */
+  partCount?: number;
+
+  /**  */
+  declaredSize?: string;
+
+  /**  */
+  urls?: object;
+
+  /**  */
+  urlExpiresAt?: Date;
+
+  /**  */
+  expiresAt?: Date;
+
+  /**  */
+  hardExpiresAt?: Date;
 }
 
 export interface AssetUpdateRequestDto {
@@ -2339,6 +2475,68 @@ export interface PlaybackDataResponseDto {
 
   /**  */
   imageUrl?: string;
+}
+
+export interface StreamingResponseBody {}
+
+export interface CommonResponseUploadSessionStatusResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: UploadSessionStatusResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ReceivedPartDto {
+  /**  */
+  partNumber?: number;
+
+  /**  */
+  size?: string;
+
+  /**  */
+  etag?: string;
+}
+
+export interface UploadSessionStatusResponseDto {
+  /**  */
+  sessionId?: string;
+
+  /**  */
+  status?: UploadSessionStatus;
+
+  /**  */
+  uploadMode?: UploadMode;
+
+  /**  */
+  partSize?: string;
+
+  /**  */
+  partCount?: number;
+
+  /**  */
+  declaredSize?: string;
+
+  /**  */
+  receivedParts?: ReceivedPartDto[];
+
+  /**  */
+  uploadedBytes?: string;
+
+  /**  */
+  expiresAt?: Date;
+
+  /**  */
+  hardExpiresAt?: Date;
+
+  /**  */
+  resource?: UploadResourceResponseDto;
 }
 
 export interface CommonResponseListReviewSessionEntity {
@@ -3007,6 +3205,53 @@ export interface CommonResponseListAnnotationsEntity {
   message?: string;
 }
 
+export interface AnnotationCountsDTO {
+  /**  */
+  openCount?: string;
+
+  /**  */
+  resolvedCount?: string;
+}
+
+export interface CommonResponseAnnotationCountsDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AnnotationCountsDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AbortUploadSessionResponseDto {
+  /**  */
+  sessionId?: string;
+
+  /**  */
+  status?: UploadSessionStatus;
+
+  /**  */
+  abortedAt?: Date;
+}
+
+export interface CommonResponseAbortUploadSessionResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AbortUploadSessionResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
   'ROLE_ADMIN' = 'ROLE_ADMIN',
@@ -3016,6 +3261,25 @@ export enum UserGrantedRole {
 export enum AuthProvider {
   'LOCAL' = 'LOCAL',
   'GOOGLE' = 'GOOGLE'
+}
+
+export enum MediaType {
+  'IMAGE' = 'IMAGE',
+  'VIDEO' = 'VIDEO',
+  'DESIGN' = 'DESIGN'
+}
+
+export enum ProcessingStatus {
+  'PENDING' = 'PENDING',
+  'PROCESSING' = 'PROCESSING',
+  'READY' = 'READY',
+  'FAILED' = 'FAILED'
+}
+
+export enum UploadStatus {
+  'UPLOADING' = 'UPLOADING',
+  'COMPLETED' = 'COMPLETED',
+  'FAILED' = 'FAILED'
 }
 
 export enum ReviewSessionStatus {
@@ -3106,30 +3370,16 @@ export enum ObjectVisibility {
   'PUBLIC' = 'PUBLIC'
 }
 
-export enum MediaType {
-  'IMAGE' = 'IMAGE',
-  'VIDEO' = 'VIDEO',
-  'DESIGN' = 'DESIGN'
-}
-
-export enum ProcessingStatus {
-  'PENDING' = 'PENDING',
-  'PROCESSING' = 'PROCESSING',
-  'READY' = 'READY',
-  'FAILED' = 'FAILED'
-}
-
-export enum UploadStatus {
-  'UPLOADING' = 'UPLOADING',
-  'COMPLETED' = 'COMPLETED',
-  'FAILED' = 'FAILED'
-}
-
 export enum AssetStatus {
   'DRAFT' = 'DRAFT',
   'IN_REVIEW' = 'IN_REVIEW',
   'APPROVED' = 'APPROVED',
   'REQUEST_CHANGES' = 'REQUEST_CHANGES'
+}
+
+export enum UploadMode {
+  'SINGLE' = 'SINGLE',
+  'MULTIPART' = 'MULTIPART'
 }
 
 export enum AnnotationStatus {
@@ -3175,6 +3425,14 @@ export enum RenditionType {
   'SPRITE' = 'SPRITE',
   'WAVEFORM' = 'WAVEFORM',
   'POSTER' = 'POSTER'
+}
+
+export enum UploadSessionStatus {
+  'INITIATED' = 'INITIATED',
+  'UPLOADING' = 'UPLOADING',
+  'COMPLETED' = 'COMPLETED',
+  'ABORTED' = 'ABORTED',
+  'EXPIRED' = 'EXPIRED'
 }
 
 export enum AuditAction {

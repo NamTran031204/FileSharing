@@ -7,7 +7,8 @@ import lombok.Data;
 @Builder
 public class DownloadFileResponseDto {
     private String url;
-    private Double fileSize;
+    private Long fileSize;
     private String fileName;
     private String mimeType;
+    private String contentType;
 }

@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         log.error("Spec Error: ", ex);
 
         return ResponseEntity
-                .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .status(errorCode.getHttpStatus())
                 .body(response);
     }
 

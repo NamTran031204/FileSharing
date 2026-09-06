@@ -16,6 +16,8 @@ import {
   type AnnotationSummaryResponse,
   type SseEmitter,
   type CommonResponseListAnnotationsEntity,
+  type CommonResponseAnnotationCountsDTO,
+  type AnnotationCountsDTO,
   type IList,
   type List,
   type IListResult,
@@ -243,6 +245,27 @@ export class AnnotationsControllerService {
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
       configs.params = { annotationId: params['annotationId'] };
+
+      axios(configs, resolve, reject);
+    });
+  }
+  /**
+   *
+   */
+  static counts(
+    params: {
+      /**  */
+      assetId: string;
+      /**  */
+      versionNumber: number;
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<CommonResponseAnnotationCountsDTO> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + '/api/annotation/counts';
+
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
+      configs.params = { assetId: params['assetId'], versionNumber: params['versionNumber'] };
 
       axios(configs, resolve, reject);
     });

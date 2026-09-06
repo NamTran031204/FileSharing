@@ -77,26 +77,7 @@ public class FileMetadataController {
     // trả về download url phục vụ cho range header request
     @PostMapping("/download")
     public CommonResponse<DownloadFileResponseDto> downloadFile(@RequestBody DownloadFileRequestDto input) {
-        try {
-            MetadataEntity metadataEntity = metadataRepo.findByObjectName(input.getObjectName())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid object name: " + input.getObjectName()));
-            String fileName = metadataEntity.getFileName();
-            if (input.getDownloadFileName() == null || input.getDownloadFileName().isBlank()) {
-                input.setDownloadFileName(fileName);
-            }
-
-            String presignedUrl = minIoService.getPresignedDownloadUrl(input, metadataEntity.getFileSize());
-
-            // Trả về cả URL và fileSize
-            return CommonResponse.success(DownloadFileResponseDto.builder()
-                    .url(presignedUrl)
-                    .fileSize(metadataEntity.getFileSize())
-                    .fileName(fileName)
-                    .mimeType(metadataEntity.getMimeType())
-                    .build());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return CommonResponse.success(metadataService.getDownloadUrl(input));
     }
 
     @PostMapping(value = "/direct-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

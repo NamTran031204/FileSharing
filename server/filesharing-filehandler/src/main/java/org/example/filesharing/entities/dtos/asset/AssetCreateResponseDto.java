@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
+import org.example.filesharing.entities.dtos.upload.UploadSessionInitResponseDto;
 import com.file.service.filesharing.core.entity.models.AssetEntity;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 
@@ -15,5 +15,5 @@ import com.file.service.filesharing.core.entity.models.MetadataEntity;
 public class AssetCreateResponseDto {
     private AssetEntity asset;
     private MetadataEntity version;
-    private InitiateUploadResponseDto upload;
+    private UploadSessionInitResponseDto upload;
 }

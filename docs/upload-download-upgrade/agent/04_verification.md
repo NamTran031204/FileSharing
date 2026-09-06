@@ -526,9 +526,9 @@ git -C $ROOT status --short                                        # -> không f
 |---|---|---|---|---|
 | WP0 | `00_guardrails.md` §6 "DoD WP0" (4 mục) | §4.5 | T-0.3 | ☑ (2026-09-05) — `filesharing-uploadservice` đã gỡ khỏi đĩa + `pom.xml`; `mvn clean install` toàn reactor `BUILD SUCCESS`, Reactor Summary đúng 6 module (core, filehandler, notification, videocodec, imagecodec, imagerawproccess); 0 tham chiếu `uploadservice` ngoài `docs/`/`.claude/`; `.claude/rules/backend-uploadservice.md` đã xoá |
 | WP1 | §6 "DoD WP1" (5 mục) | §1.4, §4.1 | T-1.5 | ☑ (2026-09-05) — xem ghi chú sai lệch bên dưới |
-| WP2 | §6 "DoD WP2" (5 mục — đọc "7 mã" theo D1) | §4.2, §2.1 (bảng partSize), §2.3 C12 | T-2.6 | ☐ |
-| WP3 | §6 "DoD WP3" (5 mục — đọc mục cuối theo D11) | §2.1, §4.5, §2.7 (G1–G3) | T-3.6 | ☐ |
-| WP4 | §6 "DoD WP4" (8 mục) | §2.1–§2.5, §2.7 | T-4.11 | ☐ |
+| WP2 | §6 "DoD WP2" (5 mục — đọc "7 mã" theo D1) | §4.2, §2.1 (bảng partSize), §2.3 C12 | T-2.6 | ☑ (2026-09-05) — xem §5.4 |
+| WP3 | §6 "DoD WP3" (5 mục — đọc mục cuối theo D11) | §2.1, §4.5, §2.7 (G1–G3) | T-3.6 | ☑ (2026-09-05) — xem §5.5 |
+| WP4 | §6 "DoD WP4" (8 mục) | §2.1–§2.5, §2.7 | T-4.11 | ☑ (2026-09-05) — xem §5.6 |
 | WP5 | §6 "DoD WP5" (6 mục) | §2.6, §1.6 | T-5.6 | ☐ |
 | WP6 | §6 "DoD WP6" (4 mục) | §4.3 | T-6.4 | ☐ |
 | WP7 | §6 "DoD WP7" (6 mục) | §4.4, §4.5, §2.3 C13, §2.7 G4 | T-7.8 | ☐ |
@@ -576,3 +576,255 @@ mc admin user svcacct info myminio svcdownloadfsharing --json
 | svc-download `cat` object có sẵn | ra đúng nội dung ✅ |
 
 Filehandler khởi động sạch sau khi thêm 4 key vào `application.yml`/`​.env`: `Started FileSharingApplication in 5.146 seconds`, không có `Failed to bind properties under 'minio'`.
+
+### 5.4 Kết quả thật đã ghi nhận — WP2 (2026-09-05)
+
+**Đã tạo/sửa đúng whitelist §3 WP2 (+ delta D1, D3, D4, D5 của `03_tasks.md` §0.3):**
+- `ErrorCode.java` (core): thêm đúng 7 mã dải `55xx` (`SESSION_NOT_FOUND`=5501, `UPLOAD_INCOMPLETE`=5502, `SIZE_MISMATCH`=5503, `CHECKSUM_MISMATCH`=5504, `SESSION_INVALID_STATE`=5505, `SESSION_LIMIT_EXCEEDED`=5506, `FILE_NOT_READY`=5507).
+- `UploadSessionStatus.java`, `UploadMode.java` (core, mới).
+- `UploadSessionEntity.java` (core, theo delta D3 — không đặt ở filehandler như whitelist gốc ghi nhầm), đúng 16 field, TTL `expireAfterSeconds=172800`.
+- `UploadSessionRepo.java` (filehandler, mới) — `extends MongoRepository<UploadSessionEntity, String>`, chưa cần query method (để dành T-6.2/T-7.6).
+- `UploadSessionService.java` + `UploadSessionServiceImpl.java` (filehandler, mới) — `create/get/touch/markCompleted/markAborted`, công thức `partSize`, ownership check trước mọi thao tác, ném `FileBusinessException` (không `RuntimeException`).
+- `MongoIndexBootstrapConfig.java`: thêm `applyUploadSessionsIndexes()` (đúng delta D5, không tạo file initializer riêng, không bật `auto-index-creation`).
+- `application.yml`: thêm block `upload:` 6 key (đúng delta D4, không tạo `UploadProperties.java`).
+
+**Output thật đã chạy:**
+
+```
+mvn -f server/pom.xml install -pl filesharing-core -DskipTests      → BUILD SUCCESS
+mvn -f server/pom.xml install -pl filesharing-filehandler -DskipTests → BUILD SUCCESS
+
+rg -n "550[1-7]" .../exceptions/ErrorCode.java
+→ đúng 7 dòng (5501..5507)
+
+spring-boot:run -pl filesharing-filehandler
+→ "Started FileSharingApplication in 4.73 seconds ..."
+→ "Mongo indexes bootstrap completed."
+
+db.upload_sessions.getIndexes()
+→ [
+    { key: { _id: 1 }, name: '_id_' },
+    { key: { expiresAt: 1 }, name: 'idx_upload_sessions_ttl', expireAfterSeconds: 172800 },
+    { key: { ownerId: 1, status: 1 }, name: 'idx_upload_sessions_owner_status' },
+    { key: { status: 1, expiresAt: 1 }, name: 'idx_upload_sessions_status_expires' },
+    { key: { uploadId: 1 }, name: 'idx_upload_sessions_upload_id', sparse: true }
+  ]
+
+db.upload_sessions.countDocuments({})   → 0
+```
+
+**Bảng `partSize`** (kiểm bằng `jshell` gọi trực tiếp `UploadSessionServiceImpl` đã compile, dùng `UploadSessionRepo` giả qua `Proxy` — không đụng Mongo/MinIO thật; `max-file-size` được set lớn tạm thời qua reflection chỉ để tách công thức khỏi guard size, không đổi code):
+
+| declaredSize | partSize | partCount |
+|---|---|---|
+| 8 MiB (biên) | 8 MiB | 1 (`uploadId=null` → `SINGLE`) |
+| 8 MiB + 1 | 8 MiB | 2 (`MULTIPART`) |
+| 10 MiB | 8 MiB | 2 |
+| 50 GiB | 8 MiB | 6400 |
+| 100 GiB | 16 MiB | 6400 |
+| 200 GiB | 32 MiB | 6400 |
+| 400 GiB | 64 MiB | 6400 |
+
+Khớp 100% công thức `01_api_contract.md` §0.5. `declaredSize <= 0` và `declaredSize > upload.max-file-size` (mặc định 50 GiB) đều bị `FileBusinessException(BAD_REQUEST)` chặn trước khi gọi `repo.save(...)` — xác nhận bằng `countDocuments({}) == 0` ở trên.
+
+**Ghi chú kỹ thuật (không phải lỗi, không cần dừng):** vì `partSize` bị chặn trần 64 MiB, thuộc tính "`partCount ≤ 10000`" chỉ đúng khi `declaredSize` nằm trong `upload.max-file-size` mặc định (50 GiB, tối đa 6400 part quan sát được). Nếu sau này tăng `upload.max-file-size` vượt ~625 GiB thì `partCount` có thể vượt 10000 — đây là thuộc tính vốn có của đúng công thức đã chốt trong `01_api_contract.md` §0.5, không phải sai lệch cần sửa ở WP2.
+
+### 5.5 Kết quả thật đã ghi nhận — WP3 (2026-09-05)
+
+**Đã tạo/sửa đúng whitelist §3 WP3 (+ delta D6, D7, D11, D12 của `03_tasks.md` §0.3):**
+- `server/pom.xml`: thêm property `<aws.sdk.version>2.31.78</aws.sdk.version>` + BOM `software.amazon.awssdk:bom` trong `dependencyManagement` (đúng delta D7 — property tên `aws.sdk.version`, không phải `awssdk.version`).
+- `server/filesharing-filehandler/pom.xml`: thêm đúng 1 `<dependency>` `software.amazon.awssdk:s3` (không ghi version, lấy từ BOM).
+- `S3Config.java` (mới, đúng delta D6 — tên lớp `S3Config` chứ không phải `S3StorageConfig`): 3 bean `s3Client`, `uploadPresigner` (`@Qualifier("uploadPresigner")`), `downloadPresigner` (`@Qualifier("downloadPresigner")`); không sửa `filesharing-core/.../MinIOConfig.java`.
+- `StorageService.java` (mới) + `S3StorageServiceImpl.java` (mới): đúng 7 thao tác `createMultipartUpload / presignUploadPart / listParts / completeMultipartUpload / abortMultipartUpload / headObject / presignGetObject`; không set `contentMD5(...)` lúc presign; lỗi SDK bọc thành `FileBusinessException(FILE_ERROR)`, không `RuntimeException`; log tối đa `objectName`/`partNumber`, không log URL.
+- `MinIoServiceImpl.java` (sửa, đúng phạm vi `T-3.6`): 4 method multipart (`initiateMultipartUpload`, `getPresignedUrlForPart`, `completeMultipartUpload`, `abortMultipartUpload`) rewire thành adapter gọi `StorageService` (create/complete/abort) + bean `uploadPresigner` dùng chung (presign part với TTL đồng nhất `clamp(partCount × 60s, 1h, 6h)` — thay công thức `calculateExpireTime(partNumber)` cũ ở đường này). Xoá `extractUploadIdFromXml`, `buildCompleteMultipartUploadXml`, field `OkHttpClient httpClient`. **Không thêm dependency nào khác ngoài `software.amazon.awssdk:s3`**; `io.minio:minio` giữ nguyên trong pom (còn dùng cho HLS/uploadSmallFile/deleteFile/download cũ).
+
+**Sai lệch phát sinh khi thực thi, đã hỏi và được người dùng chốt (2026-09-05):** `calculateExpireTime(int)` là 1 trong 4 symbol bị liệt kê để xoá ở `T-3.6`, nhưng khi rà lại thấy nó **vẫn còn 1 caller ngoài phạm vi rewire**: `getPresignedUrlForPart` cũ dùng số. Xoá helper cũ theo đúng danh sách khớp hợp đồng E7. `getPresignedDownloadUrl(DownloadFileRequestDto, Double)` — method này thuộc luồng download cũ, theo `02_schema_config.md` §6.2 + task `T-7.4` chỉ đổi kiểu `Double→long` ở WP7, **chưa** bị thay thế ở WP3/WP4. Xoá `calculateExpireTime` ngay sẽ làm vỡ `getPresignedDownloadUrl`. Theo đúng `00_guardrails.md` §4 ("Nếu còn caller ngoài E7 → STOP, báo người dùng"), đã dừng và hỏi — **người dùng chọn: giữ lại `calculateExpireTime`**, chỉ ngừng gọi nó từ `getPresignedUrlForPart` (đường multipart mới dùng `uploadPresigner` + TTL clamp). `getPresignedDownloadUrl` giữ nguyên hành vi, sẽ được dọn ở WP4/WP7 khi luồng download rewire.
+
+**Output thật đã chạy:**
+
+```
+mvn -f server/pom.xml clean install -DskipTests   → BUILD SUCCESS, 7 module
+  (filesharing, -core, -filehandler, -notification, -videocodec, -imagecodec, -imagerawproccess)
+
+mvn -f server/pom.xml dependency:tree -pl filesharing-filehandler | grep amazon
+→ software.amazon.awssdk:s3:jar:2.31.78:compile (+ transitive: aws-xml-protocol, sdk-core, auth,
+   regions, apache-client (runtime), netty-nio-client (runtime) — TRANSITIVE của artifact s3,
+   KHÔNG khai trực tiếp — đúng tiêu chí "chỉ s3 được khai trực tiếp")
+
+git diff --name-only -- server
+→ server/filesharing-filehandler/pom.xml
+  server/filesharing-filehandler/src/main/java/.../services/impl/MinIoServiceImpl.java
+  server/pom.xml
+git status --short -- server (thêm phần chưa track)
+→ ?? .../configurations/S3Config.java
+  ?? .../services/StorageService.java
+  ?? .../services/impl/S3StorageServiceImpl.java
+```
+
+**Cổng K1 (T-3.2 — bắt buộc trước khi tin cậy hợp đồng E2 SEC-06):** dùng `S3Client`/`S3Presigner` (svc-upload) tạo multipart thật trên bucket `file-sharing`, presign 1 part, PUT bằng `curl.exe`:
+
+| Kịch bản | Kết quả thật |
+|---|---|
+| `Content-MD5` đúng (base64 MD5 nhị phân của part) | `HTTP/1.1 200 OK` + `ETag` |
+| `Content-MD5` sai cố ý | `HTTP/1.1 400 Bad Request` + `<Code>BadDigest</Code>` |
+
+→ **MinIO CÓ validate `Content-MD5`** trên presigned PUT dù không nằm trong `SignedHeaders` lúc presign (đúng thiết kế `02_schema_config.md` §5.2 lưu ý 1). **Không cần đổi hợp đồng E2.** Multipart test đã abort, không rác lại.
+
+**Smoke end-to-end tầng storage (T-3.5)** — 2 part thật 5 MiB mỗi part, object `smoke-storage.bin`:
+
+```
+listParts   → part=1 size=5242880 etag="80d16d4296cede6a48c0a6a467b2ea2c"
+              part=2 size=5242880 etag="f54e80c026763c51009dd3ba98438c9a"
+complete    → etag="94d114baebd7c3184332942b6fa6d179-2"
+head        → contentLength=10485760 etag="94d114baebd7c3184332942b6fa6d179-2" contentType=binary/octet-stream
+mc stat     → Size: 10 MiB, ETag: 94d114baebd7c3184332942b6fa6d179-2   (khớp headObject)
+```
+
+Presign GET (`downloadPresigner`): GET thật → `200`, tải đủ 10485760 byte đúng nội dung; PUT bằng cùng URL → `403 AccessDenied`. **Ghi chú kỹ thuật:** `curl -I` (HEAD) trên URL ký cho GET trả `403` — đây là hành vi SigV4 đúng thiết kế (chữ ký gắn với đúng HTTP method lúc presign, HEAD ≠ GET), không phải lỗi; đã xác nhận lại bằng GET thật (200). Dọn: xoá object test, `mc ls --incomplete` trống.
+
+**Regression hợp đồng E7 (T-3.6, `00_guardrails.md` §6 DoD WP3 mục cuối + `04_verification.md` §2.7 G1–G3):** tạo 1 user test qua `/api/auth/register` + `/api/auth/login` lấy JWT thật, gọi tuần tự cả 3 endpoint legacy **trước** (baseline, code cũ) và **sau** khi rewire (code mới), có PUT part thật lên MinIO ở giữa:
+
+| Endpoint | Baseline (trước rewire) | Sau rewire | Khớp? |
+|---|---|---|---|
+| `POST /api/file-metadata/upload-metadata` | `200`, `data: {uploadId, partUrl}` | `200`, `data: {uploadId, partUrl}` (URL ký bằng `svc-upload`/SDK v2, `X-Amz-Expires=3600` = đúng `clamp(1×60s,1h,6h)`) | ✅ tên field giống hệt |
+| `POST /api/file-metadata/upload/complete` | `200`, `data: "complete upload"` | `200`, `data: "complete upload"` | ✅ byte-for-byte giống hệt |
+| `POST /api/file-metadata/upload/stop-upload` | `500`, `"Type definition error: [simple type, class ...AbortUploadRequestDto]"` | `500`, message giống hệt | ✅ tái hiện đúng lỗi **có sẵn từ trước** (không do WP3 gây ra) |
+
+Lỗi `500` của `stop-upload` là bug tồn tại sẵn trong `AbortUploadRequestDto` (`@Builder` không có `@NoArgsConstructor` → Jackson không dựng được object) — **ngoài phạm vi whitelist WP3** (file không nằm trong danh sách WP3 §3), không sửa; hành vi giống hệt trước/sau rewire nên không phải regression do `T-3.6`.
+
+Dọn dẹp sau test: abort 3 multipart mồ côi (2 từ `stop-upload` lỗi + 1 từ lần gọi `upload-metadata` thất bại do `mimeType` không hỗ trợ lúc dò contract), xoá 2 object test đã complete, xoá 4 document `metadata` + 1 document `user` test — `mc ls --incomplete myminio/file-sharing` trống sau cùng.
+
+**Kết luận WP3:** cả 5 mục DoD gốc (đọc mục cuối theo delta D11) đều xanh; cổng K1 xanh; cổng K4 (hợp đồng E7 không đổi sau rewire) xanh.
+
+### 5.6 Kết quả thật đã ghi nhận — WP4 (2026-09-05)
+
+**Đã tạo/sửa đúng whitelist §3 WP4 (T-4.1 → T-4.11 của `03_tasks.md`):**
+- `GlobalExceptionHandler.java` (core, T-4.1): đổi đúng dòng `handleBusinessException` từ `.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())` sang `.status(errorCode.getHttpStatus())`. Không đụng handler Mongo/`MethodArgumentNotValidException`/handler chung.
+- `entities/dtos/upload/*.java` (9 DTO mới, T-4.3 + T-4.4): `UploadSessionInitResponseDto`, `PartUrlBatchRequestDto`, `PartUrlBatchResponseDto`, `UploadSessionStatusResponseDto`, `ReceivedPartDto`, `CompleteUploadSessionRequestDto`, `CompletedPartDto`, `UploadResourceResponseDto`, `AbortUploadSessionResponseDto` — tên field khớp 100% `01_api_contract.md` §8. Không gắn Bean Validation annotation trên các DTO này (lý do: `MethodArgumentNotValidException` handler trong `GlobalExceptionHandler` vẫn hardcode 500 — nằm ngoài phạm vi cho phép sửa của T-4.1 — nên toàn bộ validate `partNumbers`/`parts` chuyển vào `UploadSessionServiceImpl`, ném `FileBusinessException(BAD_REQUEST)` để đi đúng đường handler đã sửa).
+- `UploadSessionController.java` (mới, T-4.5/T-4.6/T-4.7): `@RequestMapping("api/uploads")`, 4 endpoint E2–E5, thin — chỉ delegate.
+- `UploadSessionService.java` + `UploadSessionServiceImpl.java` (mở rộng từ WP2): thêm `buildInitResponse` (E1), `issuePartUrls` (E2), `getStatus` (E3), `complete` (E4, đúng 12 nhánh + idempotent bằng `findAndModify` atomic), `abort` (E5). Constructor chuyển từ `@RequiredArgsConstructor` sang tường minh để gắn `@Lazy` trên `MetadataService` (xem mục "Sự cố phát sinh" bên dưới).
+- `AssetController.java`: không đổi (URL/chữ ký `createAsset` giữ nguyên).
+- `AssetService.java`: không đổi (chữ ký không cần đổi vì `AssetCreateResponseDto` giữ nguyên tên class).
+- `AssetServiceImpl.java` (T-4.8): `createAsset` + `createNewVersion` không còn gọi `minIoService.initiateMultipartUpload`; thay bằng helper `initiateUploadSession(...)` → `StorageService.createMultipartUpload` (bỏ qua khi `SINGLE`) → `UploadSessionService.create` → `UploadSessionService.buildInitResponse`. Thêm check `fileSize > upload.max-file-size` ở `validateCreateAssetRequest`/`validateCreateVersionRequest` (trước khi tạo Asset/Metadata, không phải chỉ ở tầng session). `buildMetadataVersion` convert `Long` (request) → `Double` (entity, chưa đổi ở WP4).
+- `AssetCreateRequestDto.java`: `fileSize` `Double` → `Long`.
+- `AssetCreateResponseDto.java`: field `upload` đổi kiểu `InitiateUploadResponseDto` → `UploadSessionInitResponseDto`; `asset`/`version` giữ nguyên kiểu entity (delta D13).
+- `FileMetadataController.java`: chỉ method `/download` — bỏ toàn bộ logic cũ (`minIoService.getPresignedDownloadUrl` + try/catch `RuntimeException`), thay bằng `metadataService.getDownloadUrl(input)`. 6 endpoint khác (`/upload-metadata`, `/upload/complete`, `/upload/stop-upload`, `/direct-upload`, `/process-encode`, `/delete/{fileId}`, `/move-to-trash/{fileId}`, `/restore-file/{fileId}`, `/get-file-by-token/{token}`) **không đụng** — không gắn `@Deprecated` (đúng T-7.5, ngoài phạm vi WP4 theo `03_tasks.md`, dù dòng ghi chú whitelist ở `00_guardrails.md` §3 WP4 có nhắc tới; ưu tiên task breakdown chi tiết hơn).
+- `DownloadFileResponseDto.java`: thêm `contentType`; `fileSize` `Double` → `Long`.
+- `MetadataService.java` + `MetadataServiceImpl.java`: thêm `markUploadCompleted` (E4, set `COMPLETED` + `fileSize` thật + `processingStatus`, không Kafka), `publishProcessingJob` (tách riêng để Kafka luôn là bước cuối), `markUploadFailed` (E5), `getDownloadUrl` (E6 — tra metadata → kiểm quyền → kiểm `COMPLETED` → presign, đúng thứ tự E6.4). Kiểm quyền E6 tái dùng nguyên mẫu `ensureAssetPermission`/`ensureProjectPermission`/`ensureFolderPermission`/`isAdmin` đã có ở `AssetServiceImpl`/`ReviewSessionServiceImpl` (copy đúng pattern, không tạo permission service mới — `00_guardrails.md` §2.9), yêu cầu `GrantedProjectPermission.READ` (đúng chữ trong bảng lỗi E6.3, không phải `DOWNLOAD`). Thêm dependency `AssetRepo`, `ProjectRepo`, `FolderRepo`, `StorageService`.
+- `client/src/api/api/**`: chỉ qua `npm run gen-api` (T-4.10).
+
+**Sự cố phát sinh khi thực thi (đã tự xử lý, không đổi hợp đồng, không chạm file ngoài whitelist):**
+
+1. **Circular bean dependency khi khởi động app**: `AssetServiceImpl → UploadSessionService → MetadataService → ProcessingService → AssetServiceImpl` (cạnh `ProcessingServiceImpl → AssetServiceImpl` đã có sẵn từ trước WP4). Sửa bằng `@Lazy` trên tham số `MetadataService` của constructor tường minh trong `UploadSessionServiceImpl` (đúng tiền lệ constructor tường minh đã dùng ở `MinIoServiceImpl`/`S3StorageServiceImpl` cho `@Qualifier`) — không đụng `ProcessingServiceImpl` (ngoài whitelist WP4).
+2. **SEC-03 tự phát hiện và tự sửa**: bản nháp đầu của `initiateUploadSession(...)` có gọi `version.setUploadId(uploadId)` rồi `metadataRepo.save(version)` "cho nhất quán" — khiến `data.version.uploadId` (field cũ của `MetadataEntity`, vẫn còn trong `AssetCreateResponseDto.version` theo delta D13) lộ nguyên `uploadId` thật của S3 ra response E1, vi phạm SEC-03. Phát hiện qua chính smoke test A1 (`Select-String "uploadId"` có kết quả). Đã xoá đoạn set/save đó — `version.uploadId` giữ `null` ở luồng mới; chỉ luồng E7 legacy còn set field này.
+3. **Đọc lại `01_api_contract.md` §E1.4 để diễn giải đúng DoD "response không chứa uploadId"**: E1.4 tự thừa nhận "uploadId chỉ nằm bên trong query string của presigned URL (bắt buộc theo giao thức S3)" — với `uploadMode = MULTIPART`, presigned PUT URL **luôn** chứa literal `uploadId=...` ở query string (yêu cầu bắt buộc của chính REST API `UploadPart` của S3/MinIO, không thể loại bỏ mà vẫn dùng multipart presigned URL). Sau khi xác nhận field `uploadId` **không tồn tại** ở cấp JSON key nào trong khối `upload` (chỉ còn `sessionId, uploadMode, partSize, partCount, declaredSize, urls, urlExpiresAt, expiresAt, hardExpiresAt`), kết luận DoD đã thoả — phần substring còn lại nằm trong giá trị URL là hành vi đã được `01_api_contract.md` ghi nhận, không phải lỗi.
+4. **Hạ tầng Docker dừng ~7 giờ giữa lúc test** (máy chủ dev có thể đã sleep) — toàn bộ container (Mongo/Kafka/MinIO) exited, khiến mọi request trả `403` (JWT filter fail vì không load được `UserDetails` từ Mongo). Không liên quan code WP4. Khắc phục: `docker compose up -d` lại, đăng nhập lấy JWT mới; dữ liệu Mongo/MinIO (volume) còn nguyên sau khi container sống lại.
+5. **`mc rm --incomplete` báo "Object does not exist"` dù `mc ls --incomplete` vẫn liệt kê object** — cùng loại quirk của bản `minio/mc:latest` đang dùng đã ghi nhận ở WP1 §5.3 (ILM). Còn sót đúng 1 multipart test (`wp4-e7-legacy-obj-358327164.bin`, tạo trong lúc test baseline `upload-metadata`, chưa từng PUT part nào) không dọn được qua `mc`; sẽ tự dọn bởi `stale_uploads_expiry=168h` đã cấu hình ở WP1. Không phải rác do complete/abort thật bị lỗi (mọi kịch bản A/B/C8/C9/C11 đều xác nhận `mc ls --incomplete` sạch sau khi đúng luồng complete/abort chạy).
+
+**Output thật đã chạy:**
+
+```
+mvn -f server/pom.xml clean install -DskipTests   → BUILD SUCCESS, 7 module
+
+spring-boot:run -pl filesharing-filehandler
+→ "Started FileSharingApplication in 6.241 seconds ..."
+→ "Mongo indexes bootstrap completed."
+```
+
+**Kịch bản A (happy path, E1→PUT 2 part→E4→idempotent) — 16 MiB, MULTIPART, partSize=8388608, partCount=2:**
+
+```
+E1: sessionId=9fc9068f-... uploadMode=MULTIPART partSize=8388608 partCount=2 urls keys=1,2
+    $e1.data.upload | ConvertTo-Json -Compress | Select-String "uploadId" → chỉ khớp bên trong query string 2 URL (xem mục 3 ở trên); không có key "uploadId"
+PUT part1 → HTTP/1.1 200 OK; PUT part2 → HTTP/1.1 200 OK
+E4 complete → 200, fileSize=16777216, etag=889ad3811946d93330eb7d609db52ecf-2, uploadStatus=COMPLETED, processingStatus=READY
+mc stat → Size: 16 MiB, ETag khớp
+E4 gọi lần 2 (cùng body) → assetId/etag/completedAt giống hệt lần 1 (idempotent, không gọi lại MinIO)
+mc ls --incomplete → trống (sau khi dọn 1 multipart mồ côi từ lần thử đầu dính bug SEC-03 ở trên)
+```
+
+**Kịch bản B (resume — REL-01):**
+
+```
+B1 initiate → partCount=2
+B2 PUT chỉ part 1 → 200
+B3 GET E3 → status=UPLOADING, receivedParts=1 phần tử, uploadedBytes=8388608, expiresAt trượt tiếp (mới hơn E1)
+B4 missing=[2]
+B5 E2 xin url part 2 → urls keys=2
+B6 PUT part 2 → 200
+B7 E4 complete → fileSize=16777216, uploadStatus=COMPLETED
+B8 GET E3 sau complete → status=COMPLETED, receivedParts=[], resource.assetId có giá trị (không gọi lại ListParts)
+```
+
+**Kịch bản C (nhánh lỗi, chạy sau khi `T-4.1` đã fix `GlobalExceptionHandler`):**
+
+| # | Kịch bản | HTTP | code | message |
+|---|---|---|---|---|
+| C1 | Không JWT | 403* | — | — |
+| C2 | Session không tồn tại | 404 | 5501 | Upload session not found: khong-ton-tai |
+| C3 | Sai owner (E3) | 403 | 5104 | File permission Error |
+| C4 | E2 partNumber=0 | 400 | 400 | partNumber 0 out of range [1..2] |
+| C5 | E2 partNumber=141>2 | 400 | 400 | partNumber 141 out of range [1..2] |
+| C6 | E2 batch 51 phần tử | 400 | 400 | partNumbers batch exceeds 50 |
+| C7 | E4 thiếu cả 2 part | 400 | 5502 | Missing parts: [1, 2] |
+| C8 | E4 md5 sai 1 part | 400 | 5504 | Checksum mismatch at parts: [2] |
+| C9 | E4 tổng size lệch (PUT part 2 ngắn) | 400 | 5503 | Expected 16777216 bytes, got 9437184 |
+| C10 | E2 trên session ABORTED | 409 | 5505 | Session is ABORTED, cannot issue part urls |
+| C11 | E5 trên session COMPLETED | 409 | 5505 | Session is COMPLETED, cannot abort |
+| C12 | E1 fileSize > max-file-size | 400 | 400 | fileSize exceeds limit: 53687091200 bytes |
+
+\* C1: hợp đồng ghi 401 `USER_NOT_AUTHENTICATED`, thực tế đo được **403** khi request hoàn toàn không có header `Authorization`. Đây là hành vi có sẵn của tầng Spring Security (JWT filter chain không có `AuthenticationEntryPoint` riêng trả 401) — **không phải regression của WP4**: xác nhận bằng cách gọi thử endpoint khác không thuộc luồng upload (`/api/asset/get-page`) không JWT → cùng 403. Nằm ngoài whitelist WP4 (không có file `SecurityConfig`/`JwtAuthenticationFilter` trong whitelist §3 WP4) — không sửa, ghi nhận lại đây theo đúng tinh thần "sai lệch đã biết, không cần hỏi lại".
+
+**E5 idempotent:** gọi 2 lần liên tiếp trên session đã `ABORTED` → cả 2 lần `200`, cùng `status=ABORTED`. Lưu ý kỹ thuật: response của **lần abort đầu tiên** (vừa `Instant.now()` trong bộ nhớ) có thể hiển thị độ chính xác nano-giây khác với các lần đọc lại sau đó từ Mongo (BSON `Date` chỉ lưu tới mili-giây) — hai lần đọc lại từ DB (sau khi đã persist) cho `abortedAt` giống hệt nhau tới mili-giây. Không phải lỗi nghiệp vụ, không cần sửa.
+
+**Kịch bản E (download, E6):**
+
+| # | Kịch bản | HTTP | code |
+|---|---|---|---|
+| E-1 | Owner, file COMPLETED | 200 | — (body có đủ `url,fileSize,fileName,mimeType,contentType`; `fileSize` là số nguyên) |
+| E-2 | User khác, không quyền | 403 | 5104 |
+| E-3 | objectName không tồn tại | 404 | 5101 |
+| E-4 | File đang UPLOADING (chưa COMPLETED) | 409 | 5507 |
+| E-5 | objectName rỗng | 400 | 5103 |
+| E-6 | GET thật bằng URL trả về | 200, tải đủ 16777216 byte khớp file gốc; PUT bằng cùng URL → 403 |
+
+**Kịch bản G (regression E7, so với baseline WP3 §5.5):**
+
+```
+upload-metadata → 200, data:{uploadId, partUrl} — schema giống hệt baseline
+upload/complete → 200, data:"complete upload" — giống hệt baseline (đã PUT part thật + complete thật)
+upload/stop-upload → 500, "Type definition error: ...AbortUploadRequestDto" — giống hệt baseline
+  (bug có sẵn từ trước WP3/WP4, không do thay đổi GlobalExceptionHandler — vì lỗi này bị bắt ở
+   handler chung `Exception.class`/HttpMessageNotReadable, không phải handler FileBusinessException
+   mà T-4.1 sửa, nên vẫn hardcode 500 y hệt trước)
+```
+
+**Smoke "blast radius" của T-4.1 (bắt buộc — core dùng chung):**
+
+```
+login sai mật khẩu → 500 "Bad credentials" (BadCredentialsException của Spring Security, không phải
+  FileBusinessException/UserBusinessException → rơi vào handler Exception.class, vẫn hardcode 500,
+  hành vi y hệt trước khi sửa — không phải regression)
+GET /api/project/{id}/stats với id không tồn tại → 404, code 5101 "Cannot find project with id..."
+  (TRƯỚC khi sửa: đây từng luôn là 500 — xác nhận fix hoạt động đúng, cải thiện toàn hệ thống,
+   không riêng luồng upload)
+GET /api/asset/get-by-id/{id} không tồn tại → 404, code 404 "Resource not found" (tương tự — trước là 500)
+rg "=== *500|status *=== *500|statusCode *== *500" client/src → 0 kết quả (client không bắt cứng 500)
+```
+
+**`npm run gen-api` (T-4.10):**
+
+```
+git status --short client → chỉ 5 dòng dưới client/src/api/api/ (AnnotationsControllerService.ts,
+  AssetControllerService.ts, AssetVersionControllerService.ts, PlaybackControllerService.ts,
+  index.defs.ts đều " M"; UploadSessionControllerService.ts "??" mới) — không có thay đổi ngoài
+  thư mục generated. Các thay đổi imageReview/mediaReview/index.css trong git status là refactor
+  KHÔNG LIÊN QUAN đã tồn tại từ trước phiên làm việc này (xem memory "Image review refactor").
+rg "UploadSessionInitResponseDto|PartUrlBatchRequestDto" client/src/api/api → có kết quả
+Không chạy `npm run build` ở WP4 (đúng T-4.10 bước 4 — client sẽ gãy type cho tới WP5, nằm trong
+  ràng buộc release §9: T-4.8 + WP5 phải cùng một release).
+```
+
+**Dọn dẹp sau smoke test:** xoá project + 8 asset + 8 metadata + 8 upload_sessions + 2 user test qua mongosh; xoá toàn bộ object test đã commit trên MinIO qua `mc rm`; 1 multipart test không PUT part nào còn sót do quirk `mc rm --incomplete` (mục 5 ở trên) — sẽ tự dọn qua `stale_uploads_expiry`. **Lưu ý cho người dùng:** việc `docker compose up -d` lại (mục 4 ở trên) khiến container `minio-mc` (one-shot) chạy lại `init-bucket.sh`, sinh ra 1 access key/secret key mới ghi vào `server/dockers/config/access.txt` (không phải service account `svc-upload`/`svc-download` — không ảnh hưởng `application.yml`); file `server/filesharing-filehandler/docs/filehandler-openapi.json` cũng bị ghi đè do `OpenApiJsonExporter` tự chạy mỗi lần khởi động app — cả hai là side-effect tự động của việc chạy hạ tầng/app cục bộ, không phải chỉnh sửa thủ công, hiện đang ở trạng thái "modified" chưa commit.
+
+**Kết luận WP4:** cả 8 mục DoD gốc (`00_guardrails.md` §6 "DoD WP4") đều xanh. Ba điểm cần người dùng biết (không chặn nghiệm thu, đã ghi nhận ở trên): (a) HTTP 403 thay vì 401 khi thiếu JWT — hành vi Security có sẵn, ngoài whitelist WP4; (b) `uploadId` vẫn xuất hiện dạng substring bên trong URL đã ký ở nhánh MULTIPART — đúng thiết kế S3, đã acknowledge tại `01_api_contract.md` §E1.4; (c) `access.txt` và `filehandler-openapi.json` bị ghi đè do chạy lại hạ tầng/app, không phải do sửa code WP4.

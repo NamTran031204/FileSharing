@@ -20,7 +20,7 @@ import com.file.service.filesharing.core.exceptions.specException.UserBusinessEx
 import org.example.filesharing.repositories.MediaRenditionRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.repositories.ProcessingJobRepo;
-import org.example.filesharing.services.AssetService;
+import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProcessingService;
 import com.file.service.filesharing.core.utils.StringUtils;
@@ -35,7 +35,7 @@ import java.util.List;
 @Slf4j
 public class ProcessingServiceImpl implements ProcessingService {
 
-    private final AssetService assetService;
+    private final AssetAccessService assetAccessService;
     private final ProcessingJobRepo processingJobRepo;
     private final MediaRenditionRepo mediaRenditionRepo;
     private final MetadataRepo metadataRepo;
@@ -59,7 +59,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber) {
-        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
         ProcessingJobEntity job = processingJobRepo.findById(version.getFileId()).orElse(null);
 
         String errorMessage = version.getProcessingError();
@@ -78,7 +78,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public PlaybackDataResponseDto getPlaybackData(String assetId, Integer versionNumber) {
-        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
 
         if (version.getStatus() != UploadStatus.COMPLETED) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "version is not completed");
@@ -124,7 +124,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public List<MediaRenditionEntity> getRenditions(String assetId, Integer versionNumber) {
-        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
         return mediaRenditionRepo.findByMetadataId(version.getFileId());
     }
 
@@ -165,7 +165,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public String getHlsManifest(String assetId, Integer versionNumber) {
-        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
 
         if (version.getProcessingStatus() != ProcessingStatus.READY) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "video is not ready for playback");
@@ -181,7 +181,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public InputStream getHlsSegment(String assetId, Integer versionNumber, String filename) throws Exception {
-        MetadataEntity version = assetService.getVersion(assetId, versionNumber);
+        MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
 
         MediaRenditionEntity rendition = mediaRenditionRepo
                 .findFirstByMetadataIdAndRenditionType(version.getFileId(), RenditionType.HLS)

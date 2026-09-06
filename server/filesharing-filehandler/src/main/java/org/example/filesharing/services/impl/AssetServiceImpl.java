@@ -5,15 +5,13 @@ import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.asset.*;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
-import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
+import org.example.filesharing.entities.dtos.upload.UploadSessionInitResponseDto;
 import com.file.service.filesharing.core.entity.models.*;
 import org.example.filesharing.entities.models.UserEntity;
-import com.file.service.filesharing.core.entity.models.folder.FolderPermission;
 import com.file.service.filesharing.core.entity.models.folder.FolderStats;
 import com.file.service.filesharing.core.entity.models.project.ProjectStats;
 import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
 import com.file.service.filesharing.core.enums.*;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
@@ -22,13 +20,15 @@ import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.repositories.ProjectRepo;
+import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
-import org.example.filesharing.services.MinIoService;
+import org.example.filesharing.services.StorageService;
+import org.example.filesharing.services.UploadSessionService;
 import org.example.filesharing.services.baseService.BaseAuditService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
 import com.file.service.filesharing.core.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -55,8 +55,15 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final AuditLogService auditLogService;
-    private final MinIoService minIoService;
+    private final UploadSessionService uploadSessionService;
+    private final StorageService storageService;
     private final PasswordEncoder passwordEncoder;
+    private final AssetAccessService assetAccessService;
+
+    private static final long SMALL_FILE_THRESHOLD = 8_388_608L; // 8 MiB — 01_api_contract.md §0.5
+
+    @Value("${upload.max-file-size}")
+    private long maxFileSize;
 
     @Override
     @Transactional
@@ -114,17 +121,17 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         AssetEntity savedAsset = assetRepo.save(newAsset);
 
         String objectName = generateObjectName(fileName);
-        InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
-
         MetadataEntity version = buildMetadataVersion(
             request,
             savedAsset.getAssetId(),
             savedAsset.getProjectId(),
             1,
             objectName,
-            upload.getUploadId()
+            null
         );
         metadataRepo.save(version);
+
+        UploadSessionInitResponseDto upload = initiateUploadSession(savedAsset.getAssetId(), version, request.getFileSize());
 
         incrementProjectAssetCount(project, 1);
         incrementProjectTotalVersions(project, 1);
@@ -411,7 +418,6 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         int nextVersionNumber = currentCount + 1;
 
         String objectName = generateObjectName(requireNormalized(request.getFileName(), "fileName is required"));
-        InitiateUploadResponseDto upload = minIoService.initiateMultipartUpload(objectName, request.getFileSize());
 
         // todo: su dung service metadata
         MetadataEntity version = buildMetadataVersion(
@@ -420,9 +426,11 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             asset.getProjectId(),
             nextVersionNumber,
             objectName,
-            upload.getUploadId()
+            null
         );
         metadataRepo.save(version);
+
+        UploadSessionInitResponseDto upload = initiateUploadSession(asset.getAssetId(), version, request.getFileSize());
 
         asset.setVersionCount(nextVersionNumber);
         if (request.getAssetStatus() != null) {
@@ -525,19 +533,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
     @Override
     public MetadataEntity getVersion(String assetId, Integer versionNumber) {
-        if (StringUtils.isNullOrBlank(assetId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
-        }
-        if (versionNumber == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
-        }
-
-        MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(assetId.trim(), versionNumber)
-                .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
-
-        AssetEntity asset = getAssetOrThrow(version.getAssetId());
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
-        return version;
+        return assetAccessService.getVersion(assetId, versionNumber);
     }
 
     @Override
@@ -594,6 +590,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (request.getFileSize() == null || request.getFileSize() <= 0) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
+        if (request.getFileSize() > maxFileSize) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
+        }
 
         // mediaType is required for backward compatibility, but server computes it from mimeType
         if (request.getMediaType() == null) {
@@ -627,6 +626,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (request.getFileSize() == null || request.getFileSize() <= 0) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
+        if (request.getFileSize() > maxFileSize) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
+        }
 
         if (request.getMediaType() == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "mediaType is required");
@@ -640,6 +642,23 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
             objectName = UUID.randomUUID() + "_" + normalizedFileName;
         } while (metadataRepo.existsByObjectName(objectName));
         return objectName;
+    }
+
+    /**
+     * E1 — initiate the upload_sessions document for a freshly saved MetadataEntity version.
+     * SINGLE mode (declaredSize <= 8 MiB) skips CreateMultipartUpload entirely (01_api_contract.md E1.4).
+     */
+    private UploadSessionInitResponseDto initiateUploadSession(String assetId, MetadataEntity version, long declaredSize) {
+        String ownerId = auditService.getCurrentUserId();
+        boolean single = declaredSize <= SMALL_FILE_THRESHOLD;
+        // SEC-03: the S3 uploadId must never leave the server — do NOT persist it onto
+        // MetadataEntity.uploadId (that field only ever gets populated by the legacy E7 flow).
+        String uploadId = single ? null : storageService.createMultipartUpload(version.getObjectName());
+
+        UploadSessionEntity session = uploadSessionService.create(
+                ownerId, assetId, version.getFileId(), version.getObjectName(), declaredSize, uploadId);
+
+        return uploadSessionService.buildInitResponse(session);
     }
 
         private MetadataEntity buildMetadataVersion(
@@ -659,7 +678,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .downloadFileName(request.getFileName() + "v" + versionNumber)
                 .objectName(objectName)
                 .mimeType(request.getMimeType())
-                .fileSize(request.getFileSize())
+                .fileSize(request.getFileSize() != null ? request.getFileSize().doubleValue() : null)
                 .compressionAlgo(request.getCompressionAlgo())
                 .ownerId(currentUserId)
                 .ownerEmail(currentUserEmail)
@@ -771,18 +790,16 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
             if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
-                ensureFolderInProject(folder, project);
-                ensureFolderPermission(folder, required);
+                assetAccessService.ensureFolderInProject(folder, project);
+                assetAccessService.ensureFolderPermission(folder, required);
                 return;
             }
         }
-        ensureProjectPermission(project, auditService.getCurrentUser(), required);
+        assetAccessService.ensureProjectPermission(project, auditService.getCurrentUser(), required);
     }
 
     private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {
-        if (!Objects.equals(folder.getProjectId(), project.getProjectId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Folder does not belong to project");
-        }
+        assetAccessService.ensureFolderInProject(folder, project);
     }
 
     private void ensureProjectWritable(ProjectEntity project) {
@@ -792,64 +809,19 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     }
 
     private void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
-        ProjectEntity project = getProjectOrThrow(asset.getProjectId());
-        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
-            FolderEntity folder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, required);
-        } else {
-            ensureProjectPermission(project, auditService.getCurrentUser(), required);
-        }
-    }
-
-    private void ensureProjectRead(ProjectEntity project, UserEntity user) {
-        ensureProjectPermission(project, user, GrantedProjectPermission.READ);
-    }
-
-    private void ensureProjectModify(ProjectEntity project, UserEntity user) {
-        ensureProjectPermission(project, user, GrantedProjectPermission.CREATE_FOLDER_ASSET);
-    }
-
-    private void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required) {
-        List<GrantedProjectPermission> permissions = ProjectPermissionResolver.resolveProjectPermissions(
-                project,
-                user,
-                isAdmin(user)
-        );
-        if (!ProjectPermissionResolver.hasPermission(permissions, required)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
+        assetAccessService.ensureAssetPermission(asset, required);
     }
 
     private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
+        assetAccessService.ensureFolderPermission(folder, required);
+    }
 
-        List<FolderPermission> userPermissions = folder.getUserPermissions();
-        if (userPermissions == null || userPermissions.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+    private void ensureProjectRead(ProjectEntity project, UserEntity user) {
+        assetAccessService.ensureProjectPermission(project, user, GrantedProjectPermission.READ);
+    }
 
-        String currentUserId = currentUser.getUserId();
-        for (FolderPermission fp : userPermissions) {
-            if (Objects.equals(fp.getUserId(), currentUserId)) {
-                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
-                    return;
-                }
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-        }
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    private void ensureProjectModify(ProjectEntity project, UserEntity user) {
+        assetAccessService.ensureProjectPermission(project, user, GrantedProjectPermission.CREATE_FOLDER_ASSET);
     }
 
     private void incrementProjectAssetCount(ProjectEntity project, int delta) {
