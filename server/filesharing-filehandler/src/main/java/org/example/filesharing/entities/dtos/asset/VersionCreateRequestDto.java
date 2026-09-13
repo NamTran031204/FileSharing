@@ -15,7 +15,7 @@ public class VersionCreateRequestDto {
     private String assetId;
     private String fileName;
     private String mimeType;
-    private Double fileSize;
+    private Long fileSize;
     private MediaType mediaType;
     private String compressionAlgo;
     private Integer timeToLive;

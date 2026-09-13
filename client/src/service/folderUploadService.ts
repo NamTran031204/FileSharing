@@ -1,5 +1,6 @@
 import {AssetControllerService} from '../api/api/AssetControllerService';
 import {FolderControllerService} from '../api/api/FolderControllerService';
+import {UploadMode, UploadSessionStatus} from '../api/api/index.defs';
 import type {
     FolderTreeCreateResponseDTO,
     FolderTreeMappingDTO,
@@ -7,6 +8,15 @@ import type {
     MediaType,
 } from '../api/api/index.defs';
 import type {FolderFileItem} from '../utils/folderUploadParser';
+import fileApiResource from '../api/fileApi/fileApiResource';
+
+// Cac field kieu "long" o backend (fileSize/partSize/declaredSize) duoc swagger-axios-codegen
+// khai la string de tranh mat chinh xac int64, nhung server thuc te tra ve JSON number - chap nhan ca hai.
+const toNumber = (value: unknown): number => {
+    if (typeof value === 'number') return value;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
 
 export interface CreateFolderTreeInput {
     projectId: string;
@@ -41,9 +51,90 @@ export interface BuildUploadQueueResult {
 export interface AssetUploadSession {
     assetId: string;
     objectName: string;
-    uploadId: string;
-    partUrls: Map<number, string>;
+    sessionId: string;
+    uploadMode: UploadMode;
+    partSize: number;
+    partCount: number;
+    declaredSize: number;
+    urls: Map<number, string>;
+    urlExpiresAt: Date;
+    expiresAt: Date;
+    hardExpiresAt: Date;
 }
+
+// Persist {assetId, objectName, sessionId} theo dinh danh file (ten:size:lastModified) de lan sau
+// (vi du reload tab) nhan dung file cu -> resume dung session/asset da tao, khong goi lai E1 tao
+// asset moi (tranh sinh asset mo coi khi resume - quyet dinh kien truc da duoc nguoi dung duyet).
+const SESSION_SNAPSHOT_PREFIX = 'uploadV2Session:';
+
+interface SessionSnapshot {
+    assetId: string;
+    objectName: string;
+    sessionId: string;
+}
+
+const snapshotKeyFor = (file: File): string =>
+    `${SESSION_SNAPSHOT_PREFIX}${file.name}:${file.size}:${file.lastModified}`;
+
+const persistSessionSnapshot = (file: File, snapshot: SessionSnapshot): void => {
+    try {
+        localStorage.setItem(snapshotKeyFor(file), JSON.stringify(snapshot));
+    } catch {
+        // localStorage khong kha dung (private mode, quota) - khong chan upload
+    }
+};
+
+const readSessionSnapshot = (file: File): SessionSnapshot | null => {
+    try {
+        const raw = localStorage.getItem(snapshotKeyFor(file));
+        return raw ? (JSON.parse(raw) as SessionSnapshot) : null;
+    } catch {
+        return null;
+    }
+};
+
+export const clearSessionSnapshot = (file: File): void => {
+    try {
+        localStorage.removeItem(snapshotKeyFor(file));
+    } catch {
+        // ignore
+    }
+};
+
+// Kiem tra file nay co session dang do (INITIATED/UPLOADING) tu lan truoc khong. Goi TRUOC
+// createAssetUploadSession - neu tra ve khac null thi dung thang session nay, khong goi E1 nua.
+export const findResumableSession = async (file: File): Promise<AssetUploadSession | null> => {
+    const snapshot = readSessionSnapshot(file);
+    if (!snapshot) return null;
+
+    try {
+        const status = await fileApiResource.getUploadSessionStatus(snapshot.sessionId);
+
+        if (status.status !== UploadSessionStatus.INITIATED && status.status !== UploadSessionStatus.UPLOADING) {
+            clearSessionSnapshot(file);
+            return null;
+        }
+
+        return {
+            assetId: snapshot.assetId,
+            objectName: snapshot.objectName,
+            sessionId: snapshot.sessionId,
+            uploadMode: status.uploadMode ?? UploadMode.MULTIPART,
+            partSize: toNumber(status.partSize),
+            partCount: status.partCount ?? 0,
+            declaredSize: toNumber(status.declaredSize),
+            // E3 khong tra presigned URL - PartUrlManager se tu xin qua E2 khi can
+            urls: new Map(),
+            urlExpiresAt: new Date(),
+            expiresAt: status.expiresAt ? new Date(status.expiresAt) : new Date(),
+            hardExpiresAt: status.hardExpiresAt ? new Date(status.hardExpiresAt) : new Date(),
+        };
+    } catch {
+        // session cu khong con dung duoc (het han/khong ton tai) - don snapshot, dung session moi
+        clearSessionSnapshot(file);
+        return null;
+    }
+};
 
 const normalizeFolderMappings = (response?: FolderTreeCreateResponseDTO): FolderTreeMappingDTO[] => {
     if (!response) return [];
@@ -117,11 +208,11 @@ export const buildUploadQueue = (
     return {queue, errors};
 };
 
-const normalizePartUrls = (partUrl?: object): Map<number, string> => {
+const normalizeUrlMap = (urls?: object): Map<number, string> => {
     const map = new Map<number, string>();
-    if (!partUrl) return map;
+    if (!urls) return map;
 
-    Object.entries(partUrl as Record<string, string>).forEach(([key, value]) => {
+    Object.entries(urls as Record<string, string>).forEach(([key, value]) => {
         if (value) {
             map.set(Number(key), String(value));
         }
@@ -139,8 +230,10 @@ export interface CreateAssetUploadSessionInput {
     mediaType: MediaType;
 }
 
+// file duoc truyen kem chi de tinh khoa localStorage (dinh danh resume) - khong gui len server.
 export const createAssetUploadSession = async (
-    input: CreateAssetUploadSessionInput
+    input: CreateAssetUploadSessionInput,
+    file: File
 ): Promise<AssetUploadSession> => {
     const response = await AssetControllerService.createNew({
         body: {
@@ -148,7 +241,8 @@ export const createAssetUploadSession = async (
             folderId: input.folderId,
             fileName: input.fileName,
             mimeType: input.mimeType,
-            fileSize: input.fileSize,
+            // fileSize khai la string trong DTO generated (int64) nhung wire format thuc te la number
+            fileSize: input.fileSize as unknown as string,
             mediaType: input.mediaType,
         },
     });
@@ -159,17 +253,30 @@ export const createAssetUploadSession = async (
 
     const assetId = response.data?.asset?.assetId;
     const objectName = response.data?.version?.objectName;
-    const uploadId = response.data?.upload?.uploadId;
-    const partUrls = normalizePartUrls(response.data?.upload?.partUrl);
+    const upload = response.data?.upload;
+    const urls = normalizeUrlMap(upload?.urls);
+    const partSize = toNumber(upload?.partSize);
+    const partCount = upload?.partCount;
 
-    if (!assetId || !objectName || !uploadId || partUrls.size === 0) {
+    if (!assetId || !objectName || !upload?.sessionId || !partSize || !partCount || urls.size === 0) {
         throw new Error('Upload session is missing from create asset response');
     }
 
-    return {
+    const session: AssetUploadSession = {
         assetId,
         objectName,
-        uploadId,
-        partUrls,
+        sessionId: upload.sessionId,
+        uploadMode: upload.uploadMode ?? UploadMode.MULTIPART,
+        partSize,
+        partCount,
+        declaredSize: toNumber(upload.declaredSize),
+        urls,
+        urlExpiresAt: upload.urlExpiresAt ? new Date(upload.urlExpiresAt) : new Date(),
+        expiresAt: upload.expiresAt ? new Date(upload.expiresAt) : new Date(),
+        hardExpiresAt: upload.hardExpiresAt ? new Date(upload.hardExpiresAt) : new Date(),
     };
+
+    persistSessionSnapshot(file, {assetId, objectName, sessionId: session.sessionId});
+
+    return session;
 };

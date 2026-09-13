@@ -1,26 +1,29 @@
-// adaptive bandwidth detection + limiting
-// ket hop voi adaptive chunking algorithm
+// adaptive bandwidth: download giu nguyen adaptive chunk-size cu (ngoai pham vi WP5);
+// upload chuyen sang hill-climbing concurrency tren TONG throughput, partSize co dinh tu server (khong doi)
 
-// constants
-const MIN_CHUNK_SIZE = 5 * 1024 * 1024;        // 5mb
-const MAX_CHUNK_SIZE = 50 * 1024 * 1024;   // 50mb - chuan s3
-const INITIAL_CHUNK_SIZE = 5 * 1024 * 1024;    // 512kb - cold start
-const TARGET_UPLOAD_TIME_MIN = 1000;       // 1 giay - chunk qua nhanh
-const TARGET_UPLOAD_TIME_MAX = 5000;       // 5 giay - chunk qua cham
-
-const DOWNLOAD_MIN_CHUNK_SIZE = 1 * 1024 * 1024;      // 1mb - chunk nho hon cho download
+// ===== Download - khong doi so voi truoc WP5 =====
+const DOWNLOAD_MIN_CHUNK_SIZE = 1 * 1024 * 1024;      // 1mb
 const DOWNLOAD_MAX_CHUNK_SIZE = 50 * 1024 * 1024;     // 50mb
-const DOWNLOAD_INITIAL_CHUNK_SIZE = 2 * 1024 * 1024;  // 2mb - cold start cho download
+const DOWNLOAD_INITIAL_CHUNK_SIZE = 2 * 1024 * 1024;  // 2mb - cold start
+const DOWNLOAD_TARGET_TIME_MIN = 1000;                // 1 giay - chunk qua nhanh
+const DOWNLOAD_TARGET_TIME_MAX = 5000;                // 5 giay - chunk qua cham
+const DOWNLOAD_MAX_THREADS = 5;
+const DOWNLOAD_MIN_THREADS = 1;
+const DOWNLOAD_INITIAL_THREADS = 1;
 
-// ewma smoothing factor (0.3 = uu tien du lieu moi, nhung giu 70% ky uc cu)
+// ===== Upload - hill-climbing concurrency (WP5) =====
+const UPLOAD_MAX_THREADS = 6;           // upload.max-threads - tran ~6 ket noi/host tren HTTP/1.1
+const UPLOAD_MIN_THREADS = 1;
+const UPLOAD_INITIAL_THREADS = 1;
+const PROBE_EVALUATION_PARTS = 3;       // K part de danh gia mot lan probe
+const PLATEAU_GAIN_THRESHOLD = 0.10;    // tang aggregate < 10% coi la plateau
+const AGGREGATE_WINDOW_MS = 5000;       // cua so truot de do tong throughput dang chay
+
+// ewma smoothing factor (0.3 = uu tien du lieu moi, nhung giu 70% ky uc cu) - dung chung ca 2 mode
 const EWMA_ALPHA = 0.3;
 
-// bandwidth limiting - su dung 70% bandwidth de khong gay nghen
+// bandwidth limiting - su dung 70% bandwidth de khong gay nghen (download pacing + uoc tinh ETA)
 const BANDWIDTH_UTILIZATION_TARGET = 0.7;
-
-const INITIAL_CONCURRENT_THREADS = 1;      // so luong khoi tao
-const MAX_CONCURRENT_THREADS = 5;          // so luong toi da
-const MIN_CONCURRENT_THREADS = 1;          // so luong toi thieu
 
 export interface BandwidthStats {
     instantThroughputBps: number;      // bytes per second (tuc thoi)
@@ -40,24 +43,29 @@ export interface BandwidthStats {
     nextThreads: number;
 }
 
+type ProbeState = 'idle' | 'probing' | 'cooldown';
+
 export class AdaptiveBandwidthManager {
+    private mode: 'upload' | 'download' = 'upload';
+
+    // shared
     private averageThroughputBps: number = 0;
-    private currentChunkSize: number = INITIAL_CHUNK_SIZE;
     private sampleCount: number = 0;
     private isPanicMode: boolean = false;
     private consecutiveFailures: number = 0;
-
-    // luu lich su de phan tich
     private throughputHistory: number[] = [];
     private readonly MAX_HISTORY_SIZE = 20;
+    private currentThreads: number = UPLOAD_INITIAL_THREADS;
 
-    private currentThreads: number = INITIAL_CONCURRENT_THREADS;
-    private estimatedMaxBandwidthBps: number = 0;
+    // download-only: chunk size hien tai (upload khong bao gio doi gia tri nay, chi echo lai partSize)
+    private currentChunkSize: number = DOWNLOAD_INITIAL_CHUNK_SIZE;
 
-    private mode: 'upload' | 'download' = 'upload';
-    private minChunkSize: number = MIN_CHUNK_SIZE;
-    private maxChunkSize: number = MAX_CHUNK_SIZE;
-    private initialChunkSize: number = INITIAL_CHUNK_SIZE;
+    // upload-only: state may hill-climbing
+    private probeState: ProbeState = 'idle';
+    private probeBaselineThroughputBps: number = 0;
+    private partsSinceProbeAction: number = 0;
+    private cooldownPartsRemaining: number = 0;
+    private recentCompletions: Array<{ time: number; bytes: number }> = [];
 
     constructor() {
         this.reset();
@@ -65,16 +73,7 @@ export class AdaptiveBandwidthManager {
 
     setMode(mode: 'upload' | 'download'): void {
         this.mode = mode;
-        if (mode === 'download') {
-            this.minChunkSize = DOWNLOAD_MIN_CHUNK_SIZE;
-            this.maxChunkSize = DOWNLOAD_MAX_CHUNK_SIZE;
-            this.initialChunkSize = DOWNLOAD_INITIAL_CHUNK_SIZE;
-        } else {
-            this.minChunkSize = MIN_CHUNK_SIZE;
-            this.maxChunkSize = MAX_CHUNK_SIZE;
-            this.initialChunkSize = INITIAL_CHUNK_SIZE;
-        }
-        this.currentChunkSize = this.initialChunkSize;
+        this.reset();
     }
 
     getMode(): 'upload' | 'download' {
@@ -84,19 +83,22 @@ export class AdaptiveBandwidthManager {
     // reset ve trang thai ban dau
     reset(): void {
         this.averageThroughputBps = 0;
-
-        this.currentChunkSize = this.initialChunkSize;
-
         this.sampleCount = 0;
         this.isPanicMode = false;
         this.consecutiveFailures = 0;
         this.throughputHistory = [];
 
-        this.currentThreads = INITIAL_CONCURRENT_THREADS;
-        this.estimatedMaxBandwidthBps = 0;
+        this.currentThreads = this.mode === 'upload' ? UPLOAD_INITIAL_THREADS : DOWNLOAD_INITIAL_THREADS;
+        this.currentChunkSize = DOWNLOAD_INITIAL_CHUNK_SIZE;
+
+        this.probeState = 'idle';
+        this.probeBaselineThroughputBps = 0;
+        this.partsSinceProbeAction = 0;
+        this.cooldownPartsRemaining = 0;
+        this.recentCompletions = [];
     }
 
-    // lay kich thuoc chunk hien tai de upload
+    // lay kich thuoc chunk hien tai (chi co y nghia voi download; voi upload day la partSize server da cong bo)
     getCurrentChunkSize(): number {
         return this.currentChunkSize;
     }
@@ -105,48 +107,46 @@ export class AdaptiveBandwidthManager {
         return this.currentThreads;
     }
 
-    // ghi nhan ket qua upload thanh cong va tinh toan chunk size tiep theo
-    // chunkSizeBytes - kich thuoc chunk vua upload (bytes)
-    // uploadTimeMs - thoi gian upload (milliseconds)
-    // remainingBytes - so bytes con lai can upload
-    // partNumber - so thu tu cua chunk
-    // tra ve BandwidthStats
+    // ghi nhan ket qua thanh cong va tinh toan so luong thread tiep theo
+    // chunkSizeBytes - kich thuoc chunk/part vua xong (bytes) - voi upload day la partSize co dinh
+    // uploadTimeMs - thoi gian xu ly (milliseconds)
+    // remainingBytes - so bytes con lai
+    // partNumber - so thu tu (chi de log/debug)
     recordSuccess(
         chunkSizeBytes: number,
         uploadTimeMs: number,
         remainingBytes: number,
         partNumber?: number
     ): BandwidthStats {
-        // reset panic mode khi thanh cong
         this.consecutiveFailures = 0;
         this.isPanicMode = false;
 
-        // tinh thong luong tuc thoi (bytes/second)
         const instantThroughputBps = (chunkSizeBytes / uploadTimeMs) * 1000;
 
-        // cap nhat ewma
-        if (this.sampleCount === 0) {
-            // lan dau tien - dung gia tri tuc thoi
-            this.averageThroughputBps = instantThroughputBps;
+        let nextChunkSize: number;
+        let nextThreads: number;
+
+        if (this.mode === 'upload') {
+            // upload: partSize khong bao gio doi - chi hill-climbing so luong thread tren tong throughput
+            nextChunkSize = chunkSizeBytes;
+            nextThreads = this.hillClimbThreads(chunkSizeBytes);
         } else {
-            // ewma: new_avg = alpha * new_value + (1 - alpha) * old_avg
-            this.averageThroughputBps =
-                EWMA_ALPHA * instantThroughputBps +
-                (1 - EWMA_ALPHA) * this.averageThroughputBps;
+            if (this.sampleCount === 0) {
+                this.averageThroughputBps = instantThroughputBps;
+            } else {
+                this.averageThroughputBps = EWMA_ALPHA * instantThroughputBps + (1 - EWMA_ALPHA) * this.averageThroughputBps;
+            }
+            const result = this.calculateNextDownloadChunkAndThreads(uploadTimeMs);
+            nextChunkSize = result.nextChunkSize;
+            nextThreads = result.nextThreads;
         }
 
         this.sampleCount++;
-
-        // luu vao lich su
         this.throughputHistory.push(instantThroughputBps);
         if (this.throughputHistory.length > this.MAX_HISTORY_SIZE) {
             this.throughputHistory.shift();
         }
 
-        // tinh toan chunk size tiep theo
-        const {nextChunkSize, nextThreads} = this.calculateNextChunkSizeAndThreads(uploadTimeMs, partNumber);
-
-        // tinh thoi gian con lai uoc tinh
         const estimatedTimeRemainingMs = this.estimateTimeRemaining(remainingBytes);
 
         const stats: BandwidthStats = {
@@ -163,113 +163,134 @@ export class AdaptiveBandwidthManager {
             nextThreads,
         };
 
-        // cap nhat chunk size cho lan tiep theo
         this.currentChunkSize = nextChunkSize;
-
         this.currentThreads = nextThreads;
 
-        const partTag = partNumber !== undefined ? `[part ${partNumber}] ` : '';
-        console.log(`${partTag}stat hien tai: threads=${stats.nextThreads}, chunkSize=${this.formatBytes(stats.nextChunkSize)}`);
+        if (partNumber !== undefined) {
+            console.log(`[part ${partNumber}] threads=${stats.nextThreads} throughput=${stats.averageThroughputMbps.toFixed(2)}Mbps`);
+        }
 
         return stats;
     }
 
-    // ghi nhan loi upload - kich hoat panic mode
+    // ghi nhan loi - kich hoat panic mode
     recordFailure(): void {
         this.consecutiveFailures++;
         this.isPanicMode = true;
 
-        // panic mode: giam chunk size xuong muc toi thieu
-        if (this.consecutiveFailures >= 3) {
-            // qua nhieu loi lien tiep - ve muc toi thieu
-            this.currentChunkSize = MIN_CHUNK_SIZE;
+        if (this.mode === 'upload') {
+            // upload: panic mode chi giam thread (san 1) - khong dung toi chunk size vi partSize co dinh
+            this.currentThreads = Math.max(UPLOAD_MIN_THREADS, this.currentThreads - 1);
+            this.probeState = 'idle';
+            console.warn(`upload panic: giam thread xuong ${this.currentThreads}`);
+            return;
+        }
 
-            this.currentThreads = MIN_CONCURRENT_THREADS;
+        if (this.consecutiveFailures >= 3) {
+            this.currentChunkSize = DOWNLOAD_MIN_CHUNK_SIZE;
+            this.currentThreads = DOWNLOAD_MIN_THREADS;
             console.warn('panic mode: nhieu loi lien tiep, reset ve chunk size toi thieu');
         } else {
-            // giam manh chunk size
-            this.currentChunkSize = Math.max(
-                MIN_CHUNK_SIZE,
-                Math.floor(this.currentChunkSize / 2)
-            );
-
-            this.currentThreads = Math.max(MIN_CONCURRENT_THREADS, this.currentThreads - 1);
-
-            console.warn(`upload that bai, giam chunk size xuong ${this.formatBytes(this.currentChunkSize)}`);
+            this.currentChunkSize = Math.max(DOWNLOAD_MIN_CHUNK_SIZE, Math.floor(this.currentChunkSize / 2));
+            this.currentThreads = Math.max(DOWNLOAD_MIN_THREADS, this.currentThreads - 1);
+            console.warn(`download that bai, giam chunk size xuong ${this.formatBytes(this.currentChunkSize)}`);
         }
     }
 
-    // tinh toan kich thuoc chunk va so luong tiep theo
-    // logic:
-    // - tinh tong throughput = chunk_size * so_luong
-    // - neu chua dat 70% bandwidth: tang luong truoc, neu dat max luong thi tang chunk size
-    // - neu qua 70% bandwidth: giam chunk size truoc, neu dat min chunk thi giam luong
-    private calculateNextChunkSizeAndThreads(uploadTimeMs: number, partNumber?: number): {
+    // hill-climbing tren tong throughput (aggregate), chi danh cho upload:
+    //   moi khi mot part hoan thanh:
+    //     aggregate = EWMA(tong bytes hoan thanh / giay, cua so truot AGGREGATE_WINDOW_MS)
+    //     neu dang cooldown sau 1 lan back-off -> giu nguyen, khong probe lai ngay
+    //     neu threads < MAX_THREADS -> probe threads++ ; sau K part: tang < 10% -> lui 1 va cooldown, nguoc lai giu muc moi
+    private hillClimbThreads(chunkSizeBytes: number): number {
+        const now = performance.now();
+        this.recentCompletions.push({time: now, bytes: chunkSizeBytes});
+        this.recentCompletions = this.recentCompletions.filter(e => now - e.time <= AGGREGATE_WINDOW_MS);
+
+        const windowBytes = this.recentCompletions.reduce((sum, e) => sum + e.bytes, 0);
+        const windowSpanMs = this.recentCompletions.length > 1
+            ? now - this.recentCompletions[0].time
+            : 0;
+        const aggregateInstantBps = windowSpanMs > 0 ? (windowBytes / windowSpanMs) * 1000 : (chunkSizeBytes > 0 ? this.averageThroughputBps || windowBytes : 0);
+
+        this.averageThroughputBps = this.sampleCount === 0
+            ? aggregateInstantBps
+            : EWMA_ALPHA * aggregateInstantBps + (1 - EWMA_ALPHA) * this.averageThroughputBps;
+
+        if (this.cooldownPartsRemaining > 0) {
+            this.cooldownPartsRemaining--;
+            return this.currentThreads;
+        }
+
+        if (this.probeState === 'idle') {
+            if (this.currentThreads < UPLOAD_MAX_THREADS) {
+                this.probeBaselineThroughputBps = this.averageThroughputBps;
+                this.probeState = 'probing';
+                this.partsSinceProbeAction = 0;
+                return this.currentThreads + 1;
+            }
+            return this.currentThreads;
+        }
+
+        // probeState === 'probing'
+        this.partsSinceProbeAction++;
+        if (this.partsSinceProbeAction < PROBE_EVALUATION_PARTS) {
+            return this.currentThreads;
+        }
+
+        const gain = this.probeBaselineThroughputBps > 0
+            ? (this.averageThroughputBps - this.probeBaselineThroughputBps) / this.probeBaselineThroughputBps
+            : 1;
+
+        if (gain < PLATEAU_GAIN_THRESHOLD) {
+            // plateau - pipe da day: lui ve threads-1 va giu on dinh, khong probe lai ngay
+            this.probeState = 'cooldown';
+            this.cooldownPartsRemaining = PROBE_EVALUATION_PARTS;
+            return Math.max(UPLOAD_MIN_THREADS, this.currentThreads - 1);
+        }
+
+        // gain tot - giu muc moi, tiep tuc leo o lan goi ke tiep
+        this.probeState = 'idle';
+        return this.currentThreads;
+    }
+
+    // thuat toan cu cho download - GIU NGUYEN, ngoai pham vi WP5 (chi vá contentType o downloadService)
+    private calculateNextDownloadChunkAndThreads(uploadTimeMs: number): {
         nextChunkSize: number;
-        nextThreads: number
+        nextThreads: number;
     } {
         let nextChunkSize = this.currentChunkSize;
         let nextThreads = this.currentThreads;
 
-        // tinh throughput trung binh moi thread
-        const perThreadThroughputBps = this.averageThroughputBps;
-
-        const partTag = partNumber !== undefined ? `[part ${partNumber}] ` : '';
-        console.log(`${partTag}upload time: ${uploadTimeMs}ms, per-thread throughput: ${(perThreadThroughputBps * 8 / (1024 * 1024)).toFixed(2)} Mbps`);
-
-        if (uploadTimeMs < TARGET_UPLOAD_TIME_MIN) {
-            // qua nhanh - uu tien tang thread truoc, sau do tang chunk size
-            console.log(`${partTag}chunk qua nhanh (${uploadTimeMs}ms), can tang throughput`);
-
-            if (nextThreads < MAX_CONCURRENT_THREADS) {
-                // chua dat max thread - tang thread
+        if (uploadTimeMs < DOWNLOAD_TARGET_TIME_MIN) {
+            if (nextThreads < DOWNLOAD_MAX_THREADS) {
                 nextThreads++;
-                console.log(`${partTag}tang so luong thread len ${nextThreads}`);
             } else {
-                // da dat max thread - tang chunk size
                 nextChunkSize = Math.floor(this.currentChunkSize * 1.5);
-                console.log(`${partTag}da dat max thread, tang chunk size len ${this.formatBytes(nextChunkSize)}`);
             }
-        } else if (uploadTimeMs > TARGET_UPLOAD_TIME_MAX) {
-            // qua cham - giam chunk size truoc, sau do giam thread
-            console.log(`${partTag}chunk qua cham (${uploadTimeMs}ms), can giam throughput`);
-
-            if (nextChunkSize > this.minChunkSize) {
+        } else if (uploadTimeMs > DOWNLOAD_TARGET_TIME_MAX) {
+            if (nextChunkSize > DOWNLOAD_MIN_CHUNK_SIZE) {
                 nextChunkSize = Math.floor(this.currentChunkSize / 1.2);
-                console.log(`${partTag}giam chunk size xuong ${this.formatBytes(nextChunkSize)}`);
-            } else if (nextThreads > MIN_CONCURRENT_THREADS) {
+            } else if (nextThreads > DOWNLOAD_MIN_THREADS) {
                 nextThreads--;
-                console.log(`${partTag}da dat min chunk, giam so luong xuong ${nextThreads}`);
             }
-        } else {
-            // trong vung ly tuong (1-5 giay) - co the tang nhe neu throughput tot
-            console.log(`${partTag}thoi gian chunk toi uu (${uploadTimeMs}ms)`);
-
-            // neu dang o giua vung ly tuong va chua max thread, co the tang
-            if (uploadTimeMs < (TARGET_UPLOAD_TIME_MIN + TARGET_UPLOAD_TIME_MAX) / 2) {
-                if (nextThreads < MAX_CONCURRENT_THREADS) {
-                    nextThreads++;
-                    console.log(`${partTag}con headroom, tang thread len ${nextThreads}`);
-                }
+        } else if (uploadTimeMs < (DOWNLOAD_TARGET_TIME_MIN + DOWNLOAD_TARGET_TIME_MAX) / 2) {
+            if (nextThreads < DOWNLOAD_MAX_THREADS) {
+                nextThreads++;
             }
         }
 
-        // gioi han gia tri trong pham vi cho phep
-        nextChunkSize = Math.min(this.maxChunkSize, Math.max(this.minChunkSize, nextChunkSize));
-        nextThreads = Math.min(MAX_CONCURRENT_THREADS, Math.max(MIN_CONCURRENT_THREADS, nextThreads));
+        nextChunkSize = Math.min(DOWNLOAD_MAX_CHUNK_SIZE, Math.max(DOWNLOAD_MIN_CHUNK_SIZE, nextChunkSize));
+        nextThreads = Math.min(DOWNLOAD_MAX_THREADS, Math.max(DOWNLOAD_MIN_THREADS, nextThreads));
 
         return {nextChunkSize, nextThreads};
     }
 
-    // tinh delay can thiet de dat target bandwidth utilization (70%)
-    // giup khong chiem het bang thong cua user
+    // tinh delay can thiet de dat target bandwidth utilization (70%) - dung cho download pacing
     calculatePacingDelay(chunkSizeBytes: number, uploadTimeMs: number): number {
         if (this.averageThroughputBps === 0) return 0;
 
-        // thoi gian ly tuong de upload chunk nay voi 70% bandwidth
         const idealTimeMs = (chunkSizeBytes / (this.averageThroughputBps * BANDWIDTH_UTILIZATION_TARGET)) * 1000;
-
-        // neu upload nhanh hon thoi gian ly tuong, can delay
         const delay = idealTimeMs - uploadTimeMs;
 
         return Math.max(0, delay);
@@ -279,8 +300,11 @@ export class AdaptiveBandwidthManager {
     private estimateTimeRemaining(remainingBytes: number): number {
         if (this.averageThroughputBps === 0) return 0;
 
-        // tinh voi bandwidth da bi limit (70%)
-        const effectiveThroughput = this.averageThroughputBps * this.currentThreads * BANDWIDTH_UTILIZATION_TARGET;
+        // upload: averageThroughputBps da la tong (aggregate) qua hill-climbing, khong nhan lai currentThreads
+        const effectiveThroughput = this.mode === 'upload'
+            ? this.averageThroughputBps * BANDWIDTH_UTILIZATION_TARGET
+            : this.averageThroughputBps * this.currentThreads * BANDWIDTH_UTILIZATION_TARGET;
+
         return (remainingBytes / effectiveThroughput) * 1000;
     }
 
@@ -303,7 +327,6 @@ export class AdaptiveBandwidthManager {
         const stdDev = Math.sqrt(variance);
         const coefficientOfVariation = stdDev / avg;
 
-        // cv < 0.3 = on dinh, > 0.5 = khong on dinh
         if (coefficientOfVariation < 0.3) return 'stable';
         if (coefficientOfVariation > 0.5) return 'unstable';
         return 'stable';

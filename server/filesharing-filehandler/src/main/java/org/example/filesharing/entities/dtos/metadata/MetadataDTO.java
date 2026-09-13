@@ -13,7 +13,7 @@ public class MetadataDTO {
     private String fileName;
     private String objectName;
     private String mimeType;
-    private Double fileSize;
+    private Long fileSize;
     private String compressionAlgo;
     private Integer timeToLive;
 }

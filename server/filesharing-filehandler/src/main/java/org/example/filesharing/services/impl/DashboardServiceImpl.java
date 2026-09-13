@@ -63,7 +63,7 @@ public class DashboardServiceImpl implements DashboardService {
         long totalProjects = projectIds.size();
         long totalAssets = countActiveAssets(projectIds);
         long totalFolders = countActiveFolders(projectIds);
-        double totalStorageBytes = aggregateTotalStorage(projectIds);
+        long totalStorageBytes = aggregateTotalStorage(projectIds);
 
         return DashboardOverviewDTO.builder()
                 .totalProjects(totalProjects)
@@ -124,7 +124,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         Map<String, String> projectNameMap = mapProjectNames(projects);
-        double totalStorageBytes = aggregateTotalStorage(projectIds);
+        long totalStorageBytes = aggregateTotalStorage(projectIds);
         List<StorageStatsDTO.StorageByMediaTypeDTO> byMediaType = aggregateStorageByMediaType(projectIds);
         List<StorageStatsDTO.StorageByProjectDTO> byProject = aggregateStorageByProject(projectIds, projectNameMap);
 
@@ -237,14 +237,14 @@ public class DashboardServiceImpl implements DashboardService {
         return mongoTemplate.count(query, FolderEntity.class);
     }
 
-    private double aggregateTotalStorage(List<String> projectIds) {
+    private long aggregateTotalStorage(List<String> projectIds) {
         List<AssetEntity> assets = fetchActiveAssets(projectIds);
         if (assets.isEmpty()) {
             return 0;
         }
         List<MetadataEntity> allMetadata = fetchMetadataForAssets(assets);
         return allMetadata.stream()
-                .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+                .mapToLong(m -> m.getFileSize() != null ? m.getFileSize() : 0L)
                 .sum();
     }
 
@@ -263,8 +263,8 @@ public class DashboardServiceImpl implements DashboardService {
 
         List<StorageStatsDTO.StorageByMediaTypeDTO> response = new ArrayList<>();
         for (Map.Entry<String, List<MetadataEntity>> entry : byMediaType.entrySet()) {
-            double storageBytes = entry.getValue().stream()
-                    .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+            long storageBytes = entry.getValue().stream()
+                    .mapToLong(m -> m.getFileSize() != null ? m.getFileSize() : 0L)
                     .sum();
             response.add(StorageStatsDTO.StorageByMediaTypeDTO.builder()
                     .mediaType(entry.getKey())
@@ -302,8 +302,8 @@ public class DashboardServiceImpl implements DashboardService {
             if (projectMetadata.isEmpty()) {
                 continue;
             }
-            double storageBytes = projectMetadata.stream()
-                    .mapToDouble(m -> m.getFileSize() != null ? m.getFileSize() : 0)
+            long storageBytes = projectMetadata.stream()
+                    .mapToLong(m -> m.getFileSize() != null ? m.getFileSize() : 0L)
                     .sum();
             response.add(StorageStatsDTO.StorageByProjectDTO.builder()
                     .projectId(projectId)

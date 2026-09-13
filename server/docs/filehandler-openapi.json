@@ -172,6 +172,96 @@
         }
       }
     },
+    "/api/uploads/{sessionId}/part-urls" : {
+      "post" : {
+        "tags" : [ "upload-session-controller" ],
+        "operationId" : "issuePartUrls",
+        "parameters" : [ {
+          "name" : "sessionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PartUrlBatchRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePartUrlBatchResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/uploads/{sessionId}/complete" : {
+      "post" : {
+        "tags" : [ "upload-session-controller" ],
+        "operationId" : "complete",
+        "parameters" : [ {
+          "name" : "sessionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteUploadSessionRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseUploadResourceResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/review-session/{reviewSessionId}/decision" : {
       "post" : {
         "tags" : [ "review-session-controller" ],
@@ -1429,7 +1519,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/upload/complete" : {
@@ -1466,7 +1557,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/upload-metadata" : {
@@ -1503,7 +1595,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/restore-file/{fileId}" : {
@@ -2545,6 +2638,74 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseUserDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/uploads/{sessionId}" : {
+      "get" : {
+        "tags" : [ "upload-session-controller" ],
+        "operationId" : "getStatus",
+        "parameters" : [ {
+          "name" : "sessionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseUploadSessionStatusResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "upload-session-controller" ],
+        "operationId" : "abort",
+        "parameters" : [ {
+          "name" : "sessionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAbortUploadSessionResponseDto"
                 }
               }
             }
@@ -4080,6 +4241,159 @@
           }
         }
       },
+      "PartUrlBatchRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "partNumbers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        }
+      },
+      "CommonResponsePartUrlBatchResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PartUrlBatchResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PartUrlBatchResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "sessionId" : {
+            "type" : "string"
+          },
+          "urls" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "urlExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CompleteUploadSessionRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "parts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CompletedPartDto"
+            }
+          }
+        }
+      },
+      "CompletedPartDto" : {
+        "type" : "object",
+        "properties" : {
+          "partNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "etag" : {
+            "type" : "string"
+          },
+          "md5" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseUploadResourceResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/UploadResourceResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "MediaType" : {
+        "type" : "string",
+        "enum" : [ "IMAGE", "VIDEO", "DESIGN" ]
+      },
+      "ProcessingStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "PROCESSING", "READY", "FAILED" ]
+      },
+      "UploadResourceResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "sessionId" : {
+            "type" : "string"
+          },
+          "assetId" : {
+            "type" : "string"
+          },
+          "fileId" : {
+            "type" : "string"
+          },
+          "versionNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "objectName" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "fileSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "etag" : {
+            "type" : "string"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "mediaType" : {
+            "$ref" : "#/components/schemas/MediaType"
+          },
+          "uploadStatus" : {
+            "$ref" : "#/components/schemas/UploadStatus"
+          },
+          "processingStatus" : {
+            "$ref" : "#/components/schemas/ProcessingStatus"
+          },
+          "completedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "UploadStatus" : {
+        "type" : "string",
+        "enum" : [ "UPLOADING", "COMPLETED", "FAILED" ]
+      },
       "ReviewSessionDecisionDTO" : {
         "type" : "object",
         "properties" : {
@@ -5476,10 +5790,6 @@
           }
         }
       },
-      "MediaType" : {
-        "type" : "string",
-        "enum" : [ "IMAGE", "VIDEO", "DESIGN" ]
-      },
       "MetadataEntity" : {
         "type" : "object",
         "properties" : {
@@ -5515,8 +5825,8 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "compressionAlgo" : {
             "type" : "string"
@@ -5583,14 +5893,6 @@
             "format" : "date-time"
           }
         }
-      },
-      "ProcessingStatus" : {
-        "type" : "string",
-        "enum" : [ "PENDING", "PROCESSING", "READY", "FAILED" ]
-      },
-      "UploadStatus" : {
-        "type" : "string",
-        "enum" : [ "UPLOADING", "COMPLETED", "FAILED" ]
       },
       "EmailSenderRequestDto" : {
         "required" : [ "objectName", "toEmail", "uploadLink" ],
@@ -5748,8 +6050,8 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "compressionAlgo" : {
             "type" : "string"
@@ -5826,13 +6128,16 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "fileName" : {
             "type" : "string"
           },
           "mimeType" : {
+            "type" : "string"
+          },
+          "contentType" : {
             "type" : "string"
           }
         }
@@ -5952,8 +6257,8 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "mediaType" : {
             "$ref" : "#/components/schemas/MediaType"
@@ -5990,7 +6295,7 @@
             "$ref" : "#/components/schemas/MetadataEntity"
           },
           "upload" : {
-            "$ref" : "#/components/schemas/InitiateUploadResponseDto"
+            "$ref" : "#/components/schemas/UploadSessionInitResponseDto"
           }
         }
       },
@@ -6084,6 +6389,51 @@
           },
           "message" : {
             "type" : "string"
+          }
+        }
+      },
+      "UploadMode" : {
+        "type" : "string",
+        "enum" : [ "SINGLE", "MULTIPART" ]
+      },
+      "UploadSessionInitResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "sessionId" : {
+            "type" : "string"
+          },
+          "uploadMode" : {
+            "$ref" : "#/components/schemas/UploadMode"
+          },
+          "partSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "partCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "declaredSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "urls" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "urlExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "hardExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
@@ -6880,6 +7230,90 @@
       },
       "StreamingResponseBody" : {
         "type" : "object"
+      },
+      "CommonResponseUploadSessionStatusResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/UploadSessionStatusResponseDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReceivedPartDto" : {
+        "type" : "object",
+        "properties" : {
+          "partNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "etag" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UploadSessionStatus" : {
+        "type" : "string",
+        "enum" : [ "INITIATED", "UPLOADING", "COMPLETED", "ABORTED", "EXPIRED" ]
+      },
+      "UploadSessionStatusResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "sessionId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/UploadSessionStatus"
+          },
+          "uploadMode" : {
+            "$ref" : "#/components/schemas/UploadMode"
+          },
+          "partSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "partCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "declaredSize" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedParts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReceivedPartDto"
+            }
+          },
+          "uploadedBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "hardExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resource" : {
+            "$ref" : "#/components/schemas/UploadResourceResponseDto"
+          }
+        }
       },
       "CommonResponseListReviewSessionEntity" : {
         "type" : "object",
@@ -7792,6 +8226,38 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/AnnotationCountsDTO"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AbortUploadSessionResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "sessionId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/UploadSessionStatus"
+          },
+          "abortedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAbortUploadSessionResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AbortUploadSessionResponseDto"
           },
           "code" : {
             "type" : "string"

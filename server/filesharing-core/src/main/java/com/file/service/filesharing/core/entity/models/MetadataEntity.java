@@ -8,6 +8,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.time.Instant;
 
@@ -36,7 +38,9 @@ public class MetadataEntity {
     private String changeNote;
 
     private String mimeType;
-    private Double fileSize;
+    // ghi moi luon la int64; document cu luu BSON double van doc duoc qua ConversionService
+    @Field(targetType = FieldType.INT64)
+    private Long fileSize;
     private String compressionAlgo;
     private String uploadId;
     private String shareToken;

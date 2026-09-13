@@ -650,6 +650,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
      */
     private UploadSessionInitResponseDto initiateUploadSession(String assetId, MetadataEntity version, long declaredSize) {
         String ownerId = auditService.getCurrentUserId();
+        // SEC-08: chan tran session TRUOC khi cham storage, de lan bi 429 khong sinh multipart rac
+        uploadSessionService.ensureSessionQuota(ownerId);
         boolean single = declaredSize <= SMALL_FILE_THRESHOLD;
         // SEC-03: the S3 uploadId must never leave the server — do NOT persist it onto
         // MetadataEntity.uploadId (that field only ever gets populated by the legacy E7 flow).
@@ -678,7 +680,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .downloadFileName(request.getFileName() + "v" + versionNumber)
                 .objectName(objectName)
                 .mimeType(request.getMimeType())
-                .fileSize(request.getFileSize() != null ? request.getFileSize().doubleValue() : null)
+                .fileSize(request.getFileSize())
                 .compressionAlgo(request.getCompressionAlgo())
                 .ownerId(currentUserId)
                 .ownerEmail(currentUserEmail)

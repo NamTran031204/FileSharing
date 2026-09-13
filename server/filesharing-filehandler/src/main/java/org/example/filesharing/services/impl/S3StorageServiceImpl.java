@@ -20,8 +20,11 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListMultipartUploadsRequest;
+import software.amazon.awssdk.services.s3.model.ListMultipartUploadsResponse;
 import software.amazon.awssdk.services.s3.model.ListPartsRequest;
 import software.amazon.awssdk.services.s3.model.ListPartsResponse;
+import software.amazon.awssdk.services.s3.model.MultipartUpload;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.Part;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -30,6 +33,7 @@ import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -222,6 +226,38 @@ public class S3StorageServiceImpl implements StorageService {
         } catch (SdkException e) {
             log.error("Failed to presign download url for object: {}", objectName, e);
             throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to presign download url");
+        }
+    }
+
+    @Override
+    public List<MultipartUploadSummary> listMultipartUploads() {
+        try {
+            List<MultipartUploadSummary> result = new ArrayList<>();
+            String keyMarker = null;
+            String uploadIdMarker = null;
+            boolean truncated = true;
+
+            while (truncated) {
+                ListMultipartUploadsRequest request = ListMultipartUploadsRequest.builder()
+                        .bucket(bucketName)
+                        .keyMarker(keyMarker)
+                        .uploadIdMarker(uploadIdMarker)
+                        .build();
+                ListMultipartUploadsResponse response = s3Client.listMultipartUploads(request);
+                for (MultipartUpload upload : response.uploads()) {
+                    result.add(new MultipartUploadSummary(upload.key(), upload.uploadId(), upload.initiated()));
+                }
+                truncated = Boolean.TRUE.equals(response.isTruncated());
+                keyMarker = response.nextKeyMarker();
+                uploadIdMarker = response.nextUploadIdMarker();
+                if (keyMarker == null && uploadIdMarker == null) {
+                    truncated = false;
+                }
+            }
+            return result;
+        } catch (SdkException e) {
+            log.error("Failed to list multipart uploads on bucket: {}", bucketName, e);
+            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to list multipart uploads");
         }
     }
 

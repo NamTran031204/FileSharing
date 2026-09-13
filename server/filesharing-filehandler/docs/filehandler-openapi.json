@@ -1519,7 +1519,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/upload/complete" : {
@@ -1556,7 +1557,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/upload-metadata" : {
@@ -1593,7 +1595,8 @@
           "500" : {
             "description" : "Internal Server Error"
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/api/file-metadata/restore-file/{fileId}" : {
@@ -5822,8 +5825,8 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "compressionAlgo" : {
             "type" : "string"
@@ -6047,8 +6050,8 @@
             "type" : "string"
           },
           "fileSize" : {
-            "type" : "number",
-            "format" : "double"
+            "type" : "integer",
+            "format" : "int64"
           },
           "compressionAlgo" : {
             "type" : "string"

@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -66,6 +67,9 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     @Value("${upload.verify-etag-md5}")
     private boolean verifyEtagMd5;
 
+    @Value("${upload.max-sessions-per-user}")
+    private int maxSessionsPerUser;
+
     private Duration sessionIdleTtl;
 
     @Value("${upload.session-idle-ttl}")
@@ -81,6 +85,16 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     }
 
     @Override
+    public void ensureSessionQuota(String ownerId) {
+        long openSessions = uploadSessionRepo.countByOwnerIdAndStatusIn(
+                ownerId, List.of(UploadSessionStatus.INITIATED, UploadSessionStatus.UPLOADING));
+        if (openSessions >= maxSessionsPerUser) {
+            throw new FileBusinessException(ErrorCode.SESSION_LIMIT_EXCEEDED,
+                    "Too many concurrent upload sessions: " + maxSessionsPerUser);
+        }
+    }
+
+    @Override
     public UploadSessionEntity create(String ownerId, String assetId, String metadataId, String objectName,
                                        long declaredSize, String uploadId) {
         if (declaredSize <= 0) {
@@ -89,6 +103,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
         if (declaredSize > maxFileSize) {
             throw new FileBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
         }
+        ensureSessionQuota(ownerId);
 
         long partSize = computePartSize(declaredSize);
         int partCount = (int) Math.ceil(declaredSize / (double) partSize);
@@ -173,6 +188,13 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     public UploadSessionEntity markAborted(UploadSessionEntity session) {
         session.setStatus(UploadSessionStatus.ABORTED);
         session.setCompletedAt(Instant.now());
+        return uploadSessionRepo.save(session);
+    }
+
+    @Override
+    public UploadSessionEntity markExpired(UploadSessionEntity session) {
+        session.setStatus(UploadSessionStatus.EXPIRED);
+        // expiresAt is left untouched: the Mongo TTL index removes the document 48h after it
         return uploadSessionRepo.save(session);
     }
 
@@ -550,5 +572,25 @@ public class UploadSessionServiceImpl implements UploadSessionService {
         } catch (FileBusinessException e) {
             return false;
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // WP6 — read-only queries for the GC / reconcile jobs
+    // -------------------------------------------------------------------------
+
+    @Override
+    public List<UploadSessionEntity> findExpiredLiveSessions(Instant now) {
+        return uploadSessionRepo.findByStatusInAndExpiresAtBefore(
+                List.of(UploadSessionStatus.INITIATED, UploadSessionStatus.UPLOADING), now);
+    }
+
+    @Override
+    public Optional<UploadSessionEntity> findByUploadId(String uploadId) {
+        return uploadSessionRepo.findByUploadId(uploadId);
+    }
+
+    @Override
+    public List<UploadSessionEntity> findCompletedSessions() {
+        return uploadSessionRepo.findByStatus(UploadSessionStatus.COMPLETED);
     }
 }

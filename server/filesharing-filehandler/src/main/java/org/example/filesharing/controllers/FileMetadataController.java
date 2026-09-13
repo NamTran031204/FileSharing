@@ -33,8 +33,10 @@ public class FileMetadataController {
     private final MetadataRepo metadataRepo;
     private final VideoEncodeProducer videoEncodeProducer;
 
+    @Deprecated
     @PostMapping("/upload-metadata")
     public CommonResponse<InitiateUploadResponseDto> startUpload(@RequestBody MetadataDTO metadataDTO) {
+        log.warn("DEPRECATED endpoint called: {} - migrate to {}", "/api/file-metadata/upload-metadata", "/api/asset/create-new");
         try {
             if (StringUtils.isNullOrBlank(metadataDTO.getObjectName())) {
                 return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "objectName is required");
@@ -48,8 +50,10 @@ public class FileMetadataController {
         }
     }
 
+    @Deprecated
     @PostMapping("/upload/complete")
     public CommonResponse<String> uploadComplete(@RequestBody CompleteUploadRequest input) {
+        log.warn("DEPRECATED endpoint called: {} - migrate to {}", "/api/file-metadata/upload/complete", "/api/uploads/{sessionId}/complete");
         if (input.getObjectName() == null || input.getObjectName().isBlank()) {
             log.error("objectName is required");
             return CommonResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR, "objectName is required");
@@ -67,8 +71,10 @@ public class FileMetadataController {
         return CommonResponse.success("complete upload");
     }
 
+    @Deprecated
     @PostMapping("/upload/stop-upload")
     public CommonResponse<String> stopUpload(@RequestBody AbortUploadRequestDto input) {
+        log.warn("DEPRECATED endpoint called: {} - migrate to {}", "/api/file-metadata/upload/stop-upload", "/api/uploads/{sessionId}");
         minIoService.abortMultipartUpload(input.getObjectName(), input.getUploadId());
         metadataService.uploadFailed(input.getObjectName(), input.getUploadId());
         return CommonResponse.success("stopped upload");
@@ -86,7 +92,7 @@ public class FileMetadataController {
         dto.setFileName(file.getOriginalFilename());
         dto.setObjectName(UUID.randomUUID() + "_" + file.getOriginalFilename());
         dto.setMimeType(file.getContentType());
-        dto.setFileSize((double) file.getSize());
+        dto.setFileSize(file.getSize());
         dto.setCompressionAlgo(detectCompressionAlgo(file.getOriginalFilename(), file.getContentType()));
 
         MetadataEntity response = metadataService.saveMetadata(dto, "");

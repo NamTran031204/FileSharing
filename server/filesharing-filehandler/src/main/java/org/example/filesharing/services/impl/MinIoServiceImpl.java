@@ -40,6 +40,10 @@ public class MinIoServiceImpl implements MinIoService {
     private static final long LEGACY_PART_URL_TTL_MIN_SECONDS = 3600L;
     private static final long LEGACY_PART_URL_TTL_MAX_SECONDS = 21600L;
 
+    // TTL presigned GET cua cac duong khong thuoc E6 (processing / image data)
+    private static final long DOWNLOAD_TTL_MIN_SECONDS = 900L;
+    private static final long DOWNLOAD_TTL_MAX_SECONDS = 14400L;
+
     private final MinioClient minioClient;
     private final MetadataRepo metadataRepo;
     private final StorageService storageService;
@@ -62,14 +66,14 @@ public class MinIoServiceImpl implements MinIoService {
     }
 
     @Override
-    public InitiateUploadResponseDto initiateMultipartUpload(String objectName, Double fileSize) {
+    public InitiateUploadResponseDto initiateMultipartUpload(String objectName, long fileSize) {
         if (objectName == null || objectName.isBlank()) {
             throw new IllegalArgumentException("Object name cannot be null or empty");
         }
         try {
             String uploadId = storageService.createMultipartUpload(objectName);
 
-            int numberOfPart = fileSize.intValue() / CHUNK_SIZE + 1;
+            int numberOfPart = (int) (fileSize / CHUNK_SIZE + 1);
             long ttlSeconds = clampLegacyPartUrlTtl(numberOfPart);
 
             log.info("Number of parts: {}", numberOfPart);
@@ -168,7 +172,7 @@ public class MinIoServiceImpl implements MinIoService {
     }
 
     @Override
-    public String getPresignedDownloadUrl(DownloadFileRequestDto input, Double fileSize) throws Exception {
+    public String getPresignedDownloadUrl(DownloadFileRequestDto input, long fileSize) throws Exception {
         Map<String, String> queryParams = new HashMap<>();
 
         // Content-Disposition header để browser download với tên file custom
@@ -182,7 +186,7 @@ public class MinIoServiceImpl implements MinIoService {
                         .method(Method.GET)
                         .bucket(bucketName)
                         .object(input.getObjectName())
-                        .expiry(calculateExpireTime((int) (fileSize / (5 * 1024 * 1024))), TimeUnit.SECONDS)
+                        .expiry((int) clampDownloadTtl(fileSize), TimeUnit.SECONDS)
                         .extraQueryParams(queryParams)
                         .build()
         );
@@ -241,20 +245,13 @@ public class MinIoServiceImpl implements MinIoService {
         }
     }
 
-    // tra ve so giay
-    private int calculateExpireTime(int partNumber) {
-        // chat gpt bao la voi toc do 4G o Viet Nam thi upload 1 chunk 5Mb mat 3s
-
-        partNumber++;
-        // do co the gap van de ve xu ly tai backend, hieu nang backend, thoi gian gui goi tin tu backend ve client,... nen 10 chunk dau tien moi set expireTime: 5 minutes / chunk
-        if (partNumber < 10) {
-            return partNumber * 60 * 5;
-        } else if (partNumber < 100) {
-            return partNumber * 60; // 500Mb dau cho du gia thoi gian: 60s/chunk
-        } else {
-            return 10 * 60 * 5 + 90 * 60 + partNumber * 10; // tu cac part sau thi chi cho 10s/chunk
+    // TTL download dong nhat theo kich thuoc: clamp(size / 1MBps, 15 phut, 4 gio)
+    private long clampDownloadTtl(long fileSize) {
+        long ttlSeconds = fileSize / 1_000_000L;
+        if (ttlSeconds < DOWNLOAD_TTL_MIN_SECONDS) {
+            return DOWNLOAD_TTL_MIN_SECONDS;
         }
-        // => voi 1 file 4Gb thi expireTime se la 4 hours 30 minutes
+        return Math.min(ttlSeconds, DOWNLOAD_TTL_MAX_SECONDS);
     }
 
     @Override

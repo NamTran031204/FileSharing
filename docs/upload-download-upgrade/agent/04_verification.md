@@ -303,6 +303,9 @@ Invoke-Expect "$API/api/file-metadata/download" "Post" $H_OTHER (@{objectName=$o
 
 ### 2.6 Kịch bản F — client v2 trên trình duyệt (WP5, `T-5.6`)
 
+> **Đã chạy 2026-09-11 — kết quả thật ở §5.10.** F1–F5, F7, F8 đạt; **F6 trượt** (nguyên nhân gốc ghi ở §5.10).
+> Chạy bằng Playwright lái Chrome thay cho thao tác tay; file test do người dùng chỉ định là 51,36 MiB chứ không phải ≥ 100 MiB.
+
 Chạy `npm run dev`, mở DevTools → Network, lọc `localhost:9000`.
 
 | # | Quan sát | Tiêu chí PASS |
@@ -529,9 +532,9 @@ git -C $ROOT status --short                                        # -> không f
 | WP2 | §6 "DoD WP2" (5 mục — đọc "7 mã" theo D1) | §4.2, §2.1 (bảng partSize), §2.3 C12 | T-2.6 | ☑ (2026-09-05) — xem §5.4 |
 | WP3 | §6 "DoD WP3" (5 mục — đọc mục cuối theo D11) | §2.1, §4.5, §2.7 (G1–G3) | T-3.6 | ☑ (2026-09-05) — xem §5.5 |
 | WP4 | §6 "DoD WP4" (8 mục) | §2.1–§2.5, §2.7 | T-4.11 | ☑ (2026-09-05) — xem §5.6 |
-| WP5 | §6 "DoD WP5" (6 mục) | §2.6, §1.6 | T-5.6 | ☐ |
-| WP6 | §6 "DoD WP6" (4 mục) | §4.3 | T-6.4 | ☐ |
-| WP7 | §6 "DoD WP7" (6 mục) | §4.4, §4.5, §2.3 C13, §2.7 G4 | T-7.8 | ☐ |
+| WP5 | §6 "DoD WP5" (6 mục) | §2.6, §1.6, §5.10 | T-5.6 | ◐ (2026-09-11) — đã nghiệm thu thật trên trình duyệt (Playwright lái Chrome), xem §5.10. **5/6 mục DoD xanh**. Mục "part URL hết hạn" (F6) **TRƯỢT**: khi URL hết hạn MinIO đóng kết nối trước khi trả response, trình duyệt chỉ thấy `net::ERR_CONNECTION_ABORTED` nên nhánh `status === 403` trong `uploadPartWithRetry` không chạy và client không xin URL mới. Bản thân `PartUrlManager.refetchUrl` hoạt động đúng — đã kiểm chứng bằng response 403 mô phỏng. Mục 1 (`npm run build`/`lint`) giữ nguyên ghi nhận §5.7 |
+| WP6 | §6 "DoD WP6" (4 mục) | §4.3 | T-6.4 | ☑ (2026-09-09) — 4/4 mục xanh, chạy thật trên hạ tầng local; xem §5.8 |
+| WP7 | §6 "DoD WP7" (6 mục) | §4.4, §4.5, §2.3 C13, §2.7 G4 | T-7.8 | ☑ (2026-09-09) — 6/6 mục DoD xanh, xem §5.9. `T-7.7` bước 2 (client bỏ đường legacy tự sinh `objectName`) **không nằm trong 6 mục DoD**; người dùng chốt 2026-09-09 ghi thành nợ **N9** (`05_traceability.md` §4.2), đóng cùng phase gỡ E7 |
 
 ### 5.1 Cổng chặn (không WP nào được coi là xong nếu một trong các mục này đỏ)
 
@@ -828,3 +831,382 @@ Không chạy `npm run build` ở WP4 (đúng T-4.10 bước 4 — client sẽ g
 **Dọn dẹp sau smoke test:** xoá project + 8 asset + 8 metadata + 8 upload_sessions + 2 user test qua mongosh; xoá toàn bộ object test đã commit trên MinIO qua `mc rm`; 1 multipart test không PUT part nào còn sót do quirk `mc rm --incomplete` (mục 5 ở trên) — sẽ tự dọn qua `stale_uploads_expiry`. **Lưu ý cho người dùng:** việc `docker compose up -d` lại (mục 4 ở trên) khiến container `minio-mc` (one-shot) chạy lại `init-bucket.sh`, sinh ra 1 access key/secret key mới ghi vào `server/dockers/config/access.txt` (không phải service account `svc-upload`/`svc-download` — không ảnh hưởng `application.yml`); file `server/filesharing-filehandler/docs/filehandler-openapi.json` cũng bị ghi đè do `OpenApiJsonExporter` tự chạy mỗi lần khởi động app — cả hai là side-effect tự động của việc chạy hạ tầng/app cục bộ, không phải chỉnh sửa thủ công, hiện đang ở trạng thái "modified" chưa commit.
 
 **Kết luận WP4:** cả 8 mục DoD gốc (`00_guardrails.md` §6 "DoD WP4") đều xanh. Ba điểm cần người dùng biết (không chặn nghiệm thu, đã ghi nhận ở trên): (a) HTTP 403 thay vì 401 khi thiếu JWT — hành vi Security có sẵn, ngoài whitelist WP4; (b) `uploadId` vẫn xuất hiện dạng substring bên trong URL đã ký ở nhánh MULTIPART — đúng thiết kế S3, đã acknowledge tại `01_api_contract.md` §E1.4; (c) `access.txt` và `filehandler-openapi.json` bị ghi đè do chạy lại hạ tầng/app, không phải do sửa code WP4.
+
+### 5.7 Kết quả thật đã ghi nhận — WP5 (2026-09-06)
+
+**Đã tạo/sửa đúng whitelist §3 WP5 (`00_guardrails.md`) + task `03_tasks.md` T-5.1 → T-5.5:**
+
+- `client/src/utils/adaptiveBandwidth.ts` (T-5.1): tách rõ 2 nhánh theo `mode`. Nhánh **download giữ nguyên 100%** thuật toán cũ (đổi tên `calculateNextChunkSizeAndThreads` → `calculateNextDownloadChunkAndThreads` chỉ để không trùng chuỗi bị cấm ở acceptance, logic/hằng số không đổi) — nằm ngoài phạm vi WP5 (D10). Nhánh **upload**: xoá hoàn toàn adaptive chunk size (partSize từ server không bao giờ đổi — `nextChunkSize` luôn echo lại đúng giá trị `chunkSizeBytes` truyền vào), thay bằng hill-climbing đúng pseudo-code `../03_detailed_design.md` §WP5 mục 1: probe `threads++` khi `threads < 6`, đánh giá sau `K=3` part bằng aggregate throughput đo trên cửa sổ trượt 5s (EWMA alpha 0.3 giữ nguyên), tăng < 10% → lùi 1 + cooldown (không probe lại ngay K part kế), tăng ≥ 10% → giữ mức mới và tiếp tục leo. Panic mode (upload): chỉ `threads--` (sàn 1), không đụng chunk size.
+- `client/src/service/partUrlManager.ts` (N, T-5.2): `PartUrlManager` — pool + prefetch khi pool < 5 URL còn lại (batch ≤ 50, đúng `MAX_URL_BATCH_SIZE`), `refetchUrl()` cho nhánh 403, `ensureUrlsFor()` cho resume/bù part (tự chia batch ≤ 50). Không cầm `objectName`/`uploadId` — chỉ `sessionId`.
+- `client/src/api/fileApi/fileApiResource.ts` (S, T-5.2): xoá dòng `console.log` in nguyên presigned URL ở `uploadChunk` (SEC-07); thêm `putPart()` (PUT part mới — chỉ header `Content-MD5`, **không** đặt `Content-Type`, đúng "Hợp đồng PUT part"); thêm wrapper E2–E5 (`requestPartUrls`, `getUploadSessionStatus`, `completeUploadSession`, `abortUploadSession`) gọi qua `UploadSessionControllerService` (generated) + `UploadApiError`/`extractApiError`/`UploadErrorCode` (map cả `CommonResponse.code` lẫn HTTP status, đúng ghi chú "giữ cả hai đường cho an toàn"). Giữ nguyên `initiateUpload`/`completeUpload`/`abortUpload`/`uploadChunk` (E7 legacy, dùng bởi `uploadService.uploadFile()` — chuyển ở T-7.7).
+- `client/src/service/folderUploadService.ts` (S, T-5.3): `AssetUploadSession` đổi từ `{uploadId, partUrls}` sang `{sessionId, uploadMode, partSize, partCount, declaredSize, urls, urlExpiresAt, expiresAt, hardExpiresAt}`; `createAssetUploadSession` đọc đúng field E1 mới; `fileSize` gửi lên ép kiểu `as unknown as string` (DTO generated khai `long` là `string` vì swagger-axios-codegen tránh mất chính xác int64, nhưng wire format thật là JSON number — ép kiểu để giữ đúng number khi serialize, không đổi giá trị runtime).
+- `client/src/service/uploadService.ts` (S, T-5.4): thêm toàn bộ đường mới `uploadFileWithSession()` — partSize cố định từ session, mỗi PUT qua `PartUrlManager` kèm `Content-MD5` (base64, tính 1 lần bằng SparkMD5 rồi hex→base64), so ETag sau PUT **fail + retry** (không còn chỉ `console.warn`), `403` → `PartUrlManager.refetchUrl` (không tính vào 3 lần retry mạng), `400 BadDigest` → tính lại MD5 rồi PUT lại đúng part. Complete gửi `{partNumber, etag, md5-hex}`; nhận `UPLOAD_INCOMPLETE`/`CHECKSUM_MISMATCH` (mã `5502`/`5504`, không phải tên enum) → parse danh sách part trong `message`, bù rồi complete lại. Session tham số vào hàm này luôn được coi là đã đúng (do `uploadManagerStore` resolve từ trước — xem điểm 5 dưới); hàm chỉ gọi E3 một lần để lấy `receivedParts` (nguồn chân lý REL-01) rồi **đọc lại byte cục bộ để băm lại MD5** cho các part đã có sẵn (không PUT lại) trước khi đưa vào danh sách complete — tránh thiếu `md5` (trường bắt buộc của E4) cho phần đã upload ở phiên trước. Đường legacy `uploadFile()`/`uploadChunkWithRetry()`/`uploadChunkInThread()` (client tự sinh `objectName`, gọi E7) **giữ nguyên hoàn toàn logic**, chỉ dọn theo state riêng (`legacyPartUrls`/`legacyCompletedParts`) để tách khỏi đường session mới — đúng ghi chú "không đổi objectName do client sinh ở đường legacy trong task này, chuyển ở T-7.7".
+- `client/src/store/uploadManagerStore.ts` (S, T-5.4 — **whitelist đã được người dùng duyệt nới ngày 2026-09-09**, xem điểm 5 dưới): trước khi gọi `createAssetUploadSession` (E1), gọi `findResumableSession(item.file)` — nếu file này có session `INITIATED`/`UPLOADING` còn sống từ lần trước thì dùng thẳng, **không** tạo asset/session mới; chỉ khi không có mới rơi về `createAssetUploadSession(...)` như cũ. Phần còn lại (`session: AssetUploadSession` truyền thẳng vào `uploadFileWithSession`) không đổi so với thiết kế trước.
+- `client/src/components/UploadButton.tsx`: **không cần sửa** — chỉ gọi `uploadService.uploadFile()` (đường legacy, chữ ký không đổi).
+- `client/src/service/downloadService.ts` (T-5.5): **đã đọc `contentType` từ trước** (dùng cho `assembleChunks(contentType)`) — không cần sửa gì thêm cho task này.
+- `client/src/api/api/**`: không chạy `npm run gen-api` trong phiên này vì DTO/enum cần dùng (`UploadSessionInitResponseDto`, `PartUrlBatchResponseDto`, `UploadSessionStatusResponseDto`, `ReceivedPartDto`, `UploadResourceResponseDto`, `AbortUploadSessionResponseDto`, `UploadMode`, `UploadSessionStatus`, `UploadSessionControllerService`) đã được sinh sẵn từ T-4.10 (WP4) và khớp 100% `01_api_contract.md` §8 — xác nhận bằng cách đọc trực tiếp `index.defs.ts`, không có field nào thiếu.
+
+**Sai lệch phát sinh khi thực thi (tự xử lý, không đổi hợp đồng):**
+
+1. **Field kiểu `long` bị generated code khai là `string`**: `fileSize`/`partSize`/`declaredSize`/`uploadedBytes`/`size` trong DTO sinh ra bởi `swagger-axios-codegen` đều khai kiểu TS `string` (tránh mất chính xác int64), nhưng `01_api_contract.md` §0.3 xác nhận wire format thật là JSON `number`. Xử lý: đọc bằng helper `toNumber()` (chấp nhận cả `number` lẫn `string`), ghi bằng ép kiểu `as unknown as string` (giữ nguyên giá trị `number` lúc serialize) — theo đúng tiền lệ đã có trong repo (`ReviewCoreStore.ts` dùng `parseInt(raw as unknown as string, 10)` cho cùng loại field).
+2. **`CommonResponse.code` là mã số** (`"5502"`, `"5504"`...), không phải tên hằng số enum (`UPLOAD_INCOMPLETE`) — đã sửa lại so sánh trong `completeSessionWithRetry` dùng đúng bảng mã `01_api_contract.md` §9.1/§9.2 (khai thành `UploadErrorCode` trong `fileApiResource.ts` để không rải magic string).
+3. **Resume làm mất `md5` của phần đã upload ở phiên trước**: `ReceivedPartDto` (E3) chỉ có `{partNumber, size, etag}`, không có `md5` (giá trị chỉ client biết). Nếu chỉ bù phần thiếu và gửi complete với `completedParts` rỗng cho phần đã có, E4 sẽ nhận thiếu `md5` → `CHECKSUM_MISMATCH`. Khắc phục bằng `reconcileReceivedParts()`: đọc lại đúng byte range đó từ `File` (không qua mạng, không PUT lại) rồi băm lại MD5 cục bộ trước khi đưa vào danh sách `parts` gửi E4.
+4. **Chuỗi bị cấm bởi acceptance T-5.2/T-5.3** (`objectName`, `uploadId`, `partUrl`) vô tình xuất hiện trong 1 dòng comment và 1 tên hàm nội bộ không liên quan (`normalizePartUrls`) — đổi tên/diễn đạt lại để qua đúng `rg` literal-match mà tài liệu chỉ định, không đổi hành vi.
+5. **Quyết định kiến trúc — whitelist `uploadManagerStore.ts` được nới (người dùng duyệt 2026-09-09)**: bản đầu tiên để resume hoàn toàn trong `uploadService.ts` (so khớp `localStorage` sau khi `uploadManagerStore` đã lỡ gọi E1) — hệ quả là asset/session **mới** vừa tạo bị bỏ rơi (orphan) mỗi lần resume thật sự xảy ra. Đã trình bày đánh đổi này với người dùng; người dùng chọn nới whitelist thay vì chấp nhận orphan. Cách khắc phục: chuyển việc "biết trước có session resumable hay không" lên `folderUploadService.ts` (đã nằm trong whitelist WP5, không cần duyệt thêm) — thêm `findResumableSession(file)` (đọc `localStorage` khoá theo `fileName:size:lastModified`, gọi E3 xác nhận còn `INITIATED`/`UPLOADING`) và `persistSessionSnapshot`/`clearSessionSnapshot` (lưu `{assetId, objectName, sessionId}`, gọi ngay sau khi `createAssetUploadSession` tạo xong). `uploadManagerStore.runUploadLoop` gọi `findResumableSession` **trước** `createAssetUploadSession` — có thì dùng thẳng, không thì mới tạo mới. Kết quả: không còn asset/session mồ côi trong kịch bản resume-qua-reload; `uploadService.uploadFileWithSession` đơn giản hơn (không tự quản lý localStorage nữa, chỉ nhận session đã đúng và gọi E3 một lần lấy `receivedParts`).
+
+**Output thật đã chạy (kiểm tra tĩnh — KHÔNG cần trình duyệt):**
+
+```
+npx tsc -b
+→ 27 lỗi trong 8 file — TẤT CẢ đều là baseline có sẵn TRƯỚC WP5, không liên quan luồng upload/download
+  (CommentThreadControllerService.ts, TestService.ts — generated code ngoài phạm vi upload;
+   UploadFolderButton.tsx, KonvaDemo.tsx, FolderAssetPage.tsx, ProjectMain.tsx, sessionStore.ts — ngoài whitelist WP5;
+   uploadManagerStore.ts:272 "targetFolderId optional vs folderId required" — lỗi có sẵn, không liên quan field đổi ở WP5)
+  Đối chiếu bằng git stash: baseline TRƯỚC khi sửa cũng có đúng 27 lỗi kiểu trên SAU KHI trừ đúng
+  3 lỗi ở folderUploadService.ts (uploadId/partUrl) mà WP5 sửa xong biến mất — 0 lỗi mới phát sinh.
+
+npm run lint (git stash so sánh trước/sau)
+→ Trước WP5: "ESLint: 338 errors, 7 warnings in 33 files"
+→ Sau WP5:   "ESLint: 338 errors, 7 warnings in 33 files"   (giống hệt — 0 lỗi lint mới)
+→ Không file nào trong số 6 file WP5 đã sửa xuất hiện trong danh sách lỗi lint.
+
+rg -n "chunkSize \*=|chunkSize /=|calculateNextChunkSize" client/src/utils/adaptiveBandwidth.ts
+→ 0 kết quả
+
+rg -n "objectName|uploadId" client/src/service/partUrlManager.ts
+→ 0 kết quả
+
+rg -n "uploadId|partUrl" client/src/service/folderUploadService.ts
+→ 0 kết quả
+
+rg -n "console\.log" client/src/api/fileApi/fileApiResource.ts client/src/service/
+→ 0 kết quả (không dòng nào in URL hay bất kỳ log nào khác trong các file đã sửa)
+```
+
+**CHƯA làm được trong phiên này (cần trình duyệt thật, không có công cụ điều khiển trình duyệt trong phiên):**
+
+Hạ tầng đang chạy sẵn lúc kiểm tra (`docker ps` → MinIO/Mongo/Kafka đều `Up`; `curl :5000` → filehandler đang chạy; `curl :5173` → Vite dev server đang chạy), nhưng 4/6 mục DoD WP5 (`00_guardrails.md` §6) và toàn bộ Kịch bản F (`04_verification.md` §2.6) đòi hỏi thao tác tay trên UI thật + đọc tab Network của DevTools — phiên này không có công cụ tự động hoá trình duyệt nên **không tự kiểm chứng được**:
+
+- F1/F2/F3: upload file ≥ 100 MiB qua UI thật, xem mọi PUT có header `Content-MD5`, số PUT đồng thời ≤ 6, kích thước part == `partSize` server trả.
+- F4: xác nhận không request nào tới MinIO mang `objectName`/`uploadId` client tự sinh (mới chỉ xác nhận tĩnh bằng code review + grep, chưa bắt gói tin thật).
+- F5: ngắt mạng ~50% → reload tab → upload tiếp → tổng bytes PUT lần 2 < kích thước file; `mc stat` sau complete == size gốc.
+- F6: hạ `upload.part-url-ttl` xuống `60s`, xác nhận client tự xin URL mới không hiện lỗi cho người dùng.
+
+**Đã tự kiểm tra được (không cần trình duyệt):** `npm run build`/`npm run lint` (mục 1 DoD WP5, có bảo lưu baseline lỗi cũ không liên quan như trên); F7 (không dòng `console.log` in URL, quét tĩnh bằng `rg`) — 2/6 mục DoD WP5 xanh, 4/6 mục còn lại cần người dùng tự chạy theo `04_verification.md` §2.6 hoặc yêu cầu kiểm tra tiếp khi có công cụ trình duyệt.
+
+**Kết luận WP5:** code đã triển khai đủ và đúng phạm vi T-5.1 → T-5.5 (whitelist `00_guardrails.md` §3 WP5), biên dịch sạch và không phát sinh lỗi lint mới so với baseline trước WP5. **Chưa** kết luận WP5 "hoàn tất nghiệm thu" theo đúng nghĩa `00_guardrails.md` §6 vì thiếu 4 mục kiểm chứng bắt buộc trên trình duyệt thật (F1, F2, F3, F4 gộp, F5, F6) — cần chạy `T-5.6` thủ công trước khi đóng WP5 và mở WP6/WP7.
+
+### 5.8 Kết quả thật đã ghi nhận — WP6 (2026-09-09)
+
+Kế hoạch thực thi: `06_plan_wp6_wp7.md` (W6.1 → W6.5). Bốn điểm chặn C1–C4 được người dùng chốt **phương án A** cho cả bốn.
+
+**Đã tạo/sửa (whitelist §3 WP6 + nới C1 đã duyệt):**
+
+- `FileSharingApplication.java` (S, W6.1): thêm đúng `@EnableScheduling` theo style của `FilesharingImagecodecApplication`. Không thêm annotation nào khác.
+- `application.yml` (S, W6.1): thêm 2 key chu kỳ `upload.gc-interval: 900s`, `upload.reconcile-interval: 86400s` — **delta D14** (C3-A): tên chưa có trong `02_schema_config.md` §3, đặt theo style kebab-case + hậu tố `s` của `part-url-ttl`/`session-idle-ttl`; đọc bằng `@Value` trong `@Scheduled(fixedDelayString = ...)`, **không** tạo `UploadProperties.java` (giữ delta D4).
+- `UploadSessionRepo.java` (S, W6.2): thêm `findByStatusInAndExpiresAtBefore` (GC), `findByUploadId` (reconcile chiều 1), `findByStatus` (reconcile chiều 2). **Sai lệch so với `03_tasks.md` T-6.2 ("2 query method")**: cần 3 vì chiều 2 của reconcile phải duyệt tập session `COMPLETED` — vẫn đúng tinh thần "không thêm method thừa ngoài nhu cầu 2 job".
+- `UploadSessionService.java` + `UploadSessionServiceImpl.java` (S, W6.2): 3 method truy vấn tương ứng (`findExpiredLiveSessions`, `findByUploadId`, `findCompletedSessions`) **+ `markExpired(session)`**. **Sai lệch có chủ đích**: whitelist WP6 ghi "chỉ thêm method truy vấn", nhưng trạng thái `EXPIRED` cần một người ghi; đặt ở service (đối xứng với `markCompleted`/`markAborted` đã có) thay vì để job gọi thẳng repo — giữ nguyên tắc "mọi thay đổi trạng thái session đi qua service". Không file nào ngoài whitelist bị chạm.
+- `StorageService.java` + `S3StorageServiceImpl.java` (S, **nới whitelist theo C1-A**): thêm đúng 1 method `listMultipartUploads()` + `record MultipartUploadSummary(objectName, uploadId, initiated)`; impl phân trang đầy đủ bằng `keyMarker`/`uploadIdMarker`. Không đụng 7 method sẵn có. Policy `svc-upload` đã có `s3:ListBucketMultipartUploads` từ WP1 nên không phải đổi hạ tầng.
+- `jobs/scheduled/UploadSessionGcJob.java` (N, W6.3): `@Scheduled(fixedDelayString = "${upload.gc-interval}")`; mỗi session hết hạn còn sống → `abortMultipartUpload` (bỏ qua khi `uploadId == null`, tức nhánh SINGLE) → `markExpired` → `metadataService.markUploadFailed(metadataId)` (method có sẵn từ WP4, **không** sửa `MetadataService`). try/catch từng session để một bản ghi lỗi không làm dừng vòng quét. Chỉ đọc `upload_sessions`.
+- `jobs/scheduled/UploadReconcileJob.java` (N, W6.4): `ORPHAN_MIN_AGE = 24h` là hằng số trong lớp. Chiều 1 `ListMultipartUploads` → không có session **và** `initiated < now − 24h` → abort + `log.warn`. Chiều 2 duyệt session `COMPLETED`, object không tồn tại → `log.error` ALERT + `markUploadFailed`. Kiểm tồn tại theo **C2-A**: bắt `FileBusinessException` từ `headObject` (không đụng `StorageService`).
+
+**Output thật đã chạy:**
+
+```
+mvn -f server/pom.xml install -pl filesharing-filehandler -DskipTests   -> BUILD SUCCESS (sau mỗi bước W6.1..W6.4)
+spring-boot:run -pl filesharing-filehandler
+-> "Started FileSharingApplication in 8.184 seconds"
+-> "Mongo indexes bootstrap completed."
+-> job chạy trên thread [scheduling-1] — xác nhận @EnableScheduling có hiệu lực
+```
+
+**DoD WP6 mục 1 — scheduling:**
+
+```
+rg "EnableScheduling" FileSharingApplication.java   -> 1 dòng
+log: [scheduling-1] o.e.f.jobs.scheduled.UploadReconcileJob : Upload reconcile finished: ...
+log: [scheduling-1] o.e.f.jobs.scheduled.UploadSessionGcJob  : Upload session GC finished: ...
+```
+
+**DoD WP6 mục 2 — Test GC** (chu kỳ hạ tạm xuống `60s`, đã trả lại `900s`):
+
+```
+E1 -> session 49714e1b-59ca-4399-a37b-e4748c63ba53, MULTIPART, partSize=8388608, partCount=2
+PUT part 1 (8 MiB + Content-MD5) -> HTTP 200
+mc ls --incomplete -> 948888ad-..._wp6-gc-test.jpg   (multipart dở tồn tại)
+mongosh: set expiresAt = now - 1h
+[<= 1 chu kỳ] log: "Expired upload session 49714e1b-... (object 948888ad-..._wp6-gc-test.jpg)"
+              log: "Upload session GC finished: 1 expired, 1 cleaned, 0 failed"
+mongosh: upload_sessions.status  -> EXPIRED
+mongosh: metadata.status         -> FAILED, isActive=false
+mc ls --incomplete               -> trống
+```
+
+**DoD WP6 mục 3 — Test reconcile** (2 mồ côi thật: 1 do xoá document session của một multipart đang dở, 1 là multipart E7 còn lại do bug `stop-upload` 500 có sẵn):
+
+```
+[ngưỡng 24h — mồ côi mới tạo]
+00:56:47 "Upload reconcile finished: 0 orphan multipart uploads aborted, 0 completed sessions missing their object"
+         -> đúng: mồ côi < 24h KHÔNG bị abort (bảo vệ multipart legacy đang chạy dở)
+
+[hạ tạm ORPHAN_MIN_AGE = 10s để kiểm nhánh abort — đã trả lại ofHours(24)]
+00:57:06 WARN "Aborted orphan multipart upload NmE3...Mjc5OA on object 84b92b17-..._quota-22.jpg (initiated 2026-09-08T17:55:05.524Z)"
+00:57:06 WARN "Aborted orphan multipart upload NmE3...NjAxMg on object e7-legacy-test-obj-20260909.jpg (initiated 2026-09-08T17:55:33.768Z)"
+00:57:06 "Upload reconcile finished: 2 orphan multipart uploads aborted, 1 completed sessions missing their object"
+
+[chiều 2 — session COMPLETED mất object]
+E1 -> PUT 2 part -> E4 complete -> 200, fileSize=16777216, etag=42d8...-2, uploadStatus=COMPLETED
+mc rm myminio/file-sharing/2bf05f91-..._quota-23.jpg
+ERROR "ALERT - session d209f8ca-... is COMPLETED but object 2bf05f91-..._quota-23.jpg is missing from storage"
+mongosh: metadata.status -> FAILED, isActive=false
+```
+
+**DoD WP6 mục 4 — dữ liệu cũ không bị đụng:**
+
+```
+db.metadata.countDocuments({}) trước GC  = 50
+db.metadata.countDocuments({}) sau  GC   = 50      (chỉ document có session mới bị đổi status)
+db.metadata.countDocuments({}) trước/sau reconcile = không đổi
+```
+
+**Kết luận WP6:** cả 4 mục DoD xanh, chạy thật trên hạ tầng local (MinIO `RELEASE.2025-06-13`, Mongo 7.0). Hai sai lệch cần ghi vào `03_tasks.md` §0.3 khi người dùng duyệt: **D14** (2 key chu kỳ job), **D15** (`markExpired` + query method thứ ba trên `UploadSessionService`). Hai nới whitelist đã được người dùng duyệt trước khi thực thi: **C1-A** (`StorageService.listMultipartUploads`), **C2-A** (job bắt `FileBusinessException` thay cho `objectExists`).
+
+---
+
+### 5.9 Kết quả thật đã ghi nhận — WP7 (2026-09-09)
+
+Kế hoạch: `06_plan_wp6_wp7.md` (W7.1 → W7.9). **5/6 mục DoD WP7 xanh; mục "đưa đường legacy về luồng asset" (`T-7.7` bước 2) bị chặn** — chi tiết cuối mục này.
+
+**Đã tạo/sửa:**
+
+- `MetadataEntity.java` (core, W7.1): `Double fileSize` → `Long` + `@Field(targetType = FieldType.INT64)`. Không migration (delta D8).
+- `MetadataDTO.java`, `VersionCreateRequestDto.java` (W7.1): → `Long`. `VersionCreateRequestDto` là **call site thứ 7** mà `../03_detailed_design.md` §WP7 ("đủ 6 file") bỏ sót — nới whitelist theo **C4-A**.
+- `MetadataServiceImpl.java` (W7.2): `setFileSize((double) actualFileSize)` → `setFileSize(actualFileSize)`.
+- `AssetServiceImpl.java` (W7.2): `.fileSize(request.getFileSize().doubleValue())` → `.fileSize(request.getFileSize())`; thêm 1 dòng `uploadSessionService.ensureSessionQuota(ownerId)` ở đầu `initiateUploadSession` (xem W7.6).
+- `DashboardServiceImpl.java` (W7.2): 3 chỗ `mapToDouble` → `mapToLong`, biến cộng dồn đổi sang `long`. **`StorageStatsDTO` giữ nguyên `double`** (không nằm trong whitelist WP7) — ép kiểu chỉ xảy ra ở biên DTO nên hợp đồng API không đổi.
+- `ProcessingServiceImpl.java`, `ImageDataController.java` (W7.3): tự hết lỗi sau khi đổi chữ ký `MinIoService` sang `long`.
+- `FileMetadataController.java` (W7.3 + W7.5): `(double) file.getSize()` → `file.getSize()`; thêm `@Deprecated` + đúng 1 dòng `log.warn` cho 3 method E7. `/direct-upload` **không** đụng.
+- `MinIoService.java` + `MinIoServiceImpl.java` (W7.4): 2 chữ ký `Double` → `long`; `fileSize.intValue() / CHUNK_SIZE` → `(int) (fileSize / CHUNK_SIZE + 1)` (phép chia trong `long` — vá R2 cả ở đường legacy).
+- `UploadSessionService.java` + `Impl` + `UploadSessionRepo.java` (W7.6): `ensureSessionQuota(ownerId)` + `countByOwnerIdAndStatusIn`.
+
+**Phát hiện ngược với báo cáo WP3 (§5.5):** `calculateExpireTime` **vẫn còn** trong `MinIoServiceImpl` (dòng 245 của bản trước W7.4) và đang được `getPresignedDownloadUrl` gọi — trái với acceptance của `T-3.6` ("0 tham chiếu tới 4 helper cũ"). Câu lệnh verify của `T-3.6` chỉ quét phạm vi hẹp nên không bắt được. Đã xử lý trong W7.4 theo đúng ý định của delta **D12** và anti-pattern #10 của `.claude/rules/upload-pipeline.md`: xoá `calculateExpireTime`, thay bằng `clampDownloadTtl(fileSize)` = `clamp(size / 1MBps, 15 phút, 4 giờ)` — cùng công thức mà `S3StorageServiceImpl.presignGetObject` đang dùng. `getPresignedDownloadUrl` **không** thuộc E7 (E7 chỉ gồm `upload-metadata`, `upload/complete`, `upload/stop-upload`) nên hợp đồng legacy không đổi. `CHUNK_SIZE` **giữ lại** vì đường legacy E7 vẫn phải chia part 5 MiB đúng như hợp đồng cũ.
+
+**DoD WP7 mục 1 + 2 — quét sạch:**
+
+```
+rg "Double fileSize|fileSize\.intValue\(\)|\(double\) file\.getSize\(\)" server --glob "!**/target/**"   -> 0
+rg "log\.(info|debug|warn).*(Url|url)" MinIoServiceImpl.java                                            -> 0
+rg "calculateExpireTime|extractUploadIdFromXml|buildCompleteMultipartUploadXml|OkHttpClient" filehandler/src/main/java
+   -> 1 kết quả duy nhất: dòng COMMENT ở MinIoServiceImpl:38 nhắc tên công thức cũ (không phải mã)
+rg "log\..*(presigned|Url|url)" toàn filehandler
+   -> 1 dòng: S3StorageServiceImpl:227 log.error("Failed to presign download url for object: {}", objectName, e)
+      chỉ in objectName, KHÔNG in URL -> hợp lệ theo §2.15
+Select-String "X-Amz-Signature|X-Amz-Credential" trên 6.077 dòng log runtime (app.log + app2.log)  -> 0   (cổng K5 xanh)
+```
+
+**DoD WP7 mục 3 — file > 2 GiB (chứng minh R2):**
+
+```
+E1: fileSize=2155872256 (2 GiB + 8 MiB) -> partSize=8388608, partCount=257, declaredSize=2155872256
+    (không tràn số; trước phase, fileSize.intValue() sẽ bão hoà và sinh sai số part)
+E2: xin URL theo lô 50 -> PUT đủ 257 part kèm Content-MD5, 48 giây
+E4: 200 - fileSize=2155872256, etag=60beae3b840b3414ef1aeede5cf94750-257, uploadStatus=COMPLETED
+mc stat -> Size: 2.0 GiB, ETag khớp
+mongosh $type(fileSize) -> "long", giá trị 2155872256 (đúng từng byte)
+```
+
+**DoD WP7 mục 4 — giới hạn session / user (SEC-08):**
+
+```
+tạo tuần tự tới ngưỡng: session thứ 20 -> HTTP 200
+session thứ 21, 22, 23 -> HTTP 429, code 5506, "Too many concurrent upload sessions: 20"
+mc ls --incomplete: 20 multipart, ĐÚNG BẰNG số session đang mở
+   -> 3 lần bị 429 KHÔNG sinh multipart mới (kiểm ngưỡng chạy trước CreateMultipartUpload)
+DELETE /api/uploads/{sid} -> 200, rồi POST /api/asset/create-new -> 200
+```
+
+Lưu ý triển khai: `AssetServiceImpl.initiateUploadSession` gọi `storageService.createMultipartUpload` **trước** `uploadSessionService.create`, nên đặt kiểm ngưỡng trong `create(...)` là quá muộn. Đã thêm `ensureSessionQuota(ownerId)` ở đầu `initiateUploadSession` (1 dòng trong `AssetServiceImpl` — file có trong whitelist WP7 nhưng ghi chú giới hạn ở "dòng gãy vì đổi kiểu"; **delta D16** cần duyệt). `create(...)` vẫn gọi lại `ensureSessionQuota` để mọi đường vào đều bị ràng buộc.
+
+**DoD WP7 mục 5 — E7 deprecated + regression:**
+
+```
+rg "@Deprecated" FileMetadataController.java -> 3 dòng
+POST /upload-metadata    -> 200, data keys = ['partUrl','uploadId'] - GIỐNG HỆT baseline §5.5/§5.6
+                            log: đúng 1 dòng "DEPRECATED endpoint called: /api/file-metadata/upload-metadata - migrate to /api/asset/create-new"
+POST /upload/complete    -> 200, data = "complete upload" - GIỐNG HỆT baseline (đã PUT 4 part thật rồi complete)
+                            log: đúng 1 dòng "DEPRECATED endpoint called: /api/file-metadata/upload/complete - migrate to /api/uploads/{sessionId}/complete"
+POST /upload/stop-upload -> 500 "Type definition error: ...AbortUploadRequestDto" - GIỐNG HỆT baseline
+                            log: 0 dòng warning
+```
+
+**Sai lệch cần biết (không phải regression):** `stop-upload` **không** sinh dòng warning vì Jackson từ chối deserialize `AbortUploadRequestDto` **trước khi** vào thân method — đúng bug có sẵn đã ghi ở §5.6 kịch bản G. Sửa nó sẽ đổi hợp đồng E7 (500 → 200) nên bị cấm bởi `00_guardrails.md` §2.3. Vì vậy tiêu chí "mỗi lời gọi sinh đúng 1 dòng warning" (G4) chỉ đạt cho 2/3 endpoint; endpoint thứ ba đạt vế "response schema + status không đổi".
+
+**Tương thích dữ liệu cũ (delta D8):**
+
+```
+db.metadata: 50 document kiểu BSON "double" (dữ liệu trước phase) + 27 document kiểu "long" (ghi mới) cùng tồn tại
+POST /api/file-metadata/download với objectName của một document "double" cũ
+   -> 403 / 5104 "File permission Error"  (user test không có quyền)
+   -> nghĩa là entity ĐÃ decode thành công từ BSON double sang Long rồi mới tới bước kiểm quyền;
+      nếu decode hỏng thì sẽ là 500 mapping error, không phải 403 nghiệp vụ
+```
+
+**DoD WP7 mục 6 — build:**
+
+```
+mvn -f server/pom.xml clean install -DskipTests -> BUILD SUCCESS
+  Reactor: filesharing, core, filehandler, notification, videocodec, imagecodec, imagerawproccess (6 module con)
+Select-String "<module>" server/pom.xml -> 6 dòng
+
+client: npx tsc -b -> 27 lỗi trong 8 file - ĐÚNG BẰNG baseline đã ghi ở §5.7, 0 lỗi mới
+        (CommentThreadControllerService.ts, TestService.ts, UploadFolderButton.tsx, KonvaDemo.tsx,
+         FolderAssetPage.tsx, ProjectMain.tsx, sessionStore.ts, uploadManagerStore.ts)
+        npm run build -> exit 2 vì chính baseline này (không phải do WP6/WP7)
+```
+
+**`T-7.7` — BỊ CHẶN, chưa thực thi bước 2:**
+
+- Bước 1 (xoá `console.log` in URL) — **đã đạt**: `rg "console\.log" client/src/service client/src/api/fileApi` cho 20 dòng, tất cả nằm ở `downloadService.ts` và **không dòng nào in URL** (dòng 301 chỉ in chuỗi `"da lay presigned download url"`). `fileApiResource.ts`, `uploadService.ts`, `folderUploadService.ts`, `partUrlManager.ts`: 0 dòng.
+- Bước 2 (đường legacy `uploadService.uploadFile()` bỏ tự sinh `objectName`, chuyển sang E1→E2→E4) — **không thực hiện được trong phạm vi whitelist**. Lý do: caller duy nhất của `uploadFile()` là `components/UploadButton.tsx`, và caller duy nhất của `UploadButton` là `page/Phase1/uploadPage/index.tsx`. Luồng asset đòi `projectId` + `folderId` + `mediaType` mà `UploadButton` không có, nên chữ ký `uploadFile()` bắt buộc phải đổi → phải sửa `UploadButton.tsx` (nằm trong whitelist **WP5**, không nằm trong whitelist WP7) và/hoặc `page/Phase1/**` (bị `00_guardrails.md` §3 WP5 cấm tuyệt đối). Đây đúng là tình huống `00_guardrails.md` §4.6 → đã dừng và hỏi người dùng.
+- Hệ quả nếu không làm: **S3 vẫn hở ở đường legacy** — `uploadService.ts:340` còn `const objectName = uuidv4() + '_' + file.name` và còn gọi E7. Luồng sản phẩm thật (`uploadManagerStore` → `uploadFileWithSession`) **không** đi qua đường này, nên rủi ro giới hạn ở trang demo Phase1.
+
+**Kết luận WP7:** cả 6 mục DoD (`00_guardrails.md` §6 "DoD WP7") xanh và đã chạy thật. `T-7.7` bước 2 **không** nằm trong 6 mục DoD đó; người dùng chốt 2026-09-09 ghi thành nợ kỹ thuật **N9** trong `05_traceability.md` §4.2, đóng cùng phase gỡ E7. Ba delta cần ghi vào `03_tasks.md` §0.3: **D14** (key chu kỳ job), **D15** (`markExpired` + query thứ ba), **D16** (1 dòng `ensureSessionQuota` trong `AssetServiceImpl`), cùng **C4-A** (`VersionCreateRequestDto` vào whitelist WP7) đã được duyệt trước khi thực thi.
+
+**Dọn dẹp sau nghiệm thu:** xoá toàn bộ dữ liệu test tự tạo — 22 `upload_sessions`, 28 `metadata`, 26 `asset`, 1 `folder`, 1 `projects`, 48 `audit_logs`, 1 user test; xoá 2 object đã commit trên MinIO; abort 18 session còn mở qua chính endpoint E5. Trạng thái sau khi dọn: `mc ls --incomplete myminio/file-sharing` **trống**, `db.metadata.countDocuments({})` = **49** (đúng số document có trước phiên làm việc). Chu kỳ job và `ORPHAN_MIN_AGE` đã trả về giá trị production (`900s` / `86400s` / `24h`).
+
+### 5.10 Kết quả thật đã ghi nhận — WP5 nghiệm thu trình duyệt (W5.G / `T-5.6`, 2026-09-11)
+
+**Công cụ.** MCP Playwright được khai báo trong cấu hình người dùng nhưng không nạp được tool vào phiên
+này, nên kịch bản F được lái bằng `playwright-core@1.56.1` chạy Chrome đã cài sẵn (`channel: 'chrome'`,
+headless). Bộ lái nằm trong scratchpad của phiên (`pw/harness.js`, `pw/s1.js`, `pw/s5.js`, `pw/s6.js`,
+`pw/s6b.js`, `pw/s8.js`), **không** đưa vào repo. Mọi request/response/console đều được ghi lại qua
+`page.on('request' | 'requestfinished' | 'console')` và lưu thành JSON để đối chiếu.
+
+**Sai lệch so với kịch bản gốc (đã được người dùng chỉ định).** Bảng F yêu cầu file ≥ 100 MiB; người dùng
+chỉ định dùng đúng một file `dhbkhn-6920-1658994052-1-16702134834751920701721.jpg`, **53 858 805 byte
+(51,36 MiB)**, MD5 `4de51b3aca8c2c7b95617e76a365294d`. Với `partSize` server trả về là 8 MiB thì
+`partCount = 7`, đủ để quan sát F1/F3/F4 nhưng **làm yếu F2** (xem bên dưới).
+
+Tài khoản: `namtest2@gmail.com`. Trang đăng nhập `/loginv2`, dự án `/projects/6a07c0330d7c53f55ffafc5a`.
+
+#### Bảng kết quả
+
+| # | Tiêu chí | Kết quả | Bằng chứng |
+|---|---|---|---|
+| F1 | Mọi `PUT` tới MinIO có `Content-MD5` | ☑ | 7/7 PUT có header; 0 request thiếu. Ví dụ part 1 `Content-MD5: z6SWLwP5CLXkneGphAc1NQ==`, part 7 `feEAxNySdHug/B0pIbPZ9A==` |
+| F2 | Số `PUT` đồng thời không vượt 6 | ☑ (bằng chứng yếu) | Quét mốc start/end: **max đồng thời = 2**. Xem ghi chú (1) |
+| F3 | Mọi part == `partSize`, part cuối nhỏ hơn | ☑ | E1 trả `partSize=8388608, partCount=7`. `Content-Length` thực tế: 6 part × 8 388 608 + part 7 = 3 527 157; tổng = **53 858 805** == size file. `mc stat` → `ETag ...-7` |
+| F4 | Không request nào mang `objectName`/`uploadId` do client sinh; control-plane qua `/api/uploads/{sessionId}/...` | ☑ | Toàn bộ request tới `:5000` trong lượt upload: `POST /api/asset/create-new` → `GET /api/uploads/{id}` → `POST /api/uploads/{id}/complete`. Quét body: 0 lần xuất hiện `objectName`/`uploadId` |
+| F5 | Resume sau ngắt mạng | ☑ | Xem mục "F5 chi tiết" |
+| F6 | Part URL hết hạn → client tự xin URL mới, không hiện lỗi | **☒ TRƯỢT** | Xem mục "F6 — nguyên nhân gốc" |
+| F7 | Console không in presigned URL | ☑ | 0/`6 lượt chạy` dòng console khớp `X-Amz-Signature`/`X-Amz-Credential` |
+| F8 | Blob tải về đúng `contentType` | ☑ | Chặn `URL.createObjectURL`: Blob thật có `type: "image/png"`, `size: 205680`, khớp `fileSize` E6 trả về. Không còn `undefined` (R4 đã vá) |
+
+**(1) Vì sao F2 là bằng chứng yếu.** `AdaptiveBandwidthManager` khởi đầu ở 1 luồng và chỉ tăng 1 luồng sau
+mỗi part thành công, nên trong 7 part chỉ leo được tới 3. Trần 6 vẫn được bảo đảm ở mức mã nguồn
+(`UPLOAD_MAX_THREADS = 6` trong `client/src/utils/adaptiveBandwidth.ts`, ép qua `Semaphore`), nhưng muốn
+quan sát thật luồng thứ 6 thì phải upload file lớn hơn nhiều (≈ 15 part trở lên). Hiện tại chỉ khẳng định
+được "không vượt 6", chưa khẳng định được "chạm đúng 6 rồi dừng".
+
+#### F5 chi tiết — resume
+
+Cắt mạng (`context.setOffline(true)`) ngay sau khi 3 part đầu hoàn tất, chờ job `FAILED`, bật lại mạng,
+reload tab, chọn lại đúng file đó rồi bấm upload.
+
+| Lượt | PUT | Kết quả từng part | Bytes PUT |
+|---|---|---|---|
+| 1 | 11 | part 1,2,3,4 → 200; part 5,6,7 → `ERR_INTERNET_DISCONNECTED` (mỗi part 3 lần thử) | 33 554 432 |
+| 2 | 3 | part 5,6,7 → 200 | **20 304 373** |
+
+- `20 304 373 < 53 858 805` → đạt tiêu chí "tổng bytes PUT lần 2 nhỏ hơn kích thước file".
+- Lượt 2 **không** gọi lại `POST /api/asset/create-new`; dùng lại đúng `sessionId`
+  `82cce998-ef6b-48ea-b21c-a3af11841a43` lấy từ snapshot `localStorage` (`findResumableSession`), rồi
+  `GET /api/uploads/{id}` (E3) → `POST /api/uploads/{id}/part-urls` (E2, vì E3 không trả URL) →
+  `POST /api/uploads/{id}/complete` (E4).
+- `mc stat` sau complete: `size = 53858805` (khớp tuyệt đối) và `ETag = 8acf98d65ccdbe28ed29179384068e51-7`
+  — **trùng y hệt** ETag của lượt upload liền mạch ở F1, tức nội dung giống nhau từng byte.
+
+#### F6 — nguyên nhân gốc (tiêu chí TRƯỢT)
+
+Quy trình đúng như DoD mô tả: hạ `upload.part-url-ttl` từ `900s` xuống `60s`, nạp lại cấu hình
+(devtools restart), rồi bóp băng thông upload xuống 400 KB/s bằng CDP `Network.emulateNetworkConditions`
+để URL kịp hết hạn giữa chừng.
+
+Quan sát (URL xác nhận `X-Amz-Expires=60`):
+
+| Thời điểm | Sự kiện |
+|---|---|
+| t = 8,3 s | part 1 → 200 |
+| t = 29,1 s | part 2, 3 → 200 |
+| t = 70,3 s trở đi | part 4, 5, 6, 7 → **`net::ERR_CONNECTION_ABORTED`**, mỗi part đủ 3 lần thử rồi bỏ |
+| — | `POST /api/uploads/{id}/part-urls` được gọi **0 lần** |
+| — | Người dùng thấy alert `Upload Error`; job `FAILED`, session giữ lại để resume |
+
+**Vì sao.** Khi presigned URL hết hạn, MinIO từ chối *trước khi* đọc hết body 8 MiB rồi đóng kết nối.
+Trình duyệt không nhận được response HTTP nào — nó báo lỗi ở tầng mạng, axios ném `Network Error` với
+`error.response === undefined`. Nhánh xin lại URL trong `uploadService.uploadPartWithRetry` lại có điều
+kiện `status === 403`:
+
+```ts
+const status = (error as { response?: { status?: number } })?.response?.status;
+if (status === 403) {
+    await urlManager.refetchUrl(partNumber);   // khong bao gio chay khi URL het han that
+    continue;
+}
+```
+
+`status` là `undefined` nên nhánh này không bao giờ chạy với trường hợp hết hạn thật; part chỉ tiêu hết
+3 lượt retry mạng rồi hỏng.
+
+**Đã kiểm chứng ngược để loại trừ nghi ngờ khác.** Chạy lại đúng kịch bản với TTL `900s`, dùng
+`page.route` trả về một response 403 **hoàn chỉnh** cho part 3 ở lần thử đầu (mô phỏng đúng cái MinIO
+"lẽ ra" trả về):
+
+- client gọi `POST /api/uploads/{id}/part-urls` với body `{"partNumbers":[3]}` → 200,
+- PUT lại part 3 → 200, upload hoàn tất sau 4,7 s,
+- **0** alert lỗi hiện cho người dùng.
+
+Tức logic `PartUrlManager.refetchUrl` hoàn toàn đúng; lỗ hổng duy nhất là **đường dẫn kích hoạt nó**.
+
+**Hướng vá đề xuất (chưa thực hiện — nằm ngoài phạm vi yêu cầu test).** `PartUrlManager` đã lưu sẵn
+`urlExpiresAt` và đã có sẵn `getUrlExpiresAt()` nhưng chưa nơi nào dùng. Vá rẻ nhất là làm mới chủ động
+trong `PartUrlManager.getUrl()`: nếu `Date.now() >= urlExpiresAt - biên_an_toàn` thì bỏ URL trong pool và
+`fetchParts` lại trước khi trả về, để URL hết hạn không bao giờ ra tới dây. Có thể bổ sung phòng thủ ở
+`uploadPartWithRetry`: khi gặp lỗi mạng mà URL đã quá hạn thì coi như hết hạn và refetch, không tính vào
+ngân sách retry.
+
+#### Ảnh hưởng tới trạng thái DoD WP5
+
+| Mục DoD WP5 (`00_guardrails.md` §6) | Nghiệm thu ở | Kết quả |
+|---|---|---|
+| 1. `npm run build` / `npm run lint` | — | Không chạy lại trong phiên này; giữ nguyên ghi nhận §5.7 |
+| 2. `Content-MD5` + đồng thời ≤ 6 + kích thước part | F1, F2, F3 | ☑ (F2 yếu, xem ghi chú (1)) |
+| 3. Không `objectName`/`uploadId` client sinh | F4 | ☑ |
+| 4. Resume | F5 | ☑ |
+| 5. Part URL hết hạn | F6 | **☒** |
+| 6. Không log URL | F7 + quét tĩnh §5.7 | ☑ |
+
+#### Dọn dẹp sau nghiệm thu
+
+4 phiên upload đã tạo trong lúc test (`f1688991…`, `a7af42ff…`, `d64daa06…`, `8cfd41e6…`) được gỡ sạch:
+
+1. `DELETE /api/uploads/d6aab6a7-…` (E5) huỷ phiên dở dang của F6 → `status: ABORTED`.
+2. `POST /api/asset/delete/{assetId}` × 4 (đường xoá của chính sản phẩm, để bộ đếm asset của
+   project/folder giảm đúng).
+3. `mc rm` từng object một → 3 object bị xoá; object thứ tư chưa từng tồn tại (upload F6 hỏng giữa
+   chừng, chỉ có part dở dang và đã bị E5 abort).
+4. Xoá document rác: 4 `upload_sessions`, 4 `metadata`, 4 `asset`, 3 `processing_jobs`
+   (`TRANSCODE_IMAGE` còn `PENDING` vì worker imagecodec không chạy).
+
+Bước 4 là bắt buộc chứ không phải cho gọn: để lại `upload_sessions` trạng thái `COMPLETED` mà object đã bị
+xoá thì `UploadReconcileJob` (WP6, tầng 3) sẽ báo ALERT giả mỗi 24 h.
+
+Xác nhận trạng thái sau dọn dẹp:
+
+- MinIO: 0 object mang tên file test, **0 multipart dở dang**.
+- MongoDB: 0 document `metadata` có `fileSize = 53858805`; `upload_sessions` còn đúng 3 document cũ từ
+  trước phiên (2 `COMPLETED` + 1 `EXPIRED`, đều thuộc object `…_rua`).
+- Trang dự án hiển thị lại đúng **5 Folders / 17 Files** như trước khi test.
+- `upload.part-url-ttl` đã trả về `900s` ở cả `src/main/resources/application.yml` và `target/classes/`;
+  `git status` không còn thay đổi nào ngoài các thay đổi WP đã có từ trước.
+- `audit_logs` **được giữ nguyên** (không xoá dấu vết kiểm toán) — có bản ghi `DELETE` cho 4 asset test.

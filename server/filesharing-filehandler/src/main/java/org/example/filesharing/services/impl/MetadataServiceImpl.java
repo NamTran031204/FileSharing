@@ -289,7 +289,7 @@ public class MetadataServiceImpl implements MetadataService {
         MetadataEntity entity = metadataRepo.findById(metadataId)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
-        entity.setFileSize((double) actualFileSize);
+        entity.setFileSize(actualFileSize);
         entity.setStatus(UploadStatus.COMPLETED);
         if (entity.getMediaType() == com.file.service.filesharing.core.enums.MediaType.VIDEO) {
             entity.setProcessingStatus(com.file.service.filesharing.core.enums.ProcessingStatus.PENDING);

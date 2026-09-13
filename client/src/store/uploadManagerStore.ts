@@ -6,6 +6,7 @@ import {
     buildUploadQueue,
     createAssetUploadSession,
     createFolderTree,
+    findResumableSession,
     type UploadQueueItem,
 } from '../service/folderUploadService';
 import {uploadService, type UploadProgress} from '../service/uploadService';
@@ -326,14 +327,17 @@ export class UploadManagerStore {
             const item = job.queue[i];
 
             try {
-                const session = await createAssetUploadSession({
+                // Uu tien resume session dang do tu lan truoc (vi du reload tab) - tranh goi lai E1
+                // tao asset moi (se bo roi asset cu thanh mo coi). Chi khi khong co session nao con
+                // dung duoc thi moi tao moi.
+                const session = await findResumableSession(item.file) ?? await createAssetUploadSession({
                     projectId: job.context.projectId,
                     folderId: item.folderId,
                     fileName: item.fileName,
                     mimeType: item.mimeType,
                     fileSize: item.size,
                     mediaType: item.mediaType,
-                });
+                }, item.file);
 
                 runInAction(() => {
                     job.queue[i] = {...job.queue[i], assetId: session.assetId, objectName: session.objectName};
@@ -341,7 +345,7 @@ export class UploadManagerStore {
 
                 await uploadService.uploadFileWithSession(
                     item.file,
-                    {uploadId: session.uploadId, objectName: session.objectName, partUrls: session.partUrls},
+                    session,
                     (progress) => {
                         runInAction(() => {
                             job.currentProgress = progress;
