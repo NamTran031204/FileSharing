@@ -149,15 +149,17 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
                   {/* Bottom Actions */}
                   <div className="mt-auto">
                       {/* New Project Button */}
-                      <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={handleOpenCreateProject}
-                          title={isExpanded ? undefined : 'New Project'}
-                          className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto"
-                      >
-                          {isExpanded ? 'New Project' : null}
-                      </Button>
+                      <div className={isExpanded ? undefined : 'flex justify-center'}>
+                          <Button
+                              type="primary"
+                              icon={<PlusOutlined />}
+                              onClick={handleOpenCreateProject}
+                              title={isExpanded ? undefined : 'New Project'}
+                              className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto"
+                          >
+                              {isExpanded ? 'New Project' : null}
+                          </Button>
+                      </div>
 
                       {/* Logout */}
                       <div className="mt-4 pt-4 border-t border-border/30">
