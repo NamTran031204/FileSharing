@@ -1,13 +1,5 @@
-import {
-    CloudUploadOutlined,
-    FolderOpenOutlined,
-    MenuUnfoldOutlined,
-    PlusOutlined,
-    ReloadOutlined,
-    SearchOutlined,
-    SlidersOutlined,
-} from '@ant-design/icons';
-import { Button, Input, Modal, Segmented, Select, Tag } from 'antd';
+import { CloudUploadOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { Button, Modal, Select, Tag } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -18,11 +10,10 @@ import {
     type FolderEntity,
     type FolderTreeItemDTO,
 } from '../api/api/index.defs';
-import ActionDropdown, { type ActionDropdownItem } from '../components/core/common/ActionDropdown.tsx';
+import { type ActionDropdownItem } from '../components/core/common/ActionDropdown.tsx';
 import { type AssetType } from '../components/assets/AssetCard.tsx';
 import FolderTreePanel, { type FolderTreeNode } from '../components/folder/FolderTreePanel.tsx';
 import FolderAssetCommonCrudPage from '../components/core/crud/FolderAssetCommonCrudPage';
-import type { TopActionConfig } from '../components/core/crud/TopActions';
 import UploadAssetButton from '../components/assets/UploadAssetButton.tsx';
 import UploadFolderButton from '../components/folder/UploadFolderButton.tsx';
 import ContextActionBar from '../components/core/layout/ContextActionBar.tsx';
@@ -112,7 +103,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [filterUser, setFilterUser] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
-    const [insightCollapsed, setInsightCollapsed] = useState(false);
+    const [insightCollapsed, setInsightCollapsed] = useState(true);
 
     const searchSkipRef = useRef(false);
 
@@ -295,6 +286,8 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             onTranslate={() => uiUtils.showInfor('Dịch tên file và bình luận — chưa nối API')}
             onDownload={() => uiUtils.showInfor('Tải folder dạng .zip — chưa nối API')}
             onCopyLink={handleCopyLink}
+            onRefresh={handleRefresh}
+            refreshLoading={isLoading}
             moreItems={[
                 {
                     key: 'move',
@@ -381,83 +374,18 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         },
     ];
 
-    const toolbarSlot = (
-        <>
-            {treeCollapsed && (
-                <button
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition-all hover:border-primary hover:bg-background hover:text-primary"
-                    onClick={() => setTreeCollapsed(false)}
-                    title="Expand folder tree"
-                >
-                    <MenuUnfoldOutlined className="text-lg" />
-                </button>
-            )}
-            <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                prefix={<SearchOutlined className="text-muted-foreground" />}
-                placeholder="Search files and folders..."
-                allowClear
-                className="h-10 max-w-[420px] rounded-lg"
-            />
-            <Segmented
-                value={typeFilter}
-                onChange={(value) => setTypeFilter(String(value))}
-                options={[
-                    { label: 'All', value: 'all' },
-                    { label: 'Images', value: 'image' },
-                    { label: 'Videos', value: 'video' },
-                    { label: 'Docs', value: 'doc' },
-                ]}
-                className="hidden rounded-lg lg:inline-flex"
-            />
-            <Button
-                icon={<SlidersOutlined />}
-                onClick={() => setShowAdvancedSearch((v) => !v)}
-                className={`h-10 rounded-lg font-semibold ${showAdvancedSearch ? 'border-primary text-primary' : ''}`}
-            >
-                Advanced
-            </Button>
-            <Button
-                icon={<ReloadOutlined />}
-                onClick={handleRefresh}
-                loading={isLoading}
-                className="h-10 rounded-lg"
-            >
-                Refresh
-            </Button>
-        </>
-    );
-
-    const topActions: TopActionConfig[] = [
+    const newActions: ActionDropdownItem<unknown>[] = [
         {
-            content: (
-                <ActionDropdown
-                    actions={[
-                        {
-                            title: 'uploadFile',
-                            titleCustom: 'Upload File',
-                            icon: <CloudUploadOutlined className="text-base text-primary" />,
-                            onClick: () => folderStore.openUploadAssetModal(),
-                        },
-                        {
-                            title: 'uploadFolder',
-                            titleCustom: 'Upload Folder',
-                            icon: <FolderOpenOutlined className="text-base text-primary" />,
-                            onClick: () => folderStore.openUploadFolderModal(),
-                        },
-                    ]}
-                    trigger={
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            className="h-10 rounded-lg bg-linear-to-br from-primary-dark to-primary px-5 font-semibold shadow-md shadow-primary-dark/20"
-                        >
-                            New
-                        </Button>
-                    }
-                />
-            ),
+            title: 'uploadFile',
+            titleCustom: 'Upload File',
+            icon: <CloudUploadOutlined className="text-base text-primary" />,
+            onClick: () => folderStore.openUploadAssetModal(),
+        },
+        {
+            title: 'uploadFolder',
+            titleCustom: 'Upload Folder',
+            icon: <FolderOpenOutlined className="text-base text-primary" />,
+            onClick: () => folderStore.openUploadFolderModal(),
         },
     ];
 
@@ -505,16 +433,21 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 sidebarCollapsed
                 topBarSlot={contextBar}
                 folderTreeSlot={
-                    !treeCollapsed ? (
-                        <FolderTreePanel
-                            treeData={treeData}
-                            activeId={currentFolderId ?? 'root'}
-                            onSelect={handleTreeSelect}
-                            onCollapse={() => setTreeCollapsed(true)}
-                        />
-                    ) : undefined
+                    <FolderTreePanel
+                        treeData={treeData}
+                        activeId={currentFolderId ?? 'root'}
+                        onSelect={handleTreeSelect}
+                        collapsed={treeCollapsed}
+                        onToggleCollapse={() => setTreeCollapsed((value) => !value)}
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        typeFilter={typeFilter}
+                        onTypeFilterChange={setTypeFilter}
+                        advancedOpen={showAdvancedSearch}
+                        onToggleAdvanced={() => setShowAdvancedSearch((value) => !value)}
+                        newActions={newActions}
+                    />
                 }
-                toolbarSlot={toolbarSlot}
                 asideSlot={
                     <FolderInsightPanel
                         summaryItems={summaryItems}
@@ -523,7 +456,6 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         onToggle={() => setInsightCollapsed((value) => !value)}
                     />
                 }
-                topActions={topActions}
                 folders={folderStore.folders}
                 assets={visibleAssets}
                 isLoadingFolders={folderStore.isFolderLoading}

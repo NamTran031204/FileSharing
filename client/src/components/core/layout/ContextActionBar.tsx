@@ -3,6 +3,7 @@ import {
     DownloadOutlined,
     EllipsisOutlined,
     LinkOutlined,
+    ReloadOutlined,
     ShareAltOutlined,
     TranslationOutlined,
 } from '@ant-design/icons';
@@ -28,6 +29,9 @@ export interface ContextActionBarProps {
     onTranslate?: () => void;
     onDownload?: () => void;
     onCopyLink?: () => void;
+    /** Khong truyen -> tu an nut Refresh */
+    onRefresh?: () => void;
+    refreshLoading?: boolean;
     /** Cac muc bo sung trong menu "..." */
     moreItems?: MenuProps['items'];
     /** Slot phu o goc phai — vd: Tag trang thai, nut custom */
@@ -51,6 +55,8 @@ const ContextActionBar = ({
     onTranslate,
     onDownload,
     onCopyLink,
+    onRefresh,
+    refreshLoading,
     moreItems,
     right,
 }: ContextActionBarProps) => {
@@ -121,6 +127,17 @@ const ContextActionBar = ({
             )}
 
             <div className="flex shrink-0 items-center gap-2">
+                {onRefresh && (
+                    <Tooltip title="Refresh">
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={onRefresh}
+                            loading={refreshLoading}
+                            className="h-9 rounded-lg font-semibold"
+                            aria-label="Refresh"
+                        />
+                    </Tooltip>
+                )}
                 <Tooltip title="Translate file names and comments">
                     <Button
                         icon={<TranslationOutlined />}

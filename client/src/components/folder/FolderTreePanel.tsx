@@ -1,5 +1,16 @@
-import { CaretDownOutlined, CaretRightOutlined, FolderFilled, MenuFoldOutlined } from '@ant-design/icons';
+import {
+  CaretDownOutlined,
+  CaretRightOutlined,
+  FolderFilled,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  SlidersOutlined,
+} from '@ant-design/icons';
+import { Input, Segmented, Tooltip } from 'antd';
 import { useState } from 'react';
+import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
 
 export interface FolderTreeNode {
   id: string | number;
@@ -73,19 +84,145 @@ interface FolderTreePanelProps {
   treeData: FolderTreeNode[];
   activeId: string | number | null;
   onSelect: (id: string | number) => void;
-  onCollapse: () => void;
+  /** true = thu gon thanh rail doc 48px chi con icon, false = panel day du 280px */
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  typeFilter: string;
+  onTypeFilterChange: (value: string) => void;
+  advancedOpen: boolean;
+  onToggleAdvanced: () => void;
+  /** Actions cho nut New (Upload File / Upload Folder) — dung chung cho ca 2 trigger (day du + rail thu gon) */
+  newActions: ActionDropdownItem<unknown>[];
 }
 
-const FolderTreePanel = ({ treeData, activeId, onSelect, onCollapse }: FolderTreePanelProps) => {
+const FolderTreePanel = ({
+  treeData,
+  activeId,
+  onSelect,
+  collapsed,
+  onToggleCollapse,
+  searchValue,
+  onSearchChange,
+  typeFilter,
+  onTypeFilterChange,
+  advancedOpen,
+  onToggleAdvanced,
+  newActions,
+}: FolderTreePanelProps) => {
+  if (collapsed) {
+    return (
+      <div className="flex w-12 shrink-0 flex-col items-center gap-4 border-r border-border bg-card py-4">
+        <Tooltip title="Expand folder tree" placement="right">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Expand folder tree"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
+          >
+            <MenuUnfoldOutlined className="text-base" />
+          </button>
+        </Tooltip>
+        <Tooltip title="Search files and folders" placement="right">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Search files and folders"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
+          >
+            <SearchOutlined className="text-base" />
+          </button>
+        </Tooltip>
+        <ActionDropdown
+          actions={newActions}
+          trigger={
+            <Tooltip title="New" placement="right">
+              <button
+                type="button"
+                aria-label="New"
+                className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-all hover:bg-primary-dark"
+              >
+                <PlusOutlined className="text-base" />
+              </button>
+            </Tooltip>
+          }
+        />
+        <Tooltip title="Folder tree" placement="right">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Expand folder tree"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
+          >
+            <FolderFilled className="text-base" />
+          </button>
+        </Tooltip>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-[280px] flex-shrink-0 bg-card border-r border-border overflow-y-auto p-4">
+    <div className="flex w-[280px] flex-shrink-0 flex-col bg-card border-r border-border overflow-y-auto p-4">
+      <ActionDropdown
+        actions={newActions}
+        trigger={
+          <button
+            type="button"
+            className="mb-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-linear-to-br from-primary-dark to-primary font-semibold text-primary-foreground shadow-md shadow-primary-dark/20"
+          >
+            <PlusOutlined />
+            New
+          </button>
+        }
+      />
+
+      <Input
+        value={searchValue}
+        onChange={(e) => onSearchChange(e.target.value)}
+        prefix={<SearchOutlined className="text-muted-foreground" />}
+        placeholder="Search files and folders..."
+        allowClear
+        className="mb-3 h-9 rounded-lg"
+      />
+
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <Segmented
+          block
+          value={typeFilter}
+          onChange={(value) => onTypeFilterChange(String(value))}
+          options={[
+            { label: 'All', value: 'all' },
+            { label: 'Images', value: 'image' },
+            { label: 'Videos', value: 'video' },
+            { label: 'Docs', value: 'doc' },
+          ]}
+          size="small"
+          className="min-w-0 flex-1 rounded-lg [&_.ant-segmented-item]:px-1 [&_.ant-segmented-item-label]:text-[11px]"
+        />
+        <Tooltip title="Advanced filter">
+          <button
+            type="button"
+            onClick={onToggleAdvanced}
+            aria-label="Advanced filter"
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-all ${
+              advancedOpen
+                ? 'border-primary text-primary'
+                : 'border-border text-muted-foreground hover:border-primary hover:text-primary'
+            }`}
+          >
+            <SlidersOutlined />
+          </button>
+        </Tooltip>
+      </div>
+
       <div className="flex items-center justify-between mb-3 px-2">
         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           Folder Tree
         </span>
         <button
           className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-background hover:text-primary transition-all"
-          onClick={onCollapse}
+          onClick={onToggleCollapse}
           title="Collapse tree"
         >
           <MenuFoldOutlined className="text-base" />
