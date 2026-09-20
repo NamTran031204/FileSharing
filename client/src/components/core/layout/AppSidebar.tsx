@@ -142,11 +142,6 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
                   {/* Branding */}
                   <div className={`flex flex-col gap-1 mb-4 ${isExpanded ? 'px-2' : 'items-center'}`}>
                       <span className="text-lg font-black text-primary-dark">{isExpanded ? 'ASSET' : 'A'}</span>
-                      {isExpanded && (
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                              Premium Tier
-                          </span>
-                      )}
                   </div>
 
                   {/* Navigation */}
