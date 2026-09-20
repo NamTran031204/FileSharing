@@ -12,6 +12,10 @@ import MainPageActionCard, {type MainPageActionTone} from '../components/MainPag
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
 import uiUtils from '../utils/uiUtils.tsx';
+import {useNavigate} from 'react-router-dom';
+import {ProjectControllerService} from '../api/api/ProjectControllerService';
+import type {ProjectStatus} from '../api/api/index.defs';
+import {useStore} from '../store';
 
 interface MainPageProps {
     userName?: string;
@@ -32,6 +36,8 @@ const MainPage = ({
 }: MainPageProps) => {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreatingProject, setIsCreatingProject] = useState(false);
+    const navigate = useNavigate();
+    const {sessionStore} = useStore();
 
     const quickActions = useMemo<MainQuickAction[]>(() => [
         {
@@ -55,8 +61,37 @@ const MainPage = ({
         setIsCreatingProject(true);
 
         try {
-            console.info('Create project payload:', values);
-            uiUtils.showInfor('Tạo project — chưa có API');
+            const response = await ProjectControllerService.createNew({
+                body: {
+                    projectName: values.projectName,
+                    projectCode: values.projectCode,
+                    description: values.description,
+                    startDate: values.startDate?.toDate(),
+                    endDate: values.endDate?.toDate(),
+                    status: values.projectStatus as ProjectStatus | undefined,
+                },
+            });
+
+            if (!response?.isSuccessful) {
+                throw new Error(response?.message || 'Create project failed');
+            }
+
+            const createdProject = response.data;
+
+            uiUtils.showSuccess('Tạo project thành công');
+            setIsCreateProjectOpen(false);
+
+            if (createdProject?.projectId) {
+                sessionStore.setCurrentProject({
+                    projectId: createdProject.projectId,
+                    projectName: createdProject.projectName,
+                });
+                sessionStore.setCurrentFolder(undefined);
+                navigate(`/projects/${createdProject.projectId}`);
+            }
+        } catch (error) {
+            console.error('Create project failed:', error);
+            uiUtils.showError('Tạo project thất bại');
         } finally {
             setIsCreatingProject(false);
         }
