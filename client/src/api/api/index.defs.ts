@@ -1390,7 +1390,7 @@ export interface MetadataEntity {
   mimeType?: string;
 
   /**  */
-  fileSize?: number;
+  fileSize?: string;
 
   /**  */
   compressionAlgo?: string;
@@ -1564,7 +1564,7 @@ export interface MetadataDTO {
   mimeType?: string;
 
   /**  */
-  fileSize?: number;
+  fileSize?: string;
 
   /**  */
   compressionAlgo?: string;
@@ -2207,6 +2207,64 @@ export interface CommonResponseProcessingJobEntity {
   message?: string;
 }
 
+export interface JobResourceUsage {
+  /**  */
+  tool?: string;
+
+  /**  */
+  peakCpuPercent?: number;
+
+  /**  */
+  avgCpuPercent?: number;
+
+  /**  */
+  peakRssBytes?: string;
+
+  /**  */
+  peakTempBytes?: string;
+
+  /**  */
+  samples?: number;
+
+  /**  */
+  wallSeconds?: number;
+
+  /**  */
+  stages?: object;
+}
+
+export interface OutboxEvent {
+  /**  */
+  id?: string;
+
+  /**  */
+  type?: string;
+
+  /**  */
+  sink?: OutboxSink;
+
+  /**  */
+  topic?: string;
+
+  /**  */
+  payload?: object;
+
+  /**  */
+  status?: OutboxEventStatus;
+
+  /**  */
+  attempts?: number;
+
+  /**  */
+  dueAt?: Date;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  sentAt?: Date;
+}
+
 export interface ProcessingJobConfig {
   /**  */
   profiles?: string[];
@@ -2292,6 +2350,18 @@ export interface ProcessingJobEntity {
   completedAt?: Date;
 
   /**  */
+  dueAt?: Date;
+
+  /**  */
+  leaseUntil?: Date;
+
+  /**  */
+  attemptId?: string;
+
+  /**  */
+  traceId?: string;
+
+  /**  */
   retryCount?: number;
 
   /**  */
@@ -2305,6 +2375,12 @@ export interface ProcessingJobEntity {
 
   /**  */
   workerHeartbeat?: Date;
+
+  /**  */
+  outbox?: OutboxEvent[];
+
+  /**  */
+  resourceUsage?: JobResourceUsage;
 }
 
 export interface ProcessingJobProgress {
@@ -3396,12 +3472,23 @@ export enum Shape {
   'DOT' = 'DOT'
 }
 
+export enum OutboxEventStatus {
+  'PENDING' = 'PENDING',
+  'SENT' = 'SENT'
+}
+
+export enum OutboxSink {
+  'JOB_STORE' = 'JOB_STORE',
+  'KAFKA' = 'KAFKA'
+}
+
 export enum ProcessingJobStatus {
   'PENDING' = 'PENDING',
   'PROCESSING' = 'PROCESSING',
   'COMPLETED' = 'COMPLETED',
   'FAILED' = 'FAILED',
-  'CANCELLED' = 'CANCELLED'
+  'CANCELLED' = 'CANCELLED',
+  'DEAD_LETTER' = 'DEAD_LETTER'
 }
 
 export enum ProcessingJobType {
