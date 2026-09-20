@@ -12,13 +12,23 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import CreateProjectModal, {type CreateProjectFormValues} from "../../project/CreateProjectModal.tsx";
 import {useState} from "react";
 
+interface AppSidebarProps {
+  /** true = sidebar chi hien icon (72px), hover de mo rong de len content. Mac dinh false giu nguyen UI hien tai. */
+  collapsed?: boolean;
+}
+
 /**
- * AppSidebar - Sidebar chung cho toàn bộ ứng dụng
+ * AppSidebar - Sidebar chung cho toan bo ung dung
  * Lumina Pro Theme: Navy-Purple background, fixed width
  */
-const AppSidebar = () => {
+const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isHovering, setIsHovering] = useState(false);
+
+  // isExpanded: dang hien day du label (mo rong that su, hoac dang thu gon nhung hover)
+  const isExpanded = !collapsed || isHovering;
+  const isOverlay = collapsed && isHovering;
 
   const menuItems = [
     {
@@ -82,67 +92,87 @@ const AppSidebar = () => {
 
   return (
       <>
-          <aside className="hidden md:flex flex-col h-full py-6 px-4 gap-4 bg-background w-64 border-none">
-              {/* Branding */}
-              <div className="flex flex-col gap-1 mb-4 px-2">
-                  <span className="text-lg font-black text-primary-dark">ASSET</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-          Premium Tier
-        </span>
-              </div>
-
-              {/* Navigation */}
-              <nav className="flex flex-col gap-1">
-                  {menuItems.map((item) => {
-                      const isActive = item.isActive !== undefined
-                          ? item.isActive
-                          : location.pathname === item.key;
-
-                      return (
-                          <button
-                              key={item.key}
-                              onClick={() => handleItemClick(item.key)}
-                              className={`
-                flex items-center gap-3 py-3 px-4 rounded-lg 
-                font-inter text-sm tracking-wide uppercase font-semibold
-                transition-all translate-x-1 duration-200
-                ${isActive
-                                  ? 'text-primary-dark font-bold border-r-4 border-primary bg-accent/20'
-                                  : 'text-muted-foreground hover:text-primary-dark hover:bg-accent/10'
-                              }
-              `}
-                          >
-                              <span className="text-xl">{item.icon}</span>
-                              {item.label}
-                          </button>
-                      );
-                  })}
-              </nav>
-
-              {/* Bottom Actions */}
-              <div className="mt-auto px-2">
-                  {/* New Project Button */}
-                  <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={handleOpenCreateProject}
-                      className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto"
-                  >
-                      New Project
-                  </Button>
-
-                  {/* Logout */}
-                  <div className="mt-4 pt-4 border-t border-border/30">
-                      <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-3 py-2 px-2 text-muted-foreground hover:text-destructive transition-colors w-full"
-                      >
-                          <LogoutOutlined />
-                          <span className="text-xs font-bold uppercase tracking-wider">Logout</span>
-                      </button>
+          {/* Div giu cho trong flex layout: width co dinh theo trang thai nghi, KHONG doi khi hover */}
+          <div
+              className={`hidden md:block relative h-full transition-all duration-200 ${collapsed ? 'w-[72px]' : 'w-64'}`}
+              onMouseEnter={() => collapsed && setIsHovering(true)}
+              onMouseLeave={() => collapsed && setIsHovering(false)}
+          >
+              <aside
+                  className={`
+                    flex flex-col absolute inset-y-0 left-0 py-6 gap-4 bg-background border-none
+                    transition-all duration-200
+                    ${isExpanded ? 'w-64 px-4' : 'w-[72px] px-2'}
+                    ${isOverlay ? 'z-30 canvas-shadow' : 'z-0'}
+                  `}
+              >
+                  {/* Branding */}
+                  <div className={`flex flex-col gap-1 mb-4 ${isExpanded ? 'px-2' : 'items-center'}`}>
+                      <span className="text-lg font-black text-primary-dark">{isExpanded ? 'ASSET' : 'A'}</span>
+                      {isExpanded && (
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                              Premium Tier
+                          </span>
+                      )}
                   </div>
-              </div>
-          </aside>
+
+                  {/* Navigation */}
+                  <nav className="flex flex-col gap-1">
+                      {menuItems.map((item) => {
+                          const isActive = item.isActive !== undefined
+                              ? item.isActive
+                              : location.pathname === item.key;
+
+                          return (
+                              <button
+                                  key={item.key}
+                                  onClick={() => handleItemClick(item.key)}
+                                  title={isExpanded ? undefined : item.label}
+                                  className={`
+                    flex items-center gap-3 py-3 rounded-lg
+                    font-inter text-sm tracking-wide uppercase font-semibold
+                    transition-all duration-200
+                    ${isExpanded ? 'px-4 translate-x-1' : 'px-0 justify-center'}
+                    ${isActive
+                                      ? 'text-primary-dark font-bold border-r-4 border-primary bg-accent/20'
+                                      : 'text-muted-foreground hover:text-primary-dark hover:bg-accent/10'
+                                  }
+                  `}
+                              >
+                                  <span className="text-xl">{item.icon}</span>
+                                  {isExpanded && item.label}
+                              </button>
+                          );
+                      })}
+                  </nav>
+
+                  {/* Bottom Actions */}
+                  <div className="mt-auto">
+                      {/* New Project Button */}
+                      <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
+                          onClick={handleOpenCreateProject}
+                          title={isExpanded ? undefined : 'New Project'}
+                          className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto"
+                      >
+                          {isExpanded ? 'New Project' : null}
+                      </Button>
+
+                      {/* Logout */}
+                      <div className="mt-4 pt-4 border-t border-border/30">
+                          <button
+                              onClick={handleLogout}
+                              title={isExpanded ? undefined : 'Logout'}
+                              className={`flex items-center gap-3 py-2 text-muted-foreground hover:text-destructive transition-colors w-full ${isExpanded ? 'px-2' : 'justify-center'}`}
+                          >
+                              <LogoutOutlined />
+                              {isExpanded && <span className="text-xs font-bold uppercase tracking-wider">Logout</span>}
+                          </button>
+                      </div>
+                  </div>
+              </aside>
+          </div>
 
           <CreateProjectModal
               open={isCreateProjectOpen}
@@ -151,10 +181,7 @@ const AppSidebar = () => {
               onCreate={handleCreateProject}
           />
       </>
-
-
   );
 };
 
 export default AppSidebar;
-
