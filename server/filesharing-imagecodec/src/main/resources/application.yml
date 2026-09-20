@@ -3,7 +3,7 @@ spring:
     name: filesharing-imagecodec
   data:
     mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256&directConnection=true
   kafka:
     bootstrap-servers: localhost:9092
     consumer:

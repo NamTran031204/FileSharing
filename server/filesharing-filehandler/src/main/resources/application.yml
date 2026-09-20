@@ -6,7 +6,7 @@ spring:
     name: filesharing-filehandler
   data:
     mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256
+      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256&directConnection=true
   servlet:
     multipart:
       max-file-size: 100MB
