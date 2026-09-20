@@ -404,6 +404,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     return (
         <>
             <FolderAssetCommonCrudPage<FolderEntity, AssetSummaryDto>
+                sidebarCollapsed
                 folderTreeSlot={
                     !treeCollapsed ? (
                         <FolderTreePanel
