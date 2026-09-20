@@ -17,6 +17,8 @@ export interface OrdCrudPageProps<TFolder, TAsset>
   hiddenToolbar?: boolean;
   /** Class custom cho content scroll area */
   contentClassName?: string;
+  /** true = AppSidebar hien icon-only cho man nay (mac dinh false, giu nguyen UI hien tai) */
+  sidebarCollapsed?: boolean;
 }
 
 /**
@@ -43,10 +45,11 @@ const FolderAssetCommonCrudPage = <TFolder, TAsset>({
   topActions,
   hiddenToolbar,
   contentClassName,
+  sidebarCollapsed,
   ...bodyProps
 }: OrdCrudPageProps<TFolder, TAsset>) => {
   return (
-    <CommonLayout>
+    <CommonLayout sidebarCollapsed={sidebarCollapsed}>
       <div className="flex flex-1 overflow-hidden">
         {folderTreeSlot}
 
