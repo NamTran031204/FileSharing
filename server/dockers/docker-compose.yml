@@ -1,10 +1,44 @@
 version: '3.8'
 
 services:
+  # Sinh keyFile ben trong container roi thoat. Khong bind mount tu o Windows
+  # vi Docker Desktop khong gan duoc quyen 400 + owner 999.
+  mongo-keyfile:
+    image: mongo:7.0
+    container_name: filesharing-mongo-keyfile
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        if [ ! -f /keyfile-data/mongo-keyfile ]; then
+          openssl rand -base64 756 > /keyfile-data/mongo-keyfile
+          echo "keyfile: da sinh moi"
+        else
+          echo "keyfile: da co tu truoc"
+        fi
+        chmod 400 /keyfile-data/mongo-keyfile
+        chown 999:999 /keyfile-data/mongo-keyfile
+    volumes:
+      - mongodb_keyfile:/keyfile-data
+
   mongodb:
     image: mongo:7.0
     container_name: filesharing-mongodb
     restart: unless-stopped
+    depends_on:
+      mongo-keyfile:
+        condition: service_completed_successfully
+    # KHONG khai --auth: image tu them khi thay MONGO_INITDB_ROOT_USERNAME.
+    # PHAI giu --bind_ip_all vi override command lam mat CMD mac dinh cua image.
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --keyFile
+      - /keyfile-data/mongo-keyfile
+      - --oplogSize
+      - "512"
+      - --bind_ip_all
     ports:
       - "27017:27017"
     environment:
@@ -13,6 +47,51 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+      - mongodb_keyfile:/keyfile-data:ro
+    # ping khong can auth. Dung hostname mongodb (khong phai 127.0.0.1) de giai doan
+    # init cua entrypoint - luc mongod chi bind localhost - con bao unhealthy.
+    healthcheck:
+      test: ["CMD", "mongosh", "--host", "mongodb:27017", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - filesharing-network
+
+  # rs.initiate() mot lan, idempotent, co retry. host phai la localhost:27017 vi
+  # 4 service Spring chay tren may Windows, khong chay trong Docker.
+  # Chi mot lenh --eval duy nhat roi thoat.
+  mongo-init:
+    image: mongo:7.0
+    container_name: filesharing-mongo-init
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        for i in $$(seq 1 30); do
+          if mongosh --host mongodb:27017 \
+               -u "$$MONGO_USER" -p "$$MONGO_PASSWORD" \
+               --authenticationDatabase admin --quiet --eval '
+                 try {
+                   rs.status();
+                   print("rs0 da initiate tu truoc");
+                 } catch (e) {
+                   rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "localhost:27017" }] });
+                   print("rs0 initiate xong");
+                 }'; then
+            exit 0
+          fi
+          echo "mongod chua san sang, thu lai ($$i/30)"
+          sleep 2
+        done
+        echo "LOI: rs.initiate that bai sau 30 lan thu"
+        exit 1
     networks:
       - filesharing-network
 
@@ -121,6 +200,7 @@ volumes:
       o: bind
       device: ./data/minio
   mongodb_data:
+  mongodb_keyfile:
 
 networks:
   minio-network:
