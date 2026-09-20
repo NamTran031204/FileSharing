@@ -9,6 +9,10 @@ export interface OrdCrudPageProps<TFolder, TAsset>
   pageTitle?: string;
   /** Slot cho FolderTreePanel (hoặc bất kỳ sidebar nào) — đặt bên trái */
   folderTreeSlot?: ReactNode;
+  /** Slot full-width ngay dưới AppHeader — chỗ của ContextActionBar */
+  topBarSlot?: ReactNode;
+  /** Slot rail bên phải vùng nội dung — chỗ của FolderInsightPanel */
+  asideSlot?: ReactNode;
   /** Slot cho search box / advanced filter — đặt trong toolbar */
   toolbarSlot?: ReactNode;
   /** Các nút action ở góc phải toolbar */
@@ -26,21 +30,25 @@ export interface OrdCrudPageProps<TFolder, TAsset>
  *
  * Layout:
  *   CommonLayout
+ *     ├── topBarSlot           (ContextActionBar — full width)
  *     └── flex flex-1
- *         ├── folderTreeSlot      (sidebar tree)
+ *         ├── folderTreeSlot   (sidebar tree)
  *         └── main flex-1
  *             ├── toolbar (h-[72px])  →  toolbarSlot + TopActions
- *             └── content scrollable
- *                 ├── breadcrumb
- *                 ├── pageTitle (optional)
- *                 ├── contentTop
- *                 ├── Folders grid
- *                 ├── contentBetween
- *                 └── Assets grid
+ *             └── flex flex-1
+ *                 ├── content scrollable
+ *                 │   ├── pageTitle (optional)
+ *                 │   ├── contentTop
+ *                 │   ├── Folders grid
+ *                 │   ├── contentBetween
+ *                 │   └── Assets grid
+ *                 └── asideSlot        (rail phải)
  */
 const FolderAssetCommonCrudPage = <TFolder, TAsset>({
   pageTitle,
   folderTreeSlot,
+  topBarSlot,
+  asideSlot,
   toolbarSlot,
   topActions,
   hiddenToolbar,
@@ -50,6 +58,8 @@ const FolderAssetCommonCrudPage = <TFolder, TAsset>({
 }: OrdCrudPageProps<TFolder, TAsset>) => {
   return (
     <CommonLayout sidebarCollapsed={sidebarCollapsed}>
+      {topBarSlot}
+
       <div className="flex flex-1 overflow-hidden">
         {folderTreeSlot}
 
@@ -61,11 +71,15 @@ const FolderAssetCommonCrudPage = <TFolder, TAsset>({
             </div>
           )}
 
-          <div className={`flex-1 overflow-y-auto px-8 py-6 ${contentClassName ?? ''}`}>
-            {pageTitle && (
-              <h1 className="mb-6 text-2xl font-bold text-foreground">{pageTitle}</h1>
-            )}
-            <FolderAssetBody<TFolder, TAsset> {...bodyProps} />
+          <div className="flex flex-1 overflow-hidden">
+            <div className={`flex-1 overflow-y-auto px-8 py-6 ${contentClassName ?? ''}`}>
+              {pageTitle && (
+                <h1 className="mb-6 text-2xl font-bold text-foreground">{pageTitle}</h1>
+              )}
+              <FolderAssetBody<TFolder, TAsset> {...bodyProps} />
+            </div>
+
+            {asideSlot}
           </div>
         </div>
       </div>

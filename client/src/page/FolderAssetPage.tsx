@@ -7,12 +7,13 @@ import {
     SearchOutlined,
     SlidersOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Modal, Select } from 'antd';
+import { Button, Input, Modal, Segmented, Select, Tag } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     GrantedProjectPermission,
+    ProcessingStatus,
     type AssetSummaryDto,
     type FolderEntity,
     type FolderTreeItemDTO,
@@ -24,6 +25,12 @@ import FolderAssetCommonCrudPage from '../components/core/crud/FolderAssetCommon
 import type { TopActionConfig } from '../components/core/crud/TopActions';
 import UploadAssetButton from '../components/assets/UploadAssetButton.tsx';
 import UploadFolderButton from '../components/folder/UploadFolderButton.tsx';
+import ContextActionBar from '../components/core/layout/ContextActionBar.tsx';
+import FolderInsightPanel, {
+    type InsightProcessingItem,
+    type InsightSummaryItem,
+} from '../components/folder/FolderInsightPanel.tsx';
+import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 
 const resolveAssetType = (mimeType?: string): AssetType => {
@@ -52,6 +59,14 @@ const formatDuration = (ms?: number): string | undefined => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+/** Segmented "Images" gom cả ảnh raster lẫn SVG, khác với resolveAssetType tách riêng 'svg'. */
+const matchesTypeFilter = (mimeType: string | undefined, filter: string): boolean => {
+    if (filter === 'all') return true;
+    const type = resolveAssetType(mimeType);
+    if (filter === 'image') return type === 'image' || type === 'svg';
+    return type === filter;
 };
 
 const buildTreeNodes = (items: FolderTreeItemDTO[], projectName: string): FolderTreeNode[] => {
@@ -95,6 +110,8 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterUser, setFilterUser] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
+    const [insightCollapsed, setInsightCollapsed] = useState(false);
 
     const searchSkipRef = useRef(false);
 
@@ -185,6 +202,24 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         void folderStore.fetchAssetsPage(projectId, currentFolderId);
     };
 
+    const handleBackToParent = () => {
+        const parentFolderId = breadcrumbFolders.at(-1)?.parentFolderId;
+        if (parentFolderId) {
+            handleBreadcrumbFolderClick(parentFolderId);
+            return;
+        }
+        handleGoToRoot();
+    };
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            uiUtils.showSuccess('Đã sao chép link folder');
+        } catch {
+            uiUtils.showError('Trình duyệt chặn clipboard, hãy sao chép thủ công từ thanh địa chỉ');
+        }
+    };
+
     const handleMutationSuccess = () => {
         if (!projectId) return;
         void folderStore.fetchFolders(projectId, currentFolderId);
@@ -210,43 +245,87 @@ const FolderAssetPage = observer(function FolderAssetPage() {
 
     const isLoading = folderStore.isFolderLoading || folderStore.isLoading;
 
-    const breadcrumbItems = [
-        { title: <Link to="/home">Home</Link> },
-        { title: <Link to="/projects">Projects</Link> },
-        {
-            title: currentFolderId ? (
-                <button type="button" className="hover:text-primary transition-colors" onClick={handleGoToRoot}>
-                    {projectName}
-                </button>
-            ) : (
-                <span>{projectName}</span>
-            ),
-        },
-        ...breadcrumbFolders.slice(0, -1).map((folder) => ({
-            title: folder.folderId ? (
-                <button
-                    type="button"
-                    className="hover:text-primary transition-colors"
-                    onClick={() => handleBreadcrumbFolderClick(folder.folderId!)}
-                >
-                    {folder.folderName}
-                </button>
-            ) : (
-                <span>{folder.folderName}</span>
-            ),
-        })),
-        ...(breadcrumbFolders.length > 0
-            ? [
-                {
-                    title: (
-                        <span className="text-foreground font-medium">
-                            {breadcrumbFolders[breadcrumbFolders.length - 1]?.folderName}
-                        </span>
-                    ),
-                },
-            ]
-            : []),
+    const currentFolderName = breadcrumbFolders.at(-1)?.folderName ?? projectName;
+
+    const pathLabel = ['Projects', projectName, ...breadcrumbFolders.slice(0, -1).map((f) => f.folderName ?? '—')].join(
+        ' / '
+    );
+
+    const visibleAssets = useMemo(
+        () => folderStore.assets.filter((summary) => matchesTypeFilter(summary.latestVersion?.mimeType, typeFilter)),
+        [folderStore.assets, typeFilter]
+    );
+
+    const totalBytes = useMemo(
+        () => folderStore.assets.reduce((sum, summary) => sum + (summary.latestVersion?.fileSize ?? 0), 0),
+        [folderStore.assets]
+    );
+
+    const processingItems = useMemo<InsightProcessingItem[]>(
+        () =>
+            folderStore.assets
+                .filter((summary) => {
+                    const status = summary.latestVersion?.processingStatus;
+                    return status === ProcessingStatus.PENDING || status === ProcessingStatus.PROCESSING;
+                })
+                .map((summary, index) => ({
+                    key: summary.asset?.assetId ?? `processing-${index}`,
+                    name: summary.asset?.assetName ?? summary.latestVersion?.fileName ?? '—',
+                    status: summary.latestVersion?.processingStatus ?? ProcessingStatus.PENDING,
+                })),
+        [folderStore.assets]
+    );
+
+    const summaryItems: InsightSummaryItem[] = [
+        { label: 'Folders', value: folderStore.folders.length },
+        { label: 'Files', value: folderStore.assets.length },
+        { label: 'Total size', value: formatBytes(totalBytes) },
+        { label: 'Processing', value: processingItems.length },
     ];
+
+    const contextBar = (
+        <ContextActionBar
+            title={currentFolderName}
+            pathLabel={pathLabel}
+            // TODO(api): đổ danh sách thành viên thật từ ProjectControllerService.members
+            participants={[]}
+            onBack={currentFolderId ? handleBackToParent : undefined}
+            onShare={() => uiUtils.showInfor('Chia sẻ folder — chưa nối API')}
+            onTranslate={() => uiUtils.showInfor('Dịch tên file và bình luận — chưa nối API')}
+            onDownload={() => uiUtils.showInfor('Tải folder dạng .zip — chưa nối API')}
+            onCopyLink={handleCopyLink}
+            moreItems={[
+                {
+                    key: 'move',
+                    label: 'Move to...',
+                    onClick: () => uiUtils.showInfor('Di chuyển folder — chưa nối API'),
+                },
+                {
+                    key: 'rename',
+                    label: 'Rename',
+                    disabled: !currentFolderId,
+                    onClick: () => {
+                        if (!currentFolderId) return;
+                        folderStore.openEditFolderModal(currentFolderId);
+                    },
+                },
+                { type: 'divider' },
+                {
+                    key: 'archive',
+                    label: 'Archive',
+                    danger: true,
+                    onClick: () => uiUtils.showInfor('Lưu trữ folder — chưa nối API'),
+                },
+            ]}
+            right={
+                currentFolderId ? (
+                    <Tag color="purple" className="m-0 rounded-md border-0 font-semibold">
+                        Live status
+                    </Tag>
+                ) : null
+            }
+        />
+    );
 
     const folderActions: ActionDropdownItem<FolderEntity>[] = [
         {
@@ -311,7 +390,18 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 prefix={<SearchOutlined className="text-muted-foreground" />}
                 placeholder="Search files and folders..."
                 allowClear
-                className="h-10 max-w-[480px] rounded-lg"
+                className="h-10 max-w-[420px] rounded-lg"
+            />
+            <Segmented
+                value={typeFilter}
+                onChange={(value) => setTypeFilter(String(value))}
+                options={[
+                    { label: 'All', value: 'all' },
+                    { label: 'Images', value: 'image' },
+                    { label: 'Videos', value: 'video' },
+                    { label: 'Docs', value: 'doc' },
+                ]}
+                className="hidden rounded-lg lg:inline-flex"
             />
             <Button
                 icon={<SlidersOutlined />}
@@ -405,6 +495,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         <>
             <FolderAssetCommonCrudPage<FolderEntity, AssetSummaryDto>
                 sidebarCollapsed
+                topBarSlot={contextBar}
                 folderTreeSlot={
                     !treeCollapsed ? (
                         <FolderTreePanel
@@ -416,10 +507,17 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                     ) : undefined
                 }
                 toolbarSlot={toolbarSlot}
+                asideSlot={
+                    <FolderInsightPanel
+                        summaryItems={summaryItems}
+                        processingItems={processingItems}
+                        collapsed={insightCollapsed}
+                        onToggle={() => setInsightCollapsed((value) => !value)}
+                    />
+                }
                 topActions={topActions}
-                breadcrumbItems={breadcrumbItems}
                 folders={folderStore.folders}
-                assets={folderStore.assets}
+                assets={visibleAssets}
                 isLoadingFolders={folderStore.isFolderLoading}
                 isLoadingAssets={folderStore.isLoading}
                 mapFolderToCard={(folder) => ({
@@ -445,7 +543,21 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 getFolderKey={(folder) => folder.folderId ?? ''}
                 getAssetKey={(asset) => asset.asset?.assetId ?? ''}
                 emptyFoldersText={searchQuery ? 'No folders match your search.' : 'No sub-folders here.'}
-                emptyAssetsText={searchQuery ? 'No assets match your search.' : 'No assets in this folder.'}
+                emptyAssetsText={
+                    searchQuery || typeFilter !== 'all'
+                        ? 'No assets match your search.'
+                        : 'No assets in this folder.'
+                }
+                emptyAssetsAction={
+                    <Button
+                        type="primary"
+                        icon={<CloudUploadOutlined />}
+                        onClick={() => folderStore.openUploadAssetModal()}
+                        className="rounded-lg bg-linear-to-br from-primary-dark to-primary font-semibold"
+                    >
+                        Upload File
+                    </Button>
+                }
                 contentTop={contentTop}
             />
 

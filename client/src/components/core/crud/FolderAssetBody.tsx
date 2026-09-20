@@ -43,6 +43,8 @@ export interface FolderAssetBodyProps<TFolder, TAsset> {
 
   emptyFoldersText?: ReactNode;
   emptyAssetsText?: ReactNode;
+  /** Nút CTA hiện bên trong <Empty> của section Files (vd: Upload File) */
+  emptyAssetsAction?: ReactNode;
 
   foldersTitle?: string;
   assetsTitle?: string;
@@ -52,7 +54,7 @@ export interface FolderAssetBodyProps<TFolder, TAsset> {
 }
 
 const SkeletonGrid = ({ rows = 1, count = 4 }: { rows?: number; count?: number }) => (
-  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="rounded-2xl border border-border/30 bg-card p-5">
         <Skeleton active paragraph={{ rows }} />
@@ -86,13 +88,14 @@ const FolderAssetBody = <TFolder, TAsset>({
   getAssetKey,
   emptyFoldersText,
   emptyAssetsText,
+  emptyAssetsAction,
   foldersTitle = 'Folders',
   assetsTitle = 'Files',
   contentTop,
   contentBetweenFolderAndAsset,
 }: FolderAssetBodyProps<TFolder, TAsset>) => {
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
       {breadcrumbItems && breadcrumbItems.length > 0 && (
         <Breadcrumb
           separator={<span className="text-muted-foreground">/</span>}
@@ -104,7 +107,7 @@ const FolderAssetBody = <TFolder, TAsset>({
       {contentTop}
 
       {/* Folders section */}
-      <section className="space-y-5">
+      <section className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground">{foldersTitle}</h2>
           {!isLoadingFolders && (
@@ -115,9 +118,9 @@ const FolderAssetBody = <TFolder, TAsset>({
         </div>
 
         {isLoadingFolders ? (
-          <SkeletonGrid rows={1} />
+          <SkeletonGrid rows={1} count={3} />
         ) : folders.length === 0 ? (
-          <div className="rounded-2xl border border-border/30 bg-card px-6 py-10">
+          <div className="rounded-2xl border border-border/30 bg-card px-6 py-8">
             <Empty
               image={<FolderOpenOutlined className="text-4xl text-muted-foreground" />}
               description={
@@ -150,7 +153,7 @@ const FolderAssetBody = <TFolder, TAsset>({
       {contentBetweenFolderAndAsset}
 
       {/* Assets section */}
-      <section className="space-y-5">
+      <section className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground">{assetsTitle}</h2>
           {!isLoadingAssets && (
@@ -161,7 +164,7 @@ const FolderAssetBody = <TFolder, TAsset>({
         </div>
 
         {isLoadingAssets ? (
-          <SkeletonGrid rows={3} />
+          <SkeletonGrid rows={3} count={6} />
         ) : assets.length === 0 ? (
           <div className="rounded-2xl border border-border/30 bg-card px-6 py-10">
             <Empty
@@ -170,10 +173,12 @@ const FolderAssetBody = <TFolder, TAsset>({
                   {emptyAssetsText ?? 'No assets in this folder.'}
                 </span>
               }
-            />
+            >
+              {emptyAssetsAction}
+            </Empty>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {assets.map((asset, idx) => {
               const data = mapAssetToCard(asset);
               const key = getAssetKey?.(asset, idx) ?? `${data.name}-${idx}`;
