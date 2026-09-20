@@ -30,6 +30,7 @@ import FolderInsightPanel, {
     type InsightProcessingItem,
     type InsightSummaryItem,
 } from '../components/folder/FolderInsightPanel.tsx';
+import { ApiPendingNote } from '../components/core/common/ApiPendingNote';
 import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 
@@ -287,7 +288,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         <ContextActionBar
             title={currentFolderName}
             pathLabel={pathLabel}
-            // TODO(api): đổ danh sách thành viên thật từ ProjectControllerService.members
+            // danh sach thanh vien that se do tu ProjectControllerService.members — xem note "right" ben duoi
             participants={[]}
             onBack={currentFolderId ? handleBackToParent : undefined}
             onShare={() => uiUtils.showInfor('Chia sẻ folder — chưa nối API')}
@@ -318,11 +319,18 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 },
             ]}
             right={
-                currentFolderId ? (
-                    <Tag color="purple" className="m-0 rounded-md border-0 font-semibold">
-                        Live status
-                    </Tag>
-                ) : null
+                <>
+                    <ApiPendingNote
+                        compact
+                        label="Members"
+                        hint="Danh sách thành viên có quyền trên folder/project"
+                    />
+                    {currentFolderId && (
+                        <Tag color="purple" className="m-0 rounded-md border-0 font-semibold">
+                            Live status
+                        </Tag>
+                    )}
+                </>
             }
         />
     );

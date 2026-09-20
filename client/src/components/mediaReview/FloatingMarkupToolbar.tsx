@@ -4,6 +4,7 @@ import {
 } from '../imageReview/icons/ReviewIcons';
 import { STROKE_COLORS } from '../imageReview/constants';
 import type { StrokeColor } from '../imageReview/constants';
+import uiUtils from '../../utils/uiUtils.tsx';
 
 export type MarkupToolId = 'select' | 'rect' | 'circle' | 'arrow' | 'pan';
 
@@ -12,10 +13,8 @@ export interface FloatingMarkupToolbarProps {
   activeColor: StrokeColor;
   onToolClick: (tool: MarkupToolId) => void;
   onColorChange: (c: StrokeColor) => void;
-  // TODO(impl): 3 nút Trash/Undo/Redo kế thừa nguyên trạng no-op từ LeftToolbar cũ —
-  // useKonvaCanvas không có history stack, chưa từng có logic để bê sang.
-  // Cần thêm undo/redo stack trong hooks/useKonvaCanvas.ts + handler xoá shape đang chọn
-  // nếu muốn 3 nút này hoạt động thật.
+  // onDelete/onUndo/onRedo optional: neu khong truyen, fallback toast bao chua ho tro
+  // (thieu history stack that trong useKonvaCanvas).
   onDelete?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
@@ -38,6 +37,10 @@ export function FloatingMarkupToolbar({
   onUndo,
   onRedo,
 }: FloatingMarkupToolbarProps) {
+  const handleDelete = onDelete ?? (() => uiUtils.showInfor('Xoá vùng chọn — chưa hỗ trợ (thiếu lịch sử thao tác)'));
+  const handleUndo = onUndo ?? (() => uiUtils.showInfor('Undo — chưa hỗ trợ (thiếu lịch sử thao tác)'));
+  const handleRedo = onRedo ?? (() => uiUtils.showInfor('Redo — chưa hỗ trợ (thiếu lịch sử thao tác)'));
+
   return (
     <div className="absolute left-4 top-4 z-30 flex items-center gap-1 rounded-full border border-[var(--color-canvas-border)] bg-[var(--color-canvas-elevated)] px-2 py-1.5 shadow-2xl backdrop-blur-md">
       {TOOLS.map(({ id, Icon, title }) => (
@@ -58,21 +61,21 @@ export function FloatingMarkupToolbar({
       <div className="mx-1 h-5 w-px bg-white/15" />
 
       <button
-        onClick={onDelete}
+        onClick={handleDelete}
         title="Delete Selected (Del)"
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-rose-950/60 hover:text-rose-400"
       >
         <IconTrash />
       </button>
       <button
-        onClick={onUndo}
+        onClick={handleUndo}
         title="Undo"
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
       >
         <IconUndo />
       </button>
       <button
-        onClick={onRedo}
+        onClick={handleRedo}
         title="Redo"
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
       >

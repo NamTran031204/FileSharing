@@ -11,6 +11,7 @@ import AppSidebar from '../components/core/layout/AppSidebar.tsx';
 import MainPageActionCard, {type MainPageActionTone} from '../components/MainPageActionCard';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
+import uiUtils from '../utils/uiUtils.tsx';
 
 interface MainPageProps {
     userName?: string;
@@ -54,9 +55,8 @@ const MainPage = ({
         setIsCreatingProject(true);
 
         try {
-            // TODO: Implement API integration for creating project from modal payload.
             console.info('Create project payload:', values);
-            setIsCreateProjectOpen(false);
+            uiUtils.showInfor('Tạo project — chưa có API');
         } finally {
             setIsCreatingProject(false);
         }

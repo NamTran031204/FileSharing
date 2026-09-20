@@ -11,6 +11,7 @@ import { Button } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CreateProjectModal, {type CreateProjectFormValues} from "../../project/CreateProjectModal.tsx";
 import {useState} from "react";
+import uiUtils from "../../../utils/uiUtils.tsx";
 
 interface AppSidebarProps {
   /** true = sidebar chi hien icon (72px), hover de mo rong de len content. Mac dinh false giu nguyen UI hien tai. */
@@ -82,9 +83,8 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
         setIsCreatingProject(true);
 
         try {
-            // TODO: Implement API integration for creating project from modal payload.
             console.info('Create project payload:', values);
-            setIsCreateProjectOpen(false);
+            uiUtils.showInfor('Tạo project — chưa có API');
         } finally {
             setIsCreatingProject(false);
         }

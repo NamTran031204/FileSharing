@@ -40,11 +40,8 @@ export function StreamHealthPanel({ playerRef }: StreamHealthPanelProps) {
       </div>
       <div className="flex items-center justify-between text-[10px]">
         <span className="text-white/50">Jitter</span>
-        {/* TODO(impl): "Jitter" không có metric chuẩn từ hls.js/native <video> — cần định nghĩa cách tính
-            (vd. độ lệch chuẩn thời gian tải segment qua hls.js fragment-loaded events) trước khi hiển thị số thật.
-            Hiện hiển thị "—". Mbps (hls.bandwidthEstimate), Buffer health (video.buffered),
-            Dropped frames (video.getVideoPlaybackQuality()) đều lấy được client-side, không cần API. */}
-        <span className="font-mono font-bold text-white/40">—</span>
+        {/* chua co cong thuc tinh jitter chuan tu hls.js/native video — khong phai thieu API */}
+        <span className="font-mono font-bold text-white/40" title="Chưa hỗ trợ — chưa có công thức đo">—</span>
       </div>
       <div className="flex items-center justify-between text-[10px]">
         <span className="text-white/50">Buffer health</span>

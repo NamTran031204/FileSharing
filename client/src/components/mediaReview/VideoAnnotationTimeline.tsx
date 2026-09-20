@@ -166,22 +166,17 @@ const VideoAnnotationTimeline = ({
         );
       })}
 
-      {/* Hover thumbnail preview */}
-      {/* TODO(api): spriteKey/spriteMetadataKey đã có trong PlaybackDataResponseDto
-          (server/filesharing-filehandler/.../ProcessingServiceImpl.java:99-101, lấy từ MediaRenditionEntity)
-          nhưng chưa tìm thấy nơi nào trong filesharing-videocodec thực sự sinh sprite sheet — nhiều khả năng field luôn null.
-          Frontend cũng chưa gọi PlaybackControllerService.playback() ở đâu (HlsVideoPlayer build URL manifest
-          trực tiếp qua buildHlsManifestUrl()).
-          Cần: (1) xác nhận/bổ sung worker sinh sprite ảnh + metadata (VTT hoặc JSON toạ độ frame) ở filesharing-videocodec,
-          (2) nối PlaybackControllerService.playback() để lấy 2 key này trước khi dựng thumbnail thật.
-          Hiện tại: chỉ render khung 96×54 + nhãn timestamp, ô ảnh để trống. */}
+      {/* Hover thumbnail preview — sprite pipeline chua sinh o backend, xem VideoAnnotationTimeline.tsx cu */}
       {hoverPct !== null && dragHandleRef.current === null && (
         <div
           className="pointer-events-none absolute bottom-6 z-40 flex -translate-x-1/2 flex-col items-center gap-1"
           style={{ left: `${hoverPct}%` }}
         >
-          <div className="flex h-[54px] w-[96px] items-center justify-center rounded-md border border-white/15 bg-black/80">
-            <span className="text-[9px] text-white/30">no preview</span>
+          <div
+            className="flex h-[54px] w-[96px] items-center justify-center rounded-md border border-white/15 bg-black/80"
+            title="Sprite thumbnail chưa có API"
+          >
+            <span className="text-[9px] text-white/30">Chưa có API</span>
           </div>
           <span className="rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-mono text-white">
             {formatMs((hoverPct / 100) * safeDuration)}

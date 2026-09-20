@@ -10,6 +10,7 @@ import { ImagePlayer } from '../components/imageReview/ImagePlayer';
 import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverlay';
 import { ImageMediaAdapter } from '../components/imageReview/ImageMediaAdapter';
 import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
+import uiUtils from '../utils/uiUtils.tsx';
 
 const ImageReviewPage = observer(() => {
   const { imageReviewStore: store } = useStore();
@@ -169,6 +170,7 @@ const ImageReviewPage = observer(() => {
         versionParam={versionParam}
         onVersionChange={() => { setDrawnShapes([]); setSelectedShapeId(null); }}
         onCompare={() => setShowCompareModal(true)}
+        onDownload={() => uiUtils.showInfor('Download image — chưa có API')}
         imageData={store.imageData}
         topBarRight={<span>{zoomPercent}%</span>}
       >

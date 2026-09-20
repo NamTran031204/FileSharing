@@ -1,6 +1,7 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Divider, Progress } from 'antd';
 import { ProcessingStatus } from '../../api/api/index.defs';
+import { ApiPendingNote } from '../core/common/ApiPendingNote';
 
 export interface InsightSummaryItem {
     label: string;
@@ -28,8 +29,8 @@ interface FolderInsightPanelProps {
  * Chỉ hiện từ breakpoint xl trở lên (dưới đó ẩn hoàn toàn để nhường chỗ cho nội dung chính).
  * Gập lại thì thu về thanh dọc 48px còn đúng nút mở.
  *
- * TODO(api): bổ sung khối Members (ProjectControllerService.members) và
- * Recent activity (ProjectControllerService.auditLog) khi API được nối.
+ * Members + Recent activity: xem ApiPendingNote trong JSX — cần ProjectControllerService.members
+ * va ProjectControllerService.auditLog khi API duoc noi.
  */
 const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle }: FolderInsightPanelProps) => {
     if (collapsed) {
@@ -100,6 +101,24 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
                         </div>
                     ))
                 )}
+            </div>
+
+            <Divider className="my-5" />
+
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Members
+            </span>
+            <div className="mt-3">
+                <ApiPendingNote label="Members" hint="Danh sách thành viên có quyền trên project này" />
+            </div>
+
+            <Divider className="my-5" />
+
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Recent activity
+            </span>
+            <div className="mt-3">
+                <ApiPendingNote label="Recent activity" hint="Nhật ký hành động gần đây trên folder này" />
             </div>
         </aside>
     );

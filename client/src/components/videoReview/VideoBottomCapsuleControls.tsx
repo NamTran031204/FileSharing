@@ -8,6 +8,7 @@ import {
   IconCC, IconEye, IconEyeOff, IconFullscreen, IconPause, IconPlay,
   IconSkipNext, IconSkipPrev, IconVolume, IconVolumeMute,
 } from '../imageReview/icons/ReviewIcons';
+import uiUtils from '../../utils/uiUtils.tsx';
 
 const SPEED_OPTIONS = [0.5, 1, 1.5, 2] as const;
 
@@ -151,11 +152,11 @@ export function VideoBottomCapsuleControls({
           </div>
         </div>
 
-        {/* TODO(api): Nút CC chưa có cơ chế subtitle/caption nào ở backend (không có track .vtt/.srt sinh ở
-            filesharing-videocodec, không có field liên quan trong MediaRenditionEntity/PlaybackDataResponseDto).
-            Cần xác nhận với BA có cần captions hay không; nếu có, cần endpoint lấy danh sách subtitle track.
-            Trước mắt: nút disabled, không hiển thị giả. */}
-        <button disabled title="Captions (chưa hỗ trợ)" className="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-full text-white/25">
+        <button
+          onClick={() => uiUtils.showInfor('Phụ đề (CC) — chưa có API')}
+          title="Captions"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
+        >
           <IconCC />
         </button>
 

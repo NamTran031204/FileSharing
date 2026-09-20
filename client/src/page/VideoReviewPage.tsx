@@ -17,6 +17,7 @@ import { VideoBottomCapsuleControls } from '../components/videoReview/VideoBotto
 import { StreamHealthPanel } from '../components/videoReview/StreamHealthPanel';
 import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverlay';
 import type { StrokeColor } from '../components/imageReview/constants';
+import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { Shape } from '../hooks/useKonvaCanvas';
@@ -323,8 +324,8 @@ const VideoReviewPage = observer(() => {
         mediaAdapter={adapterRef.current}
         assetId={assetId}
         versionParam={versionParam}
-        // TODO(api/design): Compare cho Video Review chưa có tính năng thật (nút hiện disabled, quyết định B.3-2).
-        // Cần 1 vòng thiết kế UI riêng + xác nhận API so sánh 2 version video (side-by-side hoặc A/B) trước khi triển khai.
+        onCompare={() => uiUtils.showInfor('Compare video — chưa có API')}
+        onDownload={() => uiUtils.showInfor('Download video — chưa có API')}
         topBarRight={
           <span className="flex items-center gap-2">
             <span>Viewing as {viewingAsAdmin ? 'Admin' : 'Customer'}</span>

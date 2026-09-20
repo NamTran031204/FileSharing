@@ -62,6 +62,7 @@ const ActionDropdown = <TRecord,>({
   menuClassName,
   onOpenChange,
   canAccess,
+  trigger,
 }: ActionDropdownProps<TRecord>) => {
   const accessCheck = canAccess ?? (() => true);
   const safeRecord = (record ?? {}) as TRecord;
@@ -142,9 +143,9 @@ const ActionDropdown = <TRecord,>({
       disabled={disabled}
       onOpenChange={onOpenChange}
     >
+      {trigger ?? (
         <MoreOutlined className="text-base flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 text-foreground shadow-sm hover:bg-card!" />
-
-
+      )}
     </Dropdown>
   );
 };
