@@ -174,6 +174,17 @@ public class MongoIndexBootstrapConfig {
                 .on("status", Sort.Direction.ASC)
                 .on("priority", Sort.Direction.ASC)
                 .on("scheduledAt", Sort.Direction.ASC));
+        // JobClaimer.claimOne - thieu index nay thi findAndModify quet toan collection
+        ops.createIndex(new Index()
+                .on("status", Sort.Direction.ASC)
+                .on("jobType", Sort.Direction.ASC)
+                .on("dueAt", Sort.Direction.ASC));
+        // LeaseReaper.reap
+        ops.createIndex(new Index()
+                .on("status", Sort.Direction.ASC)
+                .on("leaseUntil", Sort.Direction.ASC));
+        // OutboxRelay quet, multikey vi outbox la mang nhung
+        ops.createIndex(new Index().on("outbox.status", Sort.Direction.ASC));
         ops.createIndex(new Index().on("metadataId", Sort.Direction.ASC));
         ops.createIndex(new Index()
                 .on("workerId", Sort.Direction.ASC)
