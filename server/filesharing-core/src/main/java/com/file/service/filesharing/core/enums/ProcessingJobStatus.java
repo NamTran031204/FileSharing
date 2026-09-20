@@ -5,5 +5,7 @@ public enum ProcessingJobStatus {
     PROCESSING,
     COMPLETED,
     FAILED,
-    CANCELLED
+    CANCELLED,
+    // Het retry, giu lai kem ngu canh dieu tra, co the replay thu cong (ADR-001 QD-1)
+    DEAD_LETTER
 }
