@@ -4,7 +4,7 @@ import LoginPage from '../page/Phase1/auth/LoginPage';
 import RegisterPage from '../page/Phase1/auth/RegisterPage';
 import UserFilePage from '../page/Phase1/userFilePage';
 import UploadPage from '../page/Phase1/uploadPage';
-import UserProfilePage from '../page/Phase1/UserProfilePage/UserProfilePage.tsx';
+import UserProfilePage from '../page/UserProfilePage.tsx';
 import TrashPage from '../page/Phase1/trashPage';
 import FilePreviewPage from '../page/Phase1/filePreviewPage';
 import LoginPageV2 from '../page/LoginPageV2.tsx';

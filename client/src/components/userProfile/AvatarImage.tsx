@@ -41,6 +41,7 @@ const AvatarImage = ({
                 <Avatar size={150}
                         icon={<UserIcon style={{marginTop: '13px'}}/>}
                         src={displayUrl}
+                        className="ring-4 ring-border shadow-sm"
                 > </Avatar>
 
                 {isCreateOrUpdate && (

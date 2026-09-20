@@ -62,17 +62,17 @@ const UpdateDeleteAvatar = ({imageUrl, onFileSelect, setPreviewUrl}: Props) => {
         <>
             <div className={"flex flex-col items-center gap-2"}>
                 <div
-                    className="absolute inset-0 flex flex-row items-center justify-center rounded-full opacity-0 group-hover:opacity-100 bg-black/50 transition-opacity">
+                    className="absolute inset-0 flex flex-row items-center justify-center rounded-full opacity-0 group-hover:opacity-100 bg-foreground/60 transition-opacity">
                     <Upload
                         showUploadList={false}
                         beforeUpload={handleBeforeUpload}
                         accept="image/*"
                     >
                         <UploadOutlined
-                            className={"text-white m-1 text-xl rounded-3xl p-2 hover:bg-amber-50 hover:text-black cursor-pointer"}/>
+                            className={"text-white m-1 text-xl rounded-3xl p-2 hover:bg-primary hover:text-primary-foreground cursor-pointer"}/>
                     </Upload>
                     <DeleteOutlined
-                        className="text-white m-1 text-xl rounded-3xl p-2 hover:bg-amber-50 hover:text-black cursor-pointer"
+                        className="text-white m-1 text-xl rounded-3xl p-2 hover:bg-destructive hover:text-primary-foreground cursor-pointer"
                         onClick={removeImage}
                     ></DeleteOutlined>
 
