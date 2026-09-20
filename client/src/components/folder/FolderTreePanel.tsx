@@ -9,7 +9,7 @@ import {
   SlidersOutlined,
 } from '@ant-design/icons';
 import { Input, Segmented, Tooltip } from 'antd';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
 
 export interface FolderTreeNode {
@@ -23,9 +23,11 @@ interface TreeItemProps {
   level: number;
   activeId: string | number | null;
   onSelect: (id: string | number) => void;
+  /** Chi truyen cho node cap 0 (root project) — nut collapse ca panel dat canh ten project */
+  trailingAction?: ReactNode;
 }
 
-const TreeItem = ({ item, level, activeId, onSelect }: TreeItemProps) => {
+const TreeItem = ({ item, level, activeId, onSelect, trailingAction }: TreeItemProps) => {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = item.children && item.children.length > 0;
   const isActive = activeId === item.id;
@@ -41,26 +43,29 @@ const TreeItem = ({ item, level, activeId, onSelect }: TreeItemProps) => {
         style={{ paddingLeft: `${level * 16 + 8}px`, paddingTop: 8, paddingBottom: 8, paddingRight: 8 }}
         onClick={() => onSelect(item.id)}
       >
-        {hasChildren ? (
-          <span
-            className="w-[18px] h-[18px] flex items-center justify-center flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(!expanded);
-            }}
-          >
-            {expanded ? (
+        <span
+          className="w-[14px] h-[18px] flex items-center justify-center flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
+          onClick={
+            hasChildren
+              ? (e) => {
+                  e.stopPropagation();
+                  setExpanded(!expanded);
+                }
+              : undefined
+          }
+        >
+          {hasChildren &&
+            (expanded ? (
               <CaretDownOutlined className="text-[10px]" />
             ) : (
               <CaretRightOutlined className="text-[10px]" />
-            )}
-          </span>
-        ) : (
-          <span className="w-[18px] h-[18px] flex items-center justify-center flex-shrink-0 text-muted-foreground">
-            <FolderFilled className="text-[12px]" />
-          </span>
-        )}
-        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{item.name}</span>
+            ))}
+        </span>
+        <span className="w-[18px] h-[18px] flex items-center justify-center flex-shrink-0 text-muted-foreground">
+          <FolderFilled className="text-[12px]" />
+        </span>
+        <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{item.name}</span>
+        {trailingAction}
       </div>
 
       {hasChildren && expanded && (
@@ -216,19 +221,6 @@ const FolderTreePanel = ({
         </Tooltip>
       </div>
 
-      <div className="flex items-center justify-between mb-3 px-2">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-          Folder Tree
-        </span>
-        <button
-          className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-background hover:text-primary transition-all"
-          onClick={onToggleCollapse}
-          title="Collapse tree"
-        >
-          <MenuFoldOutlined className="text-base" />
-        </button>
-      </div>
-
       <div>
         {treeData.map((root) => (
           <TreeItem
@@ -237,6 +229,20 @@ const FolderTreePanel = ({
             level={0}
             activeId={activeId}
             onSelect={onSelect}
+            trailingAction={
+              <button
+                type="button"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-background hover:text-primary transition-all flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCollapse();
+                }}
+                title="Collapse tree"
+                aria-label="Collapse tree"
+              >
+                <MenuFoldOutlined className="text-base" />
+              </button>
+            }
           />
         ))}
       </div>
