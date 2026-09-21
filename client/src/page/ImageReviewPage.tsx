@@ -11,6 +11,8 @@ import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverl
 import { ImageMediaAdapter } from '../components/imageReview/ImageMediaAdapter';
 import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
 import uiUtils from '../utils/uiUtils.tsx';
+import { downloadService, type DownloadProgress as DownloadProgressType } from '../service/downloadService';
+import DownloadProgress from '../components/uploadDownloadProgress/DownloadProgress';
 
 const ImageReviewPage = observer(() => {
   const { imageReviewStore: store } = useStore();
@@ -43,6 +45,11 @@ const ImageReviewPage = observer(() => {
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const pendingShapeIdRef = useRef<string | null>(null);
   const viewportDivRef = useRef<HTMLDivElement>(null);
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<DownloadProgressType | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [showDownloadProgress, setShowDownloadProgress] = useState(false);
 
   useEffect(() => {
     if (!assetId) return;
@@ -137,6 +144,42 @@ const ImageReviewPage = observer(() => {
     }
   };
 
+  const handleDownload = async () => {
+    if (isDownloading) return;
+    const meta = store.currentVersionMetadata;
+    if (!meta?.objectName) {
+      uiUtils.showWarning('Chưa có file để tải, thử lại sau');
+      return;
+    }
+    setIsDownloading(true);
+    setShowDownloadProgress(true);
+    setDownloadError(null);
+    setDownloadProgress(null);
+    try {
+      await downloadService.downloadAndSave(
+        meta.objectName,
+        meta.fileName ?? meta.downloadFileName,
+        progress => setDownloadProgress(progress),
+      );
+      setTimeout(() => setShowDownloadProgress(false), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Download failed';
+      if (!message.includes('cancelled')) {
+        setDownloadError(message);
+        uiUtils.showError(message);
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCancelDownload = () => {
+    downloadService.cancelDownload();
+    setIsDownloading(false);
+    setDownloadError('Cancelled by user');
+    setTimeout(() => setShowDownloadProgress(false), 2000);
+  };
+
   const handleToolClick = (tool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan') => {
     if (tool === 'select')      setActiveMode('select');
     else if (tool === 'pan')    setActiveMode('text');
@@ -170,7 +213,7 @@ const ImageReviewPage = observer(() => {
         versionParam={versionParam}
         onVersionChange={() => { setDrawnShapes([]); setSelectedShapeId(null); }}
         onCompare={() => setShowCompareModal(true)}
-        onDownload={() => uiUtils.showInfor('Download image — chưa có API')}
+        onDownload={handleDownload}
         imageData={store.imageData}
         topBarRight={<span>{zoomPercent}%</span>}
       >
@@ -283,6 +326,14 @@ const ImageReviewPage = observer(() => {
           </div>
         </div>
       )}
+
+      <DownloadProgress
+        isVisible={showDownloadProgress}
+        fileName={store.currentVersionMetadata?.fileName ?? 'image'}
+        progress={downloadProgress}
+        error={downloadError}
+        onCancel={handleCancelDownload}
+      />
     </div>
   );
 });
