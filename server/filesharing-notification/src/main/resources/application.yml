@@ -2,6 +2,8 @@ server:
   port: 5001
 
 spring:
+  config:
+    import: optional:file:./.env[.properties]
   application:
     name: filesharing-notification
   mail:
