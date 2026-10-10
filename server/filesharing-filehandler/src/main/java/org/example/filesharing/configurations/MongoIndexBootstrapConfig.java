@@ -43,8 +43,8 @@ public class MongoIndexBootstrapConfig {
     }
 
     private void applyUsersIndexes() {
-        IndexOperations ops = mongoTemplate.indexOps("users");
-        ops.createIndex(new Index().on("email", Sort.Direction.ASC));
+        IndexOperations ops = mongoTemplate.indexOps("user");
+        ops.createIndex(new Index().on("email", Sort.Direction.ASC).unique());
         ops.createIndex(new Index()
                 .on("providers.provider", Sort.Direction.ASC)
                 .on("providers.providerId", Sort.Direction.ASC));

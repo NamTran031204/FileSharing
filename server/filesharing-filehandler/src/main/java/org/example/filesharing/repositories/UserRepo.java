@@ -1,5 +1,6 @@
 package org.example.filesharing.repositories;
 
+import com.file.service.filesharing.core.enums.auth.AuthProvider;
 import org.example.filesharing.entities.models.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,12 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
     Optional<UserEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    /**
+     * Tim user da link provider Google theo sub (providerId on dinh, khong doi theo thoi gian)
+     */
+    @Query("{ 'providers': { $elemMatch: { 'provider': ?0, 'providerId': ?1 } } }")
+    Optional<UserEntity> findByProviderAndProviderId(AuthProvider provider, String providerId);
 
     /**
      * Search users by username or email using regex (case-insensitive)

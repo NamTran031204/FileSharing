@@ -5895,7 +5895,7 @@
         }
       },
       "EmailSenderRequestDto" : {
-        "required" : [ "objectName", "toEmail", "uploadLink" ],
+        "required" : [ "toEmail" ],
         "type" : "object",
         "properties" : {
           "toEmail" : {
@@ -5912,8 +5912,15 @@
           },
           "objectName" : {
             "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/EmailType"
           }
         }
+      },
+      "EmailType" : {
+        "type" : "string",
+        "enum" : [ "DOWNLOAD_LINK", "GOOGLE_ACCOUNT_LINKED" ]
       },
       "PageRequestDtoUserFileFilterPageRequestDto" : {
         "type" : "object",
@@ -6876,6 +6883,95 @@
           }
         }
       },
+      "JobResourceUsage" : {
+        "type" : "object",
+        "properties" : {
+          "tool" : {
+            "type" : "string"
+          },
+          "peakCpuPercent" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "avgCpuPercent" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "peakRssBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "peakTempBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "samples" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wallSeconds" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "stages" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "number",
+              "format" : "double"
+            }
+          }
+        }
+      },
+      "OutboxEvent" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "sink" : {
+            "$ref" : "#/components/schemas/OutboxSink"
+          },
+          "topic" : {
+            "type" : "string"
+          },
+          "payload" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object"
+            }
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/OutboxEventStatus"
+          },
+          "attempts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "OutboxEventStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "SENT" ]
+      },
+      "OutboxSink" : {
+        "type" : "string",
+        "enum" : [ "JOB_STORE", "KAFKA" ]
+      },
       "ProcessingJobConfig" : {
         "type" : "object",
         "properties" : {
@@ -6978,6 +7074,20 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "leaseUntil" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "attemptId" : {
+            "type" : "string"
+          },
+          "traceId" : {
+            "type" : "string"
+          },
           "retryCount" : {
             "type" : "integer",
             "format" : "int32"
@@ -6995,6 +7105,15 @@
           "workerHeartbeat" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "outbox" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OutboxEvent"
+            }
+          },
+          "resourceUsage" : {
+            "$ref" : "#/components/schemas/JobResourceUsage"
           }
         }
       },
@@ -7039,7 +7158,7 @@
       },
       "ProcessingJobStatus" : {
         "type" : "string",
-        "enum" : [ "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED" ]
+        "enum" : [ "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED", "DEAD_LETTER" ]
       },
       "ProcessingJobType" : {
         "type" : "string",

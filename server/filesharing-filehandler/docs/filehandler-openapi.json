@@ -5895,7 +5895,7 @@
         }
       },
       "EmailSenderRequestDto" : {
-        "required" : [ "objectName", "toEmail", "uploadLink" ],
+        "required" : [ "toEmail" ],
         "type" : "object",
         "properties" : {
           "toEmail" : {
@@ -5912,8 +5912,15 @@
           },
           "objectName" : {
             "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/EmailType"
           }
         }
+      },
+      "EmailType" : {
+        "type" : "string",
+        "enum" : [ "DOWNLOAD_LINK", "GOOGLE_ACCOUNT_LINKED" ]
       },
       "PageRequestDtoUserFileFilterPageRequestDto" : {
         "type" : "object",

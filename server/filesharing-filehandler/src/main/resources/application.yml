@@ -97,6 +97,10 @@ application:
       refresh-token:
         expiration: 604800000     # 7 days
 
+google:
+  oauth:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID}
+
 springdoc:
   api-docs:
     enabled: true

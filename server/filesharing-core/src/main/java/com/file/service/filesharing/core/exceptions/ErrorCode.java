@@ -29,6 +29,8 @@ public enum ErrorCode {
     USER_NOT_FOUND("5203", "User not found", HttpStatus.NOT_FOUND),
     USER_EMAIL_NOT_VERIFY("5204", "User email not verified", HttpStatus.BAD_REQUEST),
     USER_NOT_AUTHENTICATED("5205", "User not authenticated", HttpStatus.UNAUTHORIZED),
+    GOOGLE_TOKEN_INVALID("5206", "Google token invalid or expired", HttpStatus.UNAUTHORIZED),
+    USER_ALREADY_EXISTS("5207", "User already exists", HttpStatus.BAD_REQUEST),
 
     PROJECT_NOT_FOUND("5301", "Project not found", HttpStatus.NOT_FOUND),
     FOLDER_NOT_FOUND("5401", "Folder not found", HttpStatus.NOT_FOUND),

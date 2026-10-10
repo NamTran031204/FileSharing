@@ -1,7 +1,4 @@
-// adaptive bandwidth: download giu nguyen adaptive chunk-size cu (ngoai pham vi WP5);
-// upload chuyen sang hill-climbing concurrency tren TONG throughput, partSize co dinh tu server (khong doi)
 
-// ===== Download - khong doi so voi truoc WP5 =====
 const DOWNLOAD_MIN_CHUNK_SIZE = 1 * 1024 * 1024;      // 1mb
 const DOWNLOAD_MAX_CHUNK_SIZE = 50 * 1024 * 1024;     // 50mb
 const DOWNLOAD_INITIAL_CHUNK_SIZE = 2 * 1024 * 1024;  // 2mb - cold start
@@ -11,7 +8,7 @@ const DOWNLOAD_MAX_THREADS = 5;
 const DOWNLOAD_MIN_THREADS = 1;
 const DOWNLOAD_INITIAL_THREADS = 1;
 
-// ===== Upload - hill-climbing concurrency (WP5) =====
+// upload - hill-climbing concurrency (WP5)
 const UPLOAD_MAX_THREADS = 6;           // upload.max-threads - tran ~6 ket noi/host tren HTTP/1.1
 const UPLOAD_MIN_THREADS = 1;
 const UPLOAD_INITIAL_THREADS = 1;

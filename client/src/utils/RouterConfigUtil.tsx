@@ -8,6 +8,7 @@ import UserProfilePage from '../page/UserProfilePage.tsx';
 import TrashPage from '../page/Phase1/trashPage';
 import FilePreviewPage from '../page/Phase1/filePreviewPage';
 import LoginPageV2 from '../page/LoginPageV2.tsx';
+import RegisterPageV2 from '../page/RegisterPageV2.tsx';
 import MainPage from '../page/MainPage';
 import LocalImageCanvas from '../mockup/pages/KonvaDemo.tsx';
 import HlsVideoMockup from '../mockup/pages/HlsVideoMockup.tsx';
@@ -45,6 +46,12 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/loginv2',
         name: 'Login V2',
         element: <LoginPageV2/>,
+        isShow: false,
+    },
+    {
+        path: '/registerv2',
+        name: 'Register V2',
+        element: <RegisterPageV2/>,
         isShow: false,
     },
     {

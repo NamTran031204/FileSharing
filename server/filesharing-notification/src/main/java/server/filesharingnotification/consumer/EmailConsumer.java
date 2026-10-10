@@ -7,6 +7,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import server.filesharingnotification.entity.dto.EmailSenderRequestDto;
+import server.filesharingnotification.entity.dto.EmailType;
 import server.filesharingnotification.service.EmailService;
 
 @Slf4j
@@ -24,7 +25,13 @@ public class EmailConsumer {
     public void consume(EmailSenderRequestDto messages, Acknowledgment acknowledgment) {
         try {
             log.info("Starting to send email");
-            emailService.sendDownloadLinkViaEmail(messages);
+
+            EmailType type = messages.getType() != null ? messages.getType() : EmailType.DOWNLOAD_LINK;
+            if (type == EmailType.GOOGLE_ACCOUNT_LINKED) {
+                emailService.sendGoogleAccountLinkedEmail(messages);
+            } else {
+                emailService.sendDownloadLinkViaEmail(messages);
+            }
 
             acknowledgment.acknowledge();
             log.info("Message acknowledged successfully for: {}", messages.getToEmail());

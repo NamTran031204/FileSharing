@@ -17,6 +17,9 @@ import { VideoBottomCapsuleControls } from '../components/videoReview/VideoBotto
 import { StreamHealthPanel } from '../components/videoReview/StreamHealthPanel';
 import { CommentPopupOverlay } from '../components/imageReview/CommentPopupOverlay';
 import type { StrokeColor } from '../components/imageReview/constants';
+import DownloadProgress from '../components/uploadDownloadProgress/DownloadProgress';
+import type { DownloadProgress as DownloadProgressType } from '../service/downloadService';
+import { downloadService } from '../service/downloadService';
 import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
@@ -104,6 +107,11 @@ const VideoReviewPage = observer(() => {
   const [commentText, setCommentText] = useState('');
   const pendingShapeIdRef = useRef<string | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const [showDownloadProgress, setShowDownloadProgress] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<DownloadProgressType | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadFileName, setDownloadFileName] = useState('');
 
   const videoAnnotationsRef = useRef<VideoAnnotation[]>([]);
 
@@ -278,6 +286,34 @@ const VideoReviewPage = observer(() => {
     playerRef.current?.seek(ms);
   };
 
+  const handleDownload = async () => {
+    const metadata = store.currentVersionMetadata;
+    if (!metadata?.objectName) {
+      uiUtils.showInfor('Download video — chưa có API');
+      return;
+    }
+
+    const name = metadata.downloadFileName || metadata.fileName || metadata.objectName;
+    setDownloadFileName(name);
+    setDownloadError(null);
+    setDownloadProgress(null);
+    setShowDownloadProgress(true);
+
+    try {
+      await downloadService.downloadAndSave(metadata.objectName, name, setDownloadProgress);
+      setTimeout(() => setShowDownloadProgress(false), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Download failed';
+      if (!message.includes('cancelled')) setDownloadError(message);
+    }
+  };
+
+  const handleCancelDownload = () => {
+    downloadService.cancelDownload();
+    setDownloadError('Cancelled by user');
+    setTimeout(() => setShowDownloadProgress(false), 2000);
+  };
+
   const store = coreStoreRef.current;
 
   const displayTool: 'select' | 'rect' | 'circle' | 'arrow' | 'pan' =
@@ -325,7 +361,7 @@ const VideoReviewPage = observer(() => {
         assetId={assetId}
         versionParam={versionParam}
         onCompare={() => uiUtils.showInfor('Compare video — chưa có API')}
-        onDownload={() => uiUtils.showInfor('Download video — chưa có API')}
+        onDownload={handleDownload}
         topBarRight={
           <span className="flex items-center gap-2">
             <span>Viewing as {viewingAsAdmin ? 'Admin' : 'Customer'}</span>
@@ -479,6 +515,14 @@ const VideoReviewPage = observer(() => {
           />
         )}
       </MediaReviewLayout>
+
+      <DownloadProgress
+        isVisible={showDownloadProgress}
+        fileName={downloadFileName}
+        progress={downloadProgress}
+        error={downloadError}
+        onCancel={handleCancelDownload}
+      />
     </div>
   );
 });

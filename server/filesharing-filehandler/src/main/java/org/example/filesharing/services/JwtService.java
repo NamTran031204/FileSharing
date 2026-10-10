@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import com.file.service.filesharing.core.enums.auth.AuthProvider;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -85,5 +86,16 @@ public class JwtService {
     private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public record TokenPair(String accessToken, String refreshToken) {}
+
+    public TokenPair generateTokenPair(UserDetails userDetails, AuthProvider provider, String providerId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("provider", provider.name());
+        if (providerId != null) claims.put("providerId", providerId);
+        String accessToken = generateToken(claims, userDetails);
+        String refreshToken = buildToken(claims, userDetails, refreshExpiration);
+        return new TokenPair(accessToken, refreshToken);
     }
 }

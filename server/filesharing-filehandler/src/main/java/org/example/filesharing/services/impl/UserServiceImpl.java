@@ -1,6 +1,7 @@
 package org.example.filesharing.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auth.UserLoginRequestDto;
@@ -12,6 +13,7 @@ import org.example.filesharing.entities.dtos.user.UserDto;
 import org.example.filesharing.entities.dtos.user.UserSearchRequestDto;
 import org.example.filesharing.entities.models.user.AuthProviderInfo;
 import org.example.filesharing.entities.models.UserEntity;
+import com.file.service.filesharing.core.enums.auth.AuthProvider;
 import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
@@ -21,6 +23,7 @@ import org.example.filesharing.services.JwtService;
 import org.example.filesharing.services.UserService;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +34,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
@@ -44,6 +48,14 @@ public class UserServiceImpl implements UserService {
         if (!input.getPassword().equals(input.getConfirmPassword())) {
             throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID, "Passwords do not match");
         }
+
+        // Email da ton tai voi provider khac Local (vi du da dang ky Google) -> tu choi, khong tao trung
+        userRepo.findByEmail(input.getEmail()).ifPresent(existing -> {
+            if (!existing.hasProvider(AuthProvider.LOCAL)) {
+                throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "User đã tồn tại");
+            }
+        });
+
         String passwordHash = passwordEncoder.encode(input.getPassword());
         boolean isEmailVerified = verifyEmail(input.getEmail());
 
@@ -55,14 +67,20 @@ public class UserServiceImpl implements UserService {
                 .emailVerified(isEmailVerified)
                 .providers(List.of(authProviderInfo))
                 .build();
-        if (!input.getUserName().isBlank() && !input.getPassword().isEmpty()) {
+        if (input.getUserName() != null && !input.getUserName().isBlank() && !input.getPassword().isEmpty()) {
             userEntity.setPublicUserName(input.getUserName());
         } else {
-            // TODO: kiem tra lai cach tao userName neu input.getUserName() null hoac blank
-            // tam thoi la lay ten email
+            // userName null/blank -> lay ten truoc @ cua email lam publicUserName
             userEntity.setPublicUserName(input.getEmail().substring(0, input.getEmail().indexOf("@")));
         }
-        UserEntity savedUser = userRepo.save(userEntity);
+
+        UserEntity savedUser;
+        try {
+            savedUser = userRepo.save(userEntity);
+        } catch (DuplicateKeyException e) {
+            // Race condition: 2 request dang ky cung email gan nhu dong thoi, unique index chan o tang DB
+            throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "User đã tồn tại");
+        }
 
         var accessToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
@@ -83,6 +101,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserLoginResponseDto loginUser(UserLoginRequestDto input) {
 
+        UserEntity existingUser = userRepo.findByEmail(input.getEmail()).orElse(null);
+        if (existingUser != null && existingUser.getPassword() == null) {
+            if (existingUser.hasProvider(AuthProvider.GOOGLE)) {
+                throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID,
+                        "Bạn đã đăng ký tài khoản google rồi, Đăng nhập bằng google");
+            }
+            // Khong nen xay ra: user LOCAL nhung password null - log lai de xu ly rieng (chua co flow doi mat khau)
+            logCorruptedLocalPasswordTask(existingUser.getEmail());
+            throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID,
+                    "Tài khoản gặp lỗi bất định, yêu cầu đổi mật khẩu ngay");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.getEmail(),
@@ -93,12 +123,11 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepo.findByEmail(input.getEmail())
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND));
 
-        var accessToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
+        JwtService.TokenPair tokenPair = jwtService.generateTokenPair(user, AuthProvider.LOCAL, null);
 
         return UserLoginResponseDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessToken(tokenPair.accessToken())
+                .refreshToken(tokenPair.refreshToken())
                 .build();
     }
 
@@ -208,5 +237,13 @@ public class UserServiceImpl implements UserService {
                 .updatedAt(user.getUpdatedAt())
                 .lastLoginAt(user.getLastLoginAt())
                 .build();
+    }
+
+    /**
+     * Ghi log 1 dong vao file txt cho task "corrupted local password" - truong hop ly thuyet
+     * khong nen xay ra, chi de theo doi neu gap thuc te trong dev/staging.
+     */
+    private void logCorruptedLocalPasswordTask(String email) {
+        log.warn("Phat hien user LOCAL co password null, email={}. Xem .ai/research/log-tasks/12-tai-khoan-local-password-null-can-reset-flow.md", email);
     }
 }

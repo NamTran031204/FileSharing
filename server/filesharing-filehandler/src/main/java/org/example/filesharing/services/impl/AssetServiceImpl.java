@@ -677,7 +677,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         MediaType resolvedMediaType = MediaType.fromMime(request.getMimeType());
         MetadataEntity metadata = MetadataEntity.builder()
                 .fileName(request.getFileName())
-                .downloadFileName(request.getFileName() + "v" + versionNumber)
+                .downloadFileName(withVersionSuffix(request.getFileName(), versionNumber))
                 .objectName(objectName)
                 .mimeType(request.getMimeType())
                 .fileSize(request.getFileSize())
@@ -703,6 +703,15 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
         metadata.setShareToken(passwordEncoder.encode(UUID.randomUUID().toString()));
         return metadata;
+    }
+
+    // chen "_vN" truoc phan extension, tranh lam hong duoi file (vd .mp4 -> .mp4v1)
+    private String withVersionSuffix(String fileName, int versionNumber) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot <= 0) {
+            return fileName + "_v" + versionNumber;
+        }
+        return fileName.substring(0, dot) + "_v" + versionNumber + fileName.substring(dot);
     }
 
     private ProcessingStatus defaultProcessingStatus(MediaType mediaType) {

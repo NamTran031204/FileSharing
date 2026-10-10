@@ -14,4 +14,6 @@ public class EmailSenderRequestDto {
 
     private String shareToken;
 
+    private EmailType type;
+
 }

@@ -58,4 +58,36 @@ public class EmailService {
             throw e;
         }
     }
+
+    public void sendGoogleAccountLinkedEmail(EmailSenderRequestDto input) throws MessagingException {
+        Instant startTime = Instant.now();
+        log.info("Starting to send google-linked warning email to: {}", input.getToEmail());
+
+        try {
+            String subject = "Canh bao: Tai khoan Google vua duoc lien ket";
+
+            Context context = new Context();
+            context.setVariable("toEmail", input.getToEmail());
+
+            String htmlBody = templateEngine.process("email/googleAccountLinked", context);
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setFrom(fromMail);
+            helper.setTo(input.getToEmail());
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+
+            mailSender.send(mimeMessage);
+
+            Duration duration = Duration.between(startTime, Instant.now());
+            log.info("Google-linked warning email sent to {} in {} ms", input.getToEmail(), duration.toMillis());
+        } catch (MessagingException e) {
+            Duration duration = Duration.between(startTime, Instant.now());
+            log.error("Failed to send google-linked warning email to {} after {} ms: {}",
+                    input.getToEmail(), duration.toMillis(), e.getMessage());
+            throw e;
+        }
+    }
 }

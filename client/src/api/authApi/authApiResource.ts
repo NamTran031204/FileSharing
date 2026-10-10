@@ -1,4 +1,4 @@
-import {API_BASE, type CommonResponse, tokenManager} from '../baseApi';
+import {API_BASE, ApiError, type CommonResponse, tokenManager} from '../baseApi';
 import type {AuthProvider, UserRole} from "../enums.ts";
 import axios from "axios";
 import type {MetadataEntity} from "../fileApi/userFileApiResource.ts";
@@ -34,6 +34,10 @@ export interface UserLoginRequestDto {
 export interface UserLoginResponseDto {
     accessToken: string;
     refreshToken?: string;
+}
+
+export interface GoogleAuthRequestDto {
+    credential: string;
 }
 
 const authAxios = axios.create({
@@ -73,6 +77,58 @@ const authApiResource = {
         );
 
         return response.data.data;
+    },
+
+    registerWithGoogle: async (credential: string) => {
+        try {
+            const response = await authAxios.post<CommonResponse<UserLoginResponseDto>>(
+                '/auth/google/register',
+                {credential} as GoogleAuthRequestDto
+            );
+
+            if (!response.data.isSuccessful) {
+                throw new ApiError(response.data.code, response.data.message || 'Google register failed');
+            }
+
+            tokenManager.setTokens(
+                response.data.data.accessToken,
+                response.data.data.refreshToken!
+            );
+
+            return response.data.data;
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.data) {
+                const data = err.response.data as CommonResponse<UserLoginResponseDto>;
+                throw new ApiError(data.code, data.message || 'Google register failed');
+            }
+            throw err;
+        }
+    },
+
+    loginWithGoogle: async (credential: string) => {
+        try {
+            const response = await authAxios.post<CommonResponse<UserLoginResponseDto>>(
+                '/auth/google/login',
+                {credential} as GoogleAuthRequestDto
+            );
+
+            if (!response.data.isSuccessful) {
+                throw new ApiError(response.data.code, response.data.message || 'Google login failed');
+            }
+
+            tokenManager.setTokens(
+                response.data.data.accessToken,
+                response.data.data.refreshToken!
+            );
+
+            return response.data.data;
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.data) {
+                const data = err.response.data as CommonResponse<UserLoginResponseDto>;
+                throw new ApiError(data.code, data.message || 'Google login failed');
+            }
+            throw err;
+        }
     },
 
     checkLegit: async (shareToken: string) => {

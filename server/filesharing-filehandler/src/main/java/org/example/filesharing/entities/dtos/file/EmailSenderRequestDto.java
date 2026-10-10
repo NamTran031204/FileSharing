@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import com.file.service.filesharing.core.enums.objectPermission.ObjectPermission;
+import org.example.filesharing.enums.EmailType;
 
 import java.util.List;
 
@@ -21,15 +22,14 @@ public class EmailSenderRequestDto {
 
     private List<ObjectPermission> objectPermission;
 
-    @NotNull
-    @NotBlank
     private String uploadLink;
 
-    @NotNull
-    @NotBlank
     private String objectName;
 
     @JsonIgnore
     private String shareToken;
+
+    // null = DOWNLOAD_LINK (hanh vi cu, giu tuong thich nguoc)
+    private EmailType type;
 
 }
