@@ -3,9 +3,9 @@ spring:
     name: filesharing-videocodec
   data:
     mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256&directConnection=true
+      uri: ${MONGO_URI}
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -25,9 +25,9 @@ spring:
       concurrency: 1
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: CE28BNCAFTPVW8RZLQXC
-  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_WORKER_ACCESS_KEY}
+  secret-key: ${MINIO_WORKER_SECRET_KEY}
   buckets:
     files: file-sharing
     hls: hls-bucket

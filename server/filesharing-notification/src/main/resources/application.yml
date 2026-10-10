@@ -7,8 +7,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: tpnam1w3@gmail.com
-    password: dxcd sxwu viga ozss
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -19,7 +19,7 @@ spring:
           timeout: 10000
           writetimeout: 10000
   kafka:
-    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -47,5 +47,5 @@ kafka:
   topics:
     notification_email_sender: notification_email_sender
   authen: ${KAFKA_AUTH:false}
-  username: ${KAFKA_USER:admin}
-  password: ${KAFKA_PASS:adminKafka123}
+  username: ${KAFKA_USER}
+  password: ${KAFKA_PASS}

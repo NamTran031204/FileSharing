@@ -6,7 +6,7 @@ spring:
     name: filesharing-filehandler
   data:
     mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256&directConnection=true
+      uri: ${MONGO_URI}
   servlet:
     multipart:
       max-file-size: 100MB
@@ -14,8 +14,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: tpnam1w3@gmail.com
-    password: dxcd sxwu viga ozss
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -26,7 +26,7 @@ spring:
           timeout: 10000
           writetimeout: 10000
   kafka:
-    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -59,23 +59,23 @@ kafka:
     image_process_result_topic: image_process_result_topic
   authen: ${KAFKA_AUTH:false}
   username: ${KAFKA_USER:admin}
-  password: ${KAFKA_PASS:adminKafka123}
+  password: ${KAFKA_PASS}
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: 80D3DS419TKB0T3OOU5U
-  secret-key: YepE6i5JTnk4+YpDpeHwSy0RDD7K618JUz9jgwph
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
   buckets:
     files: file-sharing
     thumbnails: thumbnail-bucket
     image-preview: image-preview-bucket
     hls: hls-bucket
   svc-upload:
-    access-key: ${MINIO_SVC_UPLOAD_ACCESS_KEY:svcuploadfsharing}
-    secret-key: ${MINIO_SVC_UPLOAD_SECRET_KEY:ChangeMe_UploadSecret_2026}
+    access-key: ${MINIO_SVC_UPLOAD_ACCESS_KEY}
+    secret-key: ${MINIO_SVC_UPLOAD_SECRET_KEY}
   svc-download:
-    access-key: ${MINIO_SVC_DOWNLOAD_ACCESS_KEY:svcdownloadfsharing}
-    secret-key: ${MINIO_SVC_DOWNLOAD_SECRET_KEY:ChangeMe_DownloadSecret_2026}
+    access-key: ${MINIO_SVC_DOWNLOAD_ACCESS_KEY}
+    secret-key: ${MINIO_SVC_DOWNLOAD_SECRET_KEY}
 #  access-key: 5UVTKA00N1U9060FMZW0
 #  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
@@ -93,7 +93,7 @@ application:
   security:
     jwt:
       expiration: 86400000 # 24 hours
-      secret-key: nprtI/yUVAZiaZBTM7K1CYqEkrvXOPyeOIFq/1wCfzE=
+      secret-key: ${JWT_SECRET_KEY}
       refresh-token:
         expiration: 604800000     # 7 days
 

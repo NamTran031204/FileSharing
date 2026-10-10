@@ -3,9 +3,9 @@ spring:
     name: filesharing-imagerawproccess
   data:
     mongodb:
-      uri: mongodb://admin:admin123456@localhost:27017/metadata?authSource=admin&authMechanism=SCRAM-SHA-256&directConnection=true
+      uri: ${MONGO_URI}
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_SERVERS}
     consumer:
       group-id: image-raw-processing-service
       auto-offset-reset: earliest
@@ -16,9 +16,9 @@ spring:
       ack-mode: MANUAL_IMMEDIATE
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: CE28BNCAFTPVW8RZLQXC
-  secret-key: F0y4mX2bmO9YDBqi+0onGqUiSizi7b4Rq74PO2xd
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
   buckets:
     files: file-sharing
     image-preview: image-preview-bucket
