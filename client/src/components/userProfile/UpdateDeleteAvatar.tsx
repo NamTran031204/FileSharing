@@ -1,7 +1,6 @@
-import {useMemo, useState} from 'react';
+import {useState} from 'react';
 import {message, Upload} from "antd";
 import {DeleteOutlined, UploadOutlined} from "@ant-design/icons";
-import {GetFileUrl} from "../../api/baseApi.ts";
 
 interface Props {
     imageUrl?: string;
@@ -12,11 +11,6 @@ interface Props {
 const UpdateDeleteAvatar = ({imageUrl, onFileSelect, setPreviewUrl}: Props) => {
 
     const [isModified, setIsModified] = useState<boolean>(false);
-    const serverUrl = useMemo(() => {
-        if (!imageUrl || imageUrl.trim() === '') return null;
-        return GetFileUrl(imageUrl);
-    }, [imageUrl]);
-
     const validateImage = (file: File): boolean => {
         const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
         if (!isValidType) {
@@ -48,12 +42,12 @@ const UpdateDeleteAvatar = ({imageUrl, onFileSelect, setPreviewUrl}: Props) => {
     const removeImage = () => {
         if (isModified) {
             if (setPreviewUrl) {
-                setPreviewUrl(serverUrl!);
+                setPreviewUrl(imageUrl ?? '');
             }
             setIsModified(false);
         } else {
             if (setPreviewUrl) {
-                setPreviewUrl('/images/default_avatar.jpg');
+                setPreviewUrl('');
             }
         }
     };

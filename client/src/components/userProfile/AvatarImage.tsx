@@ -1,48 +1,45 @@
-import {Avatar} from "antd";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import UpdateDeleteAvatar from "./UpdateDeleteAvatar.tsx";
-import {GetFileUrl} from "../../api/baseApi.ts";
-import {UserIcon} from "./UserIcon.tsx";
+import UserAvatar from "../core/common/UserAvatar.tsx";
 
 
 interface Props {
     imageUrl?: string;
+    name?: string;
+    email?: string;
     onFileSelect?: (file: File | null) => void;
     isCreateOrUpdate?: boolean;
 }
 
 const AvatarImage = ({
-                         imageUrl, onFileSelect, isCreateOrUpdate
+                         imageUrl, name, email, onFileSelect, isCreateOrUpdate
                      }: Props) => {
 
-    const [previewUrl, setPreviewUrl] = useState<string | undefined>('');
-
-    const serverUrl = useMemo(() => {
-        if (!imageUrl || imageUrl.trim() === '') return "src/assets/userProfile/user.svg";
-        return GetFileUrl(imageUrl);
-    }, [imageUrl]);
+    // previewUrl rong -> UserAvatar hien chu viet tat
+    const [previewUrl, setPreviewUrl] = useState<string>(imageUrl ?? '');
 
     useEffect(() => {
         return () => {
-            if (previewUrl && previewUrl.startsWith('blob:')) {
+            if (previewUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(previewUrl);
             }
         };
     }, [previewUrl]);
 
     useEffect(() => {
-        setPreviewUrl(serverUrl!);
+        setPreviewUrl(imageUrl ?? '');
     }, [isCreateOrUpdate, imageUrl]);
 
-    const displayUrl = previewUrl || serverUrl;
     return (
         <div className="flex flex-col items-center gap-2">
             <div className="relative group">
-                <Avatar size={150}
-                        icon={<UserIcon style={{marginTop: '13px'}}/>}
-                        src={displayUrl}
-                        className="ring-4 ring-border shadow-sm"
-                > </Avatar>
+                <UserAvatar
+                    size={150}
+                    avatarUrl={previewUrl}
+                    name={name}
+                    email={email}
+                    className="ring-4 ring-border shadow-sm"
+                />
 
                 {isCreateOrUpdate && (
                     <UpdateDeleteAvatar imageUrl={imageUrl} onFileSelect={onFileSelect} setPreviewUrl={setPreviewUrl}/>

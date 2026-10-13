@@ -126,6 +126,8 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                 className="md:col-span-1 bg-card border border-border rounded-2xl p-8 flex flex-col items-center text-center">
                 <AvatarImage
                     imageUrl={userInfo?.avatarUrl || undefined}
+                    name={userInfo?.publicUserName}
+                    email={userInfo?.email}
                     isCreateOrUpdate={isEditMode}
                     onFileSelect={handleFileSelectFromChild}
                 />

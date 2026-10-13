@@ -1,5 +1,5 @@
-import { CheckCircleFilled, UserOutlined } from '@ant-design/icons';
-import { Avatar } from 'antd';
+import { CheckCircleFilled } from '@ant-design/icons';
+import UserAvatar from './core/common/UserAvatar.tsx';
 
 export type ReviewFeedbackStatus = 'open' | 'resolved';
 
@@ -40,15 +40,7 @@ const ImageReviewFeedbackItem = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          {item.avatarUrl ? (
-            <Avatar src={item.avatarUrl} size={32} />
-          ) : (
-            <Avatar
-              size={32}
-              icon={<UserOutlined />}
-              className="bg-[#3b3a7e]/10 text-[#3b3a7e]"
-            />
-          )}
+          <UserAvatar size={32} name={item.author} avatarUrl={item.avatarUrl} />
           <div className="min-w-0">
             <h4 className="text-xs font-bold text-[#0d1154] truncate">{item.author}</h4>
             <span className="text-[10px] text-[#777681]">{item.createdAt}</span>

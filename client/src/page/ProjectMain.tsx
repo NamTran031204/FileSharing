@@ -33,31 +33,11 @@ const toCardStatus = (status?: ProjectStatus): 'ACTIVE' | 'COMPLETED' => {
     return status === 'ACTIVE' ? 'ACTIVE' : 'COMPLETED';
 };
 
-const toMemberInitials = (email?: string) => {
-    if (!email) {
-        return 'NA';
-    }
-
-    const [namePart = ''] = email.split('@');
-    const cleaned = namePart.replace(/[^a-zA-Z]/g, ' ').trim();
-    const pieces = cleaned.split(/\s+/).filter(Boolean);
-
-    if (!pieces.length) {
-        return namePart.slice(0, 2).toUpperCase() || 'NA';
-    }
-
-    if (pieces.length === 1) {
-        return pieces[0].slice(0, 2).toUpperCase();
-    }
-
-    return `${pieces[0][0] ?? ''}${pieces[1][0] ?? ''}`.toUpperCase();
-};
-
 const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
     const collaborators = project.collaborators ?? [];
     const members = collaborators.slice(0, 3).map((member, index) => ({
         id: member.userId || `${project.projectId || project.projectCode || 'project'}-${index}`,
-        initials: toMemberInitials(member.email),
+        email: member.email,
     }));
 
     const startDate = formatProjectDate(project.startDate);

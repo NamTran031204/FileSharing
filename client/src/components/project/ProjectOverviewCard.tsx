@@ -5,14 +5,16 @@ import {
     HolderOutlined,
     VideoCameraOutlined,
 } from '@ant-design/icons';
-import {Avatar, Tag} from 'antd';
+import {Tag} from 'antd';
+import UserAvatar from "../core/common/UserAvatar.tsx";
 import ActionDropdown, {type ActionDropdownItem} from "../core/common/ActionDropdown.tsx";
 
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED';
 
 export interface ProjectMember {
     id: string;
-    initials: string;
+    email?: string;
+    name?: string;
 }
 
 export interface ProjectOverviewCardProps {
@@ -126,17 +128,17 @@ const ProjectOverviewCard = ({
 
                     <div className="flex -space-x-2">
                         {members.slice(0, 3).map((member) => (
-                            <Avatar
+                            <UserAvatar
                                 key={member.id}
                                 size={30}
-                                className="border border-card bg-muted text-[11px] font-bold text-primary-dark"
-                            >
-                                {member.initials}
-                            </Avatar>
+                                name={member.name}
+                                email={member.email}
+                                className="border border-card"
+                            />
                         ))}
 
                         {extraMembers > 0 && (
-                            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-card bg-muted text-[11px] font-bold text-primary-dark">
+                            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-card bg-muted text-[11px] font-bold text-primary">
                                 +{extraMembers}
                             </div>
                         )}

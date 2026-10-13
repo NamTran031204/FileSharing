@@ -7,13 +7,14 @@ import {
     ShareAltOutlined,
     TranslationOutlined,
 } from '@ant-design/icons';
+import UserAvatar from '../common/UserAvatar.tsx';
 import { Avatar, Button, Dropdown, Tooltip, type MenuProps } from 'antd';
 import type { ReactNode } from 'react';
 
 export interface ContextBarParticipant {
     key: string;
     name: string;
-    initials: string;
+    email?: string;
 }
 
 export interface ContextActionBarProps {
@@ -104,24 +105,18 @@ const ContextActionBar = ({
                 <Avatar.Group
                     max={{
                         count: MAX_VISIBLE_AVATARS,
-                        style: { backgroundColor: 'var(--color-muted)', color: 'var(--color-foreground)', fontWeight: 700 },
+                        style: { backgroundColor: 'var(--color-muted)', color: 'var(--color-primary)', fontWeight: 700 },
                     }}
                     size={28}
                 >
                     {participants.map((participant) => (
-                        <Tooltip key={participant.key} title={participant.name}>
-                            <Avatar
-                                size={28}
-                                style={{
-                                    backgroundColor: 'var(--color-accent)',
-                                    color: 'var(--color-foreground)',
-                                    fontWeight: 800,
-                                    fontSize: 10,
-                                }}
-                            >
-                                {participant.initials}
-                            </Avatar>
-                        </Tooltip>
+                        <UserAvatar
+                            key={participant.key}
+                            size={28}
+                            name={participant.name}
+                            email={participant.email}
+                            tooltip
+                        />
                     ))}
                 </Avatar.Group>
             )}

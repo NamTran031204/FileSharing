@@ -21,6 +21,7 @@ import type {
 } from '../api/api/index.defs';
 import { AuditAction } from '../api/api/index.defs';
 import { useStore } from '../store';
+import UserAvatar from '../components/core/common/UserAvatar.tsx';
 
 
 function formatBytes(bytes: number): string {
@@ -41,14 +42,6 @@ function formatTimeAgo(ts?: Date): string {
   if (diffH < 24) return `${diffH}h ago`;
   const diffD = Math.floor(diffH / 24);
   return `${diffD}d ago`;
-}
-
-function getInitials(email?: string): string {
-  if (!email) return '?';
-  const [local] = email.split('@');
-  const parts = local.split(/[._-]/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return local.slice(0, 2).toUpperCase();
 }
 
 const ACTION_LABEL: Partial<Record<AuditAction, string>> = {
@@ -371,9 +364,7 @@ const DashboardPage: React.FC = observer(() => {
                         >
                           <td className="py-4 pl-2 rounded-l-lg">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-[var(--color-muted)] text-[var(--color-primary-dark)] flex items-center justify-center text-xs font-bold shrink-0">
-                                {getInitials(row.actorEmail)}
-                              </div>
+                              <UserAvatar size={32} email={row.actorEmail} className="shrink-0" />
                               <span className="text-[var(--color-foreground)]">{row.actorEmail ?? '—'}</span>
                             </div>
                           </td>

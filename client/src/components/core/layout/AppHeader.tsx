@@ -1,6 +1,8 @@
-import { BellOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
+import { observer } from 'mobx-react-lite';
 import { Link } from 'react-router-dom';
+import { useStore } from '../../../store';
+import UserAvatar from '../common/UserAvatar.tsx';
 import logo from '../../../assets/logo/logo2k.png';
 import BreadCrumbNav from '../../BreadCrumbNav.tsx';
 import {type AppRoute, ROUTER_CONFIG} from '../../../utils/RouterConfigUtil.tsx';
@@ -10,7 +12,9 @@ interface AppHeaderProps {
   routes?: AppRoute[];
 }
 
-const AppHeader = ({routes = ROUTER_CONFIG}: AppHeaderProps) => {
+const AppHeader = observer(({routes = ROUTER_CONFIG}: AppHeaderProps) => {
+  const { sessionStore } = useStore();
+  const user = sessionStore.appSession?.user;
 
   return (
     <>
@@ -29,14 +33,13 @@ const AppHeader = ({routes = ROUTER_CONFIG}: AppHeaderProps) => {
           </button>
 
           {/* User Avatar */}
-          <Link to="/profile">
-            <div className="h-8 w-8 rounded-full bg-primary overflow-hidden ring-2 ring-white/20 hover:ring-white/40 transition-all cursor-pointer">
-              <Avatar
-                size={32}
-                icon={<UserOutlined />}
-                className="bg-transparent"
-              />
-            </div>
+          <Link to="/profile" aria-label={user?.publicUserName || user?.email || 'Hồ sơ cá nhân'}>
+            <UserAvatar
+              size={32}
+              name={user?.publicUserName}
+              email={user?.email}
+              className="ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
+            />
           </Link>
         </div>
       </nav>
@@ -48,6 +51,6 @@ const AppHeader = ({routes = ROUTER_CONFIG}: AppHeaderProps) => {
       {/*)}*/}
     </>
   );
-};
+});
 
 export default AppHeader;

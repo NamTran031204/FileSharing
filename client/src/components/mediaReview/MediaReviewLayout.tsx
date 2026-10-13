@@ -112,7 +112,7 @@ const MediaReviewLayout = observer(({
     for (const a of reviewStore.annotations) {
       const name = a.authorName ?? a.authorId;
       if (!name || seen.has(name)) continue;
-      seen.set(name, { key: name, name, initials: name.slice(0, 2).toUpperCase() });
+      seen.set(name, { key: name, name });
     }
     return [...seen.values()];
   }, [reviewStore.annotations]);

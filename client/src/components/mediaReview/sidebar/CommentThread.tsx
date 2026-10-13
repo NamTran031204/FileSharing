@@ -1,3 +1,4 @@
+import UserAvatar from '../../core/common/UserAvatar.tsx';
 import { IconTrash } from '../../imageReview/icons/ReviewIcons';
 import type { AnnotationWithShapes } from '../../../store/review/ImagePlayerStore';
 import { formatRelativeTime } from '../../../utils/date.util';
@@ -36,7 +37,6 @@ export function CommentThread({
   onToggleExpand,
 }: CommentThreadProps) {
   const isOpen = ann.status === 'OPEN';
-  const authorInitials = (ann.authorName ?? ann.authorId ?? 'U').slice(0, 2).toUpperCase();
   const annId = ann.annotationId ?? '';
 
   return (
@@ -51,9 +51,7 @@ export function CommentThread({
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-accent)]/30 text-[9px] font-bold text-[var(--color-foreground)]">
-            {authorInitials}
-          </div>
+          <UserAvatar size={24} name={ann.authorName ?? ann.authorId} />
           <div>
             <h4 className="text-xs font-bold text-[var(--color-foreground)]">
               {ann.authorName ?? ann.authorId ?? 'Unknown'}
@@ -81,9 +79,7 @@ export function CommentThread({
         <div className="mt-3 space-y-2 border-t border-[var(--color-border)]/20 pt-2">
           {ann.replies.map(reply => (
             <div key={reply.annotationId} className="flex gap-2 pl-[38px]">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/20 text-[8px] font-bold text-[var(--color-foreground)]">
-                {(reply.authorName ?? reply.authorId ?? 'U').slice(0, 2).toUpperCase()}
-              </div>
+              <UserAvatar size={24} name={reply.authorName ?? reply.authorId} className="shrink-0" />
               <div>
                 <span className="text-[9px] font-bold text-[var(--color-foreground)]">
                   {reply.authorName ?? reply.authorId ?? 'Unknown'}

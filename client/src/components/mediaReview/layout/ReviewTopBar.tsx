@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
+import UserAvatar from '../../core/common/UserAvatar.tsx';
 import { IconArrowLeft, IconShare } from '../../imageReview/icons/ReviewIcons';
 
 export interface ReviewParticipant {
   key: string;
   name: string;
-  initials: string;
+  email?: string;
 }
 
 export interface ReviewTopBarProps {
@@ -60,16 +61,17 @@ export function ReviewTopBar({
       {participants.length > 0 && (
         <div className="flex items-center">
           {visible.map(p => (
-            <div
+            <UserAvatar
               key={p.key}
-              title={p.name}
-              className="-ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-accent)] text-[9px] font-black text-[var(--color-foreground)] ring-2 ring-[var(--color-card)] first:ml-0"
-            >
-              {p.initials}
-            </div>
+              size={28}
+              name={p.name}
+              email={p.email}
+              tooltip
+              className="-ml-2 ring-2 ring-[var(--color-card)] first:ml-0"
+            />
           ))}
           {overflow > 0 && (
-            <div className="-ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-muted)] text-[9px] font-black text-[var(--color-foreground)] ring-2 ring-[var(--color-card)]">
+            <div className="-ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-muted)] text-[9px] font-black text-[var(--color-primary)] ring-2 ring-[var(--color-card)]">
               +{overflow}
             </div>
           )}
