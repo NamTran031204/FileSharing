@@ -41,7 +41,7 @@ const RegisterPageV2 = () => {
     setIsSubmitting(true);
     try {
       await authApiResource.registerWithGoogle(credentialResponse.credential);
-      navigate('/my-files');
+      navigate('/home');
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
         uiUtils.showError('Email này đã được liên kết với một tài khoản Google khác');

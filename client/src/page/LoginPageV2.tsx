@@ -27,7 +27,7 @@ const LoginPageV2 = () => {
         password: values.password,
       });
       setTimeout(() => {
-        navigate('/my-files');
+        navigate('/home');
       }, 2000);
     } finally {
       setIsSubmitting(false);
@@ -42,7 +42,7 @@ const LoginPageV2 = () => {
     setIsSubmitting(true);
     try {
       await authApiResource.loginWithGoogle(credentialResponse.credential);
-      navigate('/my-files');
+      navigate('/home');
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
         uiUtils.showError('Chưa có tài khoản, vui lòng đăng ký');
