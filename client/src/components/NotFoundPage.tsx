@@ -1,6 +1,7 @@
 import {useNavigate} from 'react-router-dom';
 import {Button} from 'antd';
 import {HomeOutlined, FrownOutlined} from '@ant-design/icons';
+import i18n from '../i18n';
 
 const NotFoundPage = () => {
     const navigate = useNavigate();
@@ -18,14 +19,14 @@ const NotFoundPage = () => {
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                    Oops!
+                    {i18n.t('core:notFoundPage.oops')}
                 </h1>
                 <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground mb-6">
-                    There are no file!
+                    {i18n.t('core:notFoundPage.thereAreNoFile')}
                 </h2>
 
                 <p className="text-muted-foreground mb-8 text-base">
-                    The file you're looking for might have been removed, deleted, or you don't have permission to access it.
+                    {i18n.t('core:notFoundPage.theFileYouReLooking')}
                 </p>
 
                 <Button
@@ -35,7 +36,7 @@ const NotFoundPage = () => {
                     onClick={handleBackToHome}
                     className="min-w-[180px] h-12 text-base font-medium shadow-lg hover:scale-105 transition-transform"
                 >
-                    Back to Home
+                    {i18n.t('core:notFoundPage.backToHome')}
                 </Button>
 
                 <div className="mt-12 flex items-center justify-center gap-4">

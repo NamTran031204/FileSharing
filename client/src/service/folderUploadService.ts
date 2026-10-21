@@ -9,6 +9,7 @@ import type {
 } from '../api/api/index.defs';
 import type {FolderFileItem} from '../utils/folderUploadParser';
 import fileApiResource from '../api/fileApi/fileApiResource';
+import i18n from '../i18n';
 
 // Cac field kieu "long" o backend (fileSize/partSize/declaredSize) duoc swagger-axios-codegen
 // khai la string de tranh mat chinh xac int64, nhung server thuc te tra ve JSON number - chap nhan ca hai.
@@ -156,7 +157,7 @@ export const createFolderTree = async (input: CreateFolderTreeInput): Promise<Cr
     });
 
     if (!response?.isSuccessful) {
-        throw new Error(response?.message || 'Create folder tree failed');
+        throw new Error(response?.message || i18n.t('message:folderUploadService.createFolderTreeFailed'));
     }
 
     const data = response.data;
@@ -248,7 +249,7 @@ export const createAssetUploadSession = async (
     });
 
     if (!response?.isSuccessful) {
-        throw new Error(response?.message || 'Create asset failed');
+        throw new Error(response?.message || i18n.t('message:folderUploadService.createAssetFailed'));
     }
 
     const assetId = response.data?.asset?.assetId;

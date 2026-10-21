@@ -10,6 +10,7 @@ import {
     type UploadQueueItem,
 } from '../service/folderUploadService';
 import {uploadService, type UploadProgress} from '../service/uploadService';
+import i18n from '../i18n';
 
 export type UploadJobType = 'single' | 'folder';
 
@@ -147,7 +148,7 @@ export class UploadManagerStore {
             });
         } catch (error) {
             runInAction(() => {
-                job.error.treeError = error instanceof Error ? error.message : 'Create folder tree failed';
+                job.error.treeError = error instanceof Error ? error.message : i18n.t('message:uploadManagerStore.createFolderTreeFailed');
                 job.status = 'FAILED';
                 job.isCreatingTree = false;
             });
@@ -359,7 +360,7 @@ export class UploadManagerStore {
                     job.stats.completedBytes += item.size;
                 });
             } catch (error) {
-                const message = error instanceof Error ? error.message : 'Upload failed';
+                const message = error instanceof Error ? error.message : i18n.t('message:uploadManagerStore.uploadFailed');
                 runInAction(() => {
                     job.queue[i] = {
                         ...job.queue[i],

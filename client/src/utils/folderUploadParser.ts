@@ -1,5 +1,6 @@
 import {MediaType} from '../api/api/index.defs';
 import {FileViewUtil} from './FileViewUtil';
+import i18n from '../i18n';
 
 export interface FileWithPath {
     file: File;
@@ -43,11 +44,11 @@ const getMediaType = (mimeType: string): MediaType => {
 
 export const buildFolderManifest = (rootFolderName: string, files: FileWithPath[]): FolderManifest => {
     if (!rootFolderName) {
-        throw new Error('Root folder name is required');
+        throw new Error(i18n.t('message:folderParser.rootNameRequired'));
     }
 
     if (!files.length) {
-        throw new Error('No files found in selected folder');
+        throw new Error(i18n.t('message:folderParser.noFiles'));
     }
 
     const fileItems: FolderFileItem[] = [];
@@ -57,14 +58,14 @@ export const buildFolderManifest = (rootFolderName: string, files: FileWithPath[
 
     for (const entry of files) {
         if (seenRelativePaths.has(entry.relativePath)) {
-            throw new Error(`Duplicate file path detected: ${entry.relativePath}`);
+            throw new Error(i18n.t('message:folderParser.duplicatePath', {path: entry.relativePath}));
         }
         seenRelativePaths.add(entry.relativePath);
 
         const normalizedPath = entry.relativePath.replace(/\\/g, '/');
         const pathSegments = normalizedPath.split('/').filter(Boolean);
         if (pathSegments.length < 2) {
-            throw new Error(`Invalid relative path: ${entry.relativePath}`);
+            throw new Error(i18n.t('message:folderParser.invalidPath', {path: entry.relativePath}));
         }
 
         const fileName = pathSegments[pathSegments.length - 1];

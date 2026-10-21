@@ -3,6 +3,7 @@ import {Breadcrumb, type BreadcrumbProps} from 'antd';
 import {useMemo} from 'react';
 import {Link, matchPath, useLocation} from 'react-router-dom';
 import type {AppRoute} from '../utils/RouterConfigUtil.tsx';
+import i18n from '../i18n';
 
 interface BreadCrumbNavigateProps {
     routes: AppRoute[];
@@ -103,6 +104,9 @@ const flattenRoutes = (
     return routeItems;
 };
 
+// ten route -> key trong core:routeName (khong co key thi giu nguyen)
+const routeLabel = (name: string) => i18n.t(`core:routeName.${name.replace(/\s+/g, '')}`, {defaultValue: name});
+
 const findActiveRoute = (routeItems: FlatRouteItem[], pathname: string) => {
     const matchedRoutes = routeItems.filter((route) => matchPath({path: route.path, end: false}, pathname));
 
@@ -154,10 +158,10 @@ const BreadCrumbNav = ({routes, className}: BreadCrumbNavigateProps) => {
 
             return {
                 title: isLastItem ? (
-                    <span className="text-sm font-semibold text-foreground">{route.name}</span>
+                    <span className="text-sm font-semibold text-foreground">{routeLabel(route.name)}</span>
                 ) : (
                     <Link className="text-sm text-muted-foreground transition-colors hover:text-primary" to={target}>
-                        {route.name}
+                        {routeLabel(route.name)}
                     </Link>
                 ),
             };

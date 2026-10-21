@@ -2,6 +2,7 @@ import {API_BASE, ApiError, type CommonResponse, tokenManager} from '../baseApi'
 import type {AuthProvider, UserRole} from "../enums.ts";
 import axios from "axios";
 import type {MetadataEntity} from "../fileApi/userFileApiResource.ts";
+import i18n from '../../i18n';
 
 export interface AuthProviderInfo {
     provider: AuthProvider;
@@ -56,7 +57,7 @@ const authApiResource = {
         );
 
         if (!response.data.isSuccessful) {
-            throw new Error(response.data.message || 'Register failed');
+            throw new Error(response.data.message || i18n.t('message:auth.registerFailed'));
         }
         return response.data.data;
     },
@@ -68,7 +69,7 @@ const authApiResource = {
         );
 
         if (!response.data.isSuccessful) {
-            throw new Error(response.data.message || 'Login failed');
+            throw new Error(response.data.message || i18n.t('message:auth.loginFailed'));
         }
 
         tokenManager.setTokens(
@@ -87,7 +88,7 @@ const authApiResource = {
             );
 
             if (!response.data.isSuccessful) {
-                throw new ApiError(response.data.code, response.data.message || 'Google register failed');
+                throw new ApiError(response.data.code, response.data.message || i18n.t('message:auth.googleRegisterFailed'));
             }
 
             tokenManager.setTokens(
@@ -99,7 +100,7 @@ const authApiResource = {
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.data) {
                 const data = err.response.data as CommonResponse<UserLoginResponseDto>;
-                throw new ApiError(data.code, data.message || 'Google register failed');
+                throw new ApiError(data.code, data.message || i18n.t('message:auth.googleRegisterFailed'));
             }
             throw err;
         }
@@ -113,7 +114,7 @@ const authApiResource = {
             );
 
             if (!response.data.isSuccessful) {
-                throw new ApiError(response.data.code, response.data.message || 'Google login failed');
+                throw new ApiError(response.data.code, response.data.message || i18n.t('message:auth.googleLoginFailed'));
             }
 
             tokenManager.setTokens(
@@ -125,7 +126,7 @@ const authApiResource = {
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.data) {
                 const data = err.response.data as CommonResponse<UserLoginResponseDto>;
-                throw new ApiError(data.code, data.message || 'Google login failed');
+                throw new ApiError(data.code, data.message || i18n.t('message:auth.googleLoginFailed'));
             }
             throw err;
         }
@@ -137,7 +138,7 @@ const authApiResource = {
         );
 
         if (!response.data.isSuccessful) {
-            throw new Error(response.data.message || 'You has no Legit! Please Login/Register to continue.');
+            throw new Error(response.data.message || i18n.t('message:auth.notLegit'));
         }
         return response.data.data;
     }

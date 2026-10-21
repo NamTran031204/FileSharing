@@ -12,6 +12,7 @@ import { AssetControllerService } from '../api/api/AssetControllerService';
 import { CommonPagingStore } from './CommonPagingStore.ts';
 import type SessionStore from './sessionStore';
 import { API_BASE, tokenManager } from '../api/baseApi.ts';
+import i18n from '../i18n';
 
 interface SseAssetEvent {
     assetId: string;
@@ -233,12 +234,12 @@ class FolderAssetStore extends CommonPagingStore {
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message ?? 'Khong the tai danh sach folder');
+                throw new Error(response?.message ?? i18n.t('message:folderAssetStore.khongTheTaiDanhSach'));
             }
 
             this.folders = response.data?.data ?? [];
         } catch (error) {
-            this.folderErrorMessage = error instanceof Error ? error.message : 'Khong the tai danh sach folder';
+            this.folderErrorMessage = error instanceof Error ? error.message : i18n.t('message:folderAssetStore.khongTheTaiDanhSach');
             this.folders = [];
         } finally {
             this.isFolderLoading = false;
@@ -264,13 +265,13 @@ class FolderAssetStore extends CommonPagingStore {
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message ?? 'Khong the tai danh sach asset');
+                throw new Error(response?.message ?? i18n.t('message:folderAssetStore.khongTheTaiDanhSach2'));
             }
 
             this.assets = response.data?.data ?? [];
             this.totalCount = Number(response.data?.totalCount ?? 0);
         } catch (error: unknown) {
-            this.assetErrorMessage = error instanceof Error ? error.message : 'Khong the tai danh sach asset';
+            this.assetErrorMessage = error instanceof Error ? error.message : i18n.t('message:folderAssetStore.khongTheTaiDanhSach2');
             this.assets = [];
             this.totalCount = 0;
         } finally {
@@ -294,14 +295,14 @@ class FolderAssetStore extends CommonPagingStore {
             this.actionErrorMessage = null;
             const response = await AssetControllerService.move({ body: { assetId, targetFolderId } });
             if (!response?.isSuccessful) {
-                throw new Error(response?.message ?? 'Khong the di chuyen asset');
+                throw new Error(response?.message ?? i18n.t('message:folderAssetStore.khongTheDiChuyenAsset'));
             }
 
             if (this.currentProjectId) {
                 await this.fetchAssetsPage(this.currentProjectId, this.currentFolderId);
             }
         } catch (error: unknown) {
-            this.actionErrorMessage = error instanceof Error ? error.message : 'Khong the di chuyen asset';
+            this.actionErrorMessage = error instanceof Error ? error.message : i18n.t('message:folderAssetStore.khongTheDiChuyenAsset');
         }
     }
 

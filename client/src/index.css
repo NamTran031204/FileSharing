@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Design System Tokens - Lumina Pro Theme */
+  /* Design System Tokens */
   --color-background: hsl(240 10% 96%);      /* #F3F2F7 - Main application canvas */
   --color-card: hsl(0 0% 100%);              /* #FFFFFF - Sidebar panels, cards */
   --color-foreground: hsl(237 45% 30%);      /* #2A2F6F - Deep Navy-Purple (Primary text) */

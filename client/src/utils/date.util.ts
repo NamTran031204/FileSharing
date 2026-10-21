@@ -1,5 +1,6 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import i18n from '../i18n';
 
 dayjs.extend(relativeTime);
 
@@ -42,10 +43,10 @@ export function formatRelativeTime(value: string | number | Date | null | undefi
   if (!d || !d.isValid()) return '';
   const diffMs = dayjs().diff(d);
   const hours = Math.floor(diffMs / 3_600_000);
-  if (hours < 1) return 'Just now';
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 1) return i18n.t('message:relativeTime.justNow');
+  if (hours < 24) return i18n.t('message:relativeTime.hours', {n: hours});
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return i18n.t('message:relativeTime.days', {n: days});
   return d.format('DD/MM/YYYY');
 }
 
