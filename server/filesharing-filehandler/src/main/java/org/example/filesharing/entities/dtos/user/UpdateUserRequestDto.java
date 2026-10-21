@@ -15,7 +15,7 @@ public class UpdateUserRequestDto {
 
     private String publicUserName;
 
-    @Size(min = 8, message = "Password phải có ít nhất 8 ký tự")
+    @Size(min = 8, message = "{validation.password.min}")
     private String password;
 
     private List<UserGrantedRole> roles;

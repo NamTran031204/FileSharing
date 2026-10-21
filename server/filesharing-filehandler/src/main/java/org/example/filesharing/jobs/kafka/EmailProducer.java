@@ -3,6 +3,7 @@ package org.example.filesharing.jobs.kafka;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,9 @@ public class EmailProducer {
     private String notificationEmailSender;
 
     public void sendEmail(EmailSenderRequestDto email) {
+        if (email.getLocale() == null) {
+            email.setLocale(LocaleContextHolder.getLocale().getLanguage());
+        }
         emailSenderKafkaTemplate.send(notificationEmailSender, email);
     }
 }

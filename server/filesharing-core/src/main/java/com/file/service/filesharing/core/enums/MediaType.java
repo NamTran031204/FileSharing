@@ -9,7 +9,7 @@ public enum MediaType {
 
     public static MediaType fromMime(String mime) {
         if (mime == null || mime.trim().isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Đuôi file không được để trống");
+            throw new FileBusinessException(ErrorCode.FILE_ERROR, "error.file.extensionEmpty");
         }
 
         String mimeLower = mime.toLowerCase();
@@ -28,7 +28,7 @@ public enum MediaType {
                  "application/vnd.sketchapp.document"   // .sketch
                     -> DESIGN;
 
-            default -> throw new FileBusinessException(ErrorCode.FILE_ERROR, "Không hỗ trợ định dạng MIME: " + mime);
+            default -> throw new FileBusinessException(ErrorCode.FILE_ERROR, "error.file.mimeNotSupported", mime);
         };
     }
 }

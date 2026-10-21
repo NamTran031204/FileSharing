@@ -2,6 +2,10 @@ server:
   port: 5001
 
 spring:
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   config:
     import: optional:file:./.env[.properties]
   application:

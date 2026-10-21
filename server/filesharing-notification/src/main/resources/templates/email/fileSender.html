@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>File Shared With You</title>
+    <title th:text="#{email.fileSender.subject}">File Shared With You</title>
     <style>
         /* CSS reset cho email */
         body {
@@ -98,31 +98,31 @@
            width="100%">
         <tr>
             <td align="center" bgcolor="#2563eb" class="header">
-                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">File Sharing Service</h1>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">You received a new file</p>
+                <h1 style="margin: 0; font-size: 24px; font-weight: bold;" th:text="#{email.fileSender.title}">File Sharing Service</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;" th:text="#{email.fileSender.tagline}">You received a new file</p>
             </td>
         </tr>
         <tr>
             <td bgcolor="#ffffff" class="content">
-                <p style="margin-top: 0;">Hello,</p>
-                <p>A file has been shared with you via our secure File Sharing Service.</p>
+                <p style="margin-top: 0;" th:text="#{email.fileSender.hello}">Hello,</p>
+                <p th:text="#{email.fileSender.intro}">A file has been shared with you via our secure File Sharing Service.</p>
                 <div style="margin-top: 25px;">
-                    <div class="label">From Sender</div>
+                    <div class="label" th:text="#{email.fileSender.fromSender}">From Sender</div>
                     <div class="value" th:text="${senderEmail}">sender@example.com</div>
                 </div>
                 <table border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin: 10px 0 25px 0;"
                        width="100%">
                     <tr>
                         <td style="padding: 20px;">
-                            <div class="label">File Name</div>
+                            <div class="label" th:text="#{email.fileSender.fileName}">File Name</div>
                             <div class="value" style="margin-bottom: 0; color: #0f172a;">📄 <span th:text="${fileName}">example.pdf</span>
                             </div>
                         </td>
                     </tr>
                 </table>
                 <div style="text-align: center; margin-top: 30px;">
-                    <a class="btn" target="_blank" th:href="${downloadLink}">Download File Now</a>
-                    <p style="margin-top: 20px; font-size: 13px; color: #94a3b8;">
+                    <a class="btn" target="_blank" th:href="${downloadLink}" th:text="#{email.fileSender.download}">Download File Now</a>
+                    <p style="margin-top: 20px; font-size: 13px; color: #94a3b8;" th:text="#{email.fileSender.expireNote}">
                         Link will expire soon. Please download it immediately.
                     </p>
                 </div>
@@ -130,8 +130,8 @@
         </tr>
         <tr>
             <td align="center" bgcolor="#f4f4f4" class="footer">
-                <p style="margin: 0;">&copy; 2025 File Sharing Service. All rights reserved.</p>
-                <p style="margin: 5px 0 0 0;">This is an automated email, please do not reply.</p>
+                <p style="margin: 0;" th:text="#{email.fileSender.rights}">&copy; 2025 File Sharing Service. All rights reserved.</p>
+                <p style="margin: 5px 0 0 0;" th:text="#{email.footer.auto}">This is an automated email, please do not reply.</p>
             </td>
         </tr>
     </table>

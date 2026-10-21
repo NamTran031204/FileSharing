@@ -32,4 +32,7 @@ public class EmailSenderRequestDto {
     // null = DOWNLOAD_LINK (hanh vi cu, giu tuong thich nguoc)
     private EmailType type;
 
+    /** vi | en; null thi producer tu dat theo Accept-Language cua request */
+    private String locale;
+
 }

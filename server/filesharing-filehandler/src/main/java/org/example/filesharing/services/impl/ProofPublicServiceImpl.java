@@ -21,6 +21,7 @@ import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.example.filesharing.entities.dtos.proof.ProofAssetItemDto;
 import org.example.filesharing.entities.dtos.proof.ProofLandingResponseDto;
 import org.example.filesharing.entities.dtos.proof.ProofSessionCreateRequestDto;
@@ -53,6 +54,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,7 +73,10 @@ public class ProofPublicServiceImpl implements ProofPublicService {
     private static final int MAX_SUBMIT_ASSETS = 5000;
     private static final int MAX_PAGE_SIZE = 100;
     private static final int PREVIEW_URL_SECONDS = 3600;
+    // ponytail: thong bao luu DB mot ngon ngu (vi) vi chua co ngon ngu uu tien cua owner; them truong locale cho user neu can
+    private static final Locale NOTIFY_LOCALE = Locale.forLanguageTag("vi");
 
+    private final MessageSource messageSource;
     private final FolderRepo folderRepo;
     private final ProjectRepo projectRepo;
     private final AssetRepo assetRepo;
@@ -310,8 +315,9 @@ public class ProofPublicServiceImpl implements ProofPublicService {
             NotificationEntity notification = NotificationEntity.builder()
                     .userId(ownerId)
                     .type(NotificationType.PROOF_SUBMITTED)
-                    .title("Khách đã gửi lựa chọn ảnh")
-                    .message(selection.getGuestName() + " đã chọn " + count + " ảnh trong folder " + folder.getFolderName())
+                    .title(messageSource.getMessage("notification.proofSubmitted.title", null, NOTIFY_LOCALE))
+                    .message(messageSource.getMessage("notification.proofSubmitted.message",
+                            new Object[]{selection.getGuestName(), count, folder.getFolderName()}, NOTIFY_LOCALE))
                     .link("/projects/" + folder.getProjectId() + "?folderId=" + folder.getFolderId())
                     .context(NotificationContext.builder().actorName(selection.getGuestName()).build())
                     .isRead(false)

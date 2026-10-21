@@ -6,14 +6,25 @@ import lombok.Getter;
 @Getter
 public class CommonException extends RuntimeException {
     private final ErrorCode errorCode;
+    /** tham so cho message key (i18n), rong neu message la van ban thuong */
+    private final Object[] args;
 
     public CommonException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
+        this.args = new Object[0];
     }
 
     public CommonException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
+        this.args = new Object[0];
+    }
+
+    /** message la key trong i18n/messages*.properties; args thay cho {0}, {1}... */
+    public CommonException(ErrorCode errorCode, String messageKey, Object... args) {
+        super(messageKey);
+        this.errorCode = errorCode;
+        this.args = args;
     }
 }

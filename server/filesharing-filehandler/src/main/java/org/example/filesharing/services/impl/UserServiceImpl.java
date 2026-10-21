@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
         // Email da ton tai voi provider khac Local (vi du da dang ky Google) -> tu choi, khong tao trung
         userRepo.findByEmail(input.getEmail()).ifPresent(existing -> {
             if (!existing.hasProvider(AuthProvider.LOCAL)) {
-                throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "User đã tồn tại");
+                throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "error.user.alreadyExists");
             }
         });
 
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
             savedUser = userRepo.save(userEntity);
         } catch (DuplicateKeyException e) {
             // Race condition: 2 request dang ky cung email gan nhu dong thoi, unique index chan o tang DB
-            throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "User đã tồn tại");
+            throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "error.user.alreadyExists");
         }
 
         var accessToken = jwtService.generateToken(savedUser);
@@ -105,12 +105,12 @@ public class UserServiceImpl implements UserService {
         if (existingUser != null && existingUser.getPassword() == null) {
             if (existingUser.hasProvider(AuthProvider.GOOGLE)) {
                 throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID,
-                        "Bạn đã đăng ký tài khoản google rồi, Đăng nhập bằng google");
+                        "error.user.googleRegistered");
             }
             // Khong nen xay ra: user LOCAL nhung password null - log lai de xu ly rieng (chua co flow doi mat khau)
             logCorruptedLocalPasswordTask(existingUser.getEmail());
             throw new UserBusinessException(ErrorCode.USER_PASSWORD_NOT_VALID,
-                    "Tài khoản gặp lỗi bất định, yêu cầu đổi mật khẩu ngay");
+                    "error.user.passwordMissing");
         }
 
         authenticationManager.authenticate(
@@ -134,21 +134,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getUserById(String userId) {
         UserEntity user = userRepo.findById(userId.isBlank() || userId.isEmpty() ? auditService.getCurrentUserId() : userId)
-                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy user với id: " + userId));
+                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundById", userId));
         return mapToUserDto(user);
     }
 
     @Override
     public UserDto getUserByEmail(String email) {
         UserEntity user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy user với email: " + email));
+                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundByEmail", email));
         return mapToUserDto(user);
     }
 
     @Override
     public UserDto updateUser(String userId, UpdateUserRequestDto input) {
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy user với id: " + userId));
+                .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundById", userId));
 
         if (!StringUtils.isNullOrBlank(input.getPublicUserName())) {
             user.setPublicUserName(input.getPublicUserName());
@@ -177,7 +177,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String userId) {
         if (!userRepo.existsById(userId)) {
-            throw new UserBusinessException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy user với id: " + userId);
+            throw new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundById", userId);
         }
         userRepo.deleteById(userId);
     }

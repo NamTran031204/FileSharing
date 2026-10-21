@@ -6377,6 +6377,9 @@
           },
           "type" : {
             "$ref" : "#/components/schemas/EmailType"
+          },
+          "locale" : {
+            "type" : "string"
           }
         }
       },

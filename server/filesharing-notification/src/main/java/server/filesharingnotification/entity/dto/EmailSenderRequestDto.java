@@ -16,4 +16,7 @@ public class EmailSenderRequestDto {
 
     private EmailType type;
 
+    /** vi | en; null (message cu) = vi */
+    private String locale;
+
 }

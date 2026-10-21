@@ -16,14 +16,14 @@ import java.util.List;
 @NoArgsConstructor
 public class CreateUserRequestDto {
 
-    @NotNull(message = "Email không được để trống")
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không đúng định dạng")
+    @NotNull(message = "{validation.email.required}")
+    @NotBlank(message = "{validation.email.required}")
+    @Email(message = "{validation.email.invalid}")
     private String email;
 
-    @NotNull(message = "Password không được để trống")
-    @NotBlank(message = "Password không được để trống")
-    @Size(min = 8, message = "Password phải có ít nhất 8 ký tự")
+    @NotNull(message = "{validation.password.required}")
+    @NotBlank(message = "{validation.password.required}")
+    @Size(min = 8, message = "{validation.password.min}")
     private String password;
 
     private String publicUserName;

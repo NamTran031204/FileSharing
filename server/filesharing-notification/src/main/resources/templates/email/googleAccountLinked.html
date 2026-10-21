@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Cảnh báo liên kết tài khoản Google</title>
+    <title th:text="#{email.googleLinked.subject}">Cảnh báo liên kết tài khoản Google</title>
     <style>
         body {
             margin: 0;
@@ -49,21 +49,21 @@
            width="100%">
         <tr>
             <td align="center" bgcolor="#b45309" class="header">
-                <h1 style="margin: 0; font-size: 22px; font-weight: bold;">Cảnh báo bảo mật tài khoản</h1>
+                <h1 style="margin: 0; font-size: 22px; font-weight: bold;" th:text="#{email.googleLinked.title}">Cảnh báo bảo mật tài khoản</h1>
             </td>
         </tr>
         <tr>
             <td bgcolor="#ffffff" class="content">
-                <p style="margin-top: 0;">Xin chào,</p>
-                <p>Một tài khoản Google vừa được liên kết với tài khoản của bạn (<span th:text="${toEmail}">user@example.com</span>).</p>
-                <p style="margin-top: 20px; color: #b45309; font-weight: bold;">
+                <p style="margin-top: 0;" th:text="#{email.googleLinked.hello}">Xin chào,</p>
+                <p><span th:text="#{email.googleLinked.body}">Một tài khoản Google vừa được liên kết với tài khoản của bạn</span> (<span th:text="${toEmail}">user@example.com</span>).</p>
+                <p style="margin-top: 20px; color: #b45309; font-weight: bold;" th:text="#{email.googleLinked.warning}">
                     Nếu đây không phải là bạn, vui lòng liên hệ hỗ trợ ngay lập tức.
                 </p>
             </td>
         </tr>
         <tr>
             <td align="center" bgcolor="#f4f4f4" class="footer">
-                <p style="margin: 0;">&copy; 2026 File Sharing Service. Đây là email tự động, vui lòng không trả lời.</p>
+                <p style="margin: 0;"><span th:text="#{email.googleLinked.rights}">&copy; 2026 File Sharing Service.</span> <span th:text="#{email.footer.auto}">Đây là email tự động, vui lòng không trả lời.</span></p>
             </td>
         </tr>
     </table>

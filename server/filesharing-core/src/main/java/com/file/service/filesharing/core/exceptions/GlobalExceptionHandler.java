@@ -5,7 +5,10 @@ import com.file.service.filesharing.core.exceptions.specException.CommonExceptio
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import com.mongodb.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,7 +19,29 @@ import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final MessageSource messageSource;
+
+    /**
+     * Dich message theo locale cua request (Accept-Language).
+     * raw la key trong i18n/messages*.properties thi lay ban dich; neu raw chinh la message mac dinh cua ErrorCode thi lay error.<code>;
+     * con lai giu nguyen raw (fallback)
+     */
+    private String localize(ErrorCode errorCode, String raw, Object[] args) {
+        var locale = LocaleContextHolder.getLocale();
+        if (raw != null) {
+            String byKey = messageSource.getMessage(raw, args != null && args.length > 0 ? args : null, null, locale);
+            if (byKey != null) {
+                return byKey;
+            }
+        }
+        if (raw == null || raw.equals(errorCode.getMessage())) {
+            return messageSource.getMessage("error." + errorCode.getCode(), null, errorCode.getMessage(), locale);
+        }
+        return raw;
+    }
 
     @ExceptionHandler({
             CommonException.class,
@@ -25,16 +50,21 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<CommonResponse<Object>> handleBusinessException(Exception ex, WebRequest request) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+        Object[] args = null;
 
-        if (ex instanceof FileBusinessException) {
-            errorCode = ((FileBusinessException) ex).getErrorCode();
-        } else if (ex instanceof UserBusinessException) {
-            errorCode = ((UserBusinessException) ex).getErrorCode();
+        if (ex instanceof FileBusinessException fe) {
+            errorCode = fe.getErrorCode();
+            args = fe.getArgs();
+        } else if (ex instanceof UserBusinessException ue) {
+            errorCode = ue.getErrorCode();
+            args = ue.getArgs();
+        } else if (ex instanceof CommonException ce) {
+            args = ce.getArgs();
         }
 
         CommonResponse<Object> response = CommonResponse.fail(
                 errorCode,
-                ex.getMessage()
+                localize(errorCode, ex.getMessage(), args)
         );
 
         log.error("Spec Error: ", ex);
@@ -55,7 +85,8 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<CommonResponse<Object>> handleGlobalException(Exception ex, WebRequest request) {
         CommonResponse<Object> response = CommonResponse.fail(
-                ErrorCode.MONGO_ERROR
+                ErrorCode.MONGO_ERROR,
+                localize(ErrorCode.MONGO_ERROR, null, null)
         );
 
         log.error("MONGO Error: ", ex);
@@ -81,7 +112,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonResponse<Object>> handleHttpMessageNotReadableException(MethodArgumentNotValidException ex, WebRequest request) {
         CommonResponse<Object> response = CommonResponse.fail(
                 ErrorCode.INTERNAL_SERVER_ERROR,
-                "Dữ liệu đầu vào không hợp lệ"
+                localize(ErrorCode.INTERNAL_SERVER_ERROR, "validation.invalidInput", null)
         );
 
         log.error("MethodArgumentNotValidException: ", ex);
