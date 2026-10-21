@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import type { MouseEvent } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
+import i18n from '../../i18n';
 
 export type AssetType = 'image' | 'video' | 'doc' | 'svg';
 
@@ -74,7 +75,7 @@ const AssetCard = <TRecord,>({
       return (
         <div className="flex h-full flex-col items-center justify-center gap-2">
           <div className="h-16 w-16 animate-pulse rounded-2xl bg-muted" />
-          <span className="text-[11px] font-medium text-muted-foreground">Đang xử lý...</span>
+          <span className="text-[11px] font-medium text-muted-foreground">{i18n.t('file:assetCard.dangXuLy')}</span>
         </div>
       );
     }
@@ -84,7 +85,7 @@ const AssetCard = <TRecord,>({
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-destructive/10 shadow-lg">
             <WarningOutlined className="text-3xl text-destructive" />
           </div>
-          <span className="text-[11px] font-medium text-destructive">Xử lý thất bại</span>
+          <span className="text-[11px] font-medium text-destructive">{i18n.t('file:assetCard.xuLyThatBai')}</span>
         </div>
       );
     }

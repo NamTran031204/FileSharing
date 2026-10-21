@@ -35,6 +35,7 @@ import { describeInheritSource, resolveEffectiveVisibility } from '../utils/visi
 import userApiResource from '../api/userApiResource.ts';
 import ProofLinkModal from '../components/proof/ProofLinkModal.tsx';
 import ProofSelectionsDrawer from '../components/proof/ProofSelectionsDrawer.tsx';
+import i18n from '../i18n';
 
 const resolveAssetType = (mimeType?: string): AssetType => {
     if (!mimeType) return 'doc';
@@ -106,7 +107,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const { folderStore, sessionStore } = useStore();
 
     const currentFolderId = searchParams.get('folderId') ?? undefined;
-    const projectName = sessionStore.currentProjectName || projectId || 'Project';
+    const projectName = sessionStore.currentProjectName || projectId || i18n.t('layout:folderAssetPage.project');
 
     const [treeCollapsed, setTreeCollapsed] = useState(false);
     const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -270,9 +271,9 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(window.location.href);
-            uiUtils.showSuccess('Đã sao chép link folder');
+            uiUtils.showSuccess(i18n.t('layout:folderAssetPage.daSaoChepLinkFolder'));
         } catch {
-            uiUtils.showError('Trình duyệt chặn clipboard, hãy sao chép thủ công từ thanh địa chỉ');
+            uiUtils.showError(i18n.t('layout:folderAssetPage.trinhDuyetChanClipboardHay'));
         }
     };
 
@@ -310,7 +311,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
 
     const currentFolderName = breadcrumbFolders.at(-1)?.folderName ?? projectName;
 
-    const pathLabel = ['Projects', projectName, ...breadcrumbFolders.slice(0, -1).map((f) => f.folderName ?? '—')].join(
+    const pathLabel = [i18n.t('layout:folderAssetPage.projects'), projectName, ...breadcrumbFolders.slice(0, -1).map((f) => f.folderName ?? '—')].join(
         ' / '
     );
 
@@ -340,10 +341,10 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     );
 
     const summaryItems: InsightSummaryItem[] = [
-        { label: 'Folders', value: folderStore.folders.length },
-        { label: 'Files', value: folderStore.assets.length },
-        { label: 'Total size', value: formatBytes(totalBytes) },
-        { label: 'Processing', value: processingItems.length },
+        { label: i18n.t('layout:folderAssetPage.folders'), value: folderStore.folders.length },
+        { label: i18n.t('layout:folderAssetPage.files'), value: folderStore.assets.length },
+        { label: i18n.t('layout:folderAssetPage.totalSize'), value: formatBytes(totalBytes) },
+        { label: i18n.t('layout:folderAssetPage.processing'), value: processingItems.length },
     ];
 
     const visibilityTag = currentFolderId ? (
@@ -351,7 +352,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             {effectiveVisibility === FolderVisibility.PUBLIC ? <GlobalOutlined /> : <LockOutlined />}{' '}
             {breadcrumbFolders.at(-1)?.visibility && breadcrumbFolders.at(-1)?.visibility !== FolderVisibility.INHERIT
                 ? breadcrumbFolders.at(-1)?.visibility
-                : `Inherit từ ${describeInheritSource(currentFolderId, folderStore.treeItems, projectName)}`}
+                : i18n.t('layout:folderAssetPage.inheritTu', {projectName: describeInheritSource(currentFolderId, folderStore.treeItems, projectName)})}
         </Tag>
     ) : null;
 
@@ -364,29 +365,29 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             onBack={currentFolderId ? handleBackToParent : undefined}
             onShare={() => {
                 if (!currentFolderId) {
-                    uiUtils.showInfor('Hãy mở một folder để gửi khách chọn ảnh');
+                    uiUtils.showInfor(i18n.t('layout:folderAssetPage.hayMoMotFolderDe'));
                     return;
                 }
                 if (!canShareProof) {
-                    uiUtils.showInfor('Bạn không có quyền tạo link chọn ảnh cho folder này');
+                    uiUtils.showInfor(i18n.t('layout:folderAssetPage.banKhongCoQuyenTao'));
                     return;
                 }
                 setProofLinkOpen(true);
             }}
-            onTranslate={() => uiUtils.showInfor('Dịch tên file và bình luận — chưa nối API')}
-            onDownload={() => uiUtils.showInfor('Tải folder dạng .zip — chưa nối API')}
+            onTranslate={() => uiUtils.showInfor(i18n.t('layout:folderAssetPage.dichTenFileVaBinh'))}
+            onDownload={() => uiUtils.showInfor(i18n.t('layout:folderAssetPage.taiFolderDangZipChua'))}
             onCopyLink={handleCopyLink}
             onRefresh={handleRefresh}
             refreshLoading={isLoading}
             moreItems={[
                 {
                     key: 'move',
-                    label: 'Move to...',
-                    onClick: () => uiUtils.showInfor('Di chuyển folder — chưa nối API'),
+                    label: i18n.t('layout:folderAssetPage.moveTo'),
+                    onClick: () => uiUtils.showInfor(i18n.t('layout:folderAssetPage.diChuyenFolderChuaNoi')),
                 },
                 {
                     key: 'rename',
-                    label: 'Rename',
+                    label: i18n.t('layout:folderAssetPage.rename'),
                     disabled: !currentFolderId,
                     onClick: () => {
                         if (!currentFolderId) return;
@@ -396,16 +397,16 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 ...(currentFolderId && canManageVisibility
                     ? [{
                         key: 'visibility',
-                        label: 'Quyền truy cập',
+                        label: i18n.t('layout:folderAssetPage.quyenTruyCap'),
                         onClick: () => setVisibilityFolderId(currentFolderId),
                     }]
                     : []),
                 { type: 'divider' },
                 {
                     key: 'archive',
-                    label: 'Archive',
+                    label: i18n.t('layout:folderAssetPage.archive'),
                     danger: true,
-                    onClick: () => uiUtils.showInfor('Lưu trữ folder — chưa nối API'),
+                    onClick: () => uiUtils.showInfor(i18n.t('layout:folderAssetPage.luuTruFolderChuaNoi')),
                 },
             ]}
             right={
@@ -420,17 +421,17 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                     {currentFolderId && visibilityTag}
                     {currentFolderId && canViewProof && (
                         <Button className="h-9 rounded-lg" onClick={() => setProofSelectionsOpen(true)}>
-                            Lựa chọn của khách
+                            {i18n.t('layout:folderAssetPage.luaChonCuaKhach')}
                         </Button>
                     )}
                     <ApiPendingNote
                         compact
-                        label="Members"
-                        hint="Danh sách thành viên có quyền trên folder/project"
+                        label={i18n.t('layout:folderAssetPage.members')}
+                        hint={i18n.t('layout:folderAssetPage.danhSachThanhVienCo')}
                     />
                     {currentFolderId && (
                         <Tag color="purple" className="m-0 rounded-md border-0 font-semibold">
-                            Live status
+                            {i18n.t('layout:folderAssetPage.liveStatus')}
                         </Tag>
                     )}
                 </>
@@ -442,7 +443,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         ...(canManageVisibility
             ? [{
                 title: 'visibility',
-                titleCustom: 'Quyền truy cập',
+                titleCustom: i18n.t('layout:folderAssetPage.quyenTruyCap'),
                 icon: <SafetyOutlined className="text-base" />,
                 onClick: (record?: FolderEntity) => {
                     if (record?.folderId) setVisibilityFolderId(record.folderId);
@@ -451,7 +452,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             : []),
         {
             title: 'edit',
-            titleCustom: 'Sua',
+            titleCustom: i18n.t('layout:folderAssetPage.sua'),
             permission: GrantedProjectPermission.CREATE_FOLDER_ASSET,
             onClick: (record) => {
                 if (!record?.folderId) return;
@@ -460,7 +461,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         },
         {
             title: 'remove',
-            titleCustom: 'Xoa',
+            titleCustom: i18n.t('layout:folderAssetPage.xoa'),
             permission: GrantedProjectPermission.DELETE,
             isDanger: true,
             onClick: (record) => {
@@ -473,7 +474,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const assetActions: ActionDropdownItem<AssetSummaryDto>[] = [
         {
             title: 'edit',
-            titleCustom: 'Sua',
+            titleCustom: i18n.t('layout:folderAssetPage.sua'),
             permission: GrantedProjectPermission.UPDATE,
             onClick: (record) => {
                 const assetId = record?.asset?.assetId;
@@ -483,7 +484,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         },
         {
             title: 'remove',
-            titleCustom: 'Xoa',
+            titleCustom: i18n.t('layout:folderAssetPage.xoa'),
             permission: GrantedProjectPermission.DELETE,
             isDanger: true,
             onClick: (record) => {
@@ -497,13 +498,13 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const newActions: ActionDropdownItem<unknown>[] = [
         {
             title: 'uploadFile',
-            titleCustom: 'Upload File',
+            titleCustom: i18n.t('layout:folderAssetPage.uploadFile'),
             icon: <CloudUploadOutlined className="text-base text-primary" />,
             onClick: () => folderStore.openUploadAssetModal(),
         },
         {
             title: 'uploadFolder',
-            titleCustom: 'Upload Folder',
+            titleCustom: i18n.t('layout:folderAssetPage.uploadFolder'),
             icon: <FolderOpenOutlined className="text-base text-primary" />,
             onClick: () => folderStore.openUploadFolderModal(),
         },
@@ -513,27 +514,27 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         <div className="flex shrink-0 items-end gap-4 rounded-xl border border-border bg-card px-6 py-5">
             <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    User
+                    {i18n.t('layout:folderAssetPage.user')}
                 </label>
                 <Select
                     value={filterUser}
                     onChange={setFilterUser}
                     className="min-w-40"
-                    options={[{ value: 'all', label: 'All Users' }]}
+                    options={[{ value: 'all', label: i18n.t('layout:folderAssetPage.allUsers') }]}
                 />
             </div>
             <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Status
+                    {i18n.t('layout:folderAssetPage.status')}
                 </label>
                 <Select
                     value={filterStatus}
                     onChange={setFilterStatus}
                     className="min-w-40"
                     options={[
-                        { value: 'all', label: 'All' },
-                        { value: 'private', label: 'Private' },
-                        { value: 'public', label: 'Public' },
+                        { value: 'all', label: i18n.t('layout:folderAssetPage.all') },
+                        { value: 'private', label: i18n.t('layout:folderAssetPage.private') },
+                        { value: 'public', label: i18n.t('layout:folderAssetPage.public') },
                     ]}
                 />
             </div>
@@ -542,7 +543,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 onClick={handleRefresh}
                 className="h-8 rounded-lg bg-linear-to-br from-primary-dark to-primary font-semibold"
             >
-                Search
+                {i18n.t('layout:folderAssetPage.search')}
             </Button>
         </div>
     ) : null;
@@ -606,11 +607,11 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 onAssetClick={handleAssetClick}
                 getFolderKey={(folder) => folder.folderId ?? ''}
                 getAssetKey={(asset) => asset.asset?.assetId ?? ''}
-                emptyFoldersText={searchQuery ? 'No folders match your search.' : 'No sub-folders here.'}
+                emptyFoldersText={searchQuery ? i18n.t('layout:folderAssetPage.noFoldersMatchYourSearch') : i18n.t('layout:folderAssetPage.noSubFoldersHere')}
                 emptyAssetsText={
                     searchQuery || typeFilter !== 'all'
-                        ? 'No assets match your search.'
-                        : 'No assets in this folder.'
+                        ? i18n.t('layout:folderAssetPage.noAssetsMatchYourSearch')
+                        : i18n.t('layout:folderAssetPage.noAssetsInThisFolder')
                 }
                 emptyAssetsAction={
                     <Button
@@ -619,7 +620,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         onClick={() => folderStore.openUploadAssetModal()}
                         className="rounded-lg bg-linear-to-br from-primary-dark to-primary font-semibold"
                     >
-                        Upload File
+                        {i18n.t('layout:folderAssetPage.uploadFile')}
                     </Button>
                 }
                 contentTop={contentTop}
@@ -662,7 +663,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 className="[&_.ant-modal-content]:bg-card"
                 title={
                     <span className="text-lg font-semibold text-foreground">
-                        {folderStore.isUploadFolderOpen ? 'Upload Folder' : 'Upload File'}
+                        {folderStore.isUploadFolderOpen ? i18n.t('layout:folderAssetPage.uploadFolder') : i18n.t('layout:folderAssetPage.uploadFile')}
                     </span>
                 }
                 destroyOnHidden

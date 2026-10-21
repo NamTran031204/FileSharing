@@ -16,6 +16,7 @@ import {useNavigate} from 'react-router-dom';
 import {ProjectControllerService} from '../api/api/ProjectControllerService';
 import type {ProjectStatus} from '../api/api/index.defs';
 import {useStore} from '../store';
+import i18n from '../i18n';
 
 interface MainPageProps {
     userName?: string;
@@ -42,8 +43,8 @@ const MainPage = ({
     const quickActions = useMemo<MainQuickAction[]>(() => [
         {
             key: 'upload-assets',
-            title: 'Upload Assets',
-            description: 'Drag and drop your latest media exports to start a review.',
+            title: i18n.t('layout:mainPage.uploadAssets'),
+            description: i18n.t('layout:mainPage.dragAndDropYourLatest'),
             icon: <UploadOutlined/>,
             tone: 'primary',
         },
@@ -73,12 +74,12 @@ const MainPage = ({
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message || 'Create project failed');
+                throw new Error(response?.message || i18n.t('layout:mainPage.createProjectFailed'));
             }
 
             const createdProject = response.data;
 
-            uiUtils.showSuccess('Tạo project thành công');
+            uiUtils.showSuccess(i18n.t('layout:mainPage.taoProjectThanhCong'));
             setIsCreateProjectOpen(false);
 
             if (createdProject?.projectId) {
@@ -91,7 +92,7 @@ const MainPage = ({
             }
         } catch (error) {
             console.error('Create project failed:', error);
-            uiUtils.showError('Tạo project thất bại');
+            uiUtils.showError(i18n.t('layout:mainPage.taoProjectThatBai'));
         } finally {
             setIsCreatingProject(false);
         }
@@ -109,7 +110,7 @@ const MainPage = ({
                     <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
 
                         <h1 className="mb-6 text-5xl font-black leading-tight tracking-tighter text-foreground md:text-7xl xl:text-8xl">
-                            WELCOME BACK,
+                            {i18n.t('layout:mainPage.welcomeBack')}
                             <br/>
                             <span className="bg-linear-to-br from-primary-dark to-primary bg-clip-text text-transparent">
                                 {userName}!

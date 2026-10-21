@@ -1,5 +1,6 @@
 import {NavLink} from 'react-router-dom';
 import {CloudUploadOutlined, DeleteOutlined, FolderOutlined, UserOutlined} from '@ant-design/icons';
+import i18n from '../../../i18n';
 
 const NavBar = () => {
     const navLinkClass = ({isActive}: { isActive: boolean }) =>
@@ -18,26 +19,26 @@ const NavBar = () => {
                             <CloudUploadOutlined className="text-2xl text-primary"/>
                         </div>
                         <h1 className="text-3xl font-bold text-primary-foreground tracking-tight">
-                            FILE SHARING
+                            {i18n.t('file:navBar.fileSharing')}
                         </h1>
                     </div>
 
                     <nav className="flex gap-4">
                         <NavLink to="/upload" className={navLinkClass}>
                             <CloudUploadOutlined className="text-lg"/>
-                            Upload & Share
+                            {i18n.t('file:navBar.uploadShare')}
                         </NavLink>
                         <NavLink to="/my-files" className={navLinkClass}>
                             <FolderOutlined className="text-lg"/>
-                            My Files
+                            {i18n.t('file:navBar.myFiles')}
                         </NavLink>
                         <NavLink to="/profile" className={navLinkClass}>
                             <UserOutlined className="text-lg"/>
-                            Profile
+                            {i18n.t('file:navBar.profile')}
                         </NavLink>
                         <NavLink to="/trash" className={navLinkClass}>
                             <DeleteOutlined className="text-lg"/>
-                            Trash
+                            {i18n.t('file:navBar.trash')}
                         </NavLink>
                     </nav>
                 </div>

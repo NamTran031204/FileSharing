@@ -2,6 +2,7 @@ import { FolderFilled, MoreOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import type { MouseEvent, ReactNode } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
+import i18n from '../../i18n';
 
 interface FolderCardProps<TRecord = unknown> {
   name: string;
@@ -23,12 +24,12 @@ const FolderCard = <TRecord,>({
   record,
   canAccess,
 }: FolderCardProps<TRecord>) => {
-  const itemLabel = itemCount === 1 ? 'item' : 'items';
+  const itemLabel = itemCount === 1 ? i18n.t('core:folderCard.item') : i18n.t('core:folderCard.items');
   const cardActions: ActionDropdownItem<TRecord>[] =
     actions ??
     [
-      { title: 'edit', titleCustom: 'Sửa' },
-      { title: 'remove', titleCustom: 'Xoá', isDanger: true },
+      { title: 'edit', titleCustom: i18n.t('folder:folderCard.sua') },
+      { title: 'remove', titleCustom: i18n.t('folder:folderCard.xoa'), isDanger: true },
     ];
   const hasActions = cardActions.length > 0;
 

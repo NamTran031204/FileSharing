@@ -17,6 +17,7 @@ import fileApiResource from "../../../api/fileApi/fileApiResource.ts";
 import {message} from 'antd';
 import {hasPermission} from '../../../utils/permissionUtils.ts';
 import {FileAppPermission} from "../../../api/enums.ts";
+import i18n from '../../../i18n';
 
 interface Props {
     file: MetadataEntity;
@@ -95,10 +96,10 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         setIsOpen(false);
         try {
             await fileApiResource.moveToTrash(file.fileId);
-            message.success('File moved to trash successfully');
+            message.success(i18n.t('file:breadCrumbMenu.fileMovedToTrashSuccessfully'));
             onRefresh?.();
         } catch (error) {
-            message.error('Failed to move file to trash');
+            message.error(i18n.t('file:breadCrumbMenu.failedToMoveFileTo'));
             console.error('Move to trash error:', error);
         }
     };
@@ -107,10 +108,10 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         setIsOpen(false);
         try {
             await fileApiResource.restoreFileFromTrash(file.fileId);
-            message.success('File restored successfully');
+            message.success(i18n.t('file:breadCrumbMenu.fileRestoredSuccessfully'));
             onRefresh?.();
         } catch (error) {
-            message.error('Failed to restore file');
+            message.error(i18n.t('file:breadCrumbMenu.failedToRestoreFile'));
             console.error('Restore error:', error);
         }
     };
@@ -129,7 +130,7 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         ? [
             {
                 key: 'restore',
-                label: 'Khôi phục',
+                label: i18n.t('file:breadCrumbMenu.khoiPhuc'),
                 icon: <RotateLeftOutlined/>,
                 onClick: handleRestore,
             },
@@ -137,41 +138,41 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
         : [
             {
                 key: 'detail',
-                label: 'Chi tiết',
+                label: i18n.t('file:breadCrumbMenu.chiTiet'),
                 icon: <InfoCircleOutlined/>,
                 onClick: handleDetail,
             },
             {
                 key: 'download',
-                label: 'Tải xuống',
+                label: i18n.t('file:breadCrumbMenu.taiXuong'),
                 icon: <DownloadOutlined/>,
                 onClick: handleDownload,
             },
             // >= READ/COMMENT: Thêm Gửi Email
             ...(hasPermission(fileAppPermission, FileAppPermission.READ) ? [{
                 key: 'sendEmail',
-                label: 'Gửi Email',
+                label: i18n.t('file:breadCrumbMenu.guiEmail'),
                 icon: <MailOutlined/>,
                 onClick: handleSendEmail,
             }] : []),
             // >= MODIFY: Thêm Chia sẻ
             ...(hasPermission(fileAppPermission, FileAppPermission.MODIFY) ? [{
                 key: 'share',
-                label: 'Chia sẻ',
+                label: i18n.t('file:breadCrumbMenu.chiaSe'),
                 icon: <ShareAltOutlined/>,
                 onClick: handleShare,
             }] : []),
             // OWNER: Thêm Chỉnh sửa
             ...(fileAppPermission === FileAppPermission.OWNER ? [{
                 key: 'edit',
-                label: 'Chỉnh sửa',
+                label: i18n.t('file:breadCrumbMenu.chinhSua'),
                 icon: <EditOutlined/>,
                 onClick: handleEdit,
             }] : []),
             // OWNER: Thêm Xóa file
             ...(fileAppPermission === FileAppPermission.OWNER ? [{
                 key: 'delete',
-                label: 'Xóa file',
+                label: i18n.t('file:breadCrumbMenu.xoaFile'),
                 icon: <DeleteOutlined/>,
                 danger: true,
                 onClick: handleDelete,
@@ -190,7 +191,7 @@ const BreadCrumbMenu = ({file, isTrashItem = false, onRefresh}: Props) => {
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }
         `}
-                title="Menu"
+                title={i18n.t('file:breadCrumbMenu.menu')}
             >
                 <MoreOutlined className="text-lg"/>
             </button>

@@ -15,6 +15,7 @@ import uiUtils from "../../../utils/uiUtils.tsx";
 import {ProjectControllerService} from "../../../api/api/ProjectControllerService";
 import type {ProjectStatus} from "../../../api/api/index.defs";
 import {useStore} from "../../../store";
+import i18n from '../../../i18n';
 
 interface AppSidebarProps {
   /** true = sidebar chi hien icon (72px), hover de mo rong de len content. Mac dinh false giu nguyen UI hien tai. */
@@ -23,7 +24,7 @@ interface AppSidebarProps {
 
 /**
  * AppSidebar - Sidebar chung cho toan bo ung dung
- * Lumina Pro Theme: Navy-Purple background, fixed width
+ * Navy-Purple background, fixed width
  */
 const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
   const navigate = useNavigate();
@@ -39,28 +40,28 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
     {
       key: '/home',
       icon: <HomeOutlined />,
-      label: 'Home',
+      label: i18n.t('core:appSidebar.home'),
     },
     {
       key: '/dashboard',
       icon: <AppstoreOutlined />,
-      label: 'Dashboard',
+      label: i18n.t('core:appSidebar.dashboard'),
     },
     {
       key: '/projects',
       icon: <FolderOutlined />,
-      label: 'Projects',
+      label: i18n.t('core:appSidebar.projects'),
       isActive: location.pathname.startsWith('/review') || location.pathname.startsWith('/projects'),
     },
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: i18n.t('core:appSidebar.settings'),
     },
     {
       key: '/help',
       icon: <QuestionCircleOutlined />,
-      label: 'Help',
+      label: i18n.t('core:appSidebar.help'),
     },
   ];
 
@@ -99,12 +100,12 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message || 'Create project failed');
+                throw new Error(response?.message || i18n.t('core:appSidebar.createProjectFailed'));
             }
 
             const createdProject = response.data;
 
-            uiUtils.showSuccess('Tạo project thành công');
+            uiUtils.showSuccess(i18n.t('core:appSidebar.taoProjectThanhCong'));
             setIsCreateProjectOpen(false);
 
             if (createdProject?.projectId) {
@@ -117,7 +118,7 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
             }
         } catch (error) {
             console.error('Create project failed:', error);
-            uiUtils.showError('Tạo project thất bại');
+            uiUtils.showError(i18n.t('core:appSidebar.taoProjectThatBai'));
         } finally {
             setIsCreatingProject(false);
         }
@@ -182,10 +183,10 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
                               type="primary"
                               icon={<PlusOutlined />}
                               onClick={handleOpenCreateProject}
-                              title={isExpanded ? undefined : 'New Project'}
+                              title={isExpanded ? undefined : i18n.t('core:appSidebar.newProject')}
                               className="w-full py-3 bg-gradient-to-br from-primary-dark to-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary-dark/20 hover:opacity-90 transition-opacity border-none h-auto"
                           >
-                              {isExpanded ? 'New Project' : null}
+                              {isExpanded ? i18n.t('core:appSidebar.newProject') : null}
                           </Button>
                       </div>
 
@@ -193,11 +194,11 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
                       <div className="mt-4 pt-4 border-t border-border/30">
                           <button
                               onClick={handleLogout}
-                              title={isExpanded ? undefined : 'Logout'}
+                              title={isExpanded ? undefined : i18n.t('core:appSidebar.logout')}
                               className={`flex items-center gap-3 py-2 text-muted-foreground hover:text-destructive transition-colors w-full ${isExpanded ? 'px-2' : 'justify-center'}`}
                           >
                               <LogoutOutlined />
-                              {isExpanded && <span className="text-xs font-bold uppercase tracking-wider">Logout</span>}
+                              {isExpanded && <span className="text-xs font-bold uppercase tracking-wider">{i18n.t('core:appSidebar.logout')}</span>}
                           </button>
                       </div>
                   </div>

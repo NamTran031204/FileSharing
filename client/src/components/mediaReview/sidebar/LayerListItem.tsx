@@ -1,6 +1,7 @@
 import type { AnnotationCore } from '../../../store/review/ReviewCoreStore';
 import { IconLayerArrow, IconLayerCircle, IconLayerRect } from '../../imageReview/icons/ReviewIcons';
 import { formatRelativeTime } from '../../../utils/date.util';
+import i18n from '../../../i18n';
 
 function formatMs(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
@@ -47,7 +48,7 @@ export function LayerListItem({ ann, index, variant, isHighlighted, onClick }: L
         <Icon />
       </span>
       <span className="flex-1 truncate text-xs font-bold text-[var(--color-foreground)]">
-        Comment #{index + 1}
+        {i18n.t('review:layerListItem.comment')}{index + 1}
       </span>
       <span
         className={`shrink-0 text-[10px] ${variant === 'video' ? 'font-mono' : ''} text-[var(--color-muted-foreground)]`}

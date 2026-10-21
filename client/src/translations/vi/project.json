@@ -1,0 +1,52 @@
+{
+  "projectVisibilityToggle": {
+    "projectDaChuyenSang": "Project đã chuyển sang {{Private}}",
+    "doiVisibilityThatBai": "Đổi visibility thất bại",
+    "chuyenProjectSangPublic": "Chuyển project sang Public?",
+    "moiUserDaDangNhap": "Mọi user đã đăng nhập xem được project, cây thư mục và asset ở gốc.",
+    "chuyenProjectSangPrivate": "Chuyển project sang Private?",
+    "coFolderPublicCoThe": "Có {{publicCount}} folder Public (có thể đã có proof link). Link vẫn kiểm tra quyền mỗi lần truy cập.",
+    "chiThanhVienProjectXem": "Chỉ thành viên project xem được.",
+    "doiPrivatePublic": "Đổi Private / Public",
+    "public": "Công khai",
+    "private": "Riêng tư"
+  },
+  "createProjectModal": {
+    "createProject": "Tạo dự án",
+    "cancel": "Hủy",
+    "projectName": "Tên dự án",
+    "eGWinterBrandRefresh": "VD: Làm mới thương hiệu mùa đông",
+    "projectCode": "Mã dự án",
+    "alphanumericAndUnderscoresOnly": "Chỉ gồm chữ, số và dấu gạch dưới.",
+    "description": "Mô tả",
+    "defineTheCreativeVisionFor": "Mô tả định hướng sáng tạo của dự án...",
+    "advancedOptions": "Tùy chọn nâng cao",
+    "startDate": "Ngày bắt đầu",
+    "endDate": "Ngày kết thúc",
+    "category": "Danh mục",
+    "projectStatus": "Trạng thái dự án",
+    "clientName": "Tên khách hàng",
+    "searchForClient": "Tìm khách hàng...",
+    "createDefaultFolderStructureAssets": "Tạo cấu trúc folder mặc định (Assets, Rough Cuts, Approved)",
+    "projectNameIsRequired": "Vui lòng nhập tên dự án",
+    "projectCodeIsRequired": "Vui lòng nhập mã dự án",
+    "nameMustBeBetween2": "Tên phải từ 2 đến 100 ký tự."
+  },
+  "projectOverviewCard": {
+    "timeline": "Tiến độ",
+    "updated": "Cập nhật",
+    "active": "Đang hoạt động",
+    "completed": "Hoàn thành"
+  },
+  "category": {
+    "CAMPAIGN": "CHIẾN DỊCH",
+    "BRANDING": "THƯƠNG HIỆU",
+    "PRODUCT": "SẢN PHẨM",
+    "OTHER": "KHÁC"
+  },
+  "status": {
+    "ACTIVE": "ĐANG HOẠT ĐỘNG",
+    "ARCHIVED": "LƯU TRỮ",
+    "COMPLETED": "HOÀN THÀNH"
+  }
+}

@@ -1,11 +1,8 @@
+import i18n from '../../../i18n';
+
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-const TITLE_BY_TYPE: Record<ToastType, string> = {
-  success: 'Thành công',
-  error: 'Lỗi',
-  warning: 'Cảnh báo',
-  info: 'Thông báo',
-};
+const titleByType = (type: ToastType) => i18n.t(`core:toast.${type}`);
 
 const COLOR_CLASS_BY_TYPE: Record<ToastType, string> = {
   success: 'text-[#4CB944]',
@@ -21,7 +18,7 @@ interface ToastCustomContentProps {
 
 const ToastCustomContent = ({ desc, type }: ToastCustomContentProps) => (
   <div>
-    <div className={`text-sm font-medium ${COLOR_CLASS_BY_TYPE[type]}`}>{TITLE_BY_TYPE[type]}</div>
+    <div className={`text-sm font-medium ${COLOR_CLASS_BY_TYPE[type]}`}>{titleByType(type)}</div>
     {desc && <div className="text-sm font-medium" dangerouslySetInnerHTML={{ __html: desc }} />}
   </div>
 );

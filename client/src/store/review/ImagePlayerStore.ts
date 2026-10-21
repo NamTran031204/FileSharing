@@ -7,6 +7,7 @@ import {
   annotationRegionToKonva,
 } from '../../utils/coordinateTransform';
 import type { AnnotationCore } from './ReviewCoreStore';
+import i18n from '../../i18n';
 
 export interface AnnotationWithShapes extends AnnotationCore {
   konvaShapes: KonvaShapeData[];
@@ -37,11 +38,11 @@ export class ImagePlayerStore {
     });
     try {
       const response = await ImageDataControllerService.imageData({ assetId });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Không tải được ảnh');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:imageLoadFailed'));
       runInAction(() => { this.imageData = response.data ?? null; });
     } catch (err: unknown) {
       runInAction(() => {
-        this.imageError = err instanceof Error ? err.message : 'Không tải được ảnh';
+        this.imageError = err instanceof Error ? err.message : i18n.t('message:imageLoadFailed');
       });
     } finally {
       runInAction(() => { this.isImageLoading = false; });

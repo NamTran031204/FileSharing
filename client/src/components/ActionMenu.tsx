@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MoreOutlined } from '@ant-design/icons';
+import i18n from '../i18n';
 
 export interface ActionMenuItem {
   key: string;
@@ -56,7 +57,7 @@ const ActionMenu = ({ actions, style }: ActionMenuProps) => {
       <button
         type="button"
         onClick={handleToggle}
-        aria-label="Open actions"
+        aria-label={i18n.t('file:actionMenu.openActions')}
         className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
       >
         <MoreOutlined className="text-base" />

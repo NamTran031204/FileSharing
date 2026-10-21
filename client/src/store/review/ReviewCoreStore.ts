@@ -17,6 +17,7 @@ import { AssetControllerService } from '../../api/api/AssetControllerService';
 import { AssetVersionControllerService } from '../../api/api/AssetVersionControllerService';
 import { ReviewSessionControllerService } from '../../api/api/ReviewSessionControllerService';
 import { API_BASE, tokenManager } from '../../api/baseApi';
+import i18n from '../../i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -277,14 +278,14 @@ export class ReviewCoreStore {
         assetId: this.assetId,
         versionNumber: this.currentVersionNumber,
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Lỗi tải annotations');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:annotationLoadFailed'));
       const items = response.data ?? [];
       runInAction(() => {
         this.annotations = items.map(a => this._wrapAnnotation(a));
       });
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Lỗi tải annotations';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:annotationLoadFailed');
       });
     } finally {
       runInAction(() => { this.isAnnotationsLoading = false; });
@@ -358,7 +359,7 @@ export class ReviewCoreStore {
           parentCommentId: undefined,
         },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Lưu annotation thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:annotationSaveFailed'));
       const created = response.data!;
       runInAction(() => {
         const alreadyExists = this.annotations.some(
@@ -372,7 +373,7 @@ export class ReviewCoreStore {
       return created;
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Lưu annotation thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:annotationSaveFailed');
       });
       return null;
     } finally {
@@ -395,7 +396,7 @@ export class ReviewCoreStore {
           parentCommentId: threadRootId,
         },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Gửi reply thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:replySendFailed'));
       const reply = response.data!;
       runInAction(() => {
         const root = this.annotations.find(a => a.annotationId === threadRootId);
@@ -410,7 +411,7 @@ export class ReviewCoreStore {
       return reply;
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Gửi reply thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:replySendFailed');
       });
       return null;
     } finally {
@@ -427,7 +428,7 @@ export class ReviewCoreStore {
           region: [],
         },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Chỉnh sửa thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:editFailed'));
       const updated = response.data!;
       runInAction(() => {
         const idx = this.annotations.findIndex(a => a.annotationId === annotationId);
@@ -456,7 +457,7 @@ export class ReviewCoreStore {
       });
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Chỉnh sửa thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:editFailed');
       });
     }
   }
@@ -466,7 +467,7 @@ export class ReviewCoreStore {
       const response = await AnnotationsControllerService.resolve({
         body: { annotationId },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Resolve thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:resolveFailed'));
       const updated = response.data!;
       runInAction(() => {
         const idx = this.annotations.findIndex(a => a.annotationId === annotationId);
@@ -477,7 +478,7 @@ export class ReviewCoreStore {
       this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Resolve thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:resolveFailed');
       });
     }
   }
@@ -487,7 +488,7 @@ export class ReviewCoreStore {
       const response = await AnnotationsControllerService.reopen({
         body: { annotationId },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Reopen thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:reopenFailed'));
       const updated = response.data!;
       runInAction(() => {
         const idx = this.annotations.findIndex(a => a.annotationId === annotationId);
@@ -498,7 +499,7 @@ export class ReviewCoreStore {
       this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Reopen thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:reopenFailed');
       });
     }
   }
@@ -508,7 +509,7 @@ export class ReviewCoreStore {
       const response = await AnnotationsControllerService.delete({
         body: { annotationId },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Xóa thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:deleteFailed'));
       const wasRoot = this.annotations.some(a => a.annotationId === annotationId);
       runInAction(() => {
         if (wasRoot) {
@@ -524,7 +525,7 @@ export class ReviewCoreStore {
       if (wasRoot) this.fetchAnnotationSummary();
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Xóa thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:deleteFailed');
       });
     }
   }
@@ -539,11 +540,11 @@ export class ReviewCoreStore {
         reviewSessionId: this.reviewSession.reviewSessionId,
         body: { decision: ReviewSessionStatus.APPROVED },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Approve thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:approveFailed'));
       runInAction(() => { this.reviewSession = response.data ?? this.reviewSession; });
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Approve thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:approveFailed');
       });
     } finally {
       runInAction(() => { this.isReviewLoading = false; });
@@ -558,11 +559,11 @@ export class ReviewCoreStore {
         reviewSessionId: this.reviewSession.reviewSessionId,
         body: { decision: ReviewSessionStatus.REQUEST_CHANGES, note },
       });
-      if (!response?.isSuccessful) throw new Error(response?.message ?? 'Request changes thất bại');
+      if (!response?.isSuccessful) throw new Error(response?.message ?? i18n.t('message:requestChangesFailed'));
       runInAction(() => { this.reviewSession = response.data ?? this.reviewSession; });
     } catch (err: unknown) {
       runInAction(() => {
-        this.annotationError = err instanceof Error ? err.message : 'Request changes thất bại';
+        this.annotationError = err instanceof Error ? err.message : i18n.t('message:requestChangesFailed');
       });
     } finally {
       runInAction(() => { this.isReviewLoading = false; });

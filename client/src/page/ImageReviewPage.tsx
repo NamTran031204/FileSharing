@@ -13,6 +13,7 @@ import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
 import uiUtils from '../utils/uiUtils.tsx';
 import { downloadService, type DownloadProgress as DownloadProgressType } from '../service/downloadService';
 import DownloadProgress from '../components/uploadDownloadProgress/DownloadProgress';
+import i18n from '../i18n';
 
 const ImageReviewPage = observer(() => {
   const { imageReviewStore: store } = useStore();
@@ -148,7 +149,7 @@ const ImageReviewPage = observer(() => {
     if (isDownloading) return;
     const meta = store.currentVersionMetadata;
     if (!meta?.objectName) {
-      uiUtils.showWarning('Chưa có file để tải, thử lại sau');
+      uiUtils.showWarning(i18n.t('review:imageReviewPage.chuaCoFileDeTai'));
       return;
     }
     setIsDownloading(true);
@@ -163,7 +164,7 @@ const ImageReviewPage = observer(() => {
       );
       setTimeout(() => setShowDownloadProgress(false), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Download failed';
+      const message = err instanceof Error ? err.message : i18n.t('review:imageReviewPage.downloadFailed');
       if (!message.includes('cancelled')) {
         setDownloadError(message);
         uiUtils.showError(message);
@@ -176,7 +177,7 @@ const ImageReviewPage = observer(() => {
   const handleCancelDownload = () => {
     downloadService.cancelDownload();
     setIsDownloading(false);
-    setDownloadError('Cancelled by user');
+    setDownloadError(i18n.t('file:cancelledByUser'));
     setTimeout(() => setShowDownloadProgress(false), 2000);
   };
 
@@ -275,30 +276,30 @@ const ImageReviewPage = observer(() => {
           <div className="flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 p-4 text-white">
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wider">Visual A/B Comparison</h3>
-                <p className="text-xs text-zinc-400">Drag the slider to compare versions side by side</p>
+                <h3 className="text-sm font-black uppercase tracking-wider">{i18n.t('review:imageReviewPage.visualABComparison')}</h3>
+                <p className="text-xs text-zinc-400">{i18n.t('review:imageReviewPage.dragTheSliderToCompare')}</p>
               </div>
               <button
                 onClick={() => setShowCompareModal(false)}
                 className="cursor-pointer rounded-xl bg-zinc-800 px-3.5 py-1.5 text-xs font-bold text-zinc-400 transition-all hover:bg-zinc-700 hover:text-white"
               >
-                Close
+                {i18n.t('review:imageReviewPage.close')}
               </button>
             </div>
             <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-zinc-950 select-none">
               <img
                 src={store.imageData?.previewUrl ?? ''}
-                alt="Version A"
+                alt={i18n.t('review:imageReviewPage.versionA')}
                 className="pointer-events-none absolute inset-0 h-full w-full object-contain"
                 draggable={false}
               />
               <div className="absolute right-4 top-4 z-10 rounded-full border border-zinc-800 bg-zinc-900/90 px-3 py-1 text-[10px] font-black text-[hsl(246,72%,78%)]">
-                v{store.currentVersionNumber} (CURRENT)
+                {i18n.t('review:imageReviewPage.vCurrent', {currentVersionNumber: store.currentVersionNumber})}
               </div>
               <div className="absolute inset-0 overflow-hidden" style={{ width: `${compareSliderPos}%` }}>
                 <img
                   src={sortedVersions[currentVersionIdx - 1] ? store.imageData?.previewUrl ?? '' : store.imageData?.previewUrl ?? ''}
-                  alt="Version B"
+                  alt={i18n.t('review:imageReviewPage.versionB')}
                   className="pointer-events-none h-full object-contain"
                   style={{ width: `${(100 / compareSliderPos) * 100}%`, maxWidth: 'none' }}
                   draggable={false}
@@ -321,7 +322,7 @@ const ImageReviewPage = observer(() => {
               />
             </div>
             <div className="border-t border-zinc-800 bg-zinc-950 p-3 text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              Drag the slider line left or right to compare details
+              {i18n.t('review:imageReviewPage.dragTheSliderLineLeft')}
             </div>
           </div>
         </div>

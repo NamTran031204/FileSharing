@@ -3,6 +3,7 @@ import {Alert, Button, Progress} from 'antd';
 import {CheckCircleOutlined, CloseCircleOutlined, CloudUploadOutlined, InboxOutlined} from '@ant-design/icons';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../../store';
+import i18n from '../../i18n';
 
 interface UploadAssetButtonProps {
     parentFolderId?: string;
@@ -96,8 +97,8 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
         <div className="container mx-auto px-4 py-8">
             <div className="max-w-2xl mx-auto">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-foreground mb-2">Upload File</h1>
-                    <p className="text-muted-foreground">Drag and drop or select a file to upload</p>
+                    <h1 className="text-3xl font-bold text-foreground mb-2">{i18n.t('file:uploadAssetButton.uploadFile')}</h1>
+                    <p className="text-muted-foreground">{i18n.t('file:uploadAssetButton.dragAndDropOrSelect')}</p>
                 </div>
 
                 {/* Drop zone */}
@@ -127,9 +128,9 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                         </div>
                         <div>
                             <p className="text-lg font-medium text-foreground">
-                                {isDragOver ? 'Drop your file here' : 'Click to upload or drag and drop'}
+                                {isDragOver ? i18n.t('file:uploadAssetButton.dropYourFileHere') : i18n.t('file:uploadAssetButton.clickToUploadOrDrag')}
                             </p>
-                            <p className="text-sm text-muted-foreground mt-1">Support all file types</p>
+                            <p className="text-sm text-muted-foreground mt-1">{i18n.t('file:uploadAssetButton.supportAllFileTypes')}</p>
                         </div>
                     </div>
                 </div>
@@ -153,7 +154,7 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                 {progress && (
                     <div className="mt-6 bg-card rounded-xl p-6 border border-border">
                         <div className="flex justify-between text-sm text-muted-foreground mb-3">
-                            <span>Chunk: {progress.currentChunk}/{progress.totalChunks}</span>
+                            <span>{i18n.t('file:uploadAssetButton.chunk', {currentChunk: progress.currentChunk, totalChunks: progress.totalChunks})}</span>
                             <span>{progress.percentage}%</span>
                         </div>
                         <Progress
@@ -164,23 +165,23 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                         />
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Uploaded</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadAssetButton.uploaded')}</p>
                                 <p className="font-semibold text-foreground">
                                     {formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Speed</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadAssetButton.speed')}</p>
                                 <p className="font-semibold text-foreground">
                                     {progress.throughputMbps?.toFixed(2) || '--'} Mbps
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Chunk Size</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadAssetButton.chunkSize')}</p>
                                 <p className="font-semibold text-foreground">{formatBytes(progress.currentChunkSize || 0)}</p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">ETA</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadAssetButton.eta')}</p>
                                 <p className="font-semibold text-foreground">{formatTime(progress.estimatedTimeRemainingMs || 0)}</p>
                             </div>
                         </div>
@@ -190,7 +191,7 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                 {/* Error */}
                 {uploadError && (
                     <Alert
-                        message="Upload Error"
+                        message={i18n.t('file:uploadAssetButton.uploadError')}
                         description={uploadError}
                         type="error"
                         showIcon
@@ -201,8 +202,8 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                 {/* Success */}
                 {uploadedObjectName && (
                     <Alert
-                        message="Upload Successful!"
-                        description={`File uploaded as: ${uploadedObjectName}`}
+                        message={i18n.t('file:uploadAssetButton.uploadSuccessful')}
+                        description={i18n.t('file:uploadButton.fileUploadedAs', {name: uploadedObjectName})}
                         type="success"
                         showIcon
                         icon={<CheckCircleOutlined/>}
@@ -221,7 +222,7 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                         icon={<CloudUploadOutlined/>}
                         className="flex-1 h-12 text-base font-semibold"
                     >
-                        {isUploading ? 'Uploading...' : 'Upload File'}
+                        {isUploading ? i18n.t('file:uploadAssetButton.uploading') : i18n.t('file:uploadAssetButton.uploadFile')}
                     </Button>
 
                     {isUploading && (
@@ -232,7 +233,7 @@ const UploadAssetButton = observer(({parentFolderId, onSuccess}: UploadAssetButt
                             icon={<CloseCircleOutlined/>}
                             className="h-12 text-base font-semibold"
                         >
-                            Cancel
+                            {i18n.t('file:uploadAssetButton.cancel')}
                         </Button>
                     )}
                 </div>

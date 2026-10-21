@@ -2,11 +2,12 @@
 // chua noi API. Can endpoint lay lich su hanh dong theo assetId + versionNumber.
 import { mockActionLog } from '../../imageReview/mockData';
 import { ApiPendingNote } from '../../core/common/ApiPendingNote';
+import i18n from '../../../i18n';
 
 export function ActionLogSection() {
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4" style={{ scrollbarWidth: 'thin' }}>
-      <ApiPendingNote label="Activity log" hint="Đang hiển thị dữ liệu mẫu, chưa phải lịch sử thật" className="mb-3" />
+      <ApiPendingNote label={i18n.t('review:actionLogSection.activityLog')} hint={i18n.t('review:actionLogSection.dangHienThiDuLieu')} className="mb-3" />
       <div className="space-y-2">
         {mockActionLog.map(log => (
           <div key={log.id} className="flex gap-2 rounded-lg border border-[var(--color-border)]/20 bg-[var(--color-background)] p-2 text-[11px]">

@@ -1,0 +1,155 @@
+{
+  "floatingMarkupToolbar": {
+    "xoaVungChonChuaHo": "Xoá vùng chọn — chưa hỗ trợ (thiếu lịch sử thao tác)",
+    "undoChuaHoTroThieu": "Undo — chưa hỗ trợ (thiếu lịch sử thao tác)",
+    "redoChuaHoTroThieu": "Redo — chưa hỗ trợ (thiếu lịch sử thao tác)",
+    "deleteSelectedDel": "Xóa vùng chọn (Del)",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "color": "MÀU"
+  },
+  "videoAnnotationTimeline": {
+    "spriteThumbnailChuaCoApi": "Sprite thumbnail chưa có API",
+    "chuaCoApi": "Chưa có API"
+  },
+  "actionLogSection": {
+    "dangHienThiDuLieu": "Đang hiển thị dữ liệu mẫu, chưa phải lịch sử thật",
+    "activityLog": "Nhật ký hoạt động"
+  },
+  "reviewSidebar": {
+    "moRongNgoaiMockupGoc": "Mở rộng ngoài mockup gốc",
+    "showSidebar": "Hiện thanh bên",
+    "hideSidebar": "Ẩn thanh bên",
+    "sidebar": "Thanh bên"
+  },
+  "streamHealthPanel": {
+    "chuaHoTroChuaCo": "Chưa hỗ trợ — chưa có công thức đo",
+    "streamHealth": "Chất lượng luồng",
+    "mbpsDown": "Mbps tải xuống",
+    "jitter": "Jitter",
+    "bufferHealth": "Tình trạng buffer",
+    "droppedFrames": "Khung hình bị mất",
+    "auto": "Tự động",
+    "manual": "Thủ công"
+  },
+  "videoBottomCapsuleControls": {
+    "phuDeCcChuaCo": "Phụ đề (CC) — chưa có API",
+    "play": "Phát",
+    "pause": "Tạm dừng",
+    "previousMarker": "Mốc trước",
+    "nextMarker": "Mốc sau",
+    "unmute": "Bật tiếng",
+    "mute": "Tắt tiếng",
+    "captions": "Phụ đề",
+    "auto": "Tự động",
+    "fullscreen": "Toàn màn hình",
+    "hideAnnotations": "Ẩn chú thích",
+    "showAnnotations": "Hiện chú thích"
+  },
+  "imageReviewPage": {
+    "chuaCoFileDeTai": "Chưa có file để tải, thử lại sau",
+    "visualABComparison": "So sánh trực quan A/B",
+    "dragTheSliderToCompare": "Kéo thanh trượt để so sánh các phiên bản cạnh nhau",
+    "close": "Đóng",
+    "versionA": "Phiên bản A",
+    "vCurrent": "v{{currentVersionNumber}} (HIỆN TẠI)",
+    "versionB": "Phiên bản B",
+    "dragTheSliderLineLeft": "Kéo đường trượt sang trái hoặc phải để so sánh chi tiết",
+    "downloadFailed": "Tải xuống thất bại"
+  },
+  "videoReviewPage": {
+    "downloadVideoChuaCoApi": "Download video — chưa có API",
+    "compareVideoChuaCoApi": "Compare video — chưa có API",
+    "viewingAs": "Đang xem với vai trò",
+    "downloadFailed": "Tải xuống thất bại",
+    "admin": "Quản trị",
+    "customer": "Khách hàng"
+  },
+  "bottomCapsuleControls": {
+    "panMode": "Chế độ kéo",
+    "zoomOut": "Thu nhỏ",
+    "zoomIn": "Phóng to",
+    "fitToScreen": "Vừa màn hình",
+    "fit": "VỪA",
+    "resetTo100": "Đặt lại 100%",
+    "hideAnnotations": "Ẩn chú thích",
+    "showAnnotations": "Hiện chú thích"
+  },
+  "commentPopupOverlay": {
+    "newComment": "Bình luận mới",
+    "cancel": "Hủy",
+    "typeAComment": "Nhập bình luận… dùng @ để nhắc tên",
+    "saving": "Đang lưu…",
+    "post": "Đăng"
+  },
+  "imagePlayer": {
+    "loadingImage": "Đang tải ảnh…"
+  },
+  "hlsVideoPlayer": {
+    "waitingForEncodingToStart": "Đang chờ bắt đầu mã hóa…",
+    "encodingInProgress": "Đang mã hóa…",
+    "thisMayTakeAFew": "Có thể mất vài phút.",
+    "encodingFailed": "Mã hóa thất bại",
+    "pleaseReUploadTheFile": "Vui lòng tải file lên lại và thử lại.",
+    "play": "Phát"
+  },
+  "reviewTopBar": {
+    "back": "Quay lại",
+    "projects": "Dự án",
+    "share": "Chia sẻ"
+  },
+  "assetInfoSection": {
+    "version": "PHIÊN BẢN",
+    "previousVersion": "Phiên bản trước",
+    "loading": "Đang tải…",
+    "nextVersion": "Phiên bản sau",
+    "fileSize": "DUNG LƯỢNG",
+    "dimensions": "KÍCH THƯỚC",
+    "uploaded": "TẢI LÊN",
+    "uploader": "NGƯỜI TẢI LÊN",
+    "status": "TRẠNG THÁI",
+    "approve": "Duyệt",
+    "requestChanges": "Yêu cầu chỉnh sửa",
+    "compare": "So sánh",
+    "download": "Tải xuống"
+  },
+  "commentThread": {
+    "open": "ĐANG MỞ",
+    "resolved": "ĐÃ XỬ LÝ",
+    "writeAReply": "Viết phản hồi…",
+    "cancel": "Hủy",
+    "send": "Gửi",
+    "resolve": "Đánh dấu đã xử lý",
+    "reopen": "Mở lại",
+    "reply": "Phản hồi",
+    "delete": "Xóa",
+    "unknown": "Không rõ"
+  },
+  "commentsSection": {
+    "searchComments": "Tìm bình luận...",
+    "loadingComments": "Đang tải bình luận…",
+    "noCommentsFound": "Không có bình luận"
+  },
+  "layerListItem": {
+    "comment": "Bình luận #"
+  },
+  "layersPanel": {
+    "showLayers": "Hiện lớp",
+    "hideLayers": "Ẩn lớp",
+    "layers": "Lớp",
+    "noLayersYet": "Chưa có lớp nào"
+  },
+  "sidebarTab": {
+    "comments": "Bình luận",
+    "info": "Thông tin",
+    "activity": "Hoạt động"
+  },
+  "tool": {
+    "select": "Chọn (V)",
+    "rect": "Hình chữ nhật (R)",
+    "circle": "Hình tròn (O)",
+    "arrow": "Mũi tên (A)",
+    "pan": "Kéo (H)"
+  },
+  "cancelledByUser": "Đã hủy bởi người dùng"
+}

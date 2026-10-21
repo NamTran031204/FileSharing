@@ -3,6 +3,7 @@ import {Button, Empty, Input, Select, Tag} from 'antd';
 import {DeleteOutlined, PlusOutlined, UserOutlined} from '@ant-design/icons';
 import {FileAppPermission, ObjectPermission} from '../../../api/enums.ts';
 import {getAvailableObjectPermissions} from '../../../utils/permissionUtils.ts';
+import i18n from '../../../i18n';
 
 export interface UserPermission {
     email: string;
@@ -42,19 +43,19 @@ const UserFilePermissionList = ({
 
     const permissionOptions = [
         {
-            label: 'Read Only',
+            label: i18n.t('file:userFilePermissionList.readOnly'),
             value: ObjectPermission.READ,
-            description: 'Chỉ được xem file'
+            description: i18n.t('file:userFilePermissionList.chiDuocXemFile')
         },
         {
-            label: 'Comment',
+            label: i18n.t('file:userFilePermissionList.comment'),
             value: ObjectPermission.COMMENT,
-            description: 'Được xem và comment'
+            description: i18n.t('file:userFilePermissionList.duocXemVaComment')
         },
         {
-            label: 'Modify',
+            label: i18n.t('file:userFilePermissionList.modify'),
             value: ObjectPermission.MODIFY,
-            description: 'Được xem, comment và chỉnh sửa'
+            description: i18n.t('file:userFilePermissionList.duocXemCommentVaChinh')
         },
     ].filter(option => availablePermissions.includes(option.value));
 
@@ -71,23 +72,23 @@ const UserFilePermissionList = ({
 
         const trimmedEmail = newUserEmail.trim();
         if (!trimmedEmail) {
-            setAddError('Vui lòng nhập email');
+            setAddError(i18n.t('file:userFilePermissionList.vuiLongNhapEmail'));
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(trimmedEmail)) {
-            setAddError('Email không hợp lệ');
+            setAddError(i18n.t('file:userFilePermissionList.emailKhongHopLe'));
             return;
         }
 
         if (users.some(user => user.email.toLowerCase() === trimmedEmail.toLowerCase())) {
-            setAddError('Email này đã được thêm');
+            setAddError(i18n.t('file:userFilePermissionList.emailNayDaDuocThem'));
             return;
         }
 
         if (newUserPermissions.length === 0) {
-            setAddError('Vui lòng chọn ít nhất một quyền');
+            setAddError(i18n.t('file:userFilePermissionList.vuiLongChonItNhat'));
             return;
         }
 
@@ -118,8 +119,8 @@ const UserFilePermissionList = ({
             {/* Header */}
             <div className="bg-muted/50 px-4 py-2 border-b border-border">
                 <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
-                    <span>Người dùng ({users.length})</span>
-                    <span>Quyền truy cập</span>
+                    <span>{i18n.t('file:userFilePermissionList.nguoiDung', {length: users.length})}</span>
+                    <span>{i18n.t('file:userFilePermissionList.quyenTruyCap')}</span>
                 </div>
             </div>
 
@@ -128,7 +129,7 @@ const UserFilePermissionList = ({
                     <div className="flex items-start gap-2">
                         <div className="flex w-3/4">
                             <Input
-                                placeholder="Nhập email người dùng"
+                                placeholder={i18n.t('file:userFilePermissionList.nhapEmailNguoiDung')}
                                 value={newUserEmail}
                                 onChange={(e) => setNewUserEmail(e.target.value)}
                                 onPressEnter={handleAddUser}
@@ -145,7 +146,7 @@ const UserFilePermissionList = ({
                             value={newUserPermissions}
                             onChange={setNewUserPermissions}
                             options={permissionOptions}
-                            placeholder="Chọn quyền"
+                            placeholder={i18n.t('file:userFilePermissionList.chonQuyen')}
                             maxTagCount={1}
                         />
 
@@ -154,7 +155,7 @@ const UserFilePermissionList = ({
                             icon={<PlusOutlined/>}
                             onClick={handleAddUser}
                         >
-                            Thêm
+                            {i18n.t('file:userFilePermissionList.them')}
                         </Button>
                     </div>
                 </div>
@@ -165,7 +166,7 @@ const UserFilePermissionList = ({
                     <Empty
                         description={
                             <span className="text-muted-foreground text-sm">
-                                Chưa có người dùng nào được chia sẻ
+                                {i18n.t('file:userFilePermissionList.chuaCoNguoiDungNao')}
                             </span>
                         }
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -212,7 +213,7 @@ const UserFilePermissionList = ({
                                                 value={user.permissionList}
                                                 onChange={(newPermissions) => handlePermissionChange(user.email, newPermissions)}
                                                 options={permissionOptions}
-                                                placeholder="Chọn quyền"
+                                                placeholder={i18n.t('file:userFilePermissionList.chonQuyen')}
                                                 maxTagCount={2}
                                                 disabled={readOnly}
                                             />
@@ -221,7 +222,7 @@ const UserFilePermissionList = ({
                                                 <button
                                                     onClick={() => handleRemoveUser(user.email)}
                                                     className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
-                                                    title="Xóa người dùng"
+                                                    title={i18n.t('file:userFilePermissionList.xoaNguoiDung')}
                                                 >
                                                     <DeleteOutlined className="text-destructive"/>
                                                 </button>

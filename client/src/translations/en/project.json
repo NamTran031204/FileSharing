@@ -1,0 +1,52 @@
+{
+  "projectVisibilityToggle": {
+    "projectDaChuyenSang": "Project switched to {{Private}}",
+    "doiVisibilityThatBai": "Failed to change visibility",
+    "chuyenProjectSangPublic": "Switch project to Public?",
+    "moiUserDaDangNhap": "Any signed-in user can view the project, the folder tree and root-level assets.",
+    "chuyenProjectSangPrivate": "Switch project to Private?",
+    "coFolderPublicCoThe": "{{publicCount}} folder(s) are Public (they may already have proof links). Links still check permissions on every access.",
+    "chiThanhVienProjectXem": "Only project members can view.",
+    "doiPrivatePublic": "Toggle Private / Public",
+    "public": "Public",
+    "private": "Private"
+  },
+  "createProjectModal": {
+    "createProject": "Create Project",
+    "cancel": "Cancel",
+    "projectName": "Project Name",
+    "eGWinterBrandRefresh": "e.g. Winter Brand Refresh",
+    "projectCode": "Project Code",
+    "alphanumericAndUnderscoresOnly": "Alphanumeric and underscores only.",
+    "description": "Description",
+    "defineTheCreativeVisionFor": "Define the creative vision for this project...",
+    "advancedOptions": "Advanced Options",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "category": "Category",
+    "projectStatus": "Project Status",
+    "clientName": "Client Name",
+    "searchForClient": "Search for client...",
+    "createDefaultFolderStructureAssets": "Create default folder structure (Assets, Rough Cuts, Approved)",
+    "projectNameIsRequired": "Project name is required",
+    "projectCodeIsRequired": "Project code is required",
+    "nameMustBeBetween2": "Name must be between 2 and 100 characters."
+  },
+  "projectOverviewCard": {
+    "timeline": "Timeline",
+    "updated": "Updated",
+    "active": "Active",
+    "completed": "Completed"
+  },
+  "category": {
+    "CAMPAIGN": "CAMPAIGN",
+    "BRANDING": "BRANDING",
+    "PRODUCT": "PRODUCT",
+    "OTHER": "OTHER"
+  },
+  "status": {
+    "ACTIVE": "ACTIVE",
+    "ARCHIVED": "ARCHIVED",
+    "COMPLETED": "COMPLETED"
+  }
+}

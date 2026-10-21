@@ -2,6 +2,7 @@ import type {DownloadProgress as DownloadProgressType} from '../../service/downl
 import {CloseOutlined, LoadingOutlined} from '@ant-design/icons';
 import {Progress} from 'antd';
 import {FileViewUtil} from "../../utils/FileViewUtil.ts";
+import i18n from '../../i18n';
 
 interface DownloadProgressProps {
     fileName: string;
@@ -31,7 +32,7 @@ const DownloadProgress = ({fileName, progress, error, onCancel, isVisible}: Down
                 <button
                     onClick={onCancel}
                     className="ml-2 w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    title="Cancel"
+                    title={i18n.t('file:downloadProgress.cancel')}
                 >
                     <CloseOutlined className="text-sm"/>
                 </button>
@@ -39,7 +40,7 @@ const DownloadProgress = ({fileName, progress, error, onCancel, isVisible}: Down
 
             {error ? (
                 <div className="bg-destructive/10 text-destructive px-3 py-2 rounded-lg text-xs font-medium">
-                    Error: {error}
+                    {i18n.t('file:downloadProgress.error', {error})}
                 </div>
             ) : progress ? (
                 <div className="space-y-3">
@@ -55,16 +56,16 @@ const DownloadProgress = ({fileName, progress, error, onCancel, isVisible}: Down
 
                     <div className="flex justify-between items-center text-xs text-muted-foreground">
             <span>
-              Threads: {progress.activeThreads}/{progress.maxThreads}
+              {i18n.t('file:downloadProgress.threads', {activeThreads: progress.activeThreads, maxThreads: progress.maxThreads})}
             </span>
                         <span>{progress.throughputMbps?.toFixed(2) || '--'} Mbps</span>
-                        <span>ETA: {(progress.estimatedTimeRemainingMs / 1000).toFixed(0)}s</span>
+                        <span>{i18n.t('file:downloadProgress.eta')} {(progress.estimatedTimeRemainingMs / 1000).toFixed(0)}s</span>
                     </div>
                 </div>
             ) : (
                 <div className="flex items-center justify-center py-3 gap-2">
                     <LoadingOutlined className="text-primary"/>
-                    <span className="text-xs text-muted-foreground">Starting...</span>
+                    <span className="text-xs text-muted-foreground">{i18n.t('file:downloadProgress.starting')}</span>
                 </div>
             )}
         </div>

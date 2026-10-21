@@ -1,6 +1,8 @@
 import { BellOutlined } from '@ant-design/icons';
 import { observer } from 'mobx-react-lite';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher.tsx';
 import { useStore } from '../../../store';
 import UserAvatar from '../common/UserAvatar.tsx';
 import logo from '../../../assets/logo/logo2k.png';
@@ -14,6 +16,7 @@ interface AppHeaderProps {
 
 const AppHeader = observer(({routes = ROUTER_CONFIG}: AppHeaderProps) => {
   const { sessionStore } = useStore();
+  const { t } = useTranslation();
   const user = sessionStore.appSession?.user;
 
   return (
@@ -27,13 +30,14 @@ const AppHeader = observer(({routes = ROUTER_CONFIG}: AppHeaderProps) => {
         </div>
 
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           {/* Notifications */}
           <button className="p-2 hover:bg-primary/10 rounded-lg transition-all text-primary active:opacity-80 scale-95">
             <BellOutlined className="text-lg" />
           </button>
 
           {/* User Avatar */}
-          <Link to="/profile" aria-label={user?.publicUserName || user?.email || 'Hồ sơ cá nhân'}>
+          <Link to="/profile" aria-label={user?.publicUserName || user?.email || t('profile')}>
             <UserAvatar
               size={32}
               name={user?.publicUserName}

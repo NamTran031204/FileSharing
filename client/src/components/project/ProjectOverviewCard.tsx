@@ -9,6 +9,7 @@ import {Tag} from 'antd';
 import type {GrantedVisibility} from '../../api/api/index.defs';
 import UserAvatar from "../core/common/UserAvatar.tsx";
 import ProjectVisibilityToggle from "./ProjectVisibilityToggle.tsx";
+import i18n from '../../i18n';
 
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED';
 
@@ -100,7 +101,7 @@ const ProjectOverviewCard = ({
                                     : 'border-secondary/20 bg-muted text-primary-dark'
                             }`}
                         >
-                            {isActive ? 'Active' : 'Completed'}
+                            {isActive ? i18n.t('project:projectOverviewCard.active') : i18n.t('project:projectOverviewCard.completed')}
                         </Tag>
                     </div>
 
@@ -142,7 +143,7 @@ const ProjectOverviewCard = ({
                     <div className="hidden h-10 w-px bg-border/40 lg:block"/>
 
                     <div className="min-w-[120px]">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Timeline</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{i18n.t('project:projectOverviewCard.timeline')}</p>
                         <p className="text-xs font-semibold text-foreground">{timeline}</p>
                     </div>
 
@@ -165,7 +166,7 @@ const ProjectOverviewCard = ({
                     </div>
 
                     <div className="text-right">
-                        <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Updated</p>
+                        <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{i18n.t('project:projectOverviewCard.updated')}</p>
                         <p className="text-xs font-medium text-muted-foreground">{updatedAt}</p>
                     </div>
 

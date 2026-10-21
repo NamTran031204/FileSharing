@@ -3,6 +3,7 @@ import userFileApiResource, {type MetadataEntity} from '../../../api/fileApi/use
 import FileCardComp from './FileCardComp.tsx';
 import {Button, Empty, Spin} from 'antd';
 import {LeftOutlined, ReloadOutlined, RightOutlined} from '@ant-design/icons';
+import i18n from '../../../i18n';
 
 interface FileCardListProps {
     viewMode?: 'active' | 'trash';
@@ -55,8 +56,8 @@ const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
                     </h2>
                     <p className="text-muted-foreground mt-1">
                         {viewMode === 'trash' 
-                            ? 'Files moved to trash - you can restore them'
-                            : 'Manage and organize your uploaded files'
+                            ? i18n.t('file:fileCardList.filesMovedToTrashYou')
+                            : i18n.t('file:fileCardList.manageAndOrganizeYourUploaded')
                         }
                     </p>
                 </div>
@@ -67,14 +68,14 @@ const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
                     loading={loading}
                     className="flex items-center gap-2"
                 >
-                    Refresh
+                    {i18n.t('file:fileCardList.refresh')}
                 </Button>
             </div>
 
             {loading ? (
                 <div className="flex flex-col justify-center items-center h-64 gap-4">
                     <Spin size="large"/>
-                    <p className="text-muted-foreground">Loading files...</p>
+                    <p className="text-muted-foreground">{i18n.t('file:fileCardList.loadingFiles')}</p>
                 </div>
             ) : (
                 <>
@@ -97,7 +98,7 @@ const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
                                 <Empty
                                     description={
                                         <span className="text-muted-foreground">
-                      No files found. Start uploading!
+                      {i18n.t('file:fileCardList.noFilesFoundStartUploading')}
                     </span>
                                     }
                                     className="py-16"
@@ -114,11 +115,11 @@ const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
                                 icon={<LeftOutlined/>}
                                 className="flex items-center gap-2"
                             >
-                                Previous
+                                {i18n.t('file:fileCardList.previous')}
                             </Button>
 
                             <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
-                                <span className="text-sm text-muted-foreground">Page</span>
+                                <span className="text-sm text-muted-foreground">{i18n.t('file:fileCardList.page')}</span>
                                 <span className="text-sm font-semibold text-foreground">{page}</span>
                             </div>
 
@@ -128,7 +129,7 @@ const FileCardList = ({ viewMode = 'active' }: FileCardListProps) => {
                                 iconPlacement="end"
                                 className="flex items-center gap-2"
                             >
-                                Next
+                                {i18n.t('file:fileCardList.next')}
                             </Button>
                         </div>
                     )}

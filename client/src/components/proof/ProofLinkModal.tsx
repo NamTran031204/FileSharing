@@ -4,6 +4,8 @@ import { CopyOutlined } from '@ant-design/icons';
 import { ShareTokenTime } from '../../api/api/index.defs';
 import { ProofControllerService } from '../../api/api/ProofControllerService';
 import uiUtils from '../../utils/uiUtils.tsx';
+import i18n from '../../i18n';
+import {LangUtil} from '../../utils/lang.util';
 
 interface Props {
     open: boolean;
@@ -13,18 +15,18 @@ interface Props {
     onClose: () => void;
 }
 
-const RANGE_OPTIONS = [
-    { value: ShareTokenTime.UNLIMITED, label: 'Không giới hạn' },
-    { value: ShareTokenTime.ONE_DAY, label: '1 ngày' },
-    { value: ShareTokenTime.ONE_WEEK, label: '1 tuần' },
-    { value: ShareTokenTime.ONE_MONTH, label: '1 tháng' },
-    { value: ShareTokenTime.ONE_YEAR, label: '1 năm' },
+const getRangeOptions = () => [
+    { value: ShareTokenTime.UNLIMITED, label: i18n.t('proof:proofLinkModal.khongGioiHan') },
+    { value: ShareTokenTime.ONE_DAY, label: i18n.t('proof:proofLinkModal.1Ngay') },
+    { value: ShareTokenTime.ONE_WEEK, label: i18n.t('proof:proofLinkModal.1Tuan') },
+    { value: ShareTokenTime.ONE_MONTH, label: i18n.t('proof:proofLinkModal.1Thang') },
+    { value: ShareTokenTime.ONE_YEAR, label: i18n.t('proof:proofLinkModal.1Nam') },
 ];
 
 // Lay thong bao loi tu envelope server (axios reject voi response.data)
 const errorMessage = (e: unknown): string => {
     const data = (e as { response?: { data?: { message?: string } } })?.response?.data;
-    return data?.message ?? 'Có lỗi xảy ra, hãy thử lại';
+    return data?.message ?? i18n.t('proof:proofLinkModal.coLoiXayRaHay');
 };
 
 const ProofLinkModal = ({ open, folderId, initialToken, initialExpiry, onClose }: Props) => {
@@ -49,7 +51,7 @@ const ProofLinkModal = ({ open, folderId, initialToken, initialExpiry, onClose }
             const res = await ProofControllerService.proofLink({ folderId, body: { rangeTime: range } });
             setToken(res.data?.shareToken);
             setExpiry(res.data?.shareExpiry);
-            uiUtils.showSuccess(token ? 'Đã làm mới link' : 'Đã tạo link');
+            uiUtils.showSuccess(token ? i18n.t('proof:proofLinkModal.daLamMoiLink') : i18n.t('proof:proofLinkModal.daTaoLink'));
         } catch (e) {
             uiUtils.showError(errorMessage(e));
         } finally {
@@ -59,9 +61,9 @@ const ProofLinkModal = ({ open, folderId, initialToken, initialExpiry, onClose }
 
     const handleRevoke = async () => {
         const ok = await uiUtils.showConfirm({
-            title: 'Thu hồi link',
-            content: 'Link cũ sẽ ngừng hoạt động ngay. Lượt chọn khách đã gửi vẫn được giữ.',
-            okLabel: 'Thu hồi',
+            title: i18n.t('proof:proofLinkModal.thuHoiLink'),
+            content: i18n.t('proof:proofLinkModal.linkCuSeNgungHoat'),
+            okLabel: i18n.t('proof:proofLinkModal.thuHoi'),
             onOk: async () => {
                 await ProofControllerService.proofLink1({ folderId });
             },
@@ -69,42 +71,42 @@ const ProofLinkModal = ({ open, folderId, initialToken, initialExpiry, onClose }
         if (ok) {
             setToken(undefined);
             setExpiry(undefined);
-            uiUtils.showSuccess('Đã thu hồi link');
+            uiUtils.showSuccess(i18n.t('proof:proofLinkModal.daThuHoiLink'));
         }
     };
 
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(link);
-            uiUtils.showSuccess('Đã sao chép link');
+            uiUtils.showSuccess(i18n.t('proof:proofLinkModal.daSaoChepLink'));
         } catch {
-            uiUtils.showError('Trình duyệt chặn clipboard, hãy sao chép thủ công');
+            uiUtils.showError(i18n.t('proof:proofLinkModal.trinhDuyetChanClipboardHay'));
         }
     };
 
     return (
-        <Modal open={open} title="Gửi khách chọn ảnh" footer={null} onCancel={onClose} destroyOnHidden>
+        <Modal open={open} title={i18n.t('proof:proofLinkModal.guiKhachChonAnh')} footer={null} onCancel={onClose} destroyOnHidden>
             <p className="mb-3 text-muted-foreground">
-                Khách mở link, nhập tên và chọn ảnh yêu thích. Folder phải ở chế độ PUBLIC.
+                {i18n.t('proof:proofLinkModal.khachMoLinkNhapTen')}
             </p>
 
             <div className="mb-3 flex items-center gap-2">
-                <Select value={range} onChange={setRange} options={RANGE_OPTIONS} className="w-44" aria-label="Thời hạn link" />
+                <Select value={range} onChange={setRange} options={getRangeOptions()} className="w-44" aria-label={i18n.t('proof:proofLinkModal.thoiHanLink')} />
                 <Button type="primary" loading={busy} onClick={() => void handleCreate()}>
-                    {token ? 'Làm mới link' : 'Tạo link'}
+                    {token ? i18n.t('proof:proofLinkModal.lamMoiLink') : i18n.t('proof:proofLinkModal.taoLink')}
                 </Button>
             </div>
 
             {token && (
                 <>
                     <div className="flex items-center gap-2">
-                        <Input readOnly value={link} aria-label="Link chọn ảnh" />
-                        <Button icon={<CopyOutlined />} onClick={() => void handleCopy()}>Copy</Button>
+                        <Input readOnly value={link} aria-label={i18n.t('proof:proofLinkModal.linkChonAnh')} />
+                        <Button icon={<CopyOutlined />} onClick={() => void handleCopy()}>{i18n.t('proof:proofLinkModal.copy')}</Button>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        {expiry ? `Hết hạn: ${new Date(expiry).toLocaleString('vi-VN')}` : 'Không giới hạn thời gian'}
+                        {expiry ? i18n.t('proof:proofLinkModal.hetHan', {VN: new Date(expiry).toLocaleString(LangUtil.getDateLocale())}) : i18n.t('proof:proofLinkModal.khongGioiHanThoiGian')}
                     </p>
-                    <Button danger className="mt-3" onClick={() => void handleRevoke()}>Thu hồi link</Button>
+                    <Button danger className="mt-3" onClick={() => void handleRevoke()}>{i18n.t('proof:proofLinkModal.thuHoiLink')}</Button>
                 </>
             )}
         </Modal>

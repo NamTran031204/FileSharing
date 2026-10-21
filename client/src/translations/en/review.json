@@ -1,0 +1,155 @@
+{
+  "floatingMarkupToolbar": {
+    "xoaVungChonChuaHo": "Delete selection — not supported yet (no action history)",
+    "undoChuaHoTroThieu": "Undo — not supported yet (no action history)",
+    "redoChuaHoTroThieu": "Redo — not supported yet (no action history)",
+    "deleteSelectedDel": "Delete Selected (Del)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "color": "COLOR"
+  },
+  "videoAnnotationTimeline": {
+    "spriteThumbnailChuaCoApi": "Sprite thumbnail has no API yet",
+    "chuaCoApi": "No API yet"
+  },
+  "actionLogSection": {
+    "dangHienThiDuLieu": "Showing sample data, not the real history",
+    "activityLog": "Activity log"
+  },
+  "reviewSidebar": {
+    "moRongNgoaiMockupGoc": "Extension beyond the original mockup",
+    "showSidebar": "Show sidebar",
+    "hideSidebar": "Hide sidebar",
+    "sidebar": "Sidebar"
+  },
+  "streamHealthPanel": {
+    "chuaHoTroChuaCo": "Not supported — no measurement formula yet",
+    "streamHealth": "Stream Health",
+    "mbpsDown": "Mbps down",
+    "jitter": "Jitter",
+    "bufferHealth": "Buffer health",
+    "droppedFrames": "Dropped frames",
+    "auto": "Auto",
+    "manual": "Manual"
+  },
+  "videoBottomCapsuleControls": {
+    "phuDeCcChuaCo": "Subtitles (CC) — no API yet",
+    "play": "Play",
+    "pause": "Pause",
+    "previousMarker": "Previous marker",
+    "nextMarker": "Next marker",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "captions": "Captions",
+    "auto": "Auto",
+    "fullscreen": "Fullscreen",
+    "hideAnnotations": "Hide Annotations",
+    "showAnnotations": "Show Annotations"
+  },
+  "imageReviewPage": {
+    "chuaCoFileDeTai": "No file available to download, try again later",
+    "visualABComparison": "Visual A/B Comparison",
+    "dragTheSliderToCompare": "Drag the slider to compare versions side by side",
+    "close": "Close",
+    "versionA": "Version A",
+    "vCurrent": "v{{currentVersionNumber}} (CURRENT)",
+    "versionB": "Version B",
+    "dragTheSliderLineLeft": "Drag the slider line left or right to compare details",
+    "downloadFailed": "Download failed"
+  },
+  "videoReviewPage": {
+    "downloadVideoChuaCoApi": "Download video — no API yet",
+    "compareVideoChuaCoApi": "Compare video — no API yet",
+    "viewingAs": "Viewing as",
+    "downloadFailed": "Download failed",
+    "admin": "Admin",
+    "customer": "Customer"
+  },
+  "bottomCapsuleControls": {
+    "panMode": "Pan Mode",
+    "zoomOut": "Zoom Out",
+    "zoomIn": "Zoom In",
+    "fitToScreen": "Fit to screen",
+    "fit": "FIT",
+    "resetTo100": "Reset to 100%",
+    "hideAnnotations": "Hide Annotations",
+    "showAnnotations": "Show Annotations"
+  },
+  "commentPopupOverlay": {
+    "newComment": "New Comment",
+    "cancel": "Cancel",
+    "typeAComment": "Type a comment… use @ to mention",
+    "saving": "Saving…",
+    "post": "Post"
+  },
+  "imagePlayer": {
+    "loadingImage": "Loading image…"
+  },
+  "hlsVideoPlayer": {
+    "waitingForEncodingToStart": "Waiting for encoding to start…",
+    "encodingInProgress": "Encoding in progress…",
+    "thisMayTakeAFew": "This may take a few minutes.",
+    "encodingFailed": "Encoding failed",
+    "pleaseReUploadTheFile": "Please re-upload the file and try again.",
+    "play": "Play"
+  },
+  "reviewTopBar": {
+    "back": "Back",
+    "projects": "Projects",
+    "share": "Share"
+  },
+  "assetInfoSection": {
+    "version": "VERSION",
+    "previousVersion": "Previous Version",
+    "loading": "Loading…",
+    "nextVersion": "Next Version",
+    "fileSize": "FILE SIZE",
+    "dimensions": "DIMENSIONS",
+    "uploaded": "UPLOADED",
+    "uploader": "UPLOADER",
+    "status": "STATUS",
+    "approve": "Approve",
+    "requestChanges": "Request Changes",
+    "compare": "Compare",
+    "download": "Download"
+  },
+  "commentThread": {
+    "open": "OPEN",
+    "resolved": "RESOLVED",
+    "writeAReply": "Write a reply…",
+    "cancel": "Cancel",
+    "send": "Send",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "reply": "Reply",
+    "delete": "Delete",
+    "unknown": "Unknown"
+  },
+  "commentsSection": {
+    "searchComments": "Search comments...",
+    "loadingComments": "Loading comments…",
+    "noCommentsFound": "No comments found"
+  },
+  "layerListItem": {
+    "comment": "Comment #"
+  },
+  "layersPanel": {
+    "showLayers": "Show layers",
+    "hideLayers": "Hide layers",
+    "layers": "Layers",
+    "noLayersYet": "No layers yet"
+  },
+  "sidebarTab": {
+    "comments": "Comments",
+    "info": "Info",
+    "activity": "Activity"
+  },
+  "tool": {
+    "select": "Select (V)",
+    "rect": "Rectangle (R)",
+    "circle": "Circle (O)",
+    "arrow": "Arrow (A)",
+    "pan": "Pan (H)"
+  },
+  "cancelledByUser": "Cancelled by user"
+}

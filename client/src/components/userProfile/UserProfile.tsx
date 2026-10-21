@@ -4,6 +4,8 @@ import {CloseOutlined, EditOutlined, SaveOutlined} from '@ant-design/icons';
 import AvatarImage from './AvatarImage';
 import userApiResource, {type UpdateUserRequestDto, type UserDto} from "../../api/userApiResource.ts";
 import fileApiResource from "../../api/fileApi/fileApiResource.ts";
+import i18n from '../../i18n';
+import {LangUtil} from '../../utils/lang.util';
 
 interface UserProfileProps {
     mode?: 'view' | 'edit';
@@ -13,7 +15,7 @@ interface UserProfileProps {
 // gop timestamp thanh dd/mm/yyyy theo he tieng viet
 const formatJoinDate = (isoTimestamp?: string) => {
     if (!isoTimestamp) return '—';
-    return new Intl.DateTimeFormat('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})
+    return new Intl.DateTimeFormat(LangUtil.getDateLocale(), {day: '2-digit', month: '2-digit', year: 'numeric'})
         .format(new Date(isoTimestamp));
 };
 
@@ -41,7 +43,7 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                 });
             } catch (error) {
                 console.error('Error fetching user:', error);
-                message.error('Không thể tải thông tin người dùng');
+                message.error(i18n.t('profile:userProfile.khongTheTaiThongTin'));
             } finally {
                 setFetchLoading(false);
             }
@@ -80,7 +82,7 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                     finalAvatarUrl = objectName;
                 } catch (uploadError) {
                     console.error('Upload avatar error:', uploadError);
-                    message.error('Không thể upload ảnh đại diện');
+                    message.error(i18n.t('profile:userProfile.khongTheUploadAnhDai'));
                     setLoading(false);
                     return;
                 }
@@ -94,13 +96,13 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
             const updatedUser = await userApiResource.updateUser(userInfo!.userId, updateData);
 
             setUserInfo(updatedUser);
-            message.success('Cập nhật hồ sơ thành công!');
+            message.success(i18n.t('profile:userProfile.capNhatHoSoThanh'));
             setPendingAvatarFile(null);
             onModeChange?.('view');
 
         } catch (error) {
             console.error('Save error:', error);
-            message.error('Có lỗi xảy ra khi lưu thông tin.');
+            message.error(i18n.t('profile:userProfile.coLoiXayRaKhi'));
         } finally {
             setLoading(false);
         }
@@ -149,22 +151,22 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                     <span
                         className={`h-1.5 w-1.5 rounded-full ${userInfo?.isActive ? 'bg-primary' : 'bg-destructive'}`}
                     />
-                    {userInfo?.isActive ? 'Đang hoạt động' : 'Đã khoá'}
+                    {userInfo?.isActive ? i18n.t('profile:userProfile.dangHoatDong') : i18n.t('profile:userProfile.daKhoa')}
                 </span>
 
                 <p className="mt-3 text-xs text-muted-foreground">
-                    Tham gia từ {formatJoinDate(userInfo?.creationTimestamp)}
+                    {i18n.t('profile:userProfile.thamGiaTu')} {formatJoinDate(userInfo?.creationTimestamp)}
                 </p>
             </aside>
 
             <section className="md:col-span-2 bg-card border border-border rounded-2xl overflow-hidden">
                 <div className="flex items-center justify-between px-8 py-5 border-b border-border">
                     <span className="text-base font-semibold text-foreground">
-                        Thông tin tài khoản
+                        {i18n.t('profile:userProfile.thongTinTaiKhoan')}
                     </span>
                     {!isEditMode && (
                         <Button type="text" icon={<EditOutlined/>} onClick={handleEdit}>
-                            Chỉnh sửa
+                            {i18n.t('profile:userProfile.chinhSua')}
                         </Button>
                     )}
                 </div>
@@ -172,26 +174,26 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                 <div className="px-8 py-8">
                     <Form form={form} layout="vertical" onFinish={onSave}>
                         <Form.Item
-                            label={<span className="font-medium text-foreground">Tên người dùng</span>}
+                            label={<span className="font-medium text-foreground">{i18n.t('profile:userProfile.tenNguoiDung')}</span>}
                             name="publicUserName"
-                            rules={[{required: true, message: 'Vui lòng nhập tên người dùng'}]}
+                            rules={[{required: true, message: i18n.t('profile:userProfile.vuiLongNhapTenNguoi')}]}
                             className="!mb-8"
                         >
                             <Input
-                                placeholder="Nhập tên người dùng"
+                                placeholder={i18n.t('profile:userProfile.nhapTenNguoiDung')}
                                 className="h-11 rounded-lg"
                                 disabled={!isEditMode}
                             />
                         </Form.Item>
 
                         <Form.Item
-                            label={<span className="font-medium text-foreground">Email</span>}
+                            label={<span className="font-medium text-foreground">{i18n.t('profile:userProfile.email')}</span>}
                             name="email"
-                            extra={<span className="text-xs text-muted-foreground">Email không thể thay đổi</span>}
+                            extra={<span className="text-xs text-muted-foreground">{i18n.t('profile:userProfile.emailKhongTheThayDoi')}</span>}
                             className="!mb-0"
                         >
                             <Input
-                                placeholder="Email"
+                                placeholder={i18n.t('profile:userProfile.email')}
                                 className="h-11 rounded-lg"
                                 disabled
                             />
@@ -205,7 +207,7 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                                     onClick={handleCancel}
                                     className="h-11 px-6"
                                 >
-                                    Hủy
+                                    {i18n.t('profile:userProfile.huy')}
                                 </Button>
                                 <Button
                                     type="primary"
@@ -215,7 +217,7 @@ const UserProfile = ({mode = 'view', onModeChange}: UserProfileProps) => {
                                     size="large"
                                     className="h-11 px-8 font-semibold"
                                 >
-                                    Lưu thay đổi
+                                    {i18n.t('profile:userProfile.luuThayDoi')}
                                 </Button>
                             </div>
                         )}

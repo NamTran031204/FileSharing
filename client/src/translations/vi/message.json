@@ -1,0 +1,47 @@
+{
+  "formInvalid": "Form không hợp lệ",
+  "assetListFailed": "Không thể tải danh sách asset",
+  "assetMoveFailed": "Không thể di chuyển asset",
+  "imageLoadFailed": "Không tải được ảnh",
+  "annotationLoadFailed": "Lỗi tải annotations",
+  "annotationSaveFailed": "Lưu annotation thất bại",
+  "replySendFailed": "Gửi reply thất bại",
+  "editFailed": "Chỉnh sửa thất bại",
+  "resolveFailed": "Resolve thất bại",
+  "reopenFailed": "Reopen thất bại",
+  "deleteFailed": "Xóa thất bại",
+  "approveFailed": "Approve thất bại",
+  "requestChangesFailed": "Request changes thất bại",
+  "drawTools": "Công cụ vẽ",
+  "folderUploadService": {
+    "createFolderTreeFailed": "Tạo cây folder thất bại",
+    "createAssetFailed": "Tạo tài nguyên thất bại"
+  },
+  "folderAssetStore": {
+    "khongTheTaiDanhSach": "Không thể tải danh sách folder",
+    "khongTheTaiDanhSach2": "Không thể tải danh sách tài nguyên",
+    "khongTheDiChuyenAsset": "Không thể di chuyển tài nguyên"
+  },
+  "uploadManagerStore": {
+    "createFolderTreeFailed": "Tạo cây folder thất bại",
+    "uploadFailed": "Tải lên thất bại"
+  },
+  "relativeTime": {
+    "justNow": "Vừa xong",
+    "hours": "{{n}} giờ trước",
+    "days": "{{n}} ngày trước"
+  },
+  "folderParser": {
+    "rootNameRequired": "Vui lòng nhập tên folder gốc",
+    "noFiles": "Folder đã chọn không có file nào",
+    "duplicatePath": "Phát hiện đường dẫn file trùng: {{path}}",
+    "invalidPath": "Đường dẫn tương đối không hợp lệ: {{path}}"
+  },
+  "auth": {
+    "registerFailed": "Đăng ký thất bại",
+    "loginFailed": "Đăng nhập thất bại",
+    "googleRegisterFailed": "Đăng ký Google thất bại",
+    "googleLoginFailed": "Đăng nhập Google thất bại",
+    "notLegit": "Bạn chưa đăng nhập. Vui lòng đăng nhập hoặc đăng ký để tiếp tục."
+  }
+}

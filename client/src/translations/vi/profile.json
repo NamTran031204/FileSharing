@@ -1,0 +1,24 @@
+{
+  "updateDeleteAvatar": {
+    "chiHoTroAnhJpg": "Chỉ hỗ trợ ảnh JPG, PNG",
+    "anhPhaiNhoHon5mb": "Ảnh phải nhỏ hơn 5MB"
+  },
+  "userProfile": {
+    "khongTheTaiThongTin": "Không thể tải thông tin người dùng",
+    "khongTheUploadAnhDai": "Không thể upload ảnh đại diện",
+    "capNhatHoSoThanh": "Cập nhật hồ sơ thành công!",
+    "coLoiXayRaKhi": "Có lỗi xảy ra khi lưu thông tin.",
+    "dangHoatDong": "Đang hoạt động",
+    "daKhoa": "Đã khoá",
+    "thamGiaTu": "Tham gia từ",
+    "thongTinTaiKhoan": "Thông tin tài khoản",
+    "chinhSua": "Chỉnh sửa",
+    "tenNguoiDung": "Tên người dùng",
+    "vuiLongNhapTenNguoi": "Vui lòng nhập tên người dùng",
+    "nhapTenNguoiDung": "Nhập tên người dùng",
+    "emailKhongTheThayDoi": "Email không thể thay đổi",
+    "huy": "Hủy",
+    "luuThayDoi": "Lưu thay đổi",
+    "email": "Email"
+  }
+}

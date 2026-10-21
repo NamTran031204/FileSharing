@@ -26,6 +26,7 @@ import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { Shape } from '../hooks/useKonvaCanvas';
 import { buildShapeInfoList } from '../utils/coordinateTransform';
 import type { KonvaShapeData } from '../utils/coordinateTransform';
+import i18n from '../i18n';
 
 const DEFAULT_ANNOTATION_DURATION_MS = 3000;
 const SERVER_SHAPE_STROKE = 'rgba(255,255,255,0.85)';
@@ -289,7 +290,7 @@ const VideoReviewPage = observer(() => {
   const handleDownload = async () => {
     const metadata = store.currentVersionMetadata;
     if (!metadata?.objectName) {
-      uiUtils.showInfor('Download video — chưa có API');
+      uiUtils.showInfor(i18n.t('review:videoReviewPage.downloadVideoChuaCoApi'));
       return;
     }
 
@@ -303,14 +304,14 @@ const VideoReviewPage = observer(() => {
       await downloadService.downloadAndSave(metadata.objectName, name, setDownloadProgress);
       setTimeout(() => setShowDownloadProgress(false), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Download failed';
+      const message = err instanceof Error ? err.message : i18n.t('review:videoReviewPage.downloadFailed');
       if (!message.includes('cancelled')) setDownloadError(message);
     }
   };
 
   const handleCancelDownload = () => {
     downloadService.cancelDownload();
-    setDownloadError('Cancelled by user');
+    setDownloadError(i18n.t('file:cancelledByUser'));
     setTimeout(() => setShowDownloadProgress(false), 2000);
   };
 
@@ -360,11 +361,11 @@ const VideoReviewPage = observer(() => {
         mediaAdapter={adapterRef.current}
         assetId={assetId}
         versionParam={versionParam}
-        onCompare={() => uiUtils.showInfor('Compare video — chưa có API')}
+        onCompare={() => uiUtils.showInfor(i18n.t('review:videoReviewPage.compareVideoChuaCoApi'))}
         onDownload={handleDownload}
         topBarRight={
           <span className="flex items-center gap-2">
-            <span>Viewing as {viewingAsAdmin ? 'Admin' : 'Customer'}</span>
+            <span>{i18n.t('review:videoReviewPage.viewingAs')} {viewingAsAdmin ? i18n.t('review:videoReviewPage.admin') : i18n.t('review:videoReviewPage.customer')}</span>
             <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[9px] font-black text-[var(--color-foreground)]">HLS</span>
           </span>
         }

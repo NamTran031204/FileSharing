@@ -22,6 +22,7 @@ import type {
 import { AuditAction } from '../api/api/index.defs';
 import { useStore } from '../store';
 import UserAvatar from '../components/core/common/UserAvatar.tsx';
+import i18n from '../i18n';
 
 
 function formatBytes(bytes: number): string {
@@ -36,30 +37,31 @@ function formatTimeAgo(ts?: Date): string {
   const date = ts instanceof Date ? ts : new Date(ts);
   const diffMs = Date.now() - date.getTime();
   const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 1) return i18n.t('layout:dashboardPage.timeAgo.justNow');
+  if (diffMin < 60) return i18n.t('layout:dashboardPage.timeAgo.minutes', { n: diffMin });
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
+  if (diffH < 24) return i18n.t('layout:dashboardPage.timeAgo.hours', { n: diffH });
   const diffD = Math.floor(diffH / 24);
-  return `${diffD}d ago`;
+  return i18n.t('layout:dashboardPage.timeAgo.days', { n: diffD });
 }
 
-const ACTION_LABEL: Partial<Record<AuditAction, string>> = {
-  [AuditAction.UPLOAD_COMPLETE]: 'Uploaded',
-  [AuditAction.UPLOAD_NEW_VERSION]: 'New Version',
-  [AuditAction.CREATE]: 'Created',
-  [AuditAction.UPDATE]: 'Updated',
-  [AuditAction.TRASH]: 'Trashed',
-  [AuditAction.DELETE]: 'Deleted',
-  [AuditAction.STATUS_CHANGE]: 'Status Change',
-  [AuditAction.DOWNLOAD]: 'Downloaded',
-  [AuditAction.SHARE]: 'Shared',
-  [AuditAction.RESTORE]: 'Restored',
-  [AuditAction.PERMISSION_CHANGE]: 'Permission',
+const ACTION_LABEL_KEY: Partial<Record<AuditAction, string>> = {
+  [AuditAction.UPLOAD_COMPLETE]: 'uploadComplete',
+  [AuditAction.UPLOAD_NEW_VERSION]: 'uploadNewVersion',
+  [AuditAction.CREATE]: 'create',
+  [AuditAction.UPDATE]: 'update',
+  [AuditAction.TRASH]: 'trash',
+  [AuditAction.DELETE]: 'delete',
+  [AuditAction.STATUS_CHANGE]: 'statusChange',
+  [AuditAction.DOWNLOAD]: 'download',
+  [AuditAction.SHARE]: 'share',
+  [AuditAction.RESTORE]: 'restore',
+  [AuditAction.PERMISSION_CHANGE]: 'permissionChange',
 };
 
 function mapActionLabel(action?: AuditAction): string {
-  return action ? (ACTION_LABEL[action] ?? action) : '—';
+  const key = action ? ACTION_LABEL_KEY[action] : undefined;
+  return action ? (key ? i18n.t(`layout:dashboardPage.actionLabel.${key}`) : action) : '—';
 }
 
 const MEDIA_COLORS = [
@@ -124,7 +126,7 @@ const DashboardPage: React.FC = observer(() => {
         if (rv.isSuccessful) setReviewStats(rv.data ?? null);
         if (ac.isSuccessful) setActivities(ac.data ?? []);
       } catch {
-        void message.error('Không thể tải dữ liệu dashboard');
+        void message.error(i18n.t('layout:dashboardPage.khongTheTaiDuLieu'));
       } finally {
         setIsLoading(false);
       }
@@ -167,13 +169,13 @@ const DashboardPage: React.FC = observer(() => {
         {/* ── Page Header ── */}
         <header className="mb-12 max-w-7xl mx-auto">
           <p className="text-sm tracking-[0.05em] text-[var(--color-muted-foreground)] uppercase mb-2">
-            Platform Overview
+            {i18n.t('layout:dashboardPage.platformOverview')}
           </p>
           <h1
             className="text-4xl md:text-5xl font-bold text-[var(--color-foreground)]"
             style={{ letterSpacing: '-0.02em' }}
           >
-            WELCOME BACK, {userName.toUpperCase()}!
+            {i18n.t('layout:dashboardPage.welcomeBack')} {userName.toUpperCase()}!
           </h1>
         </header>
 
@@ -182,22 +184,22 @@ const DashboardPage: React.FC = observer(() => {
             {/* ── Overview Cards ── */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard
-                label="Projects"
+                label={i18n.t('layout:dashboardPage.projects')}
                 value={Number(overview?.totalProjects ?? 0)}
                 icon={<FolderOpenOutlined />}
               />
               <StatCard
-                label="Assets"
+                label={i18n.t('layout:dashboardPage.assets')}
                 value={Number(overview?.totalAssets ?? 0).toLocaleString()}
                 icon={<PictureOutlined />}
               />
               <StatCard
-                label="Folders"
+                label={i18n.t('layout:dashboardPage.folders')}
                 value={Number(overview?.totalFolders ?? 0)}
                 icon={<FolderOutlined />}
               />
               <StatCard
-                label="Storage"
+                label={i18n.t('layout:dashboardPage.storage')}
                 value={formatBytes(overview?.totalStorageBytes ?? 0)}
                 icon={<CloudOutlined />}
               />
@@ -208,7 +210,7 @@ const DashboardPage: React.FC = observer(() => {
               {/* Storage Distribution */}
               <div className="bg-[var(--color-card)] rounded-xl p-8 canvas-shadow">
                 <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-8">
-                  Storage Distribution
+                  {i18n.t('layout:dashboardPage.storageDistribution')}
                 </h3>
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   {/* Donut chart */}
@@ -219,14 +221,14 @@ const DashboardPage: React.FC = observer(() => {
                         {formatBytes(totalBytes)}
                       </span>
                       <span className="text-xs text-[var(--color-muted-foreground)] uppercase tracking-wide mt-1">
-                        Total
+                        {i18n.t('layout:dashboardPage.total')}
                       </span>
                     </div>
                   </div>
                   {/* Legend */}
                   <div className="flex-1 w-full space-y-6">
                     {byMediaType.length === 0 ? (
-                      <p className="text-sm text-[var(--color-muted-foreground)]">No data</p>
+                      <p className="text-sm text-[var(--color-muted-foreground)]">{i18n.t('layout:dashboardPage.noData')}</p>
                     ) : (
                       byMediaType.map((cat, i) => (
                         <div key={cat.mediaType ?? i} className="flex items-center justify-between">
@@ -257,7 +259,7 @@ const DashboardPage: React.FC = observer(() => {
               {/* Review Status */}
               <div className="bg-[var(--color-card)] rounded-xl p-8 canvas-shadow">
                 <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-8">
-                  Review Status
+                  {i18n.t('layout:dashboardPage.reviewStatus')}
                 </h3>
                 <div className="space-y-4">
                   {/* Pending */}
@@ -267,8 +269,8 @@ const DashboardPage: React.FC = observer(() => {
                         <ClockCircleOutlined />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[var(--color-foreground)]">Pending Review</p>
-                        <p className="text-xs text-[var(--color-muted-foreground)]">Drafts & In Review</p>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">{i18n.t('layout:dashboardPage.pendingReview')}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">{i18n.t('layout:dashboardPage.draftsInReview')}</p>
                       </div>
                     </div>
                     <span className="text-xl font-bold group-hover:text-[var(--color-primary)] transition-colors text-[var(--color-foreground)]">
@@ -283,8 +285,8 @@ const DashboardPage: React.FC = observer(() => {
                         <CheckCircleOutlined />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[var(--color-foreground)]">Approved</p>
-                        <p className="text-xs text-[var(--color-muted-foreground)]">Ready for delivery</p>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">{i18n.t('layout:dashboardPage.approved')}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">{i18n.t('layout:dashboardPage.readyForDelivery')}</p>
                       </div>
                     </div>
                     <span className="text-xl font-bold group-hover:text-[var(--color-primary)] transition-colors text-[var(--color-foreground)]">
@@ -299,8 +301,8 @@ const DashboardPage: React.FC = observer(() => {
                         <EditOutlined />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-red-700">Needs Changes</p>
-                        <p className="text-xs text-red-500">Revisions requested</p>
+                        <p className="text-sm font-semibold text-red-700">{i18n.t('layout:dashboardPage.needsChanges')}</p>
+                        <p className="text-xs text-red-500">{i18n.t('layout:dashboardPage.revisionsRequested')}</p>
                       </div>
                     </div>
                     <span className="text-xl font-bold text-red-700">
@@ -315,8 +317,8 @@ const DashboardPage: React.FC = observer(() => {
                         <StopOutlined />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[var(--color-foreground)]">No Review</p>
-                        <p className="text-xs text-[var(--color-muted-foreground)]">Internal assets</p>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">{i18n.t('layout:dashboardPage.noReview')}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">{i18n.t('layout:dashboardPage.internalAssets')}</p>
                       </div>
                     </div>
                     <span className="text-xl font-bold group-hover:text-[var(--color-primary)] transition-colors text-[var(--color-foreground)]">
@@ -332,10 +334,10 @@ const DashboardPage: React.FC = observer(() => {
               <div className="flex justify-between items-end mb-8">
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-foreground)]">
-                    Recent Activity
+                    {i18n.t('layout:dashboardPage.recentActivity')}
                   </h3>
                   <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-                    Latest actions across all projects
+                    {i18n.t('layout:dashboardPage.latestActionsAcrossAllProjects')}
                   </p>
                 </div>
               </div>
@@ -343,17 +345,17 @@ const DashboardPage: React.FC = observer(() => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      <th className="pb-4 font-medium pl-2 w-1/3">User</th>
-                      <th className="pb-4 font-medium px-4 w-1/6">Action</th>
-                      <th className="pb-4 font-medium px-4 w-1/3">Target</th>
-                      <th className="pb-4 font-medium pr-2 text-right w-1/6">Time</th>
+                      <th className="pb-4 font-medium pl-2 w-1/3">{i18n.t('layout:dashboardPage.user')}</th>
+                      <th className="pb-4 font-medium px-4 w-1/6">{i18n.t('layout:dashboardPage.action')}</th>
+                      <th className="pb-4 font-medium px-4 w-1/3">{i18n.t('layout:dashboardPage.target')}</th>
+                      <th className="pb-4 font-medium pr-2 text-right w-1/6">{i18n.t('layout:dashboardPage.time')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {activities.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="py-8 text-center text-[var(--color-muted-foreground)]">
-                          No recent activity
+                          {i18n.t('layout:dashboardPage.noRecentActivity')}
                         </td>
                       </tr>
                     ) : (
@@ -390,10 +392,10 @@ const DashboardPage: React.FC = observer(() => {
             {/* ── Storage by Project ── */}
             <section className="bg-[var(--color-card)] rounded-xl p-8 canvas-shadow mb-12">
               <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-8">
-                Storage by Project
+                {i18n.t('layout:dashboardPage.storageByProject')}
               </h3>
               {projectStorageItems.length === 0 ? (
-                <p className="text-sm text-[var(--color-muted-foreground)]">No project data</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">{i18n.t('layout:dashboardPage.noProjectData')}</p>
               ) : (
                 <div className="space-y-8">
                   {projectStorageItems.map((proj) => (

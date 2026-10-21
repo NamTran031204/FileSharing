@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { VideoAnnotation } from './videoAnnotationTypes';
+import i18n from '../../i18n';
 
 export interface LoopRegion {
   inMs: number;
@@ -174,9 +175,9 @@ const VideoAnnotationTimeline = ({
         >
           <div
             className="flex h-[54px] w-[96px] items-center justify-center rounded-md border border-white/15 bg-black/80"
-            title="Sprite thumbnail chưa có API"
+            title={i18n.t('review:videoAnnotationTimeline.spriteThumbnailChuaCoApi')}
           >
-            <span className="text-[9px] text-white/30">Chưa có API</span>
+            <span className="text-[9px] text-white/30">{i18n.t('review:videoAnnotationTimeline.chuaCoApi')}</span>
           </div>
           <span className="rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-mono text-white">
             {formatMs((hoverPct / 100) * safeDuration)}

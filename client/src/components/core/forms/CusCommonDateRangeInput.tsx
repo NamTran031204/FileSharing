@@ -14,6 +14,7 @@ import {
     disableBeforeOrSame,
     getDateRange,
 } from '../../../utils/date.util.ts';
+import i18n from '../../../i18n';
 
 type LabelMode = 'icon' | 'fromToLabel' | 'normal';
 
@@ -31,12 +32,12 @@ interface OrdDateRangeInputProps {
     valuesFilterHidden?: DateRangePreset[];
 }
 
-const DATE_RANGE_OPTS: { key: DateRangePreset; label: string }[] = [
-    {key: 'hom_nay', label: 'Hôm nay'},
-    {key: 'hom_qua', label: 'Hôm qua'},
-    {key: '7_ngay_truoc', label: '7 ngày trước'},
-    {key: 'thang_nay', label: 'Tháng này'},
-    {key: 'thang_truoc', label: 'Tháng trước'},
+const getDateRangeOpts = (): { key: DateRangePreset; label: string }[] => [
+    {key: 'hom_nay', label: i18n.t('core:dateRange.today')},
+    {key: 'hom_qua', label: i18n.t('core:dateRange.yesterday')},
+    {key: '7_ngay_truoc', label: i18n.t('core:dateRange.last7days')},
+    {key: 'thang_nay', label: i18n.t('core:dateRange.thisMonth')},
+    {key: 'thang_truoc', label: i18n.t('core:dateRange.lastMonth')},
 ];
 
 const CusCommonDateRangeInput = (props: OrdDateRangeInputProps) => {
@@ -48,8 +49,8 @@ const CusCommonDateRangeInput = (props: OrdDateRangeInputProps) => {
         labelMode = 'normal',
         allowEq,
         notAllowFuture,
-        labelFromDate = 'Từ ngày',
-        labelToDate = 'Đến ngày',
+        labelFromDate = i18n.t('core:cusCommonDateRangeInput.tuNgay'),
+        labelToDate = i18n.t('core:cusCommonDateRangeInput.denNgay'),
         isNotShowOptions,
         valuesFilterHidden,
     } = props;
@@ -123,7 +124,7 @@ const CusCommonDateRangeInput = (props: OrdDateRangeInputProps) => {
     );
 
     const presetDropdown = useMemo(() => {
-        const visibleOpts = DATE_RANGE_OPTS.filter((o) => !valuesFilterHidden?.includes(o.key));
+        const visibleOpts = getDateRangeOpts().filter((o) => !valuesFilterHidden?.includes(o.key));
         return (
             <Dropdown
                 open={dropdownOpen}

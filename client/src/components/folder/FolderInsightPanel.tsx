@@ -2,6 +2,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Divider, Progress } from 'antd';
 import { ProcessingStatus } from '../../api/api/index.defs';
 import { ApiPendingNote } from '../core/common/ApiPendingNote';
+import i18n from '../../i18n';
 
 export interface InsightSummaryItem {
     label: string;
@@ -39,14 +40,14 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
                 <button
                     type="button"
                     onClick={onToggle}
-                    title="Expand folder summary"
-                    aria-label="Expand folder summary"
+                    title={i18n.t('folder:folderInsightPanel.expandFolderSummary')}
+                    aria-label={i18n.t('folder:folderInsightPanel.expandFolderSummary')}
                     className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
                 >
                     <MenuUnfoldOutlined className="text-base" />
                 </button>
                 <span className="mt-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground [writing-mode:vertical-rl]">
-                    Folder summary
+                    {i18n.t('folder:folderInsightPanel.folderSummary')}
                 </span>
             </div>
         );
@@ -56,13 +57,13 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
         <aside className="hidden w-[320px] shrink-0 overflow-y-auto border-l border-border bg-card px-5 py-6 xl:block">
             <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Folder summary
+                    {i18n.t('folder:folderInsightPanel.folderSummary')}
                 </span>
                 <button
                     type="button"
                     onClick={onToggle}
-                    title="Collapse folder summary"
-                    aria-label="Collapse folder summary"
+                    title={i18n.t('folder:folderInsightPanel.collapseFolderSummary')}
+                    aria-label={i18n.t('folder:folderInsightPanel.collapseFolderSummary')}
                     className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
                 >
                     <MenuFoldOutlined className="text-base" />
@@ -81,11 +82,11 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
             <Divider className="my-5" />
 
             <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                Processing queue
+                {i18n.t('folder:folderInsightPanel.processingQueue')}
             </span>
             <div className="mt-3 flex flex-col gap-3">
                 {processingItems.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Everything in this folder is ready.</p>
+                    <p className="text-sm text-muted-foreground">{i18n.t('folder:folderInsightPanel.everythingInThisFolderIs')}</p>
                 ) : (
                     processingItems.map((item) => (
                         <div key={item.key} className="rounded-xl bg-background px-3 py-2">
@@ -106,19 +107,19 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
             <Divider className="my-5" />
 
             <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                Members
+                {i18n.t('folder:folderInsightPanel.members')}
             </span>
             <div className="mt-3">
-                <ApiPendingNote label="Members" hint="Danh sách thành viên có quyền trên project này" />
+                <ApiPendingNote label={i18n.t('folder:folderInsightPanel.members')} hint={i18n.t('folder:folderInsightPanel.danhSachThanhVienCo')} />
             </div>
 
             <Divider className="my-5" />
 
             <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                Recent activity
+                {i18n.t('folder:folderInsightPanel.recentActivity')}
             </span>
             <div className="mt-3">
-                <ApiPendingNote label="Recent activity" hint="Nhật ký hành động gần đây trên folder này" />
+                <ApiPendingNote label={i18n.t('folder:folderInsightPanel.recentActivity')} hint={i18n.t('folder:folderInsightPanel.nhatKyHanhDongGan')} />
             </div>
         </aside>
     );

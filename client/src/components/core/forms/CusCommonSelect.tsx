@@ -4,6 +4,7 @@ import { debounce } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toLowerCaseNonAccentVietnamese } from '../../../utils/text.util.ts';
 import type { ICusCommonSelectOption, SelectDataSource } from './select/selectDataSource/types.ts';
+import i18n from '../../../i18n';
 
 export interface ICusCommonSelectProp extends Omit<SelectProps, 'options'> {
   datasource: SelectDataSource;
@@ -73,7 +74,7 @@ const CusCommonSelect = (props: ICusCommonSelectProp) => {
       ref={selectRef}
       className={`w-full ord-select ${className ?? ''}`}
       {...rest}
-      placeholder={placeholder ?? placeHolder ?? 'Vui lòng chọn'}
+      placeholder={placeholder ?? placeHolder ?? i18n.t('core:cusCommonSelect.vuiLongChon')}
       options={options}
       loading={loading}
       suffixIcon={
@@ -94,9 +95,9 @@ const CusCommonSelect = (props: ICusCommonSelectProp) => {
       filterOption={(input, option) => onSearchOption(input, option as ICusCommonSelectOption)}
       notFoundContent={
         loading ? (
-          <span className="text-sm text-muted-foreground">Đang tải...</span>
+          <span className="text-sm text-muted-foreground">{i18n.t('core:cusCommonSelect.dangTai')}</span>
         ) : (
-          <span className="text-sm text-muted-foreground">Không có dữ liệu</span>
+          <span className="text-sm text-muted-foreground">{i18n.t('core:cusCommonSelect.khongCoDuLieu')}</span>
         )
       }
     />

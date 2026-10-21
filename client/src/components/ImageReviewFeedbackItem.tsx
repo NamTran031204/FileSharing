@@ -1,5 +1,6 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 import UserAvatar from './core/common/UserAvatar.tsx';
+import i18n from '../i18n';
 
 export type ReviewFeedbackStatus = 'open' | 'resolved';
 
@@ -47,11 +48,11 @@ const ImageReviewFeedbackItem = ({
           </div>
         </div>
         {item.status === 'open' ? (
-          <span className={openStatusClass}>OPEN</span>
+          <span className={openStatusClass}>{i18n.t('file:imageReviewFeedbackItem.open')}</span>
         ) : (
           <div className="flex items-center gap-1 text-[9px] font-black text-[#3f397e]">
             <CheckCircleFilled className="text-sm" />
-            <span>RESOLVED</span>
+            <span>{i18n.t('file:imageReviewFeedbackItem.resolved')}</span>
           </div>
         )}
       </div>

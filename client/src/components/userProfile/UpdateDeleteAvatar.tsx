@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {message, Upload} from "antd";
 import {DeleteOutlined, UploadOutlined} from "@ant-design/icons";
+import i18n from '../../i18n';
 
 interface Props {
     imageUrl?: string;
@@ -14,12 +15,12 @@ const UpdateDeleteAvatar = ({imageUrl, onFileSelect, setPreviewUrl}: Props) => {
     const validateImage = (file: File): boolean => {
         const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
         if (!isValidType) {
-            message.error('Chỉ hỗ trợ ảnh JPG, PNG');
+            message.error(i18n.t('profile:updateDeleteAvatar.chiHoTroAnhJpg'));
             return false;
         }
         const isLt5M = file.size / 1024 / 1024 < 5;
         if (!isLt5M) {
-            message.error('Ảnh phải nhỏ hơn 5MB');
+            message.error(i18n.t('profile:updateDeleteAvatar.anhPhaiNhoHon5mb'));
             return false;
         }
         return true;

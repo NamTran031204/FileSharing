@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import FolderCard from "../../folder/FolderCard.tsx";
 import type {ActionDropdownItem} from "../common/ActionDropdown.tsx";
 import AssetCard, {type AssetType} from "../../assets/AssetCard.tsx";
+import i18n from '../../../i18n';
 
 export interface FolderCardData {
   name: string;
@@ -90,8 +91,8 @@ const FolderAssetBody = <TFolder, TAsset>({
   emptyFoldersText,
   emptyAssetsText,
   emptyAssetsAction,
-  foldersTitle = 'Folders',
-  assetsTitle = 'Files',
+  foldersTitle = i18n.t('core:folderAssetBody.folders'),
+  assetsTitle = i18n.t('core:folderAssetBody.files'),
   contentTop,
   contentBetweenFolderAndAsset,
 }: FolderAssetBodyProps<TFolder, TAsset>) => {
@@ -126,7 +127,7 @@ const FolderAssetBody = <TFolder, TAsset>({
               image={<FolderOpenOutlined className="text-4xl text-muted-foreground" />}
               description={
                 <span className="text-sm text-muted-foreground">
-                  {emptyFoldersText ?? 'No folders here.'}
+                  {emptyFoldersText ?? i18n.t('core:folderAssetBody.noFoldersHere')}
                 </span>
               }
             />
@@ -172,7 +173,7 @@ const FolderAssetBody = <TFolder, TAsset>({
             <Empty
               description={
                 <span className="text-sm text-muted-foreground">
-                  {emptyAssetsText ?? 'No assets in this folder.'}
+                  {emptyAssetsText ?? i18n.t('core:folderAssetBody.noAssetsInThisFolder')}
                 </span>
               }
             >

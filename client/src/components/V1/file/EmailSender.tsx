@@ -3,6 +3,7 @@ import {Button, Input, message, Modal, Select} from 'antd';
 import {MailOutlined, SendOutlined} from '@ant-design/icons';
 import userFileApiResource, {type EmailSenderRequestDto, type MetadataEntity} from '../../../api/fileApi/userFileApiResource.ts';
 import {ObjectPermission} from '../../../api/enums.ts';
+import i18n from '../../../i18n';
 
 export interface ShareFileModalRef {
     open: (file: MetadataEntity) => void;
@@ -44,22 +45,22 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
 
     const handleSend = async () => {
         if (!email.trim()) {
-            setEmailError('Email không được để trống');
+            setEmailError(i18n.t('file:emailSender.emailKhongDuocDeTrong'));
             return;
         }
 
         if (!validateEmail(email)) {
-            setEmailError('Email không hợp lệ');
+            setEmailError(i18n.t('file:emailSender.emailKhongHopLe'));
             return;
         }
 
         if (permissions.length === 0) {
-            message.error('Vui lòng chọn ít nhất một quyền');
+            message.error(i18n.t('file:emailSender.vuiLongChonItNhat'));
             return;
         }
 
         if (!currentFile) {
-            message.error('Không tìm thấy thông tin file');
+            message.error(i18n.t('file:emailSender.khongTimThayThongTin'));
             return;
         }
 
@@ -75,11 +76,11 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
             };
 
             await userFileApiResource.sendEmail(requestData);
-            message.success(`Email đã được gửi thành công đến ${email}`);
+            message.success(i18n.t('file:emailSender.emailDaDuocGuiThanh', {email}));
             handleClose();
         } catch (error) {
             console.error('Send email error:', error);
-            message.error('Gửi email thất bại. Vui lòng thử lại.');
+            message.error(i18n.t('file:emailSender.guiEmailThatBaiVui'));
         } finally {
             setLoading(false);
         }
@@ -90,19 +91,19 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
      */
     const permissionOptions = [
         {
-            label: 'Read Only',
+            label: i18n.t('file:emailSender.readOnly'),
             value: ObjectPermission.READ,
-            description: 'Chỉ được xem file'
+            description: i18n.t('file:emailSender.chiDuocXemFile')
         },
         {
-            label: 'Comment',
+            label: i18n.t('file:emailSender.comment'),
             value: ObjectPermission.COMMENT,
-            description: 'Được xem và comment'
+            description: i18n.t('file:emailSender.duocXemVaComment')
         },
         {
-            label: 'Modify',
+            label: i18n.t('file:emailSender.modify'),
             value: ObjectPermission.MODIFY,
-            description: 'Được xem, comment và chỉnh sửa'
+            description: i18n.t('file:emailSender.duocXemCommentVaChinh')
         },
     ];
 
@@ -111,7 +112,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
             title={
                 <div className="flex items-center gap-2">
                     <MailOutlined className="text-primary" />
-                    <span>Chia sẻ File qua Email</span>
+                    <span>{i18n.t('file:emailSender.chiaSeFileQuaEmail')}</span>
                 </div>
             }
             open={isOpen}
@@ -124,7 +125,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                 {/* File Info */}
                 {currentFile && (
                     <div className="bg-muted p-3 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">File đang chia sẻ:</p>
+                        <p className="text-xs text-muted-foreground mb-1">{i18n.t('file:emailSender.fileDangChiaSe')}</p>
                         <p className="text-sm font-semibold text-foreground truncate" title={currentFile.fileName}>
                             {currentFile.fileName}
                         </p>
@@ -134,7 +135,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                 {/* Email Input */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                        Email người nhận <span className="text-destructive">*</span>
+                        {i18n.t('file:emailSender.emailNguoiNhan')} <span className="text-destructive">*</span>
                     </label>
                     <Input
                         placeholder="example@email.com"
@@ -156,11 +157,11 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                 {/* Permission Select */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                        Quyền truy cập <span className="text-destructive">*</span>
+                        {i18n.t('file:emailSender.quyenTruyCap')} <span className="text-destructive">*</span>
                     </label>
                     <Select
                         mode="multiple"
-                        placeholder="Chọn quyền"
+                        placeholder={i18n.t('file:emailSender.chonQuyen')}
                         value={permissions}
                         onChange={(value) => setPermissions(value)}
                         options={permissionOptions}
@@ -177,7 +178,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                         )}
                     />
                     <p className="text-xs text-muted-foreground">
-                        Người nhận sẽ có các quyền này khi truy cập file
+                        {i18n.t('file:emailSender.nguoiNhanSeCoCac')}
                     </p>
                 </div>
 
@@ -187,7 +188,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                         onClick={handleClose}
                         disabled={loading}
                     >
-                        Hủy
+                        {i18n.t('file:emailSender.huy')}
                     </Button>
                     <Button
                         type="primary"
@@ -195,7 +196,7 @@ const EmailSender = forwardRef<ShareFileModalRef>((_, ref) => {
                         onClick={handleSend}
                         loading={loading}
                     >
-                        Gửi Email
+                        {i18n.t('file:emailSender.guiEmail')}
                     </Button>
                 </div>
             </div>

@@ -2,17 +2,18 @@ import { Button, Modal, Space } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { confirmable, type ConfirmDialog, type ConfirmDialogProps } from 'react-confirm';
 import type { OrdConfirmProps } from './CusCommonConfirm.types.ts';
+import i18n from '../../../i18n';
 
 type Props = ConfirmDialogProps<OrdConfirmProps, boolean>;
 
 const CusCommonConfirmDialog: ConfirmDialog<OrdConfirmProps, boolean> = ({
   show,
   proceed,
-  title = 'Xác nhận',
+  title = i18n.t('core:cusCommonConfirm.xacNhan'),
   content,
   contentCustom,
-  okLabel = 'Xác nhận',
-  cancelLabel = 'Huỷ',
+  okLabel = i18n.t('core:cusCommonConfirm.xacNhan'),
+  cancelLabel = i18n.t('core:cusCommonConfirm.huy'),
   icon = <ExclamationCircleOutlined className="text-2xl text-destructive" />,
   closable = false,
   wrapClassName,

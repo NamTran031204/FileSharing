@@ -5,6 +5,7 @@ import type {
 } from '../api/api/index.defs';
 import { AssetControllerService } from '../api/api/AssetControllerService';
 import {CommonPagingStore} from "./CommonPagingStore.ts";
+import i18n from '../i18n';
 
 class AssetStore extends CommonPagingStore{
     // ── Data ──────────────────────────────────────────────────────────────
@@ -102,12 +103,12 @@ class AssetStore extends CommonPagingStore{
                 },
             });
             if (!res?.isSuccessful) {
-                throw new Error(res?.message ?? 'Không thể tải danh sách asset');
+                throw new Error(res?.message ?? i18n.t('message:assetListFailed'));
             }
             this.assets = res.data?.data ?? [];
             this.totalCount = Number(res.data?.totalCount ?? 0);
         } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : 'Không thể tải danh sách asset';
+            const msg = e instanceof Error ? e.message : i18n.t('message:assetListFailed');
             this.errorMessage = msg;
             this.assets = [];
         } finally {
@@ -132,11 +133,11 @@ class AssetStore extends CommonPagingStore{
         try {
             const res = await AssetControllerService.move({ body: { assetId, targetFolderId } });
             if (!res?.isSuccessful) {
-                throw new Error(res?.message ?? 'Không thể di chuyển asset');
+                throw new Error(res?.message ?? i18n.t('message:assetMoveFailed'));
             }
             void this.fetchPage(this._projectId, this._folderId);
         } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : 'Không thể di chuyển asset';
+            const msg = e instanceof Error ? e.message : i18n.t('message:assetMoveFailed');
             this.errorMessage = msg;
         }
     }

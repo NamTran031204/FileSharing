@@ -9,6 +9,7 @@ import {
 } from '../../api/api/index.defs';
 import uiUtils from '../../utils/uiUtils.tsx';
 import { findRestrictedAncestor, listNonInheritDescendants } from '../../utils/visibilityUtils';
+import i18n from '../../i18n';
 
 interface VisibilityModalProps {
     open: boolean;
@@ -20,8 +21,7 @@ interface VisibilityModalProps {
     onChanged: () => void;
 }
 
-const PUBLIC_NOTE =
-    'Cho phép tạo link gửi khách duyệt (proof link) và mọi thành viên project xem được. Folder con INHERIT sẽ theo.';
+const getPublicNote = () => i18n.t('folder:visibilityModal.choPhepTaoLinkGui');
 
 const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClose, onChanged }: VisibilityModalProps) => {
     const [loading, setLoading] = useState(false);
@@ -57,7 +57,7 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
                 setInitialIds(withOwner);
                 setMembers(memberRes.data ?? []);
             })
-            .catch(() => uiUtils.showError('Không tải được quyền truy cập của folder'))
+            .catch(() => uiUtils.showError(i18n.t('folder:visibilityModal.khongTaiDuocQuyenTruy')))
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
     }, [open, folderId, projectId, ownerId]);
@@ -69,7 +69,7 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
             disabled: m.userId === ownerId,
         }));
         if (ownerId && !list.some((o) => o.value === ownerId)) {
-            list.unshift({ value: ownerId, label: 'Owner', disabled: true });
+            list.unshift({ value: ownerId, label: i18n.t('folder:visibilityModal.owner'), disabled: true });
         }
         return list;
     }, [members, ownerId]);
@@ -93,11 +93,11 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
                           },
                       });
             if (!res.isSuccessful) throw new Error(res.message);
-            uiUtils.showSuccess('Đã cập nhật quyền truy cập');
+            uiUtils.showSuccess(i18n.t('folder:visibilityModal.daCapNhatQuyenTruy'));
             onChanged();
             onClose();
         } catch (e) {
-            uiUtils.showError((e as Error)?.message || 'Cập nhật quyền truy cập thất bại');
+            uiUtils.showError((e as Error)?.message || i18n.t('folder:visibilityModal.capNhatQuyenTruyCap'));
         } finally {
             setSaving(false);
         }
@@ -105,15 +105,15 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
 
     const handleOk = () => {
         if (value === FolderVisibility.PUBLIC && current !== FolderVisibility.PUBLIC) {
-            Modal.confirm({ title: 'Chuyển sang Public?', content: PUBLIC_NOTE, onOk: doSave });
+            Modal.confirm({ title: i18n.t('folder:visibilityModal.chuyenSangPublic'), content: getPublicNote(), onOk: doSave });
             return;
         }
         if (value === FolderVisibility.RESTRICTED && current !== FolderVisibility.RESTRICTED && nonInheritChildren.length > 0) {
             Modal.confirm({
-                title: 'Folder con có quyền riêng',
-                content: `Các folder con sau giữ quyền riêng, không đổi theo: ${nonInheritChildren
+                title: i18n.t('folder:visibilityModal.folderConCoQuyenRieng'),
+                content: i18n.t('folder:visibilityModal.cacFolderConSauGiu', {join: nonInheritChildren
                     .map((c) => c.folderName)
-                    .join(', ')}`,
+                    .join(', ')}),
                 onOk: doSave,
             });
             return;
@@ -124,11 +124,11 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
     return (
         <Modal
             open={open}
-            title="Quyền truy cập"
+            title={i18n.t('folder:visibilityModal.quyenTruyCap')}
             onCancel={onClose}
             onOk={handleOk}
-            okText="Lưu"
-            cancelText="Hủy"
+            okText={i18n.t('folder:visibilityModal.luu')}
+            cancelText={i18n.t('folder:visibilityModal.huy')}
             okButtonProps={{ disabled: loading || unchanged, loading: saving }}
             destroyOnHidden
         >
@@ -138,10 +138,10 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
                     onChange={(e) => setValue(e.target.value)}
                     className="flex flex-col gap-3"
                 >
-                    <Radio value={FolderVisibility.INHERIT}>Inherit — theo folder cha / project</Radio>
-                    <Radio value={FolderVisibility.RESTRICTED}>Restricted — chỉ người được chọn</Radio>
+                    <Radio value={FolderVisibility.INHERIT}>{i18n.t('folder:visibilityModal.inheritFollowsParent')}</Radio>
+                    <Radio value={FolderVisibility.RESTRICTED}>{i18n.t('folder:visibilityModal.restrictedChiNguoiDuocChon')}</Radio>
                     <Radio value={FolderVisibility.PUBLIC} disabled={!!restrictedAncestor}>
-                        Public — {PUBLIC_NOTE}
+                        {i18n.t('folder:visibilityModal.publicPrefix', {note: getPublicNote()})}
                     </Radio>
                 </Radio.Group>
 
@@ -150,13 +150,13 @@ const VisibilityModal = ({ open, folderId, projectId, ownerId, treeItems, onClos
                         className="mt-3"
                         type="info"
                         showIcon
-                        message={`Không thể Public vì folder cha "${restrictedAncestor.folderName}" đang Restricted`}
+                        message={i18n.t('folder:visibilityModal.khongThePublicViFolder', {folderName: restrictedAncestor.folderName})}
                     />
                 )}
 
                 {value === FolderVisibility.RESTRICTED && (
                     <div className="mt-4">
-                        <p className="mb-1 text-xs font-semibold text-muted-foreground">Thành viên được truy cập</p>
+                        <p className="mb-1 text-xs font-semibold text-muted-foreground">{i18n.t('folder:visibilityModal.thanhVienDuocTruyCap')}</p>
                         <Select
                             mode="multiple"
                             className="w-full"

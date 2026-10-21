@@ -16,6 +16,7 @@ import authApiResource from "../../../api/authApi/authApiResource.ts";
 import {FileAppPermission, ObjectVisibility} from "../../../api/enums.ts";
 import {FileViewUtil} from "../../../utils/FileViewUtil.ts";
 import NotFoundPage from "../../../components/NotFoundPage.tsx";
+import i18n from '../../../i18n';
 
 const FilePreviewPage = () => {
     const params = useParams();
@@ -28,7 +29,7 @@ const FilePreviewPage = () => {
         const fetchFileData = async () => {
             console.log("shareToken", shareToken);
             if (!shareToken) {
-                setError('Invalid share token');
+                setError(i18n.t('file:invalidShareToken'));
                 setLoading(false);
                 return;
             }
@@ -53,7 +54,7 @@ const FilePreviewPage = () => {
                 setError(null);
             } catch (err) {
                 console.error('Failed to fetch file:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load file');
+                setError(err instanceof Error ? err.message : i18n.t('file:index.failedToLoadFile'));
                 setFileMetadata(null);
             } finally {
                 setLoading(false);
@@ -68,7 +69,7 @@ const FilePreviewPage = () => {
             <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
                 <div className="text-center">
                     <Spin size="large"/>
-                    <p className="text-muted-foreground mt-4">Loading file...</p>
+                    <p className="text-muted-foreground mt-4">{i18n.t('file:index.loadingFile')}</p>
                 </div>
             </div>
         );
@@ -142,7 +143,7 @@ const FilePreviewPage = () => {
                                     size="large"
                                     onClick={handleDownload}
                                 >
-                                    Download File
+                                    {i18n.t('file:index.downloadFile')}
                                 </Button>
                             </Space>
                         </div>
@@ -153,7 +154,7 @@ const FilePreviewPage = () => {
                     title={
                         <div className="flex items-center gap-2">
                             <FileOutlined/>
-                            <span>File Preview</span>
+                            <span>{i18n.t('file:index.filePreview')}</span>
                         </div>
                     }
                     className="shadow-lg"
@@ -164,14 +165,14 @@ const FilePreviewPage = () => {
                 </Card>
 
                 <Card
-                    title="File Details"
+                    title={i18n.t('file:index.fileDetails')}
                     className="mt-6 shadow-lg"
                 >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex items-center gap-3">
                             <UserOutlined className="text-muted-foreground text-lg"/>
                             <div>
-                                <p className="text-xs text-muted-foreground">Owner ID</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:index.ownerId')}</p>
                                 <p className="font-medium text-foreground">{fileMetadata.ownerId}</p>
                             </div>
                         </div>
@@ -179,7 +180,7 @@ const FilePreviewPage = () => {
                         <div className="flex items-center gap-3">
                             <ClockCircleOutlined className="text-muted-foreground text-lg"/>
                             <div>
-                                <p className="text-xs text-muted-foreground">Created</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:index.created')}</p>
                                 <p className="font-medium text-foreground">
                                     {new Date(fileMetadata.creationTimestamp).toLocaleDateString()}
                                 </p>
@@ -190,7 +191,7 @@ const FilePreviewPage = () => {
                             <div className="flex items-center gap-3">
                                 <FileOutlined className="text-muted-foreground text-lg"/>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Compression</p>
+                                    <p className="text-xs text-muted-foreground">{i18n.t('file:index.compression')}</p>
                                     <p className="font-medium text-foreground">{fileMetadata.compressionAlgo}</p>
                                 </div>
                             </div>
@@ -199,7 +200,7 @@ const FilePreviewPage = () => {
                         <div className="flex items-center gap-3">
                             <EyeOutlined className="text-muted-foreground text-lg"/>
                             <div>
-                                <p className="text-xs text-muted-foreground">Your Permission</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:index.yourPermission')}</p>
                                 <Tag color="blue">
                                     {fileMetadata.publishUserPermission || FileAppPermission.PUBLIC}
                                 </Tag>
@@ -210,7 +211,7 @@ const FilePreviewPage = () => {
 
                 <div className="mt-8 text-center">
                     <p className="text-sm text-muted-foreground">
-                        This file is shared with you. Handle with care and respect privacy.
+                        {i18n.t('file:index.thisFileIsSharedWith')}
                     </p>
                 </div>
             </div>

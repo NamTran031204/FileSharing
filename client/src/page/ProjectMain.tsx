@@ -20,6 +20,7 @@ import CreateProjectModal, {type CreateProjectFormValues} from '../components/pr
 import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/project/ProjectOverviewCard.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
 import {useStore} from '../store';
+import i18n from '../i18n';
 
 const PAGE_SIZE = 24;
 
@@ -48,11 +49,11 @@ const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
 
     return {
         projectId: project.projectId,
-        title: project.projectName || 'Untitled Project',
+        title: project.projectName || i18n.t('layout:projectMain.untitledProject'),
         code: project.projectCode || project.projectId || 'N/A',
         category: project.category,
         ownerEmail: project.ownerEmail || 'unknown@domain.local',
-        description: project.description || 'No description',
+        description: project.description || i18n.t('layout:projectMain.noDescription'),
         status: toCardStatus(project.status),
         folderCount: project.stats?.folderCount ?? 0,
         videoCount: project.stats?.assetCount ?? 0,
@@ -100,14 +101,14 @@ const ProjectMain = observer(function ProjectMain() {
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message || 'Cannot load projects');
+                throw new Error(response?.message || i18n.t('layout:projectMain.cannotLoadProjects'));
             }
 
             const items = response.data?.data ?? [];
             setProjects(items.map(mapProjectToCard));
         } catch (error) {
             console.error('Failed to load projects:', error);
-            message.error('Không thể tải danh sách project');
+            message.error(i18n.t('layout:projectMain.khongTheTaiDanhSach'));
             setProjects([]);
         } finally {
             setIsLoadingProjects(false);
@@ -150,15 +151,15 @@ const ProjectMain = observer(function ProjectMain() {
             });
 
             if (!response?.isSuccessful) {
-                throw new Error(response?.message || 'Create project failed');
+                throw new Error(response?.message || i18n.t('layout:projectMain.createProjectFailed'));
             }
 
-            message.success('Tạo project thành công');
+            message.success(i18n.t('layout:projectMain.taoProjectThanhCong'));
             setIsCreateProjectOpen(false);
             await loadProjects();
         } catch (error) {
             console.error('Create project failed:', error);
-            message.error('Tạo project thất bại');
+            message.error(i18n.t('layout:projectMain.taoProjectThatBai'));
         } finally {
             setIsCreatingProject(false);
         }
@@ -171,9 +172,9 @@ const ProjectMain = observer(function ProjectMain() {
                     <div className="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
                         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                             <div>
-                                <h1 className="text-4xl font-extrabold tracking-tighter text-foreground">Project List</h1>
+                                <h1 className="text-4xl font-extrabold tracking-tighter text-foreground">{i18n.t('layout:projectMain.projectList')}</h1>
                                 <p className="mt-1 text-sm font-medium text-muted-foreground">
-                                    You have <span className="font-semibold text-primary">{projects.length} active projects</span> in your workspace.
+                                    {i18n.t('layout:projectMain.youHave')} <span className="font-semibold text-primary">{projects.length} active projects</span> in your workspace.
                                 </p>
                             </div>
 
@@ -183,7 +184,7 @@ const ProjectMain = observer(function ProjectMain() {
                                 onClick={() => setIsCreateProjectOpen(true)}
                                 className="h-11 rounded-lg px-5 font-bold"
                             >
-                                Add Project
+                                {i18n.t('layout:projectMain.addProject')}
                             </Button>
                         </div>
 
@@ -195,14 +196,14 @@ const ProjectMain = observer(function ProjectMain() {
                                         value={searchKeyword}
                                         onChange={(event) => setSearchKeyword(event.target.value)}
                                         prefix={<SearchOutlined className="text-muted-foreground"/>}
-                                        placeholder="Search by project name, code, or description..."
+                                        placeholder={i18n.t('layout:projectMain.searchByProjectNameCode')}
                                         className="rounded-xl"
                                     />
                                 </div>
 
                                 <Space>
-                                    <Button icon={<FilterOutlined/>}>Filter</Button>
-                                    <Button icon={<SortAscendingOutlined/>}>Sort</Button>
+                                    <Button icon={<FilterOutlined/>}>{i18n.t('layout:projectMain.filter')}</Button>
+                                    <Button icon={<SortAscendingOutlined/>}>{i18n.t('layout:projectMain.sort')}</Button>
                                 </Space>
                             </div>
                         </section>
@@ -242,7 +243,7 @@ const ProjectMain = observer(function ProjectMain() {
                                         image={<FileSearchOutlined className="text-5xl text-muted-foreground"/>}
                                         description={
                                             <span className="text-sm text-muted-foreground">
-                                                No projects found for current search.
+                                                {i18n.t('layout:projectMain.noProjectsFoundForCurrent')}
                                             </span>
                                         }
                                     >
@@ -265,17 +266,17 @@ const ProjectMain = observer(function ProjectMain() {
 
                 <div className="hidden fixed z-100 w-48 overflow-hidden rounded-xl border border-border/30 bg-card py-2 shadow-lg">
                     <Button type="text" icon={<PushpinOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                        Pin Project
+                        {i18n.t('layout:projectMain.pinProject')}
                     </Button>
                     <Button type="text" icon={<EditOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                        Rename
+                        {i18n.t('layout:projectMain.rename')}
                     </Button>
                     <Button type="text" icon={<ShareAltOutlined/>} className="w-full justify-start rounded-none px-4 text-left">
-                        Share
+                        {i18n.t('layout:projectMain.share')}
                     </Button>
                     <div className="my-1 h-px bg-border/40"/>
                     <Button type="text" icon={<InboxOutlined/>} className="w-full justify-start rounded-none px-4 text-left text-destructive hover:text-destructive">
-                        Archive
+                        {i18n.t('layout:projectMain.archive')}
                     </Button>
                 </div>
             </CommonLayout>

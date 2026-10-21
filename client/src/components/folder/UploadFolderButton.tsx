@@ -16,17 +16,9 @@ import {
 } from '../../utils/folderUploadParser.ts';
 import {useStore} from '../../store';
 import type {UploadJobStatus} from '../../store/uploadManagerStore.ts';
+import i18n from '../../i18n';
 
-const phaseLabelMap: Record<UploadJobStatus, string> = {
-    DRAFT: 'Ready to create tree',
-    READY: 'Folder tree created',
-    QUEUED: 'Queued',
-    RUNNING: 'Uploading files',
-    COMPLETED: 'Completed',
-    PARTIAL_FAILED: 'Partial failed',
-    FAILED: 'Failed',
-    CANCELLED: 'Cancelled',
-};
+const phaseLabel = (status: UploadJobStatus): string => i18n.t(`folder:uploadFolderButton.phase.${status}`);
 
 const formatTime = (ms: number): string => {
     if (!ms || ms <= 0) return '--';
@@ -116,7 +108,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
 
     const handleSelectFolder = useCallback(async () => {
         if (!directoryPicker) {
-            setParseError('Folder picker is not supported in this browser.');
+            setParseError(i18n.t('folder:uploadFolderButton.folderPickerNotSupported'));
             return;
         }
 
@@ -139,7 +131,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
             setJobId(id);
         } catch (error) {
             if (error instanceof DOMException && error.name === 'AbortError') return;
-            setParseError(error instanceof Error ? error.message : 'Failed to parse folder');
+            setParseError(error instanceof Error ? error.message : i18n.t('folder:uploadFolderButton.failedToParseFolder'));
         }
     }, [collectFilesFromDirectory, baseFolderPath, parentFolderId, directoryPicker, projectId, uploadManagerStore]);
 
@@ -161,7 +153,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
     const statusTag = useMemo(() => {
         if (!job) return null;
 
-        const label = job.isCreatingTree ? 'Creating folder tree' : phaseLabelMap[job.status];
+        const label = job.isCreatingTree ? i18n.t('folder:uploadFolderButton.creatingFolderTree') : phaseLabel(job.status);
         const colorClass =
             job.status === 'FAILED' || job.status === 'PARTIAL_FAILED'
                 ? 'bg-destructive/10 text-destructive'
@@ -176,9 +168,9 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
         <div className="w-full max-w-3xl rounded-lg border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-foreground">Upload Folder</h2>
+                    <h2 className="text-xl font-semibold text-foreground">{i18n.t('folder:uploadFolderButton.uploadFolder')}</h2>
                     <p className="text-sm text-muted-foreground">
-                        Select a folder, create the tree, then upload files sequentially.
+                        {i18n.t('folder:uploadFolderButton.selectAFolderCreateThe')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -188,14 +180,14 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                         onClick={handleSelectFolder}
                         className="bg-card text-foreground border border-border hover:border-secondary"
                     >
-                        Select Folder
+                        {i18n.t('folder:uploadFolderButton.selectFolder')}
                     </Button>
                 </div>
             </div>
 
             {parseError && (
                 <Alert
-                    message="Folder parse error"
+                    message={i18n.t('folder:uploadFolderButton.folderParseError')}
                     description={parseError}
                     type="error"
                     showIcon
@@ -208,17 +200,17 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2 text-sm text-foreground">
                             <CheckCircleOutlined className="text-primary"/>
-                            <span>Selected folder:</span>
+                            <span>{i18n.t('folder:uploadFolderButton.selectedFolder')}</span>
                             <span className="font-semibold">{selectedFolderName}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            Folders: <span className="text-foreground font-semibold">{folderManifest.totalFolders}</span>
+                            {i18n.t('folder:uploadFolderButton.folders')} <span className="text-foreground font-semibold">{folderManifest.totalFolders}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            Files: <span className="text-foreground font-semibold">{folderManifest.totalFiles}</span>
+                            {i18n.t('folder:uploadFolderButton.files')} <span className="text-foreground font-semibold">{folderManifest.totalFiles}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            Size: <span className="text-foreground font-semibold">{FileViewUtil.formatBytes(folderManifest.totalBytes)}</span>
+                            {i18n.t('folder:uploadFolderButton.size')} <span className="text-foreground font-semibold">{FileViewUtil.formatBytes(folderManifest.totalBytes)}</span>
                         </div>
                     </div>
 
@@ -230,7 +222,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                             icon={isCreatingTree ? <LoadingOutlined/> : <CloudUploadOutlined/>}
                             className="bg-primary text-primary-foreground hover:opacity-90"
                         >
-                            Create Folder Tree
+                            {i18n.t('folder:uploadFolderButton.createFolderTree')}
                         </Button>
 
                         <Button
@@ -239,7 +231,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                             icon={<CloudUploadOutlined/>}
                             className="bg-card text-foreground border border-border hover:border-secondary"
                         >
-                            Start Upload
+                            {i18n.t('folder:uploadFolderButton.startUpload')}
                         </Button>
 
                         {isUploading && (
@@ -248,14 +240,14 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                                 icon={<CloseCircleOutlined/>}
                                 className="bg-card text-destructive border border-border hover:border-destructive"
                             >
-                                Cancel
+                                {i18n.t('folder:uploadFolderButton.cancel')}
                             </Button>
                         )}
                     </div>
 
                     {job.error.treeError && (
                         <Alert
-                            message="Folder tree error"
+                            message={i18n.t('folder:uploadFolderButton.folderTreeError')}
                             description={job.error.treeError}
                             type="error"
                             showIcon
@@ -267,7 +259,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
 
             {job?.error.uploadError && (
                 <Alert
-                    message="Upload warning"
+                    message={i18n.t('folder:uploadFolderButton.uploadWarning')}
                     description={job.error.uploadError}
                     type="warning"
                     showIcon
@@ -280,20 +272,20 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm font-semibold text-foreground">
-                                Current file: {currentItem.relativePath}
+                                {i18n.t('folder:uploadFolderButton.currentFile', {relativePath: currentItem.relativePath})}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                File {(job?.currentIndex ?? 0) + 1} / {totalFiles}
+                                {i18n.t('folder:uploadFolderButton.file')} {(job?.currentIndex ?? 0) + 1} / {totalFiles}
                             </p>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                            Uploaded: {job?.stats.uploadedCount ?? 0} | Failed: {job?.stats.failedCount ?? 0}
+                            {i18n.t('folder:uploadFolderButton.uploaded')} {job?.stats.uploadedCount ?? 0} | Failed: {job?.stats.failedCount ?? 0}
                         </div>
                     </div>
 
                     <div className="mt-4">
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Overall</span>
+                            <span>{i18n.t('folder:uploadFolderButton.overall')}</span>
                             <span>{overallPercent}%</span>
                         </div>
                         <Progress percent={overallPercent} showInfo={false}/>
@@ -301,7 +293,7 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
 
                     <div className="mt-4">
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Current file</span>
+                            <span>{i18n.t('folder:uploadFolderButton.currentFile2')}</span>
                             <span>{job?.currentProgress?.percentage ?? 0}%</span>
                         </div>
                         <Progress percent={job?.currentProgress?.percentage ?? 0} showInfo={false}/>
@@ -309,25 +301,25 @@ const UploadFolderButton = observer(({ parentFolderId, baseFolderPath, onSuccess
 
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
                         <div className="rounded-md bg-muted/40 p-3">
-                            <p className="text-[10px] uppercase">Uploaded</p>
+                            <p className="text-[10px] uppercase">{i18n.t('folder:uploadFolderButton.uploaded2')}</p>
                             <p className="text-sm font-semibold text-foreground">
                                 {FileViewUtil.formatBytes(job?.currentProgress?.uploadedBytes ?? 0)} / {FileViewUtil.formatBytes(job?.currentProgress?.totalBytes ?? 0)}
                             </p>
                         </div>
                         <div className="rounded-md bg-muted/40 p-3">
-                            <p className="text-[10px] uppercase">Speed</p>
+                            <p className="text-[10px] uppercase">{i18n.t('folder:uploadFolderButton.speed')}</p>
                             <p className="text-sm font-semibold text-foreground">
                                 {job?.currentProgress?.throughputMbps?.toFixed(2) ?? '--'} Mbps
                             </p>
                         </div>
                         <div className="rounded-md bg-muted/40 p-3">
-                            <p className="text-[10px] uppercase">Chunk size</p>
+                            <p className="text-[10px] uppercase">{i18n.t('folder:uploadFolderButton.chunkSize')}</p>
                             <p className="text-sm font-semibold text-foreground">
                                 {FileViewUtil.formatBytes(job?.currentProgress?.currentChunkSize ?? 0)}
                             </p>
                         </div>
                         <div className="rounded-md bg-muted/40 p-3">
-                            <p className="text-[10px] uppercase">ETA</p>
+                            <p className="text-[10px] uppercase">{i18n.t('folder:uploadFolderButton.eta')}</p>
                             <p className="text-sm font-semibold text-foreground">
                                 {formatTime(job?.currentProgress?.estimatedTimeRemainingMs ?? 0)}
                             </p>

@@ -5,6 +5,7 @@ import { useMeasure } from 'react-use';
 import { ProcessingStatus } from '../../api/api/index.defs';
 import { buildHlsManifestUrl, createHlsXhrSetup } from '../../api/hlsApiResource';
 import { IconPlay } from '../imageReview/icons/ReviewIcons';
+import i18n from '../../i18n';
 
 /** Kích thước lớn nhất giữ đúng aspectRatio, nằm gọn trong outerWidth × outerHeight (letterbox-free). */
 function contentBoxSize(outerWidth: number, outerHeight: number, aspectRatio: number): { width: number; height: number } {
@@ -219,7 +220,7 @@ const HlsVideoPlayer = forwardRef<HlsVideoPlayerHandle, Props>(
       return (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[var(--color-canvas)] text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-          <p className="text-sm font-medium text-white/60">Waiting for encoding to start…</p>
+          <p className="text-sm font-medium text-white/60">{i18n.t('review:hlsVideoPlayer.waitingForEncodingToStart')}</p>
         </div>
       );
     }
@@ -228,8 +229,8 @@ const HlsVideoPlayer = forwardRef<HlsVideoPlayerHandle, Props>(
       return (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[var(--color-canvas)] text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[var(--color-accent)]" />
-          <p className="text-sm font-medium text-white/60">Encoding in progress…</p>
-          <p className="text-xs text-white/30">This may take a few minutes.</p>
+          <p className="text-sm font-medium text-white/60">{i18n.t('review:hlsVideoPlayer.encodingInProgress')}</p>
+          <p className="text-xs text-white/30">{i18n.t('review:hlsVideoPlayer.thisMayTakeAFew')}</p>
         </div>
       );
     }
@@ -240,8 +241,8 @@ const HlsVideoPlayer = forwardRef<HlsVideoPlayerHandle, Props>(
           <svg className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
           </svg>
-          <p className="text-sm font-medium text-red-400">Encoding failed</p>
-          <p className="text-xs text-white/30">Please re-upload the file and try again.</p>
+          <p className="text-sm font-medium text-red-400">{i18n.t('review:hlsVideoPlayer.encodingFailed')}</p>
+          <p className="text-xs text-white/30">{i18n.t('review:hlsVideoPlayer.pleaseReUploadTheFile')}</p>
         </div>
       );
     }
@@ -277,7 +278,7 @@ const HlsVideoPlayer = forwardRef<HlsVideoPlayerHandle, Props>(
             <button
               type="button"
               onClick={handleBigPlayClick}
-              title="Play"
+              title={i18n.t('review:hlsVideoPlayer.play')}
               className="absolute left-1/2 top-1/2 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-transform hover:scale-105"
             >
               <span className="ml-1 scale-[2]"><IconPlay /></span>

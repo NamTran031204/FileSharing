@@ -1,0 +1,47 @@
+{
+  "formInvalid": "Invalid form",
+  "assetListFailed": "Unable to load the asset list",
+  "assetMoveFailed": "Unable to move the asset",
+  "imageLoadFailed": "Unable to load the image",
+  "annotationLoadFailed": "Failed to load annotations",
+  "annotationSaveFailed": "Failed to save the annotation",
+  "replySendFailed": "Failed to send the reply",
+  "editFailed": "Edit failed",
+  "resolveFailed": "Resolve failed",
+  "reopenFailed": "Reopen failed",
+  "deleteFailed": "Delete failed",
+  "approveFailed": "Approve failed",
+  "requestChangesFailed": "Request changes failed",
+  "drawTools": "Drawing tools",
+  "folderUploadService": {
+    "createFolderTreeFailed": "Create folder tree failed",
+    "createAssetFailed": "Create asset failed"
+  },
+  "folderAssetStore": {
+    "khongTheTaiDanhSach": "Khong the tai danh sach folder",
+    "khongTheTaiDanhSach2": "Khong the tai danh sach asset",
+    "khongTheDiChuyenAsset": "Khong the di chuyen asset"
+  },
+  "uploadManagerStore": {
+    "createFolderTreeFailed": "Create folder tree failed",
+    "uploadFailed": "Upload failed"
+  },
+  "relativeTime": {
+    "justNow": "Just now",
+    "hours": "{{n}}h ago",
+    "days": "{{n}}d ago"
+  },
+  "folderParser": {
+    "rootNameRequired": "Root folder name is required",
+    "noFiles": "No files found in selected folder",
+    "duplicatePath": "Duplicate file path detected: {{path}}",
+    "invalidPath": "Invalid relative path: {{path}}"
+  },
+  "auth": {
+    "registerFailed": "Register failed",
+    "loginFailed": "Login failed",
+    "googleRegisterFailed": "Google register failed",
+    "googleLoginFailed": "Google login failed",
+    "notLegit": "You are not signed in. Please login or register to continue."
+  }
+}

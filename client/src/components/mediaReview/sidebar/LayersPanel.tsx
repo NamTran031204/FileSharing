@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import type { AnnotationCore } from '../../../store/review/ReviewCoreStore';
 import { IconChevronLeft, IconChevronRight, IconLayerCircle, IconLayerRect } from '../../imageReview/icons/ReviewIcons';
 import { LayerListItem } from './LayerListItem';
+import i18n from '../../../i18n';
 
 interface LayersPanelProps {
   collapsed: boolean;
@@ -28,7 +29,7 @@ export const LayersPanel = observer(({
     >
       <button
         onClick={onToggleCollapsed}
-        title={collapsed ? 'Show layers' : 'Hide layers'}
+        title={collapsed ? i18n.t('review:layersPanel.showLayers') : i18n.t('review:layersPanel.hideLayers')}
         className="absolute top-1/2 z-30 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-foreground)] shadow-md"
         style={{ right: -12 }}
       >
@@ -43,11 +44,11 @@ export const LayersPanel = observer(({
       ) : (
         <div className="flex min-h-0 flex-1 flex-col p-4">
           <h3 className="mb-3 shrink-0 text-xs font-black uppercase tracking-wider text-[var(--color-foreground)]">
-            Layers
+            {i18n.t('review:layersPanel.layers')}
           </h3>
           <div className="flex-1 space-y-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
             {annotations.length === 0 ? (
-              <p className="py-4 text-center text-[10px] text-[var(--color-muted-foreground)]">No layers yet</p>
+              <p className="py-4 text-center text-[10px] text-[var(--color-muted-foreground)]">{i18n.t('review:layersPanel.noLayersYet')}</p>
             ) : (
               annotations.map((ann, idx) => (
                 <LayerListItem

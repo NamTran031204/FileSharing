@@ -5,6 +5,7 @@ import {
 import { STROKE_COLORS } from '../imageReview/constants';
 import type { StrokeColor } from '../imageReview/constants';
 import uiUtils from '../../utils/uiUtils.tsx';
+import i18n from '../../i18n';
 
 export type MarkupToolId = 'select' | 'rect' | 'circle' | 'arrow' | 'pan';
 
@@ -20,12 +21,12 @@ export interface FloatingMarkupToolbarProps {
   onRedo?: () => void;
 }
 
-const TOOLS = [
-  { id: 'select' as const, Icon: IconSelect, title: 'Select (V)' },
-  { id: 'rect'   as const, Icon: IconRect,   title: 'Rectangle (R)' },
-  { id: 'circle' as const, Icon: IconCircle, title: 'Circle (O)' },
-  { id: 'arrow'  as const, Icon: IconArrow,  title: 'Arrow (A)' },
-  { id: 'pan'    as const, Icon: IconPan,    title: 'Pan (H)' },
+const getTools = () => [
+  { id: 'select' as const, Icon: IconSelect, title: i18n.t('review:tool.select') },
+  { id: 'rect'   as const, Icon: IconRect,   title: i18n.t('review:tool.rect') },
+  { id: 'circle' as const, Icon: IconCircle, title: i18n.t('review:tool.circle') },
+  { id: 'arrow'  as const, Icon: IconArrow,  title: i18n.t('review:tool.arrow') },
+  { id: 'pan'    as const, Icon: IconPan,    title: i18n.t('review:tool.pan') },
 ];
 
 export function FloatingMarkupToolbar({
@@ -37,13 +38,13 @@ export function FloatingMarkupToolbar({
   onUndo,
   onRedo,
 }: FloatingMarkupToolbarProps) {
-  const handleDelete = onDelete ?? (() => uiUtils.showInfor('Xoá vùng chọn — chưa hỗ trợ (thiếu lịch sử thao tác)'));
-  const handleUndo = onUndo ?? (() => uiUtils.showInfor('Undo — chưa hỗ trợ (thiếu lịch sử thao tác)'));
-  const handleRedo = onRedo ?? (() => uiUtils.showInfor('Redo — chưa hỗ trợ (thiếu lịch sử thao tác)'));
+  const handleDelete = onDelete ?? (() => uiUtils.showInfor(i18n.t('review:floatingMarkupToolbar.xoaVungChonChuaHo')));
+  const handleUndo = onUndo ?? (() => uiUtils.showInfor(i18n.t('review:floatingMarkupToolbar.undoChuaHoTroThieu')));
+  const handleRedo = onRedo ?? (() => uiUtils.showInfor(i18n.t('review:floatingMarkupToolbar.redoChuaHoTroThieu')));
 
   return (
     <div className="absolute left-4 top-4 z-30 flex items-center gap-1 rounded-full border border-[var(--color-canvas-border)] bg-[var(--color-canvas-elevated)] px-2 py-1.5 shadow-2xl backdrop-blur-md">
-      {TOOLS.map(({ id, Icon, title }) => (
+      {getTools().map(({ id, Icon, title }) => (
         <button
           key={id}
           onClick={() => onToolClick(id)}
@@ -62,21 +63,21 @@ export function FloatingMarkupToolbar({
 
       <button
         onClick={handleDelete}
-        title="Delete Selected (Del)"
+        title={i18n.t('review:floatingMarkupToolbar.deleteSelectedDel')}
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-rose-950/60 hover:text-rose-400"
       >
         <IconTrash />
       </button>
       <button
         onClick={handleUndo}
-        title="Undo"
+        title={i18n.t('review:floatingMarkupToolbar.undo')}
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
       >
         <IconUndo />
       </button>
       <button
         onClick={handleRedo}
-        title="Redo"
+        title={i18n.t('review:floatingMarkupToolbar.redo')}
         className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
       >
         <IconRedo />
@@ -87,7 +88,7 @@ export function FloatingMarkupToolbar({
       <div className="group/color relative flex h-8 w-8 cursor-pointer items-center justify-center">
         <div className="h-4 w-4 rounded-full border border-white/50" style={{ backgroundColor: activeColor }} />
         <div className="absolute left-full top-0 z-30 ml-2 hidden flex-col gap-1.5 rounded-lg border border-[var(--color-canvas-border)] bg-[var(--color-canvas-elevated)] p-2 shadow-2xl group-hover/color:flex">
-          <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-white/50">COLOR</span>
+          <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-white/50">{i18n.t('review:floatingMarkupToolbar.color')}</span>
           <div className="flex gap-1.5">
             {STROKE_COLORS.map(c => (
               <button

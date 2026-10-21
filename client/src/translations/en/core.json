@@ -1,0 +1,90 @@
+{
+  "apiPendingNote": {
+    "chuaCoApi": "No API yet — {{label}}",
+    "chuaCoApi2": "No API yet"
+  },
+  "cusCommonConfirm": {
+    "xacNhan": "Confirm",
+    "huy": "Cancel"
+  },
+  "cusCommonDateRangeInput": {
+    "tuNgay": "From date",
+    "denNgay": "To date"
+  },
+  "cusCommonSelect": {
+    "vuiLongChon": "Please select",
+    "dangTai": "Loading...",
+    "khongCoDuLieu": "No data"
+  },
+  "appSidebar": {
+    "taoProjectThanhCong": "Project created successfully",
+    "taoProjectThatBai": "Failed to create project",
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "settings": "Settings",
+    "help": "Help",
+    "newProject": "New Project",
+    "logout": "Logout",
+    "createProjectFailed": "Create project failed"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Notice"
+  },
+  "dateRange": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last7days": "Last 7 days",
+    "thisMonth": "This month",
+    "lastMonth": "Last month"
+  },
+  "contextActionBar": {
+    "copyLink": "Copy link",
+    "back": "Back",
+    "refresh": "Refresh",
+    "translateFileNamesAndComments": "Translate file names and comments",
+    "translate": "Translate",
+    "download": "Download",
+    "share": "Share",
+    "moreActions": "More actions"
+  },
+  "folderAssetBody": {
+    "noFoldersHere": "No folders here.",
+    "noAssetsInThisFolder": "No assets in this folder.",
+    "folders": "Folders",
+    "files": "Files"
+  },
+  "notFoundPage": {
+    "oops": "Oops!",
+    "thereAreNoFile": "There are no file!",
+    "theFileYouReLooking": "The file you're looking for might have been removed, deleted, or you don't have permission to access it.",
+    "backToHome": "Back to Home"
+  },
+  "folderCard": {
+    "item": "item",
+    "items": "items"
+  },
+  "routeName": {
+    "Login": "Login",
+    "LoginV2": "Login V2",
+    "RegisterV2": "Register V2",
+    "Register": "Register",
+    "Home": "Home",
+    "Preview": "Preview",
+    "MyFiles": "My Files",
+    "Upload": "Upload",
+    "Profile": "Profile",
+    "Trash": "Trash",
+    "MockupImageReview": "Mockup Image Review",
+    "ImageReviewV2": "Image Review V2",
+    "VideoReview": "Video Review",
+    "Dashboard": "Dashboard",
+    "Projects": "Projects",
+    "MockupHLSVideo": "Mockup HLS Video",
+    "Proof": "Proof",
+    "ProjectAssets": "Project Assets"
+  }
+}

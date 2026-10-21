@@ -5,6 +5,7 @@ import { IconChevronLeft, IconChevronRight } from '../../imageReview/icons/Revie
 import { CommentsSection } from './CommentsSection';
 import { ActionLogSection } from './ActionLogSection';
 import { AssetInfoSection } from './AssetInfoSection';
+import i18n from '../../../i18n';
 
 export type ReviewSidebarTab = 'comments' | 'info' | 'activity';
 
@@ -58,11 +59,8 @@ export interface ReviewSidebarProps {
   onDownload?: () => void;
 }
 
-const TABS: { id: ReviewSidebarTab; label: string }[] = [
-  { id: 'comments', label: 'Comments' },
-  { id: 'info', label: 'Info' },
-  { id: 'activity', label: 'Activity' },
-];
+const getTabs = (): { id: ReviewSidebarTab; label: string }[] =>
+  (['comments', 'info', 'activity'] as const).map((id) => ({ id, label: i18n.t(`review:sidebarTab.${id}`) }));
 
 export function ReviewSidebar({
   collapsed,
@@ -118,7 +116,7 @@ export function ReviewSidebar({
     >
       <button
         onClick={onToggleCollapsed}
-        title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+        title={collapsed ? i18n.t('review:reviewSidebar.showSidebar') : i18n.t('review:reviewSidebar.hideSidebar')}
         className="absolute top-1/2 z-30 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-foreground)] shadow-md"
         style={{ left: -12 }}
       >
@@ -127,16 +125,16 @@ export function ReviewSidebar({
 
       {collapsed ? (
         <div className="flex flex-1 items-center justify-center text-[var(--color-muted-foreground)]">
-          <span className="rotate-90 whitespace-nowrap text-[10px] font-black uppercase tracking-widest">Sidebar</span>
+          <span className="rotate-90 whitespace-nowrap text-[10px] font-black uppercase tracking-widest">{i18n.t('review:reviewSidebar.sidebar')}</span>
         </div>
       ) : (
         <>
           <div className="flex shrink-0 border-b border-[var(--color-border)]">
-            {TABS.map(t => (
+            {getTabs().map(t => (
               <button
                 key={t.id}
                 onClick={() => onTabChange(t.id)}
-                title={t.id === 'activity' ? 'Mở rộng ngoài mockup gốc' : undefined}
+                title={t.id === 'activity' ? i18n.t('review:reviewSidebar.moRongNgoaiMockupGoc') : undefined}
                 className={`flex-1 cursor-pointer border-b-2 py-2.5 text-xs font-bold transition-all ${
                   activeTab === t.id
                     ? 'border-[var(--color-primary)] text-[var(--color-foreground)]'

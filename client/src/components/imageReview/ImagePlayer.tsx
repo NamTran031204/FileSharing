@@ -4,6 +4,7 @@ import type { KonvaShapeData } from '../../utils/coordinateTransform';
 import type { StrokeColor } from './constants';
 import { FloatingMarkupToolbar } from '../mediaReview/FloatingMarkupToolbar';
 import { BottomCapsuleControls } from './BottomCapsuleControls';
+import i18n from '../../i18n';
 
 type ToolId = 'select' | 'rect' | 'circle' | 'arrow' | 'pan';
 
@@ -132,7 +133,7 @@ export function ImagePlayer({
       >
         {(isImageLoading || isInitialLoading) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-canvas)]/60">
-            <div className="text-sm text-white/70">Loading image…</div>
+            <div className="text-sm text-white/70">{i18n.t('review:imagePlayer.loadingImage')}</div>
           </div>
         )}
 

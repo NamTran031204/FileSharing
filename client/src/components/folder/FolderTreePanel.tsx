@@ -11,6 +11,7 @@ import {
 import { Input, Segmented, Tooltip } from 'antd';
 import { type ReactNode, useState } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
+import i18n from '../../i18n';
 
 export interface FolderTreeNode {
   id: string | number;
@@ -119,21 +120,21 @@ const FolderTreePanel = ({
   if (collapsed) {
     return (
       <div className="flex w-12 shrink-0 flex-col items-center gap-4 border-r border-border bg-card py-4">
-        <Tooltip title="Expand folder tree" placement="right">
+        <Tooltip title={i18n.t('folder:folderTreePanel.expandFolderTree')} placement="right">
           <button
             type="button"
             onClick={onToggleCollapse}
-            aria-label="Expand folder tree"
+            aria-label={i18n.t('folder:folderTreePanel.expandFolderTree')}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
           >
             <MenuUnfoldOutlined className="text-base" />
           </button>
         </Tooltip>
-        <Tooltip title="Search files and folders" placement="right">
+        <Tooltip title={i18n.t('folder:folderTreePanel.searchFilesAndFolders')} placement="right">
           <button
             type="button"
             onClick={onToggleCollapse}
-            aria-label="Search files and folders"
+            aria-label={i18n.t('folder:folderTreePanel.searchFilesAndFolders')}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
           >
             <SearchOutlined className="text-base" />
@@ -142,10 +143,10 @@ const FolderTreePanel = ({
         <ActionDropdown
           actions={newActions}
           trigger={
-            <Tooltip title="New" placement="right">
+            <Tooltip title={i18n.t('folder:folderTreePanel.new')} placement="right">
               <button
                 type="button"
-                aria-label="New"
+                aria-label={i18n.t('folder:folderTreePanel.new')}
                 className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-all hover:bg-primary-dark"
               >
                 <PlusOutlined className="text-base" />
@@ -153,11 +154,11 @@ const FolderTreePanel = ({
             </Tooltip>
           }
         />
-        <Tooltip title="Folder tree" placement="right">
+        <Tooltip title={i18n.t('folder:folderTreePanel.folderTree')} placement="right">
           <button
             type="button"
             onClick={onToggleCollapse}
-            aria-label="Expand folder tree"
+            aria-label={i18n.t('folder:folderTreePanel.expandFolderTree')}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-background hover:text-primary"
           >
             <FolderFilled className="text-base" />
@@ -177,7 +178,7 @@ const FolderTreePanel = ({
             className="mb-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-linear-to-br from-primary-dark to-primary font-semibold text-primary-foreground shadow-md shadow-primary-dark/20"
           >
             <PlusOutlined />
-            New
+            {i18n.t('folder:folderTreePanel.new')}
           </button>
         }
       />
@@ -186,7 +187,7 @@ const FolderTreePanel = ({
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         prefix={<SearchOutlined className="text-muted-foreground" />}
-        placeholder="Search files and folders..."
+        placeholder={i18n.t('folder:folderTreePanel.searchFilesAndFolders2')}
         allowClear
         className="mb-3 h-9 rounded-lg"
       />
@@ -197,19 +198,19 @@ const FolderTreePanel = ({
           value={typeFilter}
           onChange={(value) => onTypeFilterChange(String(value))}
           options={[
-            { label: 'All', value: 'all' },
-            { label: 'Images', value: 'image' },
-            { label: 'Videos', value: 'video' },
-            { label: 'Docs', value: 'doc' },
+            { label: i18n.t('folder:folderTreePanel.all'), value: 'all' },
+            { label: i18n.t('folder:folderTreePanel.images'), value: 'image' },
+            { label: i18n.t('folder:folderTreePanel.videos'), value: 'video' },
+            { label: i18n.t('folder:folderTreePanel.docs'), value: 'doc' },
           ]}
           size="small"
           className="min-w-0 flex-1 rounded-lg [&_.ant-segmented-item]:px-1 [&_.ant-segmented-item-label]:text-[11px]"
         />
-        <Tooltip title="Advanced filter">
+        <Tooltip title={i18n.t('folder:folderTreePanel.advancedFilter')}>
           <button
             type="button"
             onClick={onToggleAdvanced}
-            aria-label="Advanced filter"
+            aria-label={i18n.t('folder:folderTreePanel.advancedFilter')}
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-all ${
               advancedOpen
                 ? 'border-primary text-primary'
@@ -237,8 +238,8 @@ const FolderTreePanel = ({
                   e.stopPropagation();
                   onToggleCollapse();
                 }}
-                title="Collapse tree"
-                aria-label="Collapse tree"
+                title={i18n.t('folder:folderTreePanel.collapseTree')}
+                aria-label={i18n.t('folder:folderTreePanel.collapseTree')}
               >
                 <MenuFoldOutlined className="text-base" />
               </button>

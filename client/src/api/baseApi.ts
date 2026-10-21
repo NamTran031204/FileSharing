@@ -1,3 +1,4 @@
+import {LangUtil} from '../utils/lang.util';
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export interface CommonResponse<T> {
@@ -49,6 +50,7 @@ export const tokenManager = {
 function createHeaders(customHeaders?: HeadersInit): Headers {
     const headers = new Headers({
         'Content-Type': 'application/json',
+        'Accept-Language': LangUtil.getLang(),
         ...customHeaders
     });
 

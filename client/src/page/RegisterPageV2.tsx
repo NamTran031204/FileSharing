@@ -7,6 +7,7 @@ import authApiResource from '../api/authApi/authApiResource.ts';
 import { ApiError } from '../api/baseApi.ts';
 import logo from '../assets/logo/logo2k.png';
 import uiUtils from '../utils/uiUtils.tsx';
+import i18n from '../i18n';
 
 interface RegisterFormValues {
   email: string;
@@ -24,10 +25,10 @@ const RegisterPageV2 = () => {
     setIsSubmitting(true);
     try {
       await authApiResource.register(values);
-      uiUtils.showSuccess('Đăng ký thành công, vui lòng đăng nhập');
+      uiUtils.showSuccess(i18n.t('auth:registerPageV2.dangKyThanhCongVui'));
       navigate('/loginv2');
     } catch (err) {
-      uiUtils.showError(err instanceof Error ? err.message : 'Đăng ký thất bại');
+      uiUtils.showError(err instanceof Error ? err.message : i18n.t('auth:registerPageV2.dangKyThatBai'));
     } finally {
       setIsSubmitting(false);
     }
@@ -35,7 +36,7 @@ const RegisterPageV2 = () => {
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
-      uiUtils.showError('Không lấy được thông tin từ Google');
+      uiUtils.showError(i18n.t('auth:registerPageV2.khongLayDuocThongTin'));
       return;
     }
     setIsSubmitting(true);
@@ -44,9 +45,9 @@ const RegisterPageV2 = () => {
       navigate('/home');
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
-        uiUtils.showError('Email này đã được liên kết với một tài khoản Google khác');
+        uiUtils.showError(i18n.t('auth:registerPageV2.emailNayDaDuocLien'));
       } else {
-        uiUtils.showError(err instanceof Error ? err.message : 'Đăng ký Google thất bại');
+        uiUtils.showError(err instanceof Error ? err.message : i18n.t('auth:registerPageV2.dangKyGoogleThatBai'));
       }
     } finally {
       setIsSubmitting(false);
@@ -68,70 +69,70 @@ const RegisterPageV2 = () => {
               <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm">
                 <img
                   className="w-full h-full object-cover"
-                  alt="Media Review Platform logo"
+                  alt={i18n.t('auth:registerPageV2.mediaReviewPlatformLogo')}
                   src={logo}
                 />
               </div>
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">ASSETS</h1>
-                <p className="text-sm text-muted-foreground font-medium">Tạo tài khoản mới</p>
+                <p className="text-sm text-muted-foreground font-medium">{i18n.t('auth:registerPageV2.taoTaiKhoanMoi')}</p>
               </div>
             </div>
 
             <Form<RegisterFormValues> layout="vertical" onFinish={handleFinish} requiredMark={false} className="space-y-1">
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Tên hiển thị</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:registerPageV2.tenHienThi')}</span>}
                 name="userName"
               >
-                <Input size="large" placeholder="Tên của bạn" className="h-12 rounded-lg" />
+                <Input size="large" placeholder={i18n.t('auth:registerPageV2.tenCuaBan')} className="h-12 rounded-lg" />
               </Form.Item>
 
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Email</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:registerPageV2.email')}</span>}
                 name="email"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập email' },
-                  { type: 'email', message: 'Email không hợp lệ' },
+                  { required: true, message: i18n.t('auth:registerPageV2.vuiLongNhapEmail') },
+                  { type: 'email', message: i18n.t('auth:registerPageV2.emailKhongHopLe') },
                 ]}
               >
                 <Input size="large" placeholder="your@email.com" className="h-12 rounded-lg" />
               </Form.Item>
 
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Mật khẩu</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:registerPageV2.matKhau')}</span>}
                 name="password"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập mật khẩu' },
-                  { min: 8, message: 'Mật khẩu tối thiểu 8 ký tự' },
+                  { required: true, message: i18n.t('auth:registerPageV2.vuiLongNhapMatKhau') },
+                  { min: 8, message: i18n.t('auth:registerPageV2.matKhauToiThieu8') },
                 ]}
               >
                 <Input.Password
                   size="large"
-                  placeholder="Tối thiểu 8 ký tự"
+                  placeholder={i18n.t('auth:registerPageV2.toiThieu8KyTu')}
                   className="h-12 rounded-lg"
                   iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                 />
               </Form.Item>
 
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Xác nhận mật khẩu</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:registerPageV2.xacNhanMatKhau')}</span>}
                 name="confirmPassword"
                 dependencies={['password']}
                 rules={[
-                  { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+                  { required: true, message: i18n.t('auth:registerPageV2.vuiLongXacNhanMat') },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || getFieldValue('password') === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error('Mật khẩu xác nhận không khớp'));
+                      return Promise.reject(new Error(i18n.t('auth:registerPageV2.matKhauXacNhanKhong')));
                     },
                   }),
                 ]}
               >
                 <Input.Password
                   size="large"
-                  placeholder="Nhập lại mật khẩu"
+                  placeholder={i18n.t('auth:registerPageV2.nhapLaiMatKhau')}
                   className="h-12 rounded-lg"
                   iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                 />
@@ -139,17 +140,17 @@ const RegisterPageV2 = () => {
 
               <Form.Item className="!mb-0 !mt-4">
                 <Button type="primary" htmlType="submit" loading={isSubmitting} className="!w-full !h-12 !rounded-lg !font-semibold">
-                  Đăng Ký
+                  {i18n.t('auth:registerPageV2.dangKy')}
                 </Button>
               </Form.Item>
             </Form>
 
-            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest text-muted-foreground">hoặc</Divider>
+            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest text-muted-foreground">{i18n.t('auth:registerPageV2.hoac')}</Divider>
 
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => uiUtils.showError('Đăng ký Google thất bại')}
+                onError={() => uiUtils.showError(i18n.t('auth:registerPageV2.dangKyGoogleThatBai'))}
                 text="signup_with"
                 shape="rectangular"
                 width={320}
@@ -157,9 +158,9 @@ const RegisterPageV2 = () => {
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Đã có tài khoản?
+              {i18n.t('auth:registerPageV2.daCoTaiKhoan')}
               <Link to="/loginv2" className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
-                Đăng nhập
+                {i18n.t('auth:registerPageV2.dangNhap')}
               </Link>
             </p>
           </div>

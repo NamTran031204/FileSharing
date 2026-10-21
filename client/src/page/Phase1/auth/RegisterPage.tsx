@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import authApiResource from "../../../api/authApi/authApiResource.ts";
 import {ApiError} from "../../../api/baseApi.ts";
+import i18n from '../../../i18n';
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ const RegisterPage = () => {
 
             setMessage({
                 type: 'success',
-                text: 'Đăng ký thành công! Chuyển đến trang đăng nhập...'
+                text: i18n.t('auth:registerPage.dangKyThanhCongChuyen')
             });
             setTimeout(() => {
                 navigate('/login');
@@ -40,7 +41,7 @@ const RegisterPage = () => {
             } else {
                 setMessage({
                     type: 'error',
-                    text: 'internal server error',
+                    text: i18n.t('auth:registerPage.internalServerError'),
                 });
             }
         } finally {
@@ -54,7 +55,7 @@ const RegisterPage = () => {
             <div className="w-1/2 bg-gradient-to-br from-blue-400 to-blue-600">
                 <img
                     src="/wallpaperflare.com_wallpaper.jpg"
-                    alt="Register"
+                    alt={i18n.t('auth:registerPage.register')}
                     className="w-full h-full object-cover"
                 />
             </div>
@@ -62,7 +63,7 @@ const RegisterPage = () => {
             <div className="w-1/2 bg-white flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
                     <h1 className="text-4xl font-bold text-blue-800 mb-8 text-center">
-                        REGISTER
+                        {i18n.t('auth:registerPage.register2')}
                     </h1>
 
                     <div className="space-y-6">
@@ -78,53 +79,53 @@ const RegisterPage = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
+                                {i18n.t('auth:registerPage.email')}
                             </label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                                placeholder="Enter your email"
+                                placeholder={i18n.t('auth:registerPage.enterYourEmail')}
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Username
+                                {i18n.t('auth:registerPage.username')}
                             </label>
                             <input
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                                placeholder="Enter your username"
+                                placeholder={i18n.t('auth:registerPage.enterYourUsername')}
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Password
+                                {i18n.t('auth:registerPage.password')}
                             </label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                                placeholder="Enter your password"
+                                placeholder={i18n.t('auth:registerPage.enterYourPassword')}
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Retype Password
+                                {i18n.t('auth:registerPage.retypePassword')}
                             </label>
                             <input
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                                placeholder="Retype your password"
+                                placeholder={i18n.t('auth:registerPage.retypeYourPassword')}
                             />
                         </div>
 
@@ -132,13 +133,13 @@ const RegisterPage = () => {
                             onClick={handleRegister}
                             className="w-full bg-blue-100 text-blue-800 font-semibold py-3 px-4 rounded-lg hover:bg-blue-200 transition-colors"
                         >
-                            Register
+                            {i18n.t('auth:registerPage.register')}
                         </button>
 
                         <p className="text-center text-gray-600 mt-4">
-                            Đã có tài khoản?{' '}
+                            {i18n.t('auth:registerPage.daCoTaiKhoan')}{' '}
                             <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
-                                Đăng nhập
+                                {i18n.t('auth:registerPage.dangNhap')}
                             </Link>
                         </p>
                     </div>

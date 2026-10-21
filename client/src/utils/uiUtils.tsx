@@ -11,6 +11,7 @@ import CusCommonConfirm from '../components/core/confirm/CusCommonConfirm.tsx';
 import type { OrdConfirmProps } from '../components/core/confirm/CusCommonConfirm.types.ts';
 import ToastCustomContent from '../components/core/common/ToastCustomContent';
 import { rootStore } from '../store';
+import i18n from '../i18n';
 
 class UiUtils {
   private BASE_TOAST: ToastOptions = {
@@ -60,7 +61,7 @@ class UiUtils {
   };
 
   showCommonValidateForm = () => {
-    toast.error(<ToastCustomContent desc="Form không hợp lệ" type="error" />, {
+    toast.error(<ToastCustomContent desc={i18n.t('message:formInvalid')} type="error" />, {
       ...this.BASE_TOAST,
       icon: <CloseCircleFilled className="text-destructive" />,
       toastId: 'formInvalidErr',

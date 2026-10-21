@@ -1,0 +1,90 @@
+{
+  "apiPendingNote": {
+    "chuaCoApi": "Chưa có API — {{label}}",
+    "chuaCoApi2": "Chưa có API"
+  },
+  "cusCommonConfirm": {
+    "xacNhan": "Xác nhận",
+    "huy": "Huỷ"
+  },
+  "cusCommonDateRangeInput": {
+    "tuNgay": "Từ ngày",
+    "denNgay": "Đến ngày"
+  },
+  "cusCommonSelect": {
+    "vuiLongChon": "Vui lòng chọn",
+    "dangTai": "Đang tải...",
+    "khongCoDuLieu": "Không có dữ liệu"
+  },
+  "appSidebar": {
+    "taoProjectThanhCong": "Tạo project thành công",
+    "taoProjectThatBai": "Tạo project thất bại",
+    "home": "Trang chủ",
+    "dashboard": "Bảng điều khiển",
+    "projects": "Dự án",
+    "settings": "Cài đặt",
+    "help": "Trợ giúp",
+    "newProject": "Dự án mới",
+    "logout": "Đăng xuất",
+    "createProjectFailed": "Tạo dự án thất bại"
+  },
+  "toast": {
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông báo"
+  },
+  "dateRange": {
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "last7days": "7 ngày trước",
+    "thisMonth": "Tháng này",
+    "lastMonth": "Tháng trước"
+  },
+  "contextActionBar": {
+    "copyLink": "Sao chép link",
+    "back": "Quay lại",
+    "refresh": "Làm mới",
+    "translateFileNamesAndComments": "Dịch tên file và bình luận",
+    "translate": "Dịch",
+    "download": "Tải xuống",
+    "share": "Chia sẻ",
+    "moreActions": "Thêm thao tác"
+  },
+  "folderAssetBody": {
+    "noFoldersHere": "Chưa có folder nào.",
+    "noAssetsInThisFolder": "Folder này chưa có tài nguyên.",
+    "folders": "Folder",
+    "files": "File"
+  },
+  "notFoundPage": {
+    "oops": "Rất tiếc!",
+    "thereAreNoFile": "Không có file nào!",
+    "theFileYouReLooking": "File bạn tìm có thể đã bị gỡ, bị xóa hoặc bạn không có quyền truy cập.",
+    "backToHome": "Về trang chủ"
+  },
+  "folderCard": {
+    "item": "mục",
+    "items": "mục"
+  },
+  "routeName": {
+    "Login": "Đăng nhập",
+    "LoginV2": "Đăng nhập",
+    "RegisterV2": "Đăng ký",
+    "Register": "Đăng ký",
+    "Home": "Trang chủ",
+    "Preview": "Xem trước",
+    "MyFiles": "File của tôi",
+    "Upload": "Tải lên",
+    "Profile": "Hồ sơ",
+    "Trash": "Thùng rác",
+    "MockupImageReview": "Duyệt ảnh (mockup)",
+    "ImageReviewV2": "Duyệt ảnh",
+    "VideoReview": "Duyệt video",
+    "Dashboard": "Bảng điều khiển",
+    "Projects": "Dự án",
+    "MockupHLSVideo": "Video HLS (mockup)",
+    "Proof": "Chọn ảnh",
+    "ProjectAssets": "Tài nguyên dự án"
+  }
+}

@@ -8,6 +8,7 @@ import {
   IconDiff,
   IconDownload,
 } from '../../imageReview/icons/ReviewIcons';
+import i18n from '../../../i18n';
 
 function formatBytes(bytes?: number | null): string {
   if (!bytes) return '—';
@@ -101,14 +102,14 @@ export function AssetInfoSection({
 
       <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)]/30 py-2.5">
         <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          VERSION
+          {i18n.t('review:assetInfoSection.version')}
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={onPrev}
             disabled={!canGoPrev}
             className="rounded p-1 text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)] disabled:cursor-not-allowed disabled:opacity-40"
-            title="Previous Version"
+            title={i18n.t('review:assetInfoSection.previousVersion')}
           >
             <IconChevronLeft />
           </button>
@@ -132,7 +133,7 @@ export function AssetInfoSection({
                 </button>
               ))}
               {sortedVersions.length === 0 && (
-                <div className="px-3 py-1.5 text-xs text-[var(--color-muted-foreground)]">Loading…</div>
+                <div className="px-3 py-1.5 text-xs text-[var(--color-muted-foreground)]">{i18n.t('review:assetInfoSection.loading')}</div>
               )}
             </div>
           </div>
@@ -140,18 +141,18 @@ export function AssetInfoSection({
             onClick={onNext}
             disabled={!canGoNext}
             className="rounded p-1 text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)] disabled:cursor-not-allowed disabled:opacity-40"
-            title="Next Version"
+            title={i18n.t('review:assetInfoSection.nextVersion')}
           >
             <IconChevronRight />
           </button>
         </div>
       </div>
 
-      <InfoRow label="FILE SIZE">{loading ? '...' : fileSize}</InfoRow>
-      <InfoRow label="DIMENSIONS">{loading ? '...' : dimensions}</InfoRow>
-      <InfoRow label="UPLOADED">{loading ? '...' : uploaded}</InfoRow>
-      <InfoRow label="UPLOADER">{loading ? '...' : uploader}</InfoRow>
-      <InfoRow label="STATUS">
+      <InfoRow label={i18n.t('review:assetInfoSection.fileSize')}>{loading ? '...' : fileSize}</InfoRow>
+      <InfoRow label={i18n.t('review:assetInfoSection.dimensions')}>{loading ? '...' : dimensions}</InfoRow>
+      <InfoRow label={i18n.t('review:assetInfoSection.uploaded')}>{loading ? '...' : uploaded}</InfoRow>
+      <InfoRow label={i18n.t('review:assetInfoSection.uploader')}>{loading ? '...' : uploader}</InfoRow>
+      <InfoRow label={i18n.t('review:assetInfoSection.status')}>
         <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${statusClass}`}>
           {reviewStatus.replace('_', ' ')}
         </span>
@@ -163,14 +164,14 @@ export function AssetInfoSection({
           disabled={isReviewLoading}
           className="cursor-pointer rounded-lg bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-60"
         >
-          Approve
+          {i18n.t('review:assetInfoSection.approve')}
         </button>
         <button
           onClick={onRequestChanges}
           disabled={isReviewLoading}
           className="cursor-pointer rounded-lg border border-rose-300 py-2 text-xs font-bold text-rose-700 transition-all hover:bg-rose-50 disabled:opacity-60"
         >
-          Request Changes
+          {i18n.t('review:assetInfoSection.requestChanges')}
         </button>
         <div className="mt-1 flex gap-2">
           <button
@@ -179,7 +180,7 @@ export function AssetInfoSection({
             className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <IconDiff />
-            <span>Compare</span>
+            <span>{i18n.t('review:assetInfoSection.compare')}</span>
           </button>
           <button
             onClick={onDownload}
@@ -187,7 +188,7 @@ export function AssetInfoSection({
             className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <IconDownload />
-            <span>Download</span>
+            <span>{i18n.t('review:assetInfoSection.download')}</span>
           </button>
         </div>
       </div>

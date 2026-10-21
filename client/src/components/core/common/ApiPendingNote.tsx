@@ -1,3 +1,4 @@
+import i18n from '../../../i18n';
 interface ApiPendingNoteProps {
   /** Ten khoi du lieu/tinh nang dang thieu API, vd: "Members" */
   label: string;
@@ -15,7 +16,7 @@ export function ApiPendingNote({ label, hint, compact = false, className = '' }:
         title={hint}
         className={`inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--color-border)] bg-[var(--color-background)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-muted-foreground)] ${className}`}
       >
-        Chưa có API — {label}
+        {i18n.t('core:apiPendingNote.chuaCoApi', {label})}
       </span>
     );
   }
@@ -24,7 +25,7 @@ export function ApiPendingNote({ label, hint, compact = false, className = '' }:
     <div
       className={`rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-xs text-[var(--color-muted-foreground)] ${className}`}
     >
-      <span className="font-bold text-[var(--color-primary)]">Chưa có API</span>
+      <span className="font-bold text-[var(--color-primary)]">{i18n.t('core:apiPendingNote.chuaCoApi2')}</span>
       <span> — {label}{hint ? `: ${hint}` : ''}</span>
     </div>
   );

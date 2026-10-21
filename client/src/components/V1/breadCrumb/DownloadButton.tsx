@@ -3,6 +3,7 @@ import type {DownloadProgress as DownloadProgressType} from '../../../service/do
 import {downloadService} from '../../../service/downloadService.ts';
 import {DownloadOutlined} from '@ant-design/icons';
 import DownloadProgress from "../../uploadDownloadProgress/DownloadProgress.tsx";
+import i18n from '../../../i18n';
 
 interface DownloadButtonProps {
     objectName: string;
@@ -51,7 +52,7 @@ export default function DownloadButton(props: DownloadButtonProps) {
             console.log('Download thành công!');
             setTimeout(() => setShowProgress(false), 3000);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Download failed';
+            const errorMessage = err instanceof Error ? err.message : i18n.t('file:downloadButton.downloadFailed');
             if (!errorMessage.includes('cancelled')) {
                 setError(errorMessage);
             }
@@ -68,7 +69,7 @@ export default function DownloadButton(props: DownloadButtonProps) {
     const handleCancel = () => {
         downloadService.cancelDownload();
         setIsDownloading(false);
-        setError('Cancelled by user');
+        setError(i18n.t('file:cancelledByUser'));
         setTimeout(() => setShowProgress(false), 2000);
     };
 
@@ -97,7 +98,7 @@ export default function DownloadButton(props: DownloadButtonProps) {
                         : 'text-muted-foreground hover:bg-muted hover:text-primary hover:shadow-md'
                 }
         `}
-                title="Download File"
+                title={i18n.t('file:downloadButton.downloadFile')}
             >
                 <DownloadOutlined className={isDownloading ? 'animate-bounce' : ''}/>
             </button>

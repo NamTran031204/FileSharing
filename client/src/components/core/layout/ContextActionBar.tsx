@@ -10,6 +10,7 @@ import {
 import UserAvatar from '../common/UserAvatar.tsx';
 import { Avatar, Button, Dropdown, Tooltip, type MenuProps } from 'antd';
 import type { ReactNode } from 'react';
+import i18n from '../../../i18n';
 
 export interface ContextBarParticipant {
     key: string;
@@ -67,7 +68,7 @@ const ContextActionBar = ({
             label: (
                 <div className="flex items-center gap-2">
                     <LinkOutlined className="text-base" />
-                    <span>Copy link</span>
+                    <span>{i18n.t('core:contextActionBar.copyLink')}</span>
                 </div>
             ),
             onClick: onCopyLink,
@@ -78,11 +79,11 @@ const ContextActionBar = ({
     return (
         <div className="z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-6">
             {onBack && (
-                <Tooltip title="Back">
+                <Tooltip title={i18n.t('core:contextActionBar.back')}>
                     <button
                         type="button"
                         onClick={onBack}
-                        aria-label="Back"
+                        aria-label={i18n.t('core:contextActionBar.back')}
                         className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground transition-all hover:bg-background hover:text-primary"
                     >
                         <ArrowLeftOutlined />
@@ -123,31 +124,31 @@ const ContextActionBar = ({
 
             <div className="flex shrink-0 items-center gap-2">
                 {onRefresh && (
-                    <Tooltip title="Refresh">
+                    <Tooltip title={i18n.t('core:contextActionBar.refresh')}>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={onRefresh}
                             loading={refreshLoading}
                             className="h-9 rounded-lg font-semibold"
-                            aria-label="Refresh"
+                            aria-label={i18n.t('core:contextActionBar.refresh')}
                         />
                     </Tooltip>
                 )}
-                <Tooltip title="Translate file names and comments">
+                <Tooltip title={i18n.t('core:contextActionBar.translateFileNamesAndComments')}>
                     <Button
                         icon={<TranslationOutlined />}
                         onClick={onTranslate}
                         className="h-9 rounded-lg font-semibold"
                     >
-                        <span className="hidden sm:inline">Translate</span>
+                        <span className="hidden sm:inline">{i18n.t('core:contextActionBar.translate')}</span>
                     </Button>
                 </Tooltip>
-                <Tooltip title="Download">
+                <Tooltip title={i18n.t('core:contextActionBar.download')}>
                     <Button
                         icon={<DownloadOutlined />}
                         onClick={onDownload}
                         className="h-9 rounded-lg font-semibold"
-                        aria-label="Download"
+                        aria-label={i18n.t('core:contextActionBar.download')}
                     />
                 </Tooltip>
                 <Button
@@ -156,10 +157,10 @@ const ContextActionBar = ({
                     onClick={onShare}
                     className="h-9 rounded-lg bg-linear-to-br from-primary-dark to-primary px-4 font-semibold shadow-md shadow-primary-dark/20"
                 >
-                    Share
+                    {i18n.t('core:contextActionBar.share')}
                 </Button>
                 <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
-                    <Button icon={<EllipsisOutlined />} className="h-9 rounded-lg" aria-label="More actions" />
+                    <Button icon={<EllipsisOutlined />} className="h-9 rounded-lg" aria-label={i18n.t('core:contextActionBar.moreActions')} />
                 </Dropdown>
             </div>
 

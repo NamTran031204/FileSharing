@@ -5,6 +5,7 @@ import { FolderControllerService } from '../../api/api/FolderControllerService';
 import { ProjectControllerService } from '../../api/api/ProjectControllerService';
 import { FolderVisibility, GrantedVisibility, type FolderTreeItemDTO } from '../../api/api/index.defs';
 import uiUtils from '../../utils/uiUtils.tsx';
+import i18n from '../../i18n';
 
 interface ProjectVisibilityToggleProps {
     projectId: string;
@@ -32,10 +33,10 @@ const ProjectVisibilityToggle = ({ projectId, visibility, onChanged }: ProjectVi
         try {
             const res = await ProjectControllerService.visibility({ projectId, body: { visibility: target } });
             if (!res.isSuccessful) throw new Error(res.message);
-            uiUtils.showSuccess(`Project đã chuyển sang ${target === GrantedVisibility.PUBLIC ? 'Public' : 'Private'}`);
+            uiUtils.showSuccess(i18n.t('project:projectVisibilityToggle.projectDaChuyenSang', {Private: target === GrantedVisibility.PUBLIC ? 'Public' : 'Private'}));
             onChanged(target);
         } catch (e) {
-            uiUtils.showError((e as Error)?.message || 'Đổi visibility thất bại');
+            uiUtils.showError((e as Error)?.message || i18n.t('project:projectVisibilityToggle.doiVisibilityThatBai'));
         } finally {
             setSaving(false);
         }
@@ -46,8 +47,8 @@ const ProjectVisibilityToggle = ({ projectId, visibility, onChanged }: ProjectVi
         e.stopPropagation();
         if (target === GrantedVisibility.PUBLIC) {
             Modal.confirm({
-                title: 'Chuyển project sang Public?',
-                content: 'Mọi user đã đăng nhập xem được project, cây thư mục và asset ở gốc.',
+                title: i18n.t('project:projectVisibilityToggle.chuyenProjectSangPublic'),
+                content: i18n.t('project:projectVisibilityToggle.moiUserDaDangNhap'),
                 onOk: apply,
             });
             return;
@@ -60,11 +61,11 @@ const ProjectVisibilityToggle = ({ projectId, visibility, onChanged }: ProjectVi
             // dem khong duoc thi van cho chuyen
         }
         Modal.confirm({
-            title: 'Chuyển project sang Private?',
+            title: i18n.t('project:projectVisibilityToggle.chuyenProjectSangPrivate'),
             content:
                 publicCount > 0
-                    ? `Có ${publicCount} folder Public (có thể đã có proof link). Link vẫn kiểm tra quyền mỗi lần truy cập.`
-                    : 'Chỉ thành viên project xem được.',
+                    ? i18n.t('project:projectVisibilityToggle.coFolderPublicCoThe', {publicCount})
+                    : i18n.t('project:projectVisibilityToggle.chiThanhVienProjectXem'),
             onOk: apply,
         });
     };
@@ -75,9 +76,9 @@ const ProjectVisibilityToggle = ({ projectId, visibility, onChanged }: ProjectVi
             loading={saving}
             icon={isPublic ? <GlobalOutlined /> : <LockOutlined />}
             onClick={handleClick}
-            title="Đổi Private / Public"
+            title={i18n.t('project:projectVisibilityToggle.doiPrivatePublic')}
         >
-            {isPublic ? 'Public' : 'Private'}
+            {isPublic ? i18n.t('project:projectVisibilityToggle.public') : i18n.t('project:projectVisibilityToggle.private')}
         </Button>
     );
 };

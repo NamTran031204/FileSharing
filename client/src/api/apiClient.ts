@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {API_BASE, tokenManager} from './baseApi';
 import {serviceOptions} from './api/index.defs';
+import {LangUtil} from '../utils/lang.util';
 
 const baseUrl = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : API_BASE;
 
@@ -9,6 +10,8 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+    config.headers = config.headers ?? {};
+    config.headers['Accept-Language'] = LangUtil.getLang();
     const token = tokenManager.getAccessToken();
     if (token) {
         config.headers = config.headers ?? {};

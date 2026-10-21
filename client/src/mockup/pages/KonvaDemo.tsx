@@ -4,6 +4,7 @@ import { Circle, Image as KonvaImage, Layer, Rect, Stage, Transformer } from 're
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import CommonLayout from '../../layout/CommonLayout';
+import { useTranslation } from 'react-i18next';
 
 type ToolType = 'select' | 'circle' | 'rect' | 'pan' | 'rotate';
 
@@ -62,6 +63,7 @@ const getButtonClassName = (isActive: boolean) =>
   ].join(' ');
 
 const KonvaDemo = () => {
+  const { t } = useTranslation();
   const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const shapeRefs = useRef<Record<string, Konva.Shape | null>>({});
@@ -354,7 +356,7 @@ const KonvaDemo = () => {
         </section>
 
         <aside className="w-64 shrink-0 bg-card border-r border-border p-5 flex flex-col gap-3">
-          <h2 className="text-xl font-semibold text-foreground">Công cụ vẽ</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('message:drawTools')}</h2>
 
           <button onClick={() => setSelectedTool('select')} className={getButtonClassName(selectedTool === 'select')}>
             move
@@ -406,7 +408,7 @@ const KonvaDemo = () => {
             className="w-full rounded-md border border-border bg-secondary px-4 py-2 text-left text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
             type="button"
           >
-            Lưu
+            {t('save')}
           </button>
         </aside>
       </div>

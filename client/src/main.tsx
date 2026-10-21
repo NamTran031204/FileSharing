@@ -1,20 +1,15 @@
 import {StrictMode} from 'react'
 import {createRoot} from 'react-dom/client'
-import {GoogleOAuthProvider} from '@react-oauth/google'
 import './index.css'
 import './api/apiClient'
-import App from './App.tsx'
-import {Provider, rootStore} from './store'
-import ModalProvider from './core/context/ModalProvider'
+import Root from './Root.tsx'
+import {i18nReady} from './i18n'
 
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-            <Provider value={rootStore}>
-                <ModalProvider>
-                    <App/>
-                </ModalProvider>
-            </Provider>
-        </GoogleOAuthProvider>
-    </StrictMode>,
-)
+// i18n loi van render app (fallback chuoi vi/key)
+i18nReady.catch(console.error).finally(() => {
+    createRoot(document.getElementById('root')!).render(
+        <StrictMode>
+            <Root/>
+        </StrictMode>,
+    )
+})

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Input, Modal } from 'antd';
+import i18n from '../../i18n';
 
 interface Props {
     open: boolean;
@@ -16,23 +17,23 @@ const ProofSubmitModal = ({ open, count, submitting, error, onSubmit, onCancel }
     return (
         <Modal
             open={open}
-            title="Gửi lựa chọn"
-            okText="Gửi"
-            cancelText="Quay lại"
+            title={i18n.t('proof:proofSubmitModal.guiLuaChon')}
+            okText={i18n.t('proof:proofSubmitModal.gui')}
+            cancelText={i18n.t('proof:proofSubmitModal.quayLai')}
             confirmLoading={submitting}
             onOk={() => onSubmit(note)}
             onCancel={onCancel}
             destroyOnHidden
         >
-            <p className="mb-2">Bạn đã chọn <b>{count}</b> ảnh.</p>
-            <p className="mb-3 text-muted-foreground">Sau khi gửi bạn sẽ không thể chỉnh sửa lựa chọn.</p>
+            <p className="mb-2">{i18n.t('proof:proofSubmitModal.banDaChon')} <b>{count}</b> {i18n.t('proof:proofSubmitModal.anh')}</p>
+            <p className="mb-3 text-muted-foreground">{i18n.t('proof:proofSubmitModal.sauKhiGuiBanSe')}</p>
             <Input.TextArea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 maxLength={1000}
                 showCount
                 rows={3}
-                placeholder="Lời nhắn cho nhiếp ảnh gia (không bắt buộc)"
+                placeholder={i18n.t('proof:proofSubmitModal.loiNhanChoNhiepAnh')}
             />
             {error && <p className="mt-3 text-destructive">{error}</p>}
         </Modal>

@@ -2,6 +2,7 @@ import { Button, Form, Modal, Space } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import type { ModalConfig } from './ModalContext';
+import { useTranslation } from 'react-i18next';
 
 interface ModalInternal extends ModalConfig {
   key: string;
@@ -16,6 +17,7 @@ interface ModalItemProps {
 }
 
 const ModalItem = ({ modal, index, closeModal }: ModalItemProps) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -83,14 +85,14 @@ const ModalItem = ({ modal, index, closeModal }: ModalItemProps) => {
                   <Space>
                     <CloseOutlined className="me-2" />
                   </Space>
-                  {modal.cancelText ?? 'Huỷ'}
+                  {modal.cancelText ?? t('cancel')}
                 </Space.Compact>
               )}
             </div>
             {modal.showOk !== false && (
               <Button type="primary" loading={loading} onClick={handleOk}>
                 <Space.Compact className="flex items-center text-base">
-                  {modal.okText ?? 'Lưu'}
+                  {modal.okText ?? t('save')}
                 </Space.Compact>
               </Button>
             )}

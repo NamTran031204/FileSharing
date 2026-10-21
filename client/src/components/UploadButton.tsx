@@ -3,6 +3,7 @@ import type {UploadProgress} from '../service/uploadService';
 import {uploadService} from '../service/uploadService';
 import {Alert, Button, Progress} from 'antd';
 import {CheckCircleOutlined, CloseCircleOutlined, CloudUploadOutlined, InboxOutlined} from '@ant-design/icons';
+import i18n from '../i18n';
 
 export default function UploadButton() {
     const [file, setFile] = useState<File | null>(null);
@@ -46,7 +47,7 @@ export default function UploadButton() {
 
     const handleUpload = async () => {
         if (!file) {
-            setError('Please select a file first');
+            setError(i18n.t('file:uploadButton.pleaseSelectAFileFirst'));
             return;
         }
 
@@ -71,7 +72,7 @@ export default function UploadButton() {
             setUploadedObjectName(objectName);
             console.log('upload thanh cong! ten object:', objectName);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+            const errorMessage = err instanceof Error ? err.message : i18n.t('file:uploadButton.uploadFailed');
             if (!errorMessage.includes('cancelled')) {
                 setError(errorMessage);
             }
@@ -109,8 +110,8 @@ export default function UploadButton() {
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-foreground mb-2">Upload File</h1>
-                    <p className="text-muted-foreground">Drag and drop or select a file to upload</p>
+                    <h1 className="text-3xl font-bold text-foreground mb-2">{i18n.t('file:uploadButton.uploadFile')}</h1>
+                    <p className="text-muted-foreground">{i18n.t('file:uploadButton.dragAndDropOrSelect')}</p>
                 </div>
 
                 {/* Upload Area */}
@@ -144,10 +145,10 @@ export default function UploadButton() {
                         </div>
                         <div>
                             <p className="text-lg font-medium text-foreground">
-                                {isDragOver ? 'Drop your file here' : 'Click to upload or drag and drop'}
+                                {isDragOver ? i18n.t('file:uploadButton.dropYourFileHere') : i18n.t('file:uploadButton.clickToUploadOrDrag')}
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Support all file types
+                                {i18n.t('file:uploadButton.supportAllFileTypes')}
                             </p>
                         </div>
                     </div>
@@ -172,7 +173,7 @@ export default function UploadButton() {
                 {progress && (
                     <div className="mt-6 bg-card rounded-xl p-6 border border-border">
                         <div className="flex justify-between text-sm text-muted-foreground mb-3">
-                            <span>Chunk: {progress.currentChunk}/{progress.totalChunks}</span>
+                            <span>{i18n.t('file:uploadButton.chunk', {currentChunk: progress.currentChunk, totalChunks: progress.totalChunks})}</span>
                             <span>{progress.percentage}%</span>
                         </div>
 
@@ -188,25 +189,25 @@ export default function UploadButton() {
 
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Uploaded</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadButton.uploaded')}</p>
                                 <p className="font-semibold text-foreground">
                                     {formatBytes(progress.uploadedBytes)} / {formatBytes(progress.totalBytes)}
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Speed</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadButton.speed')}</p>
                                 <p className="font-semibold text-foreground">
                                     {progress.throughputMbps?.toFixed(2) || '--'} Mbps
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">Chunk Size</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadButton.chunkSize')}</p>
                                 <p className="font-semibold text-foreground">
                                     {formatBytes(progress.currentChunkSize || 0)}
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
-                                <p className="text-xs text-muted-foreground">ETA</p>
+                                <p className="text-xs text-muted-foreground">{i18n.t('file:uploadButton.eta')}</p>
                                 <p className="font-semibold text-foreground">
                                     {formatTime(progress.estimatedTimeRemainingMs || 0)}
                                 </p>
@@ -218,7 +219,7 @@ export default function UploadButton() {
                 {/* Error */}
                 {error && (
                     <Alert
-                        message="Upload Error"
+                        message={i18n.t('file:uploadButton.uploadError')}
                         description={error}
                         type="error"
                         showIcon
@@ -229,8 +230,8 @@ export default function UploadButton() {
                 {/* Success */}
                 {uploadedObjectName && (
                     <Alert
-                        message="Upload Successful!"
-                        description={`File uploaded as: ${uploadedObjectName}`}
+                        message={i18n.t('file:uploadButton.uploadSuccessful')}
+                        description={i18n.t('file:uploadButton.fileUploadedAs', {name: uploadedObjectName})}
                         type="success"
                         showIcon
                         icon={<CheckCircleOutlined/>}
@@ -249,7 +250,7 @@ export default function UploadButton() {
                         icon={<CloudUploadOutlined/>}
                         className="flex-1 h-12 text-base font-semibold"
                     >
-                        {isUploading ? 'Uploading...' : 'Upload File'}
+                        {isUploading ? i18n.t('file:uploadButton.uploading') : i18n.t('file:uploadButton.uploadFile')}
                     </Button>
 
                     {isUploading && (
@@ -260,7 +261,7 @@ export default function UploadButton() {
                             icon={<CloseCircleOutlined/>}
                             className="h-12 text-base font-semibold"
                         >
-                            Cancel
+                            {i18n.t('file:uploadButton.cancel')}
                         </Button>
                     )}
                 </div>

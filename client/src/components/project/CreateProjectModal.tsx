@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import { SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
+import i18n from '../../i18n';
 
 const { Text } = Typography;
 
@@ -34,18 +35,11 @@ interface CreateProjectModalProps {
   onCreate: (values: CreateProjectFormValues) => void;
 }
 
-const categoryOptions = [
-  { value: 'CAMPAIGN', label: 'CAMPAIGN' },
-  { value: 'BRANDING', label: 'BRANDING' },
-  { value: 'PRODUCT', label: 'PRODUCT' },
-  { value: 'OTHER', label: 'OTHER' },
-] as const;
+const getCategoryOptions = () =>
+  (['CAMPAIGN', 'BRANDING', 'PRODUCT', 'OTHER'] as const).map((value) => ({ value, label: i18n.t(`project:category.${value}`) }));
 
-const statusOptions = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'ARCHIVED', label: 'ARCHIVED' },
-  { value: 'COMPLETED', label: 'COMPLETED' },
-] as const;
+const getStatusOptions = () =>
+  (['ACTIVE', 'ARCHIVED', 'COMPLETED'] as const).map((value) => ({ value, label: i18n.t(`project:status.${value}`) }));
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   open,
@@ -80,7 +74,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     <Modal
       open={open}
       onCancel={onCancel}
-      title={<h2 className="text-2xl font-extrabold tracking-tighter text-on-surface">Create Project</h2>}
+      title={<h2 className="text-2xl font-extrabold tracking-tighter text-on-surface">{i18n.t('project:createProjectModal.createProject')}</h2>}
       width={960}
       destroyOnHidden
       centered
@@ -114,7 +108,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           onClick={onCancel}
           className="font-bold! tracking-tight! text-primary!"
         >
-          Cancel
+          {i18n.t('project:createProjectModal.cancel')}
         </Button>,
         <Button
           key="create"
@@ -123,7 +117,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           onClick={handleSubmit}
           className="font-bold! tracking-tight!"
         >
-          Create Project
+          {i18n.t('project:createProjectModal.createProject')}
         </Button>,
       ]}
     >
@@ -136,14 +130,14 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
           <Form.Item
             name="projectName"
-            label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Project Name <span className="text-error">*</span></span>}
+            label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.projectName')} <span className="text-error">*</span></span>}
             rules={[
-              { required: true, message: 'Project name is required' },
-              { min: 2, max: 100, message: 'Name must be between 2 and 100 characters.' },
+              { required: true, message: i18n.t('project:createProjectModal.projectNameIsRequired') },
+              { min: 2, max: 100, message: i18n.t('project:createProjectModal.nameMustBeBetween2') },
             ]}
           >
             <Input
-              placeholder="e.g. Winter Brand Refresh"
+              placeholder={i18n.t('project:createProjectModal.eGWinterBrandRefresh')}
               maxLength={100}
               className="rounded-lg! py-3!"
             />
@@ -151,15 +145,15 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
           <Form.Item
             name="projectCode"
-            label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Project Code <span className="text-error">*</span></span>}
+            label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.projectCode')} <span className="text-error">*</span></span>}
             rules={[
-              { required: true, message: 'Project code is required' },
+              { required: true, message: i18n.t('project:createProjectModal.projectCodeIsRequired') },
               {
                 pattern: /^[A-Za-z0-9_]+$/,
-                message: 'Alphanumeric and underscores only.',
+                message: i18n.t('project:createProjectModal.alphanumericAndUnderscoresOnly'),
               },
             ]}
-            extra={<Text className="text-[10px]! italic! text-on-surface-variant!">Alphanumeric and underscores only.</Text>}
+            extra={<Text className="text-[10px]! italic! text-on-surface-variant!">{i18n.t('project:createProjectModal.alphanumericAndUnderscoresOnly')}</Text>}
           >
             <Input placeholder="WBR_2024" className="rounded-lg! py-3!" />
           </Form.Item>
@@ -169,7 +163,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             className="md:col-span-2"
             label={
               <div className="w-full flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Description</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.description')}</span>
                 <span className="text-[10px] text-outline font-medium">{descriptionLength} / 500</span>
               </div>
             }
@@ -177,7 +171,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <Input.TextArea
               rows={3}
               maxLength={500}
-              placeholder="Define the creative vision for this project..."
+              placeholder={i18n.t('project:createProjectModal.defineTheCreativeVisionFor')}
               className="rounded-lg!"
               onChange={(event) => setDescriptionLength(event.target.value.length)}
             />
@@ -189,7 +183,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <summary className="flex items-center justify-between cursor-pointer list-none select-none">
               <Space size={8} className="text-primary-container!">
                 <SettingOutlined />
-                <span className="font-bold text-[13px] tracking-tight">Advanced Options</span>
+                <span className="font-bold text-[13px] tracking-tight">{i18n.t('project:createProjectModal.advancedOptions')}</span>
               </Space>
               <span className="text-primary-container transition-transform duration-300 group-open:rotate-180">⌄</span>
             </summary>
@@ -197,14 +191,14 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
               <Form.Item
                 name="startDate"
-                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Start Date</span>}
+                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.startDate')}</span>}
               >
                 <DatePicker className="w-full rounded-lg! py-2!" format="YYYY-MM-DD" />
               </Form.Item>
 
               <Form.Item
                 name="endDate"
-                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">End Date</span>}
+                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.endDate')}</span>}
               >
                 <DatePicker
                   className="w-full rounded-lg! py-2!"
@@ -215,24 +209,24 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
               <Form.Item
                 name="category"
-                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Category</span>}
+                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.category')}</span>}
               >
-                <Select options={categoryOptions as unknown as { value: string; label: string }[]} className="w-full" />
+                <Select options={getCategoryOptions()} className="w-full" />
               </Form.Item>
 
               <Form.Item
                 name="projectStatus"
-                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Project Status</span>}
+                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.projectStatus')}</span>}
               >
-                <Select options={statusOptions as unknown as { value: string; label: string }[]} className="w-full" />
+                <Select options={getStatusOptions()} className="w-full" />
               </Form.Item>
 
               <Form.Item
                 name="clientName"
                 className="md:col-span-2"
-                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Client Name</span>}
+                label={<span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">{i18n.t('project:createProjectModal.clientName')}</span>}
               >
-                <Input prefix={<SearchOutlined className="text-outline" />} placeholder="Search for client..." className="rounded-lg! py-3!" />
+                <Input prefix={<SearchOutlined className="text-outline" />} placeholder={i18n.t('project:createProjectModal.searchForClient')} className="rounded-lg! py-3!" />
               </Form.Item>
 
               <Form.Item
@@ -242,7 +236,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               >
                 <Checkbox>
                   <span className="text-sm font-medium text-on-surface">
-                    Create default folder structure (Assets, Rough Cuts, Approved)
+                    {i18n.t('project:createProjectModal.createDefaultFolderStructureAssets')}
                   </span>
                 </Checkbox>
               </Form.Item>

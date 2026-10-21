@@ -1,0 +1,24 @@
+{
+  "updateDeleteAvatar": {
+    "chiHoTroAnhJpg": "Only JPG and PNG images are supported",
+    "anhPhaiNhoHon5mb": "Image must be smaller than 5MB"
+  },
+  "userProfile": {
+    "khongTheTaiThongTin": "Unable to load user information",
+    "khongTheUploadAnhDai": "Unable to upload the avatar",
+    "capNhatHoSoThanh": "Profile updated successfully!",
+    "coLoiXayRaKhi": "An error occurred while saving.",
+    "dangHoatDong": "Active",
+    "daKhoa": "Locked",
+    "thamGiaTu": "Joined",
+    "thongTinTaiKhoan": "Account information",
+    "chinhSua": "Edit",
+    "tenNguoiDung": "Username",
+    "vuiLongNhapTenNguoi": "Please enter a username",
+    "nhapTenNguoiDung": "Enter a username",
+    "emailKhongTheThayDoi": "Email cannot be changed",
+    "huy": "Cancel",
+    "luuThayDoi": "Save changes",
+    "email": "Email"
+  }
+}

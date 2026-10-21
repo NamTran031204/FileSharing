@@ -7,6 +7,7 @@ import authApiResource from '../api/authApi/authApiResource.ts';
 import { ApiError } from '../api/baseApi.ts';
 import uiUtils from '../utils/uiUtils.tsx';
 import logo from '../assets/logo/logo2k.png';
+import i18n from '../i18n';
 
 interface LoginFormValues {
   email: string;
@@ -36,7 +37,7 @@ const LoginPageV2 = () => {
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
-      uiUtils.showError('Không lấy được thông tin từ Google');
+      uiUtils.showError(i18n.t('auth:loginPageV2.khongLayDuocThongTin'));
       return;
     }
     setIsSubmitting(true);
@@ -45,9 +46,9 @@ const LoginPageV2 = () => {
       navigate('/home');
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
-        uiUtils.showError('Chưa có tài khoản, vui lòng đăng ký');
+        uiUtils.showError(i18n.t('auth:loginPageV2.chuaCoTaiKhoanVui'));
       } else {
-        uiUtils.showError(err instanceof Error ? err.message : 'Đăng nhập Google thất bại');
+        uiUtils.showError(err instanceof Error ? err.message : i18n.t('auth:loginPageV2.dangNhapGoogleThatBai'));
       }
     } finally {
       setIsSubmitting(false);
@@ -69,36 +70,36 @@ const LoginPageV2 = () => {
               <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm">
                 <img
                   className="w-full h-full object-cover"
-                  alt="Media Review Platform logo"
+                  alt={i18n.t('auth:loginPageV2.mediaReviewPlatformLogo')}
                   src={logo}
                 />
               </div>
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">ASSETS</h1>
-                <p className="text-sm text-muted-foreground font-medium">Welcome back!</p>
+                <p className="text-sm text-muted-foreground font-medium">{i18n.t('auth:loginPageV2.welcomeBack')}</p>
               </div>
             </div>
 
             <Form<LoginFormValues> layout="vertical" onFinish={handleFinish} requiredMark={false} className="space-y-1">
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Email</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:loginPageV2.email')}</span>}
                 name="email"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập email' },
-                  { type: 'email', message: 'Email không hợp lệ' },
+                  { required: true, message: i18n.t('auth:loginPageV2.vuiLongNhapEmail') },
+                  { type: 'email', message: i18n.t('auth:loginPageV2.emailKhongHopLe') },
                 ]}
               >
                 <Input size="large" placeholder="your@email.com" className="h-12 rounded-lg" />
               </Form.Item>
 
               <Form.Item
-                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">Password</span>}
+                label={<span className="text-xs font-bold uppercase tracking-[0.05em] text-muted-foreground">{i18n.t('auth:loginPageV2.password')}</span>}
                 name="password"
-                rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+                rules={[{ required: true, message: i18n.t('auth:loginPageV2.vuiLongNhapMatKhau') }]}
               >
                 <Input.Password
                   size="large"
-                  placeholder="Nhập mật khẩu"
+                  placeholder={i18n.t('auth:loginPageV2.nhapMatKhau')}
                   className="h-12 rounded-lg"
                   iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                 />
@@ -106,26 +107,26 @@ const LoginPageV2 = () => {
 
               <div className="flex items-center justify-between pb-2">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox>Remember me (for 30 days)</Checkbox>
+                  <Checkbox>{i18n.t('auth:loginPageV2.rememberMeFor30Days')}</Checkbox>
                 </Form.Item>
                 <Button type="link" className="!px-0 !text-sm !font-semibold">
-                  Quên mật khẩu?
+                  {i18n.t('auth:loginPageV2.quenMatKhau')}
                 </Button>
               </div>
 
               <Form.Item className="!mb-0">
                 <Button type="primary" htmlType="submit" loading={isSubmitting} className="!w-full !h-12 !rounded-lg !font-semibold">
-                  Đăng Nhập
+                  {i18n.t('auth:loginPageV2.dangNhap')}
                 </Button>
               </Form.Item>
             </Form>
 
-            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest text-muted-foreground">hoặc</Divider>
+            <Divider className="!my-0 !text-xs !font-bold !uppercase !tracking-widest text-muted-foreground">{i18n.t('auth:loginPageV2.hoac')}</Divider>
 
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => uiUtils.showError('Đăng nhập Google thất bại')}
+                onError={() => uiUtils.showError(i18n.t('auth:loginPageV2.dangNhapGoogleThatBai'))}
                 text="continue_with"
                 shape="rectangular"
                 width={320}
@@ -133,35 +134,35 @@ const LoginPageV2 = () => {
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Chưa có tài khoản?
+              {i18n.t('auth:loginPageV2.chuaCoTaiKhoan')}
               <Link to="/registerv2" className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
-                Đăng ký
+                {i18n.t('auth:loginPageV2.dangKy')}
               </Link>
             </p>
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Chuyên trang dành cho người làm media</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">{i18n.t('auth:loginPageV2.chuyenTrangDanhChoNguoi')}</p>
           </div>
         </div>
       </main>
 
       <footer className="w-full py-12 bg-muted flex flex-col md:flex-row justify-between items-center px-12 gap-6 mt-auto">
         <div className="text-primary text-xs font-medium uppercase tracking-[0.05em]">
-          Sản Phẩm của Nam Trần
+          {i18n.t('auth:loginPageV2.sanPhamCuaNamTran')}
         </div>
         <nav className="flex flex-wrap justify-center gap-6">
           <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Giới thiệu
+            {i18n.t('auth:loginPageV2.gioiThieu')}
           </a>
           <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
             Github
           </a>
           <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
-              Donate tại đây
+              {i18n.t('auth:loginPageV2.donateTaiDay')}
           </a>
           <a className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-all duration-300" href="#">
-            Mọi thắc mắc liên hệ thông qua đây!
+            {i18n.t('auth:loginPageV2.moiThacMacLienHe')}
           </a>
         </nav>
       </footer>

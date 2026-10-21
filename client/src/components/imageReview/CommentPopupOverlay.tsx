@@ -1,4 +1,5 @@
 import { IconX } from './icons/ReviewIcons';
+import i18n from '../../i18n';
 
 interface CommentPopupOverlayProps {
   position: { x: number; y: number };
@@ -30,7 +31,7 @@ export function CommentPopupOverlay({
       }}
     >
       <div className="mb-3 flex items-center justify-between border-b border-[var(--color-border)]/30 pb-2">
-        <span className="text-xs font-black uppercase tracking-wider text-[var(--color-foreground)]">New Comment</span>
+        <span className="text-xs font-black uppercase tracking-wider text-[var(--color-foreground)]">{i18n.t('review:commentPopupOverlay.newComment')}</span>
         <button
           onClick={onClose}
           className="rounded p-0.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
@@ -43,7 +44,7 @@ export function CommentPopupOverlay({
           ref={textareaRef}
           value={commentText}
           onChange={e => onTextChange(e.target.value)}
-          placeholder="Type a comment… use @ to mention"
+          placeholder={i18n.t('review:commentPopupOverlay.typeAComment')}
           rows={3}
           className="w-full resize-none rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-background)] p-2.5 text-xs text-[var(--color-foreground)] outline-none transition-all placeholder:text-[var(--color-muted-foreground)]/50 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/20"
         />
@@ -56,14 +57,14 @@ export function CommentPopupOverlay({
             onClick={onClose}
             className="flex-1 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-background)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-border)]/20"
           >
-            Cancel
+            {i18n.t('review:commentPopupOverlay.cancel')}
           </button>
           <button
             type="submit"
             disabled={isSaving}
             className="flex-1 rounded-lg bg-[var(--color-primary)] py-1.5 text-xs font-bold text-white transition-all hover:bg-[var(--color-secondary)] disabled:opacity-60"
           >
-            {isSaving ? 'Saving…' : 'Post'}
+            {isSaving ? i18n.t('review:commentPopupOverlay.saving') : i18n.t('review:commentPopupOverlay.post')}
           </button>
         </div>
       </form>

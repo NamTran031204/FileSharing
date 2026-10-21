@@ -9,6 +9,7 @@ import {
   IconSkipNext, IconSkipPrev, IconVolume, IconVolumeMute,
 } from '../imageReview/icons/ReviewIcons';
 import uiUtils from '../../utils/uiUtils.tsx';
+import i18n from '../../i18n';
 
 const SPEED_OPTIONS = [0.5, 1, 1.5, 2] as const;
 
@@ -122,23 +123,23 @@ export function VideoBottomCapsuleControls({
       </div>
 
       <div className="pointer-events-auto mx-auto flex items-center gap-1.5 rounded-full border border-[var(--color-canvas-border)] bg-[var(--color-canvas-elevated)]/95 px-3 py-1.5 text-white shadow-2xl">
-        <button onClick={handlePlayPause} title={isPaused ? 'Play' : 'Pause'} className="flex h-8 w-8 items-center justify-center rounded-full text-white/85 hover:bg-white/10">
+        <button onClick={handlePlayPause} title={isPaused ? i18n.t('review:videoBottomCapsuleControls.play') : i18n.t('review:videoBottomCapsuleControls.pause')} className="flex h-8 w-8 items-center justify-center rounded-full text-white/85 hover:bg-white/10">
           {isPaused ? <IconPlay /> : <IconPause />}
         </button>
-        <button onClick={handlePrevMarker} title="Previous marker" className="flex h-7 w-7 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
+        <button onClick={handlePrevMarker} title={i18n.t('review:videoBottomCapsuleControls.previousMarker')} className="flex h-7 w-7 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
           <IconSkipPrev />
         </button>
         <span className="w-24 select-none text-center text-[11px] font-mono text-white/75">
           {formatMs(currentMs)} / {formatMs(durationMs)}
         </span>
-        <button onClick={handleNextMarker} title="Next marker" className="flex h-7 w-7 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
+        <button onClick={handleNextMarker} title={i18n.t('review:videoBottomCapsuleControls.nextMarker')} className="flex h-7 w-7 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
           <IconSkipNext />
         </button>
 
         <div className="mx-1 h-5 w-px bg-white/15" />
 
         <div className="group/vol relative flex h-8 w-8 items-center justify-center">
-          <button onClick={handleToggleMute} title={muted ? 'Unmute' : 'Mute'} className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
+          <button onClick={handleToggleMute} title={muted ? i18n.t('review:videoBottomCapsuleControls.unmute') : i18n.t('review:videoBottomCapsuleControls.mute')} className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
             {muted || volume === 0 ? <IconVolumeMute /> : <IconVolume />}
           </button>
           <div className="absolute bottom-full left-1/2 z-30 mb-2 hidden -translate-x-1/2 flex-col items-center rounded-lg border border-[var(--color-canvas-border)] bg-[var(--color-canvas-elevated)] p-2 shadow-2xl group-hover/vol:flex">
@@ -153,8 +154,8 @@ export function VideoBottomCapsuleControls({
         </div>
 
         <button
-          onClick={() => uiUtils.showInfor('Phụ đề (CC) — chưa có API')}
-          title="Captions"
+          onClick={() => uiUtils.showInfor(i18n.t('review:videoBottomCapsuleControls.phuDeCcChuaCo'))}
+          title={i18n.t('review:videoBottomCapsuleControls.captions')}
           className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-all hover:bg-white/10 hover:text-white"
         >
           <IconCC />
@@ -171,7 +172,7 @@ export function VideoBottomCapsuleControls({
               onClick={() => handleSelectQuality(-1)}
               className={`px-3 py-1 text-left text-[10px] font-bold hover:bg-white/10 ${currentLevel === -1 ? 'text-[var(--color-accent)]' : 'text-white/70'}`}
             >
-              Auto
+              {i18n.t('review:videoBottomCapsuleControls.auto')}
             </button>
             {levels.map(l => (
               <button
@@ -204,7 +205,7 @@ export function VideoBottomCapsuleControls({
 
         <div className="mx-1 h-5 w-px bg-white/15" />
 
-        <button onClick={() => playerRef.current?.requestFullscreen()} title="Fullscreen" className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
+        <button onClick={() => playerRef.current?.requestFullscreen()} title={i18n.t('review:videoBottomCapsuleControls.fullscreen')} className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
           <IconFullscreen />
         </button>
 
@@ -212,7 +213,7 @@ export function VideoBottomCapsuleControls({
 
         <button
           onClick={onToggleAnnotations}
-          title={showAnnotations ? 'Hide Annotations' : 'Show Annotations'}
+          title={showAnnotations ? i18n.t('review:videoBottomCapsuleControls.hideAnnotations') : i18n.t('review:videoBottomCapsuleControls.showAnnotations')}
           className={`flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 ${showAnnotations ? 'text-[var(--color-accent)]' : 'text-white/40'}`}
         >
           {showAnnotations ? <IconEye /> : <IconEyeOff />}

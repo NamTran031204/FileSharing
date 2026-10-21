@@ -7,6 +7,7 @@ import {FileViewUtil} from '../../../utils/FileViewUtil.ts';
 import {FileAppPermission, ObjectPermission, ObjectVisibility} from "../../../api/enums.ts";
 import UserFilePermissionList, {type UserPermission} from './UserFilePermissionList.tsx';
 import {hasPermission} from '../../../utils/permissionUtils.ts';
+import i18n from '../../../i18n';
 
 type Mode = 'view' | 'edit';
 
@@ -43,7 +44,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                     fileName: file.fileName,
                     mimeType: file.mimeType,
                     fileSize: FileViewUtil.formatBytes(file.fileSize),
-                    compressionAlgo: file.compressionAlgo || 'None',
+                    compressionAlgo: file.compressionAlgo || i18n.t('file:fileDetailModal.none'),
                     ownerId: file.ownerId,
                     timeToLive: file.timeToLive,
                     publicPermission: file.publicPermission,
@@ -80,7 +81,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 fileName: currentFile.fileName,
                 mimeType: currentFile.mimeType,
                 fileSize: FileViewUtil.formatBytes(currentFile.fileSize),
-                compressionAlgo: currentFile.compressionAlgo || 'None',
+                compressionAlgo: currentFile.compressionAlgo || i18n.t('file:fileDetailModal.none'),
                 ownerId: currentFile.ownerId,
                 timeToLive: currentFile.timeToLive,
                 publicPermission: currentFile.publicPermission,
@@ -117,19 +118,19 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                     fileName: updatedFile.fileName,
                     mimeType: updatedFile.mimeType,
                     fileSize: FileViewUtil.formatBytes(updatedFile.fileSize),
-                    compressionAlgo: updatedFile.compressionAlgo || 'None',
+                    compressionAlgo: updatedFile.compressionAlgo || i18n.t('file:fileDetailModal.none'),
                     ownerId: updatedFile.ownerId,
                     timeToLive: updatedFile.timeToLive,
                     publicPermission: updatedFile.publicPermission,
                     visibility: updatedFile.visibility,
                 });
 
-                message.success('Cập nhật file thành công!');
+                message.success(i18n.t('file:fileDetailModal.capNhatFileThanhCong'));
                 setMode('view');
                 onFileUpdated?.();
             } catch (error) {
                 console.error('Update error:', error);
-                message.error('Có lỗi xảy ra khi cập nhật file');
+                message.error(i18n.t('file:fileDetailModal.coLoiXayRaKhi'));
             } finally {
                 setLoading(false);
             }
@@ -139,21 +140,21 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             if (!currentFile) return;
 
             Modal.confirm({
-                title: 'Xác nhận xóa file',
-                content: 'Bạn có chắc chắn muốn chuyển file vào thùng rác?',
-                okText: 'Xóa',
+                title: i18n.t('file:fileDetailModal.xacNhanXoaFile'),
+                content: i18n.t('file:fileDetailModal.banCoChacChanMuon'),
+                okText: i18n.t('file:fileDetailModal.xoa'),
                 okType: 'danger',
-                cancelText: 'Hủy',
+                cancelText: i18n.t('file:fileDetailModal.huy'),
                 onOk: async () => {
                     try {
                         setDeleteLoading(true);
                         await fileApiResource.moveToTrash(currentFile.fileId);
-                        message.success('Đã chuyển file vào thùng rác');
+                        message.success(i18n.t('file:fileDetailModal.daChuyenFileVaoThung'));
                         handleClose();
                         onFileDeleted?.();
                     } catch (error) {
                         console.error('Delete error:', error);
-                        message.error('Có lỗi xảy ra khi xóa file');
+                        message.error(i18n.t('file:fileDetailModal.coLoiXayRaKhi2'));
                     } finally {
                         setDeleteLoading(false);
                     }
@@ -162,14 +163,14 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
         };
 
         const permissionOptions = [
-            {label: 'Read Only', value: ObjectPermission.READ},
-            {label: 'Comment', value: ObjectPermission.COMMENT},
-            {label: 'Modify', value: ObjectPermission.MODIFY},
+            {label: i18n.t('file:fileDetailModal.readOnly'), value: ObjectPermission.READ},
+            {label: i18n.t('file:fileDetailModal.comment'), value: ObjectPermission.COMMENT},
+            {label: i18n.t('file:fileDetailModal.modify'), value: ObjectPermission.MODIFY},
         ];
 
         const visibilityOptions = [
-            {label: 'Private', value: ObjectVisibility.PRIVATE},
-            {label: 'Public', value: ObjectVisibility.PUBLIC},
+            {label: i18n.t('file:fileDetailModal.private'), value: ObjectVisibility.PRIVATE},
+            {label: i18n.t('file:fileDetailModal.public'), value: ObjectVisibility.PUBLIC},
         ];
 
         const handlePermissionChange = (email: string, newPermissions: ObjectPermission[]) => {
@@ -199,7 +200,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
             };
 
             setUserPermissions(prevPermissions => [...prevPermissions, newUser]);
-            message.success(`Đã thêm ${email}`);
+            message.success(i18n.t('file:fileDetailModal.daThem', {email}));
         };
 
         const fileAppPermission = currentFile?.publishUserPermission || FileAppPermission.PUBLIC;
@@ -210,7 +211,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                 title={
                     <div className="flex items-center gap-3">
                         <span className="text-xl font-semibold">
-                            {isEditMode ? 'Chỉnh sửa File' : 'Chi tiết File'}
+                            {isEditMode ? i18n.t('file:fileDetailModal.chinhSuaFile') : i18n.t('file:fileDetailModal.chiTietFile')}
                         </span>
                         {!isEditMode && <EyeOutlined className="text-primary"/>}
                         {isEditMode && <EditOutlined className="text-primary"/>}
@@ -231,20 +232,20 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* File Name - Editable */}
                             <Form.Item
-                                label={<span className="font-medium">Tên file</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.tenFile')}</span>}
                                 name="fileName"
-                                rules={[{required: true, message: 'Vui lòng nhập tên file'}]}
+                                rules={[{required: true, message: i18n.t('file:fileDetailModal.vuiLongNhapTenFile')}]}
                                 className="mb-4"
                             >
                                 <Input
                                     disabled={!isEditMode}
-                                    placeholder="Nhập tên file"
+                                    placeholder={i18n.t('file:fileDetailModal.nhapTenFile')}
                                     className={!isEditMode ? 'bg-muted' : ''}
                                 />
                             </Form.Item>
 
                             <Form.Item
-                                label={<span className="font-medium">Loại file</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.loaiFile')}</span>}
                                 name="mimeType"
                                 className="mb-4"
                             >
@@ -252,7 +253,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                             </Form.Item>
 
                             <Form.Item
-                                label={<span className="font-medium">Kích thước</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.kichThuoc')}</span>}
                                 name="fileSize"
                                 className="mb-4"
                             >
@@ -260,7 +261,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                             </Form.Item>
 
                             <Form.Item
-                                label={<span className="font-medium">Thuật toán nén</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.thuatToanNen')}</span>}
                                 name="compressionAlgo"
                                 className="mb-4"
                             >
@@ -269,7 +270,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
 
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
-                                    label={<span className="font-medium">Owner ID</span>}
+                                    label={<span className="font-medium">{i18n.t('file:fileDetailModal.ownerId')}</span>}
                                     name="ownerId"
                                     className="mb-4"
                                 >
@@ -278,30 +279,30 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                             )}
 
                             <Form.Item
-                                label={<span className="font-medium">Thời gian lưu trữ (giây)</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.thoiGianLuuTruGiay')}</span>}
                                 name="timeToLive"
-                                rules={[{required: true, message: 'Vui lòng nhập thời gian'}]}
+                                rules={[{required: true, message: i18n.t('file:fileDetailModal.vuiLongNhapThoiGian')}]}
                                 className="mb-4"
                             >
                                 <Input
                                     type="number"
                                     disabled={!isEditMode}
-                                    placeholder="Nhập thời gian (giây)"
+                                    placeholder={i18n.t('file:fileDetailModal.nhapThoiGianGiay')}
                                     className={!isEditMode ? 'bg-muted' : ''}
                                 />
                             </Form.Item>
 
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
-                                    label={<span className="font-medium">Quyền công khai</span>}
+                                    label={<span className="font-medium">{i18n.t('file:fileDetailModal.quyenCongKhai')}</span>}
                                     name="publicPermission"
-                                    rules={[{required: true, message: 'Vui lòng chọn quyền'}]}
+                                    rules={[{required: true, message: i18n.t('file:fileDetailModal.vuiLongChonQuyen')}]}
                                     className="mb-4"
                                 >
                                     <Select
                                         disabled={!isEditMode}
                                         options={permissionOptions}
-                                        placeholder="Chọn quyền"
+                                        placeholder={i18n.t('file:fileDetailModal.chonQuyen')}
                                         className={!isEditMode ? 'bg-muted' : ''}
                                     />
                                 </Form.Item>
@@ -309,15 +310,15 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
 
                             {hasPermission(fileAppPermission, FileAppPermission.READ) && (
                                 <Form.Item
-                                    label={<span className="font-medium">Chế độ hiển thị</span>}
+                                    label={<span className="font-medium">{i18n.t('file:fileDetailModal.cheDoHienThi')}</span>}
                                     name="visibility"
-                                    rules={[{required: true, message: 'Vui lòng chọn chế độ'}]}
+                                    rules={[{required: true, message: i18n.t('file:fileDetailModal.vuiLongChonCheDo')}]}
                                     className="mb-4"
                                 >
                                     <Select
                                         disabled={!isEditMode}
                                         options={visibilityOptions}
-                                        placeholder="Chọn chế độ hiển thị"
+                                        placeholder={i18n.t('file:fileDetailModal.chonCheDoHienThi')}
                                         className={!isEditMode ? 'bg-muted' : ''}
                                     />
                                 </Form.Item>
@@ -326,7 +327,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
 
                         {hasPermission(fileAppPermission, FileAppPermission.MODIFY) && (
                             <Form.Item
-                                label={<span className="font-medium">Quyền chia sẻ với người dùng</span>}
+                                label={<span className="font-medium">{i18n.t('file:fileDetailModal.quyenChiaSeVoiNguoi')}</span>}
                                 className="mb-4"
                             >
                                 <UserFilePermissionList
@@ -355,7 +356,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                             size="large"
                             className="min-w-[120px]"
                         >
-                            Xóa file
+                            {i18n.t('file:fileDetailModal.xoaFile')}
                         </Button>
                     )}
 
@@ -368,7 +369,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                     size="large"
                                     className="min-w-[100px]"
                                 >
-                                    Hủy
+                                    {i18n.t('file:fileDetailModal.huy')}
                                 </Button>
                             )}
 
@@ -380,7 +381,7 @@ const FileDetailModal = forwardRef<FileDetailModalRef, FileDetailModalProps>(
                                 size="large"
                                 className="min-w-[120px]"
                             >
-                                {isEditMode ? 'Lưu' : 'Chỉnh sửa'}
+                                {isEditMode ? i18n.t('file:fileDetailModal.luu') : i18n.t('file:fileDetailModal.chinhSua')}
                             </Button>
                         </div>
                     )}
