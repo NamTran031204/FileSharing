@@ -10,10 +10,12 @@ import {
     SortAscendingOutlined,
 } from '@ant-design/icons';
 import {Button, Empty, Input, Skeleton, Space, message} from 'antd';
+import {observer} from 'mobx-react-lite';
 import {useEffect, useMemo, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ProjectControllerService} from '../api/api/ProjectControllerService';
-import {type ProjectEntity, type ProjectStatus} from '../api/api/index.defs';
+import {type ProjectEntity, type ProjectStatus, UserGrantedRole} from '../api/api/index.defs';
+import userApiResource from '../api/userApiResource.ts';
 import CreateProjectModal, {type CreateProjectFormValues} from '../components/project/CreateProjectModal.tsx';
 import ProjectOverviewCard, {type ProjectOverviewCardProps} from '../components/project/ProjectOverviewCard.tsx';
 import CommonLayout from "../layout/CommonLayout.tsx";
@@ -60,10 +62,12 @@ const mapProjectToCard = (project: ProjectEntity): ProjectOverviewCardProps => {
         updatedAt: formatProjectDate(project.updatedAt) || 'N/A',
         members,
         extraMembers: Math.max(0, collaborators.length - members.length),
+        ownerId: project.ownerId,
+        visibility: project.visibility,
     };
 };
 
-const ProjectMain = () => {
+const ProjectMain = observer(function ProjectMain() {
     const navigate = useNavigate();
     const {sessionStore} = useStore();
     const [searchKeyword, setSearchKeyword] = useState('');
@@ -71,6 +75,16 @@ const ProjectMain = () => {
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [projects, setProjects] = useState<ProjectOverviewCardProps[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+    // sessionStore.user chua duoc nap nen lay userId hien tai tu API
+    const [myUserId, setMyUserId] = useState('');
+
+    useEffect(() => {
+        userApiResource.getCurrentUser()
+            .then((user) => setMyUserId(user?.userId ?? ''))
+            .catch(() => setMyUserId(''));
+    }, []);
+
+    const isAdmin = sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_ADMIN);
 
     const loadProjects = async () => {
         try {
@@ -199,6 +213,8 @@ const ProjectMain = () => {
                                     <ProjectOverviewCard
                                         key={project.code}
                                         {...project}
+                                        canManage={isAdmin || (!!myUserId && project.ownerId === myUserId)}
+                                        onVisibilityChange={() => void loadProjects()}
                                         onClick={() => {
                                             const projectId = project.projectId;
                                             if (!projectId) return;
@@ -265,6 +281,6 @@ const ProjectMain = () => {
             </CommonLayout>
         </>
     );
-};
+});
 
 export default ProjectMain;

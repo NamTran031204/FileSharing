@@ -606,10 +606,21 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
         ensureOwnerOrAdminPermission(project);
 
+        GrantedVisibility oldVisibility = project.getVisibility();
+        if (oldVisibility == visibility) {
+            return project;
+        }
+
         project.setVisibility(visibility);
         buildAudit(project, false);
         ProjectEntity savedProject = projectRepo.save(project);
-        writeProjectAuditLog(savedProject, AuditAction.UPDATE, null);
+
+        Map<String, Object> before = new HashMap<>();
+        Map<String, Object> after = new HashMap<>();
+        before.put("visibility", oldVisibility);
+        after.put("visibility", visibility);
+        AuditChanges changes = AuditChanges.builder().before(before).after(after).build();
+        writeProjectAuditLog(savedProject, AuditAction.PERMISSION_CHANGE, changes);
         return savedProject;
     }
 

@@ -365,7 +365,8 @@ public final class ProjectPermissionResolver {
 
         if (project.getCollaborators() != null) {
             for (ProjectCollaborator collaborator : project.getCollaborators()) {
-                if (collaborator.getUserId() != null && collaborator.getProjectRole() != null) {
+                if (collaborator.getUserId() != null && collaborator.getProjectRole() != null
+                        && !collaborator.getUserId().equals(project.getOwnerId())) {
                     result.add(buildSingleEntry(collaborator.getUserId(), collaborator.getProjectRole(), false));
                 }
             }
@@ -385,8 +386,15 @@ public final class ProjectPermissionResolver {
 
         Map<String, GrantedProjectRole> roleMap = buildRoleMap(project);
 
+        // owner luon nam trong danh sach restricted, khong trung
+        java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+        if (project.getOwnerId() != null) {
+            ids.add(project.getOwnerId());
+        }
+        ids.addAll(userIds);
+
         List<FolderPermission> result = new ArrayList<>();
-        for (String userId : userIds) {
+        for (String userId : ids) {
             GrantedProjectRole role = roleMap.get(userId);
             if (role != null) {
                 result.add(buildSingleEntry(userId, role, true));

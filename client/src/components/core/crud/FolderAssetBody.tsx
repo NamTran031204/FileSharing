@@ -8,6 +8,7 @@ import AssetCard, {type AssetType} from "../../assets/AssetCard.tsx";
 export interface FolderCardData {
   name: string;
   itemCount: number;
+  visibilityBadge?: ReactNode;
 }
 
 export interface AssetCardData {
@@ -140,6 +141,7 @@ const FolderAssetBody = <TFolder, TAsset>({
                   key={key}
                   name={data.name}
                   itemCount={data.itemCount}
+                  visibilityBadge={data.visibilityBadge}
                   record={folder}
                   actions={folderActions}
                   onClick={() => onFolderClick?.(folder)}

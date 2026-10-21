@@ -1,11 +1,13 @@
 import { FolderFilled, MoreOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import ActionDropdown, { type ActionDropdownItem } from '../core/common/ActionDropdown.tsx';
 
 interface FolderCardProps<TRecord = unknown> {
   name: string;
   itemCount: number;
+  /** icon khoa/globe canh ten, do FolderAssetPage truyen */
+  visibilityBadge?: ReactNode;
   onClick?: () => void;
   actions?: ActionDropdownItem<TRecord>[];
   record?: TRecord;
@@ -15,6 +17,7 @@ interface FolderCardProps<TRecord = unknown> {
 const FolderCard = <TRecord,>({
   name,
   itemCount,
+  visibilityBadge,
   onClick,
   actions,
   record,
@@ -44,7 +47,10 @@ const FolderCard = <TRecord,>({
         <FolderFilled className="text-lg" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground transition group-hover:text-primary">{name}</p>
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground transition group-hover:text-primary">
+          <span className="truncate">{name}</span>
+          {visibilityBadge}
+        </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {itemCount} {itemLabel}
         </p>

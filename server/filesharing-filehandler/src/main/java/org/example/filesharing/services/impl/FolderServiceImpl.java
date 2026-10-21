@@ -48,6 +48,7 @@ import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,11 +104,15 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         List<String> ancestorIds = buildAncestorIds(parentFolder);
         int level = parentFolder != null ? safeLevel(parentFolder.getLevel()) + 1 : 1;
 
-        List<FolderPermission> userPermissions = mapProjectCollaboratorList2FolderPermissionsList(project.getCollaborators());
+        // folder moi luon INHERIT, quyen copy tu cha de khong rong hon cha
+        List<FolderPermission> userPermissions = parentFolder != null
+                && parentFolder.getUserPermissions() != null && !parentFolder.getUserPermissions().isEmpty()
+                ? new ArrayList<>(parentFolder.getUserPermissions())
+                : allMemberPermissions(project);
 
         FolderEntity savedFolder = persistNewFolder(
                 projectId, parentFolderId, folderName,
-                trimToNull(request.getDescription()), ancestorIds, level, request.getVisibility(),
+                trimToNull(request.getDescription()), ancestorIds, level, FolderVisibility.INHERIT,
                 userPermissions);
 
         incrementProjectFolderCount(project, 1);
@@ -383,6 +388,9 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
 
         AuditChanges permissionChanges = null;
         if (request.getRestrictedUserIds() != null) {
+            if (folder.getVisibility() != FolderVisibility.RESTRICTED) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "restrictedUserIds is only allowed when folder is RESTRICTED");
+            }
             ensureFolderPermission(folder, project, GrantedProjectPermission.ADD_USER);
             validateRestrictedUserIds(project, request.getRestrictedUserIds());
 
@@ -491,11 +499,25 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         long total = mongoTemplate.count(query, FolderEntity.class);
         query.with(pageRequest.getPageRequest());
         List<FolderEntity> data = mongoTemplate.find(query, FolderEntity.class);
+        hideManagementFields(data, project);
 
         return PageResult.<FolderEntity>builder()
                 .totalCount(total)
                 .data(data)
                 .build();
+    }
+
+    // nguoi khong phai owner/admin khong duoc thay token chia se va danh sach quyen; entity chi de tra ve, khong save
+    private void hideManagementFields(List<FolderEntity> folders, ProjectEntity project) {
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
+            return;
+        }
+        for (FolderEntity f : folders) {
+            f.setShareToken(null);
+            f.setShareExpiry(null);
+            f.setUserPermissions(null);
+        }
     }
 
     @Override
@@ -712,6 +734,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         long total = mongoTemplate.count(query, FolderEntity.class);
         query.with(pageRequest.getPageRequest());
         List<FolderEntity> data = mongoTemplate.find(query, FolderEntity.class);
+        hideManagementFields(data, project);
 
         return PageResult.<FolderEntity>builder()
                 .totalCount(total)
@@ -732,13 +755,22 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         FolderEntity folder = getActiveFolderOrThrow(request.getFolderId().trim());
         ProjectEntity project = getProjectOrThrow(folder.getProjectId());
         ensureProjectWritable(project);
-        ensureFolderPermission(folder, project, GrantedProjectPermission.UPDATE);
+        ensureOwnerOrAdmin(project);
 
         FolderVisibility newVisibility = request.getVisibility();
         FolderVisibility oldVisibility = folder.getVisibility() != null ? folder.getVisibility() : FolderVisibility.INHERIT;
 
+        if (newVisibility != FolderVisibility.RESTRICTED
+                && request.getRestrictedUserIds() != null && !request.getRestrictedUserIds().isEmpty()) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "restrictedUserIds is only allowed when visibility is RESTRICTED");
+        }
+
         if (oldVisibility == newVisibility) {
             return folder;
+        }
+
+        if (newVisibility == FolderVisibility.PUBLIC && hasRestrictedAncestor(folder)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Cannot set PUBLIC under a RESTRICTED ancestor folder");
         }
 
         if (newVisibility == FolderVisibility.RESTRICTED && (request.getRestrictedUserIds() == null || request.getRestrictedUserIds().isEmpty())) {
@@ -748,7 +780,7 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         List<FolderPermission> newPermissions;
 
         if (newVisibility == FolderVisibility.INHERIT) {
-            List<FolderPermission> parentPermissions = resolveParentPermissions(folder);
+            List<FolderPermission> parentPermissions = resolveParentPermissions(folder, project);
             if (oldVisibility == FolderVisibility.RESTRICTED) {
                 // keep isPrivateCollaborator=true entries, merge with parent
                 newPermissions = ProjectPermissionResolver.buildInheritMerge(folder.getUserPermissions(), parentPermissions);
@@ -773,6 +805,12 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         after.put("visibility", newVisibility);
         after.put("permissions", newPermissions);
 
+        if (oldVisibility == FolderVisibility.PUBLIC) {
+            // roi PUBLIC thi link chia se het hieu luc
+            folder.setShareToken(null);
+            folder.setShareExpiry(null);
+            folder.setShareCreatedBy(null);
+        }
         folder.setVisibility(newVisibility);
         folder.setUserPermissions(newPermissions);
         buildAudit(folder, false);
@@ -902,10 +940,11 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         return false;
     }
 
-    private List<FolderPermission> resolveParentPermissions(FolderEntity folder) {
+    private List<FolderPermission> resolveParentPermissions(FolderEntity folder, ProjectEntity project) {
         String parentId = folder.getParentFolderId();
         if (parentId == null) {
-            return new ArrayList<>();
+            // folder goc: lay toan bo thanh vien project, khong de rong
+            return allMemberPermissions(project);
         }
         return folderRepo.findById(parentId)
                 .map(FolderEntity::getUserPermissions)
@@ -1132,6 +1171,31 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
     }
 
+    private List<FolderPermission> allMemberPermissions(ProjectEntity project) {
+        return ProjectPermissionResolver.buildFolderUserPermissions(project, FolderVisibility.PUBLIC, null, null);
+    }
+
+    private void ensureOwnerOrAdmin(ProjectEntity project) {
+        UserEntity currentUser = auditService.getCurrentUser();
+        if (isAdmin(currentUser) || Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
+            return;
+        }
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    }
+
+    private boolean hasRestrictedAncestor(FolderEntity folder) {
+        List<String> ancestorIds = folder.getAncestorIds();
+        if (ancestorIds == null || ancestorIds.isEmpty()) {
+            return false;
+        }
+        for (FolderEntity ancestor : folderRepo.findAllById(ancestorIds)) {
+            if (ancestor.getVisibility() == FolderVisibility.RESTRICTED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void validateRestrictedUserIds(ProjectEntity project, List<String> userIds) {
         if (project == null || userIds == null) {
             return;
@@ -1166,29 +1230,41 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         }
     }
 
+    // counter dung $inc de khong ghi de cac field khac (visibility, userPermissions) khi chay dong thoi
     private void incrementParentSubfolderCount(FolderEntity parent, int delta) {
-        FolderStats stats = ensureFolderStats(parent);
-        int current = stats.getSubfoldersCount() != null ? stats.getSubfoldersCount() : 0;
-        stats.setSubfoldersCount(Math.max(0, current + delta));
-        parent.setStats(stats);
-        applyUpdateAudit(parent);
-        folderRepo.save(parent);
+        if (parent.getStats() == null) {
+            // stats null thi $inc loi, khoi tao truoc
+            parent.setStats(defaultFolderStats());
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(parent.getFolderId()).and("stats").is(null)),
+                    new Update().set("stats", parent.getStats()), FolderEntity.class);
+        }
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(parent.getFolderId())),
+                new Update().inc("stats.subfoldersCount", delta)
+                        .set("updateBy", auditService.getCurrentUserId())
+                        .set("updateByEmail", auditService.getCurrentUserEmail()),
+                FolderEntity.class);
     }
 
     private void incrementProjectFolderCount(ProjectEntity project, int delta) {
-        ProjectStats stats = ensureProjectStats(project);
-        int current = stats.getFolderCount() != null ? stats.getFolderCount() : 0;
-        stats.setFolderCount(Math.max(0, current + delta));
-        project.setStats(stats);
-        projectRepo.save(project);
+        incrementProjectStat(project, "stats.folderCount", delta);
     }
 
     private void incrementProjectAssetCount(ProjectEntity project, int delta) {
-        ProjectStats stats = ensureProjectStats(project);
-        int current = stats.getAssetCount() != null ? stats.getAssetCount() : 0;
-        stats.setAssetCount(Math.max(0, current + delta));
-        project.setStats(stats);
-        projectRepo.save(project);
+        incrementProjectStat(project, "stats.assetCount", delta);
+    }
+
+    private void incrementProjectStat(ProjectEntity project, String field, int delta) {
+        if (project.getStats() == null) {
+            ensureProjectStats(project);
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(project.getProjectId()).and("stats").is(null)),
+                    new Update().set("stats", project.getStats()), ProjectEntity.class);
+        }
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(project.getProjectId())),
+                new Update().inc(field, delta), ProjectEntity.class);
     }
 
     private FolderStats defaultFolderStats() {

@@ -6,8 +6,9 @@ import {
     VideoCameraOutlined,
 } from '@ant-design/icons';
 import {Tag} from 'antd';
+import type {GrantedVisibility} from '../../api/api/index.defs';
 import UserAvatar from "../core/common/UserAvatar.tsx";
-import ActionDropdown, {type ActionDropdownItem} from "../core/common/ActionDropdown.tsx";
+import ProjectVisibilityToggle from "./ProjectVisibilityToggle.tsx";
 
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED';
 
@@ -33,6 +34,11 @@ export interface ProjectOverviewCardProps {
     updatedAt: string;
     members: ProjectMember[];
     extraMembers?: number;
+    ownerId?: string;
+    visibility?: GrantedVisibility;
+    /** owner/admin moi thay toggle doi visibility */
+    canManage?: boolean;
+    onVisibilityChange?: (visibility: GrantedVisibility) => void;
     onClick?: () => void;
 }
 
@@ -51,12 +57,26 @@ const ProjectOverviewCard = ({
     updatedAt,
     members,
     extraMembers = 0,
+    projectId,
+    visibility,
+    canManage,
+    onVisibilityChange,
     onClick,
 }: ProjectOverviewCardProps) => {
     const isActive = status === 'ACTIVE';
 
-
+    // toggle nam ngoai the button goc de khong long phan tu tuong tac
     return (
+        <div className="relative">
+        {canManage && projectId && (
+            <div className="absolute right-4 top-3 z-10">
+                <ProjectVisibilityToggle
+                    projectId={projectId}
+                    visibility={visibility}
+                    onChanged={(v) => onVisibilityChange?.(v)}
+                />
+            </div>
+        )}
         <button
             type="button"
             onClick={onClick}
@@ -149,20 +169,10 @@ const ProjectOverviewCard = ({
                         <p className="text-xs font-medium text-muted-foreground">{updatedAt}</p>
                     </div>
 
-                    {/*{hasActions && (*/}
-                    {/*    <div*/}
-                    {/*        className="absolute right-3 top-3 z-10 opacity-0 transition group-hover:opacity-100"*/}
-                    {/*        onClick={stopPropagation}*/}
-                    {/*    >*/}
-                    {/*        <ActionDropdown<TRecord>*/}
-                    {/*            actions={cardActions}*/}
-                    {/*            record={record}*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
                 </div>
             </div>
         </button>
+        </div>
     );
 };
 

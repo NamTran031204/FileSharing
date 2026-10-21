@@ -1,11 +1,14 @@
-import { CloudUploadOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, FolderOpenOutlined, GlobalOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { Button, Modal, Select, Tag } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
+    FolderVisibility,
     GrantedProjectPermission,
     ProcessingStatus,
+    UserGrantedRole,
+    type ProjectEntity,
     type AssetSummaryDto,
     type FolderEntity,
     type FolderTreeItemDTO,
@@ -25,6 +28,10 @@ import { ApiPendingNote } from '../components/core/common/ApiPendingNote';
 import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 import { FolderControllerService } from '../api/api/FolderControllerService';
+import { ProjectControllerService } from '../api/api/ProjectControllerService';
+import VisibilityModal from '../components/folder/VisibilityModal.tsx';
+import ProjectVisibilityToggle from '../components/project/ProjectVisibilityToggle.tsx';
+import { describeInheritSource, resolveEffectiveVisibility } from '../utils/visibilityUtils';
 import userApiResource from '../api/userApiResource.ts';
 import ProofLinkModal from '../components/proof/ProofLinkModal.tsx';
 import ProofSelectionsDrawer from '../components/proof/ProofSelectionsDrawer.tsx';
@@ -114,12 +121,27 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [currentFolder, setCurrentFolder] = useState<FolderEntity | null>(null);
     // sessionStore.user chua duoc nap o app nen lay userId hien tai truc tiep tu API
     const [myUserId, setMyUserId] = useState('');
+    // project de biet ownerId/visibility (quyen doi visibility chi cho owner/admin)
+    const [project, setProject] = useState<ProjectEntity | null>(null);
+    const [visibilityFolderId, setVisibilityFolderId] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         userApiResource.getCurrentUser()
             .then((user) => setMyUserId(user?.userId ?? ''))
             .catch(() => setMyUserId(''));
     }, []);
+
+    useEffect(() => {
+        if (!projectId) return;
+        ProjectControllerService.getById({ projectId })
+            .then((res) => setProject(res.data ?? null))
+            .catch(() => setProject(null));
+    }, [projectId, refreshKey]);
+
+    const canManageVisibility =
+        sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_ADMIN) ||
+        (!!myUserId && project?.ownerId === myUserId);
 
     useEffect(() => {
         if (!currentFolderId) {
@@ -131,7 +153,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             .then((res) => { if (!cancelled) setCurrentFolder(res.data ?? null); })
             .catch(() => { if (!cancelled) setCurrentFolder(null); });
         return () => { cancelled = true; };
-    }, [currentFolderId, proofLinkOpen]);
+    }, [currentFolderId, proofLinkOpen, refreshKey]);
 
     const currentFolderPermissions = useMemo(
         () => (currentFolder && currentFolder.folderId === currentFolderId ? currentFolder.userPermissions ?? [] : [])
@@ -139,7 +161,12 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             .flatMap((p) => p.permissions ?? []),
         [currentFolder, currentFolderId, myUserId],
     );
-    const canShareProof = currentFolderPermissions.includes(GrantedProjectPermission.ADD_USER);
+    const effectiveVisibility = currentFolderId
+        ? resolveEffectiveVisibility(currentFolderId, folderStore.treeItems, project?.visibility)
+        : undefined;
+    const canShareProof =
+        currentFolderPermissions.includes(GrantedProjectPermission.ADD_USER) &&
+        effectiveVisibility === FolderVisibility.PUBLIC;
     const canViewProof = currentFolderPermissions.includes(GrantedProjectPermission.READ);
 
     const searchSkipRef = useRef(false);
@@ -249,6 +276,13 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         }
     };
 
+    const handleVisibilityChanged = () => {
+        if (!projectId) return;
+        void folderStore.fetchTree(projectId);
+        void folderStore.fetchFolders(projectId, currentFolderId);
+        setRefreshKey((k) => k + 1);
+    };
+
     const handleMutationSuccess = () => {
         if (!projectId) return;
         void folderStore.fetchFolders(projectId, currentFolderId);
@@ -312,6 +346,15 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         { label: 'Processing', value: processingItems.length },
     ];
 
+    const visibilityTag = currentFolderId ? (
+        <Tag className="m-0 rounded-md border-0 font-semibold">
+            {effectiveVisibility === FolderVisibility.PUBLIC ? <GlobalOutlined /> : <LockOutlined />}{' '}
+            {breadcrumbFolders.at(-1)?.visibility && breadcrumbFolders.at(-1)?.visibility !== FolderVisibility.INHERIT
+                ? breadcrumbFolders.at(-1)?.visibility
+                : `Inherit từ ${describeInheritSource(currentFolderId, folderStore.treeItems, projectName)}`}
+        </Tag>
+    ) : null;
+
     const contextBar = (
         <ContextActionBar
             title={currentFolderName}
@@ -350,6 +393,13 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         folderStore.openEditFolderModal(currentFolderId);
                     },
                 },
+                ...(currentFolderId && canManageVisibility
+                    ? [{
+                        key: 'visibility',
+                        label: 'Quyền truy cập',
+                        onClick: () => setVisibilityFolderId(currentFolderId),
+                    }]
+                    : []),
                 { type: 'divider' },
                 {
                     key: 'archive',
@@ -360,6 +410,14 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             ]}
             right={
                 <>
+                    {!currentFolderId && canManageVisibility && projectId && (
+                        <ProjectVisibilityToggle
+                            projectId={projectId}
+                            visibility={project?.visibility}
+                            onChanged={handleVisibilityChanged}
+                        />
+                    )}
+                    {currentFolderId && visibilityTag}
                     {currentFolderId && canViewProof && (
                         <Button className="h-9 rounded-lg" onClick={() => setProofSelectionsOpen(true)}>
                             Lựa chọn của khách
@@ -381,6 +439,16 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     );
 
     const folderActions: ActionDropdownItem<FolderEntity>[] = [
+        ...(canManageVisibility
+            ? [{
+                title: 'visibility',
+                titleCustom: 'Quyền truy cập',
+                icon: <SafetyOutlined className="text-base" />,
+                onClick: (record?: FolderEntity) => {
+                    if (record?.folderId) setVisibilityFolderId(record.folderId);
+                },
+            }]
+            : []),
         {
             title: 'edit',
             titleCustom: 'Sua',
@@ -515,6 +583,10 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 mapFolderToCard={(folder) => ({
                     name: folder.folderName ?? '—',
                     itemCount: folder.stats?.assetCount ?? 0,
+                    visibilityBadge:
+                        folder.visibility === FolderVisibility.RESTRICTED ? <LockOutlined className="text-xs text-muted-foreground" />
+                        : folder.visibility === FolderVisibility.PUBLIC ? <GlobalOutlined className="text-xs text-primary" />
+                        : undefined,
                 })}
                 mapAssetToCard={(summary) => {
                     const version = summary.latestVersion;
@@ -552,6 +624,18 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 }
                 contentTop={contentTop}
             />
+
+            {visibilityFolderId && projectId && (
+                <VisibilityModal
+                    open
+                    folderId={visibilityFolderId}
+                    projectId={projectId}
+                    ownerId={project?.ownerId}
+                    treeItems={folderStore.treeItems}
+                    onClose={() => setVisibilityFolderId(null)}
+                    onChanged={handleVisibilityChanged}
+                />
+            )}
 
             {currentFolderId && (
                 <>
