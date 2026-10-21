@@ -10,6 +10,7 @@ import {
   type ProcessingStatus,
   type MediaInfo,
   type EmailSenderRequestDto,
+  type EmailType,
   type CommonResponseString,
   type PageRequestDtoUserFileFilterPageRequestDto,
   type UserFileFilterPageRequestDto,

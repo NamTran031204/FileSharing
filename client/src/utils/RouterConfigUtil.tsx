@@ -17,6 +17,7 @@ import ImageReviewPage from "../page/ImageReviewPage.tsx";
 import VideoReviewPage from "../page/VideoReviewPage.tsx";
 import FolderAssetPage from "../page/FolderAssetPage.tsx";
 import DashboardPage from "../page/DashboardPage.tsx";
+import ProofGuestPage from "../page/ProofGuestPage.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -129,6 +130,12 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/mockup/hls-video',
         name: 'Mockup HLS Video',
         element: <HlsVideoMockup/>,
+        isShow: false,
+    },
+    {
+        path: '/proof/:shareToken',
+        name: 'Proof',
+        element: <ProofGuestPage/>,
         isShow: false,
     },
     {

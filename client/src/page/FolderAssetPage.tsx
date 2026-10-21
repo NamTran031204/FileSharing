@@ -24,6 +24,10 @@ import FolderInsightPanel, {
 import { ApiPendingNote } from '../components/core/common/ApiPendingNote';
 import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
+import { FolderControllerService } from '../api/api/FolderControllerService';
+import userApiResource from '../api/userApiResource.ts';
+import ProofLinkModal from '../components/proof/ProofLinkModal.tsx';
+import ProofSelectionsDrawer from '../components/proof/ProofSelectionsDrawer.tsx';
 
 const resolveAssetType = (mimeType?: string): AssetType => {
     if (!mimeType) return 'doc';
@@ -104,6 +108,39 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [insightCollapsed, setInsightCollapsed] = useState(true);
+    const [proofLinkOpen, setProofLinkOpen] = useState(false);
+    const [proofSelectionsOpen, setProofSelectionsOpen] = useState(false);
+    // folder hien tai de lay shareToken va userPermissions (folderStore.folders chi chua folder con)
+    const [currentFolder, setCurrentFolder] = useState<FolderEntity | null>(null);
+    // sessionStore.user chua duoc nap o app nen lay userId hien tai truc tiep tu API
+    const [myUserId, setMyUserId] = useState('');
+
+    useEffect(() => {
+        userApiResource.getCurrentUser()
+            .then((user) => setMyUserId(user?.userId ?? ''))
+            .catch(() => setMyUserId(''));
+    }, []);
+
+    useEffect(() => {
+        if (!currentFolderId) {
+            setCurrentFolder(null);
+            return;
+        }
+        let cancelled = false;
+        FolderControllerService.getById({ folderId: currentFolderId })
+            .then((res) => { if (!cancelled) setCurrentFolder(res.data ?? null); })
+            .catch(() => { if (!cancelled) setCurrentFolder(null); });
+        return () => { cancelled = true; };
+    }, [currentFolderId, proofLinkOpen]);
+
+    const currentFolderPermissions = useMemo(
+        () => (currentFolder && currentFolder.folderId === currentFolderId ? currentFolder.userPermissions ?? [] : [])
+            .filter((p) => p.userId === myUserId)
+            .flatMap((p) => p.permissions ?? []),
+        [currentFolder, currentFolderId, myUserId],
+    );
+    const canShareProof = currentFolderPermissions.includes(GrantedProjectPermission.ADD_USER);
+    const canViewProof = currentFolderPermissions.includes(GrantedProjectPermission.READ);
 
     const searchSkipRef = useRef(false);
 
@@ -282,7 +319,17 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             // danh sach thanh vien that se do tu ProjectControllerService.members — xem note "right" ben duoi
             participants={[]}
             onBack={currentFolderId ? handleBackToParent : undefined}
-            onShare={() => uiUtils.showInfor('Chia sẻ folder — chưa nối API')}
+            onShare={() => {
+                if (!currentFolderId) {
+                    uiUtils.showInfor('Hãy mở một folder để gửi khách chọn ảnh');
+                    return;
+                }
+                if (!canShareProof) {
+                    uiUtils.showInfor('Bạn không có quyền tạo link chọn ảnh cho folder này');
+                    return;
+                }
+                setProofLinkOpen(true);
+            }}
             onTranslate={() => uiUtils.showInfor('Dịch tên file và bình luận — chưa nối API')}
             onDownload={() => uiUtils.showInfor('Tải folder dạng .zip — chưa nối API')}
             onCopyLink={handleCopyLink}
@@ -313,6 +360,11 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             ]}
             right={
                 <>
+                    {currentFolderId && canViewProof && (
+                        <Button className="h-9 rounded-lg" onClick={() => setProofSelectionsOpen(true)}>
+                            Lựa chọn của khách
+                        </Button>
+                    )}
                     <ApiPendingNote
                         compact
                         label="Members"
@@ -500,6 +552,23 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 }
                 contentTop={contentTop}
             />
+
+            {currentFolderId && (
+                <>
+                    <ProofLinkModal
+                        open={proofLinkOpen}
+                        folderId={currentFolderId}
+                        initialToken={currentFolder?.shareToken}
+                        initialExpiry={currentFolder?.shareExpiry}
+                        onClose={() => setProofLinkOpen(false)}
+                    />
+                    <ProofSelectionsDrawer
+                        open={proofSelectionsOpen}
+                        folderId={currentFolderId}
+                        onClose={() => setProofSelectionsOpen(false)}
+                    />
+                </>
+            )}
 
             <Modal
                 open={folderStore.isUploadAssetOpen || folderStore.isUploadFolderOpen}

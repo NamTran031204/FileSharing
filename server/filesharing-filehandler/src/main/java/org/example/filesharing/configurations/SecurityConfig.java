@@ -46,6 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**"
                         ).permitAll()
+                        // proof link cho khach khong tai khoan, tu kiem token trong service
+                        .requestMatchers("/api/public/**").permitAll()
 
                         .requestMatchers("/api/admin/**").hasAuthority(UserGrantedRole.ROLE_ADMIN.toString())
                         .requestMatchers(
@@ -106,7 +108,8 @@ public class SecurityConfig {
                 "Content-Type",
                 "Accept",
                 "Origin",
-                "X-Requested-With"
+                "X-Requested-With",
+                "X-Guest-Key"
         ));
 
         configuration.setExposedHeaders(Arrays.asList(

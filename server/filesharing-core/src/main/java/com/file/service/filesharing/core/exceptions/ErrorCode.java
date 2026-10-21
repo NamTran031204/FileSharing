@@ -47,6 +47,12 @@ public enum ErrorCode {
     SESSION_LIMIT_EXCEEDED("5506", "Too many concurrent upload sessions", HttpStatus.TOO_MANY_REQUESTS),
     FILE_NOT_READY("5507", "File is not ready for download", HttpStatus.CONFLICT),
 
+    PROOF_LINK_INVALID("5601", "Proof link is invalid", HttpStatus.NOT_FOUND),
+    PROOF_LINK_EXPIRED("5602", "Proof link has expired", HttpStatus.GONE),
+    PROOF_SESSION_INVALID("5603", "Proof session is invalid", HttpStatus.FORBIDDEN),
+    PROOF_ALREADY_SUBMITTED("5604", "Proof selection already submitted", HttpStatus.CONFLICT),
+    PROOF_ASSET_NOT_IN_FOLDER("5605", "Asset does not belong to the proof folder", HttpStatus.BAD_REQUEST),
+
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),
 

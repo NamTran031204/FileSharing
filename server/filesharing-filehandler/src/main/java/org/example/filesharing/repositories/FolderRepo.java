@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface FolderRepo extends MongoRepository<FolderEntity, String> {
     List<FolderEntity> findByProjectId(String projectId);
+    Optional<FolderEntity> findByShareToken(String shareToken);
+    boolean existsByShareToken(String shareToken);
     List<FolderEntity> findByParentFolderId(String parentFolderId);
     Optional<FolderEntity> findByProjectIdAndParentFolderIdAndFolderName(String projectId, String parentFolderId, String folderName);
     List<FolderEntity> findByAncestorIdsContaining(String ancestorId);

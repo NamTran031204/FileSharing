@@ -472,6 +472,66 @@ export interface ReviewSessionCreateDTO {
   reviewerIds?: string[];
 }
 
+export interface ProofSubmitRequestDto {
+  /**  */
+  assetIds?: string[];
+
+  /**  */
+  note?: string;
+}
+
+export interface CommonResponseProofSubmitResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofSubmitResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofSubmitResponseDto {
+  /**  */
+  selectionId?: string;
+
+  /**  */
+  count?: number;
+
+  /**  */
+  submittedAt?: Date;
+}
+
+export interface ProofSessionCreateRequestDto {
+  /**  */
+  guestName?: string;
+}
+
+export interface CommonResponseProofSessionResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofSessionResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofSessionResponseDto {
+  /**  */
+  guestKey?: string;
+
+  /**  */
+  guestName?: string;
+}
+
 export interface ProjectVisibilityUpdateDTO {
   /**  */
   visibility?: GrantedVisibility;
@@ -981,6 +1041,33 @@ export interface PageResultNotificationEntity {
   data?: NotificationEntity[];
 }
 
+export interface ProofLinkCreateRequestDto {
+  /**  */
+  rangeTime?: ShareTokenTime;
+}
+
+export interface CommonResponseProofLinkResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofLinkResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofLinkResponseDto {
+  /**  */
+  shareToken?: string;
+
+  /**  */
+  shareExpiry?: Date;
+}
+
 export interface FolderUpdateRequestDTO {
   /**  */
   folderId?: string;
@@ -1078,6 +1165,9 @@ export interface FolderEntity {
 
   /**  */
   shareExpiry?: Date;
+
+  /**  */
+  shareCreatedBy?: string;
 }
 
 export interface FolderPermission {
@@ -1462,6 +1552,9 @@ export interface EmailSenderRequestDto {
 
   /**  */
   objectName?: string;
+
+  /**  */
+  type?: EmailType;
 }
 
 export interface PageRequestDtoUserFileFilterPageRequestDto {
@@ -2629,6 +2722,121 @@ export interface CommonResponseListReviewSessionEntity {
   message?: string;
 }
 
+export interface CommonResponseProofLandingResponseDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofLandingResponseDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofLandingResponseDto {
+  /**  */
+  folderName?: string;
+
+  /**  */
+  imageCount?: string;
+
+  /**  */
+  shareExpiry?: Date;
+}
+
+export interface CommonResponsePageResultProofAssetItemDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultProofAssetItemDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultProofAssetItemDto {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: ProofAssetItemDto[];
+}
+
+export interface ProofAssetItemDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  thumbnailUrl?: string;
+
+  /**  */
+  previewUrl?: string;
+
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+}
+
+export interface CommonResponseProofSelectionDetailDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofSelectionDetailDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofSelectionDetailDto {
+  /**  */
+  selectionId?: string;
+
+  /**  */
+  guestName?: string;
+
+  /**  */
+  status?: ProofSelectionStatus;
+
+  /**  */
+  note?: string;
+
+  /**  */
+  submittedAt?: Date;
+
+  /**  */
+  items?: ProofSelectionItemDto[];
+}
+
+export interface ProofSelectionItemDto {
+  /**  */
+  assetId?: string;
+
+  /**  */
+  assetName?: string;
+
+  /**  */
+  thumbnailUrl?: string;
+
+  /**  */
+  available?: boolean;
+}
+
 export interface CommonResponseProjectStats {
   /**  */
   isSuccessful?: boolean;
@@ -2894,6 +3102,40 @@ export interface ProcessingStatusResponseDto {
 
   /**  */
   errorMessage?: string;
+}
+
+export interface CommonResponseListProofSelectionSummaryDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: ProofSelectionSummaryDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface ProofSelectionSummaryDto {
+  /**  */
+  selectionId?: string;
+
+  /**  */
+  guestName?: string;
+
+  /**  */
+  status?: ProofSelectionStatus;
+
+  /**  */
+  count?: number;
+
+  /**  */
+  submittedAt?: Date;
+
+  /**  */
+  createdAt?: Date;
 }
 
 export interface SseEmitter {
@@ -3426,7 +3668,8 @@ export enum NotificationType {
   'NEW_VERSION' = 'NEW_VERSION',
   'REVIEW_INVITATION' = 'REVIEW_INVITATION',
   'ANNOTATION_RESOLVED' = 'ANNOTATION_RESOLVED',
-  'DEADLINE_REMINDER' = 'DEADLINE_REMINDER'
+  'DEADLINE_REMINDER' = 'DEADLINE_REMINDER',
+  'PROOF_SUBMITTED' = 'PROOF_SUBMITTED'
 }
 
 export enum FolderVisibility {
@@ -3444,6 +3687,11 @@ export enum ObjectPermission {
 export enum ObjectVisibility {
   'PRIVATE' = 'PRIVATE',
   'PUBLIC' = 'PUBLIC'
+}
+
+export enum EmailType {
+  'DOWNLOAD_LINK' = 'DOWNLOAD_LINK',
+  'GOOGLE_ACCOUNT_LINKED' = 'GOOGLE_ACCOUNT_LINKED'
 }
 
 export enum AssetStatus {
@@ -3520,6 +3768,11 @@ export enum UploadSessionStatus {
   'COMPLETED' = 'COMPLETED',
   'ABORTED' = 'ABORTED',
   'EXPIRED' = 'EXPIRED'
+}
+
+export enum ProofSelectionStatus {
+  'DRAFT' = 'DRAFT',
+  'SUBMITTED' = 'SUBMITTED'
 }
 
 export enum AuditAction {

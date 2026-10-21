@@ -2,6 +2,7 @@ package org.example.filesharing.configurations;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.index.PartialIndexFilter;
 
 import java.time.Duration;
 
@@ -37,6 +39,7 @@ public class MongoIndexBootstrapConfig {
             applyAuditLogsIndexes();
             applyNotificationsIndexes();
             applyUploadSessionsIndexes();
+            applyProofSelectionIndexes();
 
             log.info("Mongo indexes bootstrap completed.");
         };
@@ -107,6 +110,18 @@ public class MongoIndexBootstrapConfig {
         ops.createIndex(new Index().on("parentFolderId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("ancestorIds", Sort.Direction.ASC));
         ops.createIndex(new Index().on("permissions.userId", Sort.Direction.ASC));
+        // unique chi tren shareToken kieu string; sparse van index gia tri null ghi tuong minh nen dung partial
+        ops.createIndex(new Index().on("shareToken", Sort.Direction.ASC).unique()
+                .partial(PartialIndexFilter.of(new Document("shareToken", new Document("$type", "string")))));
+    }
+
+    private void applyProofSelectionIndexes() {
+        IndexOperations ops = mongoTemplate.indexOps("proof_selection");
+        ops.createIndex(new Index().on("guestKeyHash", Sort.Direction.ASC).unique());
+        ops.createIndex(new Index()
+                .on("folderId", Sort.Direction.ASC)
+                .on("status", Sort.Direction.ASC)
+                .on("submittedAt", Sort.Direction.DESC));
     }
 
     private void applyMediaRenditionsIndexes() {

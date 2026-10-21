@@ -38,4 +38,6 @@ public class FolderEntity extends EntityAuditBase {
 
     private String shareToken;
     private Instant shareExpiry;
+    // userId nguoi tao/lam moi proof link, nhan notification khi khach gui
+    private String shareCreatedBy;
 }
