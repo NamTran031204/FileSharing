@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Modal, Select } from 'antd';
+import { Button, Input, Modal, Select, Space, Tooltip } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
 import { ShareTokenTime } from '../../api/api/index.defs';
 import { ProofControllerService } from '../../api/api/ProofControllerService';
@@ -86,29 +86,49 @@ const ProofLinkModal = ({ open, folderId, initialToken, initialExpiry, onClose }
 
     return (
         <Modal open={open} title={i18n.t('proof:proofLinkModal.guiKhachChonAnh')} footer={null} onCancel={onClose} destroyOnHidden>
-            <p className="mb-3 text-muted-foreground">
+            <div className="flex flex-col gap-4 pt-2">
+            <p className="m-0 text-muted-foreground">
                 {i18n.t('proof:proofLinkModal.khachMoLinkNhapTen')}
             </p>
 
-            <div className="mb-3 flex items-center gap-2">
-                <Select value={range} onChange={setRange} options={getRangeOptions()} className="w-44" aria-label={i18n.t('proof:proofLinkModal.thoiHanLink')} />
-                <Button type="primary" loading={busy} onClick={() => void handleCreate()}>
-                    {token ? i18n.t('proof:proofLinkModal.lamMoiLink') : i18n.t('proof:proofLinkModal.taoLink')}
-                </Button>
-            </div>
+            <Select
+                value={range}
+                onChange={setRange}
+                options={getRangeOptions()}
+                className="w-full"
+                aria-label={i18n.t('proof:proofLinkModal.thoiHanLink')}
+            />
 
-            {token && (
+            {!token ? (
+                <Button type="primary" shape="round" size="large" block loading={busy} onClick={() => void handleCreate()}>
+                    {i18n.t('proof:proofLinkModal.taoLink')}
+                </Button>
+            ) : (
                 <>
-                    <div className="flex items-center gap-2">
+                    <Space.Compact className="w-full">
                         <Input readOnly value={link} aria-label={i18n.t('proof:proofLinkModal.linkChonAnh')} />
-                        <Button icon={<CopyOutlined />} onClick={() => void handleCopy()}>{i18n.t('proof:proofLinkModal.copy')}</Button>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                        <Tooltip title={i18n.t('proof:proofLinkModal.copy')}>
+                            <Button
+                                icon={<CopyOutlined />}
+                                aria-label={i18n.t('proof:proofLinkModal.copy')}
+                                onClick={() => void handleCopy()}
+                            />
+                        </Tooltip>
+                    </Space.Compact>
+                    <p className="m-0 text-sm text-muted-foreground">
                         {expiry ? i18n.t('proof:proofLinkModal.hetHan', {VN: new Date(expiry).toLocaleString(LangUtil.getDateLocale())}) : i18n.t('proof:proofLinkModal.khongGioiHanThoiGian')}
                     </p>
-                    <Button danger className="mt-3" onClick={() => void handleRevoke()}>{i18n.t('proof:proofLinkModal.thuHoiLink')}</Button>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button danger shape="round" size="large" onClick={() => void handleRevoke()}>
+                            {i18n.t('proof:proofLinkModal.thuHoiLink')}
+                        </Button>
+                        <Button type="primary" shape="round" size="large" loading={busy} onClick={() => void handleCreate()}>
+                            {i18n.t('proof:proofLinkModal.lamMoiLink')}
+                        </Button>
+                    </div>
                 </>
             )}
+            </div>
         </Modal>
     );
 };

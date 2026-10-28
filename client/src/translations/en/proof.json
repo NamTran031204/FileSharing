@@ -74,6 +74,9 @@
     "daChonAnh": "Selected {{selectedCount}} photos",
     "gui": "Submit",
     "linkKhongHopLeHoac": "The link is invalid or has been revoked.",
-    "linkNayDaHetHan": "This link has expired."
+    "linkNayDaHetHan": "This link has expired.",
+    "khongCanTaiKhoan": "No account needed",
+    "daGuiAnh": "{{count}} photos submitted",
+    "guiLuaChon": "Submit selection"
   }
 }

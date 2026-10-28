@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
+import { Button } from 'antd';
 import { CloseOutlined, HeartFilled, HeartOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { ProofAssetItem } from '../../api/proofApi';
 import i18n from '../../i18n';
@@ -34,7 +35,12 @@ const ProofLightbox = observer(({ assets, index, selected, readOnly, onIndexChan
         <div className="fixed inset-0 z-50 flex flex-col bg-canvas" role="dialog" aria-label={i18n.t('proof:proofLightbox.xemAnh')}>
             <div className="flex items-center justify-between px-4 py-3 text-primary-foreground">
                 <span className="truncate text-sm">{asset.assetName} · {index + 1}/{assets.length}</span>
-                <button type="button" aria-label={i18n.t('proof:proofLightbox.dong')} className="p-2 text-primary-foreground" onClick={onClose}>
+                <button
+                    type="button"
+                    aria-label={i18n.t('proof:proofLightbox.dong')}
+                    className="flex size-11 items-center justify-center rounded-full bg-canvas-elevated text-primary-foreground"
+                    onClick={onClose}
+                >
                     <CloseOutlined />
                 </button>
             </div>
@@ -44,7 +50,7 @@ const ProofLightbox = observer(({ assets, index, selected, readOnly, onIndexChan
                     type="button"
                     aria-label={i18n.t('proof:proofLightbox.anhTruoc')}
                     disabled={index === 0}
-                    className="absolute left-2 z-10 p-3 text-primary-foreground disabled:opacity-30"
+                    className="absolute left-2 z-10 flex size-11 items-center justify-center rounded-full border border-canvas-border bg-canvas-elevated text-primary-foreground disabled:opacity-30"
                     onClick={() => onIndexChange(index - 1)}
                 >
                     <LeftOutlined />
@@ -58,7 +64,7 @@ const ProofLightbox = observer(({ assets, index, selected, readOnly, onIndexChan
                     type="button"
                     aria-label={i18n.t('proof:proofLightbox.anhSau')}
                     disabled={index === assets.length - 1}
-                    className="absolute right-2 z-10 p-3 text-primary-foreground disabled:opacity-30"
+                    className="absolute right-2 z-10 flex size-11 items-center justify-center rounded-full border border-canvas-border bg-canvas-elevated text-primary-foreground disabled:opacity-30"
                     onClick={() => onIndexChange(index + 1)}
                 >
                     <RightOutlined />
@@ -69,14 +75,17 @@ const ProofLightbox = observer(({ assets, index, selected, readOnly, onIndexChan
                 {readOnly ? (
                     isSelected && <HeartFilled className="text-2xl text-destructive" aria-label={i18n.t('proof:proofLightbox.daChon')} />
                 ) : (
-                    <button
-                        type="button"
+                    <Button
+                        shape="round"
+                        size="large"
+                        type={isSelected ? 'primary' : 'default'}
                         aria-label={isSelected ? i18n.t('proof:proofLightbox.boChon') : i18n.t('proof:proofLightbox.chonAnh')}
-                        className="text-3xl text-primary-foreground"
+                        className={isSelected ? '!border-destructive !bg-destructive !text-primary-foreground' : ''}
+                        icon={isSelected ? <HeartFilled /> : <HeartOutlined />}
                         onClick={() => onToggle(asset.assetId)}
                     >
-                        {isSelected ? <HeartFilled className="text-destructive" /> : <HeartOutlined />}
-                    </button>
+                        {isSelected ? i18n.t('proof:proofLightbox.daChon') : i18n.t('proof:proofLightbox.chonAnh')}
+                    </Button>
                 )}
             </div>
         </div>

@@ -74,6 +74,9 @@
     "daChonAnh": "Đã chọn {{selectedCount}} ảnh",
     "gui": "Gửi",
     "linkKhongHopLeHoac": "Link không hợp lệ hoặc đã bị thu hồi.",
-    "linkNayDaHetHan": "Link này đã hết hạn."
+    "linkNayDaHetHan": "Link này đã hết hạn.",
+    "khongCanTaiKhoan": "Không cần tài khoản",
+    "daGuiAnh": "Đã gửi {{count}} ảnh",
+    "guiLuaChon": "Gửi lựa chọn"
   }
 }

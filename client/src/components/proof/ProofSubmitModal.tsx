@@ -20,6 +20,8 @@ const ProofSubmitModal = ({ open, count, submitting, error, onSubmit, onCancel }
             title={i18n.t('proof:proofSubmitModal.guiLuaChon')}
             okText={i18n.t('proof:proofSubmitModal.gui')}
             cancelText={i18n.t('proof:proofSubmitModal.quayLai')}
+            okButtonProps={{ shape: 'round' }}
+            cancelButtonProps={{ shape: 'round' }}
             confirmLoading={submitting}
             onOk={() => onSubmit(note)}
             onCancel={onCancel}

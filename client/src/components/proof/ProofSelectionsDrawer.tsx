@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Drawer, Empty, Spin, Tag } from 'antd';
+import { Alert, Avatar, Button, Drawer, Empty, Spin, Tag } from 'antd';
 import { ArrowLeftOutlined, CopyOutlined } from '@ant-design/icons';
 import type { ProofSelectionDetailDto, ProofSelectionSummaryDto } from '../../api/api/index.defs';
 import { ProofControllerService } from '../../api/api/ProofControllerService';
@@ -82,11 +82,14 @@ const ProofSelectionsDrawer = ({ open, folderId, onClose }: Props) => {
                                 <li key={s.selectionId}>
                                     <button
                                         type="button"
-                                        className="mb-2 flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left"
+                                        className="mb-3 flex w-full items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-3 text-left"
                                         onClick={() => void openDetail(s.selectionId)}
                                     >
-                                        <span>
-                                            <span className="block font-semibold text-foreground">{s.guestName}</span>
+                                        <Avatar className="!bg-accent !text-primary-foreground">
+                                            {(s.guestName ?? '').trim().charAt(0).toUpperCase() || '?'}
+                                        </Avatar>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate font-semibold text-foreground">{s.guestName}</span>
                                             <span className="text-sm text-muted-foreground">{formatTime(s.submittedAt)}</span>
                                         </span>
                                         <Tag>{s.count} {i18n.t('proof:proofSelectionsDrawer.anh')}</Tag>
@@ -100,16 +103,16 @@ const ProofSelectionsDrawer = ({ open, folderId, onClose }: Props) => {
                 {detail && (
                     <div>
                         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => setDetail(null)}>{i18n.t('proof:proofSelectionsDrawer.quayLai')}</Button>
-                        <h3 className="mt-2 text-lg font-semibold text-foreground">{detail.guestName}</h3>
-                        <p className="text-sm text-muted-foreground">{formatTime(detail.submittedAt)}</p>
+                        <h3 className="mb-1 mt-4 text-lg font-semibold text-foreground">{detail.guestName}</h3>
+                        <p className="mb-4 text-sm text-muted-foreground">{formatTime(detail.submittedAt)}</p>
                         {detail.note && (
-                            <p className="my-3 whitespace-pre-wrap rounded-lg bg-background px-3 py-2 text-foreground">{detail.note}</p>
+                            <p className="mb-4 whitespace-pre-wrap rounded-lg bg-background px-4 py-3 text-foreground">{detail.note}</p>
                         )}
 
-                        <Button type="primary" icon={<CopyOutlined />} onClick={() => void handleCopy()} className="my-3">
+                        <Button type="primary" shape="round" size="large" block icon={<CopyOutlined />} onClick={() => void handleCopy()} className="mb-4">
                             {i18n.t('proof:proofSelectionsDrawer.copyChoLightroom')}
                         </Button>
-                        {copiedCount !== null && <span className="ml-2 text-foreground">{i18n.t('proof:proofSelectionsDrawer.daCopyTen', {copiedCount})}</span>}
+                        {copiedCount !== null && <p className="mb-3 text-foreground">{i18n.t('proof:proofSelectionsDrawer.daCopyTen', {copiedCount})}</p>}
                         {lightroom.hasSpaces && (
                             <Alert
                                 type="warning"
@@ -121,7 +124,7 @@ const ProofSelectionsDrawer = ({ open, folderId, onClose }: Props) => {
 
                         <ul className="m-0 list-none p-0">
                             {(detail.items ?? []).map((item) => (
-                                <li key={item.assetId} className="mb-2 flex items-center gap-3">
+                                <li key={item.assetId} className="mb-3 flex items-center gap-4">
                                     {item.thumbnailUrl ? (
                                         <img src={item.thumbnailUrl} alt={item.assetName} className="h-12 w-12 rounded object-cover" />
                                     ) : (
