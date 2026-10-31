@@ -59,7 +59,7 @@ const resolveRouteElement = (route: AppRoute) => {
         ? <Navigate to={route.redirectTo} replace/>
         : route.element ?? null;
 
-    if (route.isProtected) {
+    if (!route.isPublic) {
         return <ProtectedRoute>{baseElement}</ProtectedRoute>;
     }
 

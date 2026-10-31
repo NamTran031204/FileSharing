@@ -14,7 +14,7 @@ const LoginPage = () => {
             password: password,
         });
         setTimeout(() => {
-            navigate('/my-files');
+            navigate('/home');
         }, 2000);
     };
 

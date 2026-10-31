@@ -27,36 +27,41 @@ export interface AppRoute extends Omit<RouteObject, 'children'> {
     icon?: ReactNode; // antd icon
     isShow?: boolean; // dùng sau
     roles?: string[];
-    isProtected?: boolean; // để đóng gói vào ProtectedRoute
+    isPublic?: boolean; // true = khong bao ProtectedRoute, mac dinh moi route deu can dang nhap
     children?: AppRoute[];
 }
 
 export const ROUTER_CONFIG: AppRoute[] = [
     {
         path: '/',
+        isPublic: true,
         redirectTo: '/home',
         isShow: false,
     },
     {
         path: '/login',
+        isPublic: true,
         name: 'Login',
         element: <LoginPage/>,
         isShow: false,
     },
     {
         path: '/loginv2',
+        isPublic: true,
         name: 'Login V2',
         element: <LoginPageV2/>,
         isShow: false,
     },
     {
         path: '/registerv2',
+        isPublic: true,
         name: 'Register V2',
         element: <RegisterPageV2/>,
         isShow: false,
     },
     {
         path: '/register',
+        isPublic: true,
         name: 'Register',
         element: <RegisterPage/>,
         isShow: false,
@@ -75,25 +80,21 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/my-files',
         name: 'My Files',
         element: <UserFilePage/>,
-        isProtected: true,
     },
     {
         path: '/upload',
         name: 'Upload',
         element: <UploadPage/>,
-        isProtected: true,
     },
     {
         path: '/profile',
         name: 'Profile',
         element: <UserProfilePage/>,
-        isProtected: true,
     },
     {
         path: '/trash',
         name: 'Trash',
         element: <TrashPage/>,
-        isProtected: true,
     },
     {
         path: '/mockup/image-review',
@@ -117,7 +118,6 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/dashboard',
         name: 'Dashboard',
         element: <DashboardPage/>,
-        isProtected: true,
         isShow: true,
     },
     {
@@ -134,6 +134,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     },
     {
         path: '/proof/:shareToken',
+        isPublic: true,
         name: 'Proof',
         element: <ProofGuestPage/>,
         isShow: false,
@@ -142,7 +143,6 @@ export const ROUTER_CONFIG: AppRoute[] = [
         path: '/projects/:projectId',
         name: 'Project Assets',
         element: <FolderAssetPage/>,
-        isProtected: true,
         isShow: false,
     }
 ];
