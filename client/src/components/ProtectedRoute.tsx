@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const isAuthenticated = !!tokenManager.getAccessToken();
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/loginv2" replace />;
     }
 
     return <>{children}</>;

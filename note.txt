@@ -1,0 +1,23 @@
+ok, tôi rất hài lòng về tài liệu. Tôi chỉ có 1 số điều chỉnh dưới đây:
+
+1. Bỏ 0.4; 0.2, 0.1
+
+2. chuyển mục 3.1 sang file khác
+
+3. drawio 3.7 cần vẽ theo dạng non-code, không trích xuất code vào đó mà chỉ thể hiện cơ chế.
+4. tương tự với 3.8: không trích code, thuần giải thích cơ chế, nếu có toán học thì viết công thức toán học.
+
+5. Mục `3.7.3`: yêu cầu không cần viết 3 phương án rồi ghi chọn, viết thẳng phương án 3
+
+6. Mục 1.6 và 1.7 cần rút gọn lại, tham khảo danh sách nghiệp vụ để biết sẽ rút về những domain nào.
+
+7. Tôi có thực hiện giải pháp logging và auditlog trong `E:\DaiCuongBK\Project3\FileSharing\.ai\project\2026-10-13-thiet-ke-audit-log-lich-su-hoat-dong-project-folder-asset\thiet-ke-tong-the.md` và `E:\DaiCuongBK\Project3\FileSharing\.ai\project\2026-10-14-ThietKe-Logging-UngDungVaTrienKhai\01_thiet-ke-giai-phap-logging.md`. yêu cầu bạn bổ sung các công nghệ này vào tài liệu. chưa cần bổ sung schema database, chỉ cần bổ sung các công cụ trong hình vẽ và có nhắc đến logging và audit ở nội dung thôi.
+
+-> REview: tài liệu quá nhiều code và tên file. xử lý dọn theo 2 phưƠng án làm song song:
+1. những phần mà code hiện trạng đã có: không viết tên file, tên hàm, code,... vào nữa, nếu là đặc điểm cơ chế (như replica set của mongo) thì vẫn ghi bình thường. phần nào liên quan đến codebase java thì không ghi.
+2. những phần mà hiện trạng code chưa có mà chỉ là giải pháp/thiết kế: cũng dọn dẹp nhưng phần được dọn dẹp không vứt đi mà đẩy sang 1 file khác, có định nghĩa rõ ràng, thiết kế rõ ràng mang tính technical hơn. ví dụ như các hàm job `UploadSessionGcJob`,...
+3. psudo code: chuyển hoá thành lời hoặc sơ đồ drawio
+-> mục tiêu tài liệu đáp ứng các tiêu chí:
+1. dễ đọc, dễ theo dõi
+2. mang tính khái quát và thiết kế (vì bản chất tài liệu này là tài liệu được viết khi chưa có bất kì dòng codebase nào được thực hiện)
+

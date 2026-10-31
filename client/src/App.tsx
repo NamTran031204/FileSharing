@@ -1,4 +1,5 @@
-import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import {useEffect} from 'react';
+import {BrowserRouter, Navigate, Route, Routes, useNavigate} from 'react-router-dom';
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
@@ -74,11 +75,25 @@ const renderRoute = (route: AppRoute, routeIndex: number) => {
     );
 };
 
+// token het han / bi tu choi (401) thi baseApi/apiClient da xoa token, o day chuyen ve login
+const UnauthorizedRedirect = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const onUnauthorized = () => navigate('/login', {replace: true});
+        window.addEventListener('auth:unauthorized', onUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', onUnauthorized);
+    }, [navigate]);
+
+    return null;
+};
+
 const App = () => {
     const normalizedRoutes = flattenRoutes(ROUTER_CONFIG);
 
     return (
         <BrowserRouter>
+            <UnauthorizedRedirect/>
             <Routes>{normalizedRoutes.map(renderRoute)}</Routes>
             <ToastContainer />
             <BusyOverlay />

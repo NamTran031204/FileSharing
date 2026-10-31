@@ -1,3 +1,6 @@
+server:
+  port: 5002
+
 spring:
   config:
     import: optional:file:./.env[.properties]
