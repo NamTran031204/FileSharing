@@ -42,7 +42,7 @@ const AssetCard = <TRecord,>({
   const isDocument = type === 'doc';
   const isImage = type === 'image' || type === 'svg';
   const showThumbnail = Boolean(thumbnailUrl) && isImage;
-  const isProcessing = processingStatus === 'PROCESSING';
+  const isProcessing = processingStatus === 'PENDING' || processingStatus === 'PROCESSING';
   const isFailed = processingStatus === 'FAILED';
   const cardActions: ActionDropdownItem<TRecord>[] = actions ?? [];
   const hasActions = cardActions.length > 0;

@@ -1504,6 +1504,12 @@ export interface MetadataEntity {
   processingError?: string;
 
   /**  */
+  currentJobId?: string;
+
+  /**  */
+  processingAttemptId?: string;
+
+  /**  */
   processingStartAt?: Date;
 
   /**  */
@@ -1555,6 +1561,9 @@ export interface EmailSenderRequestDto {
 
   /**  */
   type?: EmailType;
+
+  /**  */
+  locale?: string;
 }
 
 export interface PageRequestDtoUserFileFilterPageRequestDto {
@@ -2300,6 +2309,23 @@ export interface CommonResponseProcessingJobEntity {
   message?: string;
 }
 
+export interface JobErrorEntry {
+  /**  */
+  attemptId?: string;
+
+  /**  */
+  workerId?: string;
+
+  /**  */
+  at?: Date;
+
+  /**  */
+  kind?: Kind;
+
+  /**  */
+  message?: string;
+}
+
 export interface JobResourceUsage {
   /**  */
   tool?: string;
@@ -2324,38 +2350,6 @@ export interface JobResourceUsage {
 
   /**  */
   stages?: object;
-}
-
-export interface OutboxEvent {
-  /**  */
-  id?: string;
-
-  /**  */
-  type?: string;
-
-  /**  */
-  sink?: OutboxSink;
-
-  /**  */
-  topic?: string;
-
-  /**  */
-  payload?: object;
-
-  /**  */
-  status?: OutboxEventStatus;
-
-  /**  */
-  attempts?: number;
-
-  /**  */
-  dueAt?: Date;
-
-  /**  */
-  createdAt?: Date;
-
-  /**  */
-  sentAt?: Date;
 }
 
 export interface ProcessingJobConfig {
@@ -2464,13 +2458,19 @@ export interface ProcessingJobEntity {
   lastError?: string;
 
   /**  */
+  errorHistory?: JobErrorEntry[];
+
+  /**  */
+  resultPublishedAt?: Date;
+
+  /**  */
+  relayLeaseUntil?: Date;
+
+  /**  */
   workerId?: string;
 
   /**  */
   workerHeartbeat?: Date;
-
-  /**  */
-  outbox?: OutboxEvent[];
 
   /**  */
   resourceUsage?: JobResourceUsage;
@@ -2493,6 +2493,12 @@ export interface ProcessingJobResult {
 
   /**  */
   outputKeys?: string[];
+
+  /**  */
+  manifestKey?: string;
+
+  /**  */
+  thumbnailUrl?: string;
 
   /**  */
   errorMessage?: string;
@@ -3720,14 +3726,10 @@ export enum Shape {
   'DOT' = 'DOT'
 }
 
-export enum OutboxEventStatus {
-  'PENDING' = 'PENDING',
-  'SENT' = 'SENT'
-}
-
-export enum OutboxSink {
-  'JOB_STORE' = 'JOB_STORE',
-  'KAFKA' = 'KAFKA'
+export enum Kind {
+  'TRANSIENT' = 'TRANSIENT',
+  'PERMANENT' = 'PERMANENT',
+  'LEASE_EXPIRED' = 'LEASE_EXPIRED'
 }
 
 export enum ProcessingJobStatus {

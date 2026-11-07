@@ -50,6 +50,10 @@ public class MetadataEntity {
     private UploadStatus status;
     private ProcessingStatus processingStatus;
     private String processingError;
+    // Job hien tai cua metadata, consumer ket qua bo qua ket qua cua job khac
+    private String currentJobId;
+    // attemptId cua ket qua da ap, ket qua cu hon (attemptId nho hon) bi bo qua
+    private String processingAttemptId;
     private Instant processingStartAt;
     private Instant processingCompleteAt;
     private MediaInfo mediaInfo;

@@ -1,5 +1,6 @@
 package com.file.service.filesharingimagecodec.vips;
 
+import com.file.service.filesharing.core.job.exception.PermanentJobException;
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Component;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +17,9 @@ import java.util.List;
 
 /**
  * bộ xử lý ảnh tạo ra ảnh thu nhỏ và ảnh xem trước định dạng WebP.
+ *
+ * <p>LUU Y: ma nguon nay chay bang javax.imageio (khong phai libvips) va xuat PNG dan nhan .webp / image/webp.
+ * Khong doi ten package/lop khi chua co ke hoach chuyen sang libvips.
  *
  * <p>vì jvips yêu cầu các tệp nhị phân libvips gốc và thiết lập JNI có thể không
  * khả dụng trên tất cả các môi trường phát triển, việc triển khai này sử dụng
@@ -40,58 +43,18 @@ public class VipsProcessor {
     private final ImageProcessingConfig config;
 
     /**
-     * xử lý byte ảnh thành ảnh thu nhỏ + ảnh xem trước.
-     *
-     * @param inputBytes  dữ liệu ảnh thô (JPEG/PNG/WebP)
-     * @param options     các tuỳ chọn xử lý (chiều rộng, chất lượng, loại bỏ)
-     * @return danh sách gồm 2 VipsResult: [thumb, preview]
-     */
-    public List<VipsResult> processFromBytes(byte[] inputBytes, VipsOptions options) throws IOException {
-        log.info("xu ly anh tu bytes: {} bytes, thumbnailWidth={}", inputBytes.length, options.getThumbnailWidth());
-
-        BufferedImage original = ImageIO.read(new ByteArrayInputStream(inputBytes));
-        if (original == null) {
-            throw new IOException("Unable to load image — unsupported format or corrupt data");
-        }
-
-        List<VipsResult> results = new ArrayList<>(2);
-
-        // 1. tạo ảnh thu nhỏ
-        BufferedImage thumb = createThumbnail(original, options.getThumbnailWidth());
-        thumb = flattenAlpha(thumb);
-        byte[] thumbBytes = encodeToFormat(thumb, "png", options.getQuality());
-        results.add(VipsResult.builder()
-                .fileName("thumb.webp")
-                .data(thumbBytes)
-                .contentType("image/webp")
-                .build());
-
-        // 2. tạo ảnh xem trước (độ phân giải đầy đủ, chuyển đổi định dạng)
-        BufferedImage preview = flattenAlpha(original);
-        byte[] previewBytes = encodeToFormat(preview, "png", options.getQuality());
-        results.add(VipsResult.builder()
-                .fileName("preview.webp")
-                .data(previewBytes)
-                .contentType("image/webp")
-                .build());
-
-        log.info("xu ly hoan tat: thumb={}B, preview={}B", thumbBytes.length, previewBytes.length);
-        return results;
-    }
-
-    /**
      * xử lý ảnh từ một đường dẫn tệp cục bộ (cho ảnh lớn ≥ 50MB).
      *
      * @param filePath  đường dẫn đến tệp đầu vào tạm thời
      * @param options   các tuỳ chọn xử lý
      * @return danh sách gồm 2 VipsResult: [thumb, preview]
      */
-    public List<VipsResult> processFromFile(String filePath, VipsOptions options) throws IOException {
+    public List<VipsResult> processFromFile(String filePath, VipsOptions options) throws IOException, PermanentJobException {
         log.info("xu ly anh tu tep: {}, thumbnailWidth={}", filePath, options.getThumbnailWidth());
 
         BufferedImage original = ImageIO.read(new File(filePath));
         if (original == null) {
-            throw new IOException("Unable to load image from file: " + filePath);
+            throw new PermanentJobException("khong doc duoc anh (dinh dang khong ho tro hoac hong)");
         }
 
         List<VipsResult> results = new ArrayList<>(2);

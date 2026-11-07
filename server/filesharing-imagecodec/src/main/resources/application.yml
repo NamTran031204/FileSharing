@@ -11,20 +11,6 @@ spring:
       uri: ${MONGO_URI}
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}
-    consumer:
-      group-id: image-processing-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties:
-        max.poll.records: 5
-        max.poll.interval.ms: 60000
-        session.timeout.ms: 30000
-        heartbeat.interval.ms: 10000
-    listener:
-      ack-mode: MANUAL_IMMEDIATE
-      concurrency: 1
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -40,30 +26,15 @@ minio:
     thumbnails: thumbnail-bucket
     image-preview: image-preview-bucket
 
-kafka:
-  topics:
-    image_process_result_topic: image_process_result_topic
-
 image:
   processing:
-    is-test: false
-    kafka:
-      topic: image_process_topic
     vips:
-      large-image-threshold-mb: 50
       processing-timeout-seconds: 30
+      max-pixels: 50000000
     output:
       webp-quality: 82
       strip-metadata: true
-    queue:
-      max-capacity: 500
-    retry:
-      max-attempts: 3
-      initial-delay-seconds: 2
-      multiplier: 2.0
-    temp:
-      base-dir: ${java.io.tmpdir}/vips-input
-      cleanup-age-hours: 2
+      thumbnail-width: 200
 
 resilience4j:
   bulkhead:
@@ -71,3 +42,12 @@ resilience4j:
       image-processor:
         maxConcurrentCalls: 3
         maxWaitDuration: 0ms
+
+job-runtime:
+  enabled: true
+  job-types: [TRANSCODE_IMAGE]
+  bulkhead-name: image-processor
+  workspace-dir: ${java.io.tmpdir}/vips-input
+
+outbox-relay:
+  enabled: true

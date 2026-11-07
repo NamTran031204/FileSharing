@@ -198,9 +198,25 @@ public class MongoIndexBootstrapConfig {
         ops.createIndex(new Index()
                 .on("status", Sort.Direction.ASC)
                 .on("leaseUntil", Sort.Direction.ASC));
-        // OutboxRelay quet, multikey vi outbox la mang nhung
-        ops.createIndex(new Index().on("outbox.status", Sort.Direction.ASC));
         ops.createIndex(new Index().on("metadataId", Sort.Direction.ASC));
+        // Moi {metadataId, jobType} toi da 1 job: nen tang cua JobSubmitService.submit (upsert idempotent)
+        ops.createIndex(new Index()
+                .on("metadataId", Sort.Direction.ASC)
+                .on("jobType", Sort.Direction.ASC)
+                .unique()
+                .partial(org.springframework.data.mongodb.core.index.PartialIndexFilter.of(
+                        org.springframework.data.mongodb.core.query.Criteria.where("metadataId").type(org.bson.BsonType.STRING.getValue()))));
+        // JobStore.claimOne: sort priority DESC, dueAt ASC
+        ops.createIndex(new Index()
+                .on("status", Sort.Direction.ASC)
+                .on("jobType", Sort.Direction.ASC)
+                .on("priority", Sort.Direction.DESC)
+                .on("dueAt", Sort.Direction.ASC));
+        // JobResultRelay.claimUnpublishedResult
+        ops.createIndex(new Index()
+                .on("status", Sort.Direction.ASC)
+                .on("jobType", Sort.Direction.ASC)
+                .on("resultPublishedAt", Sort.Direction.ASC));
         ops.createIndex(new Index()
                 .on("workerId", Sort.Direction.ASC)
                 .on("status", Sort.Direction.ASC));

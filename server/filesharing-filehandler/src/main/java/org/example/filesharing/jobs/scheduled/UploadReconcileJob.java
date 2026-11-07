@@ -3,6 +3,8 @@ package org.example.filesharing.jobs.scheduled;
 import com.file.service.filesharing.core.entity.models.UploadSessionEntity;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.example.filesharing.repositories.MetadataRepo;
+import org.example.filesharing.services.JobSubmitService;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.StorageService;
 import org.example.filesharing.services.UploadSessionService;
@@ -31,17 +33,25 @@ import java.util.List;
 public class UploadReconcileJob {
 
     private static final Duration ORPHAN_MIN_AGE = Duration.ofHours(24);
+    // Chi tao bu job cho session hoan tat gan day, tranh dung lai lich su cu
+    private static final Duration SUBMIT_WINDOW = Duration.ofHours(48);
 
     private final UploadSessionService uploadSessionService;
     private final StorageService storageService;
     private final MetadataService metadataService;
+    private final MetadataRepo metadataRepo;
+    private final JobSubmitService jobSubmitService;
 
     public UploadReconcileJob(UploadSessionService uploadSessionService,
                               StorageService storageService,
-                              MetadataService metadataService) {
+                              MetadataService metadataService,
+                              MetadataRepo metadataRepo,
+                              JobSubmitService jobSubmitService) {
         this.uploadSessionService = uploadSessionService;
         this.storageService = storageService;
         this.metadataService = metadataService;
+        this.metadataRepo = metadataRepo;
+        this.jobSubmitService = jobSubmitService;
     }
 
     @Scheduled(fixedDelayString = "${upload.reconcile-interval}")
@@ -90,6 +100,7 @@ public class UploadReconcileJob {
         int missing = 0;
         for (UploadSessionEntity session : completed) {
             if (objectExists(session.getObjectName())) {
+                ensureJob(session);
                 continue;
             }
             missing++;
@@ -104,6 +115,19 @@ public class UploadReconcileJob {
             }
         }
         return missing;
+    }
+
+    // Tao bu job neu session COMPLETED chua co job (upsert idempotent, co job roi thi khong lam gi)
+    private void ensureJob(UploadSessionEntity session) {
+        if (session.getMetadataId() == null || session.getCompletedAt() == null
+                || session.getCompletedAt().isBefore(Instant.now().minus(SUBMIT_WINDOW))) {
+            return;
+        }
+        try {
+            metadataRepo.findById(session.getMetadataId()).ifPresent(jobSubmitService::submit);
+        } catch (Exception e) {
+            log.error("Failed to ensure processing job for metadata {}: {}", session.getMetadataId(), e.getMessage(), e);
+        }
     }
 
     /**

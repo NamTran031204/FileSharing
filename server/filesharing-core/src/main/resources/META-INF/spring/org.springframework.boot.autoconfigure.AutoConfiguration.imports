@@ -1,1 +1,3 @@
 com.file.service.filesharing.core.CoreAutoConfiguration
+com.file.service.filesharing.core.job.JobRuntimeAutoConfiguration
+com.file.service.filesharing.core.job.relay.JobResultRelayAutoConfiguration

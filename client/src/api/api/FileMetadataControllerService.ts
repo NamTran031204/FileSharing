@@ -123,18 +123,6 @@ export class FileMetadataControllerService {
   /**
    *
    */
-  static processEncode(options: IRequestOptions = {}): Promise<CommonResponseString> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/file-metadata/process-encode';
-
-      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
   static download(
     params: {
       /** requestBody */

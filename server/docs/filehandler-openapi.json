@@ -1808,43 +1808,6 @@
         }
       }
     },
-    "/api/file-metadata/process-encode" : {
-      "post" : {
-        "tags" : [ "file-metadata-controller" ],
-        "operationId" : "processEncode",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseString"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - Invalid or missing JWT token"
-          },
-          "403" : {
-            "description" : "Forbidden - Access denied"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        }
-      }
-    },
     "/api/file-metadata/download" : {
       "post" : {
         "tags" : [ "file-metadata-controller" ],
@@ -2880,66 +2843,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseAbortUploadSessionResponseDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - Invalid or missing JWT token"
-          },
-          "403" : {
-            "description" : "Forbidden - Access denied"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/test/image-process" : {
-      "get" : {
-        "tags" : [ "test" ],
-        "operationId" : "imageProcess",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized - Invalid or missing JWT token"
-          },
-          "403" : {
-            "description" : "Forbidden - Access denied"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/test/encode-video" : {
-      "get" : {
-        "tags" : [ "test" ],
-        "operationId" : "encodeVideo",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : {
-                    "type" : "string"
-                  }
                 }
               }
             }
@@ -6311,6 +6214,12 @@
           "processingError" : {
             "type" : "string"
           },
+          "currentJobId" : {
+            "type" : "string"
+          },
+          "processingAttemptId" : {
+            "type" : "string"
+          },
           "processingStartAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -7348,6 +7257,27 @@
           }
         }
       },
+      "JobErrorEntry" : {
+        "type" : "object",
+        "properties" : {
+          "attemptId" : {
+            "type" : "string"
+          },
+          "workerId" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "kind" : {
+            "$ref" : "#/components/schemas/Kind"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
       "JobResourceUsage" : {
         "type" : "object",
         "properties" : {
@@ -7387,55 +7317,9 @@
           }
         }
       },
-      "OutboxEvent" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          },
-          "sink" : {
-            "$ref" : "#/components/schemas/OutboxSink"
-          },
-          "topic" : {
-            "type" : "string"
-          },
-          "payload" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/OutboxEventStatus"
-          },
-          "attempts" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "dueAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "sentAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "OutboxEventStatus" : {
+      "Kind" : {
         "type" : "string",
-        "enum" : [ "PENDING", "SENT" ]
-      },
-      "OutboxSink" : {
-        "type" : "string",
-        "enum" : [ "JOB_STORE", "KAFKA" ]
+        "enum" : [ "TRANSIENT", "PERMANENT", "LEASE_EXPIRED" ]
       },
       "ProcessingJobConfig" : {
         "type" : "object",
@@ -7564,18 +7448,26 @@
           "lastError" : {
             "type" : "string"
           },
+          "errorHistory" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/JobErrorEntry"
+            }
+          },
+          "resultPublishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "relayLeaseUntil" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "workerId" : {
             "type" : "string"
           },
           "workerHeartbeat" : {
             "type" : "string",
             "format" : "date-time"
-          },
-          "outbox" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OutboxEvent"
-            }
           },
           "resourceUsage" : {
             "$ref" : "#/components/schemas/JobResourceUsage"
@@ -7609,6 +7501,12 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "manifestKey" : {
+            "type" : "string"
+          },
+          "thumbnailUrl" : {
+            "type" : "string"
           },
           "errorMessage" : {
             "type" : "string"

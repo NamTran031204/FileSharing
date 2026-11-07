@@ -23,15 +23,9 @@ public interface MetadataService {
 
     /**
      * E4 — mark the metadata version COMPLETED with the real size read back from storage.
-     * Does not publish any Kafka message (call {@link #publishProcessingJob(MetadataEntity)} after
-     * the upload session has been committed, per REL-02 "Kafka last").
+     * Does not create the processing job (call JobSubmitService.submit before committing the upload session).
      */
     MetadataEntity markUploadCompleted(String metadataId, long actualFileSize);
-
-    /**
-     * Dispatches the post-upload processing job (video encode / image transcode) for a completed version.
-     */
-    void publishProcessingJob(MetadataEntity entity);
 
     /**
      * E5 — mark the metadata version FAILED (session aborted).

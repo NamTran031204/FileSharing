@@ -50,7 +50,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false
-      auto-offset-reset: latest
+      auto-offset-reset: earliest
       group-id: file-handler
     listener:
       ack-mode: manual
@@ -59,10 +59,7 @@ spring:
 kafka:
   topics:
     notification_email_sender: notification_email_sender
-    video_encode_topic: video_encode_topic
-    video_encode_result_topic: video_encode_result_topic
-    image_process_topic: image_process_topic
-    image_process_result_topic: image_process_result_topic
+    job_result_topic: job_result_topic
   authen: ${KAFKA_AUTH:false}
   username: ${KAFKA_USER:admin}
   password: ${KAFKA_PASS}

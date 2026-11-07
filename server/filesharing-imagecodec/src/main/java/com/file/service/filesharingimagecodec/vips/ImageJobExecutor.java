@@ -1,185 +1,139 @@
 package com.file.service.filesharingimagecodec.vips;
 
+import com.file.service.filesharing.core.enums.ProcessingJobType;
+import com.file.service.filesharing.core.job.InputMode;
+import com.file.service.filesharing.core.job.JobContext;
+import com.file.service.filesharing.core.job.JobExecution;
+import com.file.service.filesharing.core.job.JobExecutor;
+import com.file.service.filesharing.core.job.OutputObject;
+import com.file.service.filesharing.core.job.exception.PermanentJobException;
+import com.file.service.filesharing.core.job.exception.TransientJobException;
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
-import com.file.service.filesharingimagecodec.job.JobService;
-import com.file.service.filesharingimagecodec.kafka.ImageProcessResultProducer;
 import com.file.service.filesharingimagecodec.storage.MinioStorageClient;
-import com.file.service.filesharingimagecodec.storage.TempFileManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * trình thực thi xử lý ảnh cốt lõi. quản lý toàn bộ vòng đời:
- * tải xuống → VipsProcessor → tải lên → dọn dẹp.
- * <p>
- * hỗ trợ hai chế độ được điều khiển bởi image.processing.is-test:
- * - Production: tải xuống từ MinIO, tải kết quả lên MinIO
- * - Test: sử dụng ảnh cục bộ được mã hoá cứng, bỏ qua tải xuống/tải lên MinIO
- */
+/** Phan rieng cua imagecodec: tao thumb + preview tu file anh. Moi thu con lai do runtime trong core lo. */
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class ImageJobExecutor {
-
-    private static final String TEST_INPUT_PATH =
-            "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-imagecodec\\temp\\test-image.png";
-    private static final String TEST_OUTPUT_BASE =
-            "E:\\DaiCuongBK\\Project3\\FileSharing\\server\\filesharing-imagecodec\\temp\\output";
+public class ImageJobExecutor implements JobExecutor {
 
     private final ImageProcessingConfig config;
     private final VipsProcessor vipsProcessor;
-    private final JobService jobService;
     private final MinioStorageClient storageClient;
-    private final TempFileManager tempFileManager;
-    private final ImageProcessResultProducer resultProducer;
 
-    public void execute(String jobId, String objectName, String assetId, String metadataId) {
-        boolean isTest = config.isTest();
-        int timeoutSeconds = config.getVips().getProcessingTimeoutSeconds();
+    @Value("${minio.buckets.thumbnails}")
+    private String thumbnailBucket;
+    @Value("${minio.buckets.image-preview}")
+    private String previewBucket;
 
+    @Override
+    public Set<ProcessingJobType> supportedTypes() {
+        return Set.of(ProcessingJobType.TRANSCODE_IMAGE);
+    }
+
+    @Override
+    public InputMode inputMode() {
+        return InputMode.DOWNLOAD;
+    }
+
+    @Override
+    public JobExecution process(JobContext ctx) throws PermanentJobException, TransientJobException {
+        Path input = ctx.inputFile();
+        String objectName = ctx.job().getObjectName();
         try {
-            CompletableFuture
-                    .supplyAsync(() -> {
-                        try {
-                            return doProcess(jobId, objectName, assetId, metadataId, isTest);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }, runnable -> Thread.ofVirtual().start(runnable))
-                    .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
-                    .join();
-
-        } catch (Exception ex) {
-            Throwable cause = unwrapCause(ex);
-
-            if (cause instanceof TimeoutException) {
-                log.error("job {} da het thoi gian cho sau {}s", jobId, timeoutSeconds);
-                jobService.markFailed(jobId, "Processing timed out after " + timeoutSeconds + "s");
-            } else if (isCorruptInput(cause)) {
-                log.error("job {} that bai — dau vao bi hong: {}", jobId, cause.getMessage());
-                jobService.markFailedPermanently(jobId, cause.getMessage());
-                resultProducer.sendFailed(jobId, assetId, metadataId, cause.getMessage());
-            } else {
-                log.error("job {} that bai: {}", jobId, cause.getMessage(), cause);
-                jobService.markFailed(jobId, cause.getMessage());
+            if (Files.size(input) == 0) {
+                throw new PermanentJobException("file anh 0 byte");
             }
+            checkPixels(input);
+            ctx.reportProgress(20, "PROCESSING");
 
-            if (!isTest) {
+            VipsOptions options = VipsOptions.builder()
+                    .thumbnailWidth(config.getOutput().getThumbnailWidth())
+                    .quality(config.getOutput().getWebpQuality())
+                    .stripMetadata(config.getOutput().isStripMetadata())
+                    .build();
+            List<VipsResult> results = runWithTimeout(input, options);
+
+            Path thumbFile = write(ctx, results, "thumb.webp");
+            Path previewFile = write(ctx, results, "preview.webp");
+            ctx.reportProgress(80, "UPLOADING");
+            return new JobExecution(List.of(
+                    new OutputObject(thumbnailBucket, objectName, thumbFile, "image/webp", false),
+                    new OutputObject(previewBucket, objectName, previewFile, "image/webp", false)),
+                    null, storageClient.buildThumbnailPublicUrl(objectName), null);
+        } catch (IOException e) {
+            // file da tai ve nhung khong doc duoc: coi la dau vao hong
+            throw new PermanentJobException("khong doc duoc anh: " + e.getMessage(), e);
+        }
+    }
+
+    private List<VipsResult> runWithTimeout(Path input, VipsOptions options)
+            throws IOException, PermanentJobException, TransientJobException {
+        int timeout = config.getVips().getProcessingTimeoutSeconds();
+        try {
+            return CompletableFuture.supplyAsync(() -> {
                 try {
-                    tempFileManager.deleteJobDir(jobId);
-                } catch (Exception ignored) {
+                    return vipsProcessor.processFromFile(input.toString(), options);
+                } catch (Exception e) {
+                    throw new CompletionException(e);
                 }
+            }, r -> Thread.ofVirtual().start(r)).orTimeout(timeout, TimeUnit.SECONDS).join();
+        } catch (CompletionException e) {
+            Throwable c = e.getCause();
+            while (c instanceof CompletionException && c.getCause() != null) c = c.getCause();
+            if (c instanceof TimeoutException) {
+                throw new TransientJobException("xu ly anh qua " + timeout + "s");
             }
+            if (c instanceof PermanentJobException p) throw p;
+            if (c instanceof IOException io) throw io;
+            throw new TransientJobException(String.valueOf(c.getMessage()), c);
         }
     }
 
-    private List<VipsResult> doProcess(String jobId, String objectName, String assetId, String metadataId, boolean isTest) throws Exception {
-        int thumbnailWidth = 200; // mặc định Todo: sau này có thể cho custom
-        int quality = config.getOutput().getWebpQuality();
-
-        VipsOptions options = VipsOptions.builder()
-                .thumbnailWidth(thumbnailWidth)
-                .quality(quality)
-                .stripMetadata(config.getOutput().isStripMetadata())
-                .build();
-
-        List<VipsResult> results;
-
-        if (isTest) {
-            log.info("[test] job {}: xu ly tu {}", jobId, TEST_INPUT_PATH);
-            jobService.updateProgress(jobId, 10, "DOWNLOADING (test-local)");
-            results = vipsProcessor.processFromFile(TEST_INPUT_PATH, options);
-            jobService.updateProgress(jobId, 80, "PROCESSED");
-
-            String outputDir = TEST_OUTPUT_BASE + "/" + jobId;
-            java.nio.file.Files.createDirectories(Path.of(outputDir));
-            List<String> outputKeys = new ArrayList<>();
-            for (VipsResult r : results) {
-                Path outPath = Path.of(outputDir, r.getFileName());
-                java.nio.file.Files.write(outPath, r.getData());
-                outputKeys.add(outPath.toString());
+    // Doc width x height tu header, khong decode
+    private void checkPixels(Path input) throws IOException, PermanentJobException {
+        try (ImageInputStream in = ImageIO.createImageInputStream(input.toFile())) {
+            Iterator<ImageReader> readers = in == null ? null : ImageIO.getImageReaders(in);
+            if (readers == null || !readers.hasNext()) {
+                throw new PermanentJobException("dinh dang anh khong duoc ho tro hoac file hong");
             }
-
-            jobService.markCompleted(jobId, outputKeys, outputDir);
-            log.info("[test] job {} hoan tat. dau ra tai: {}", jobId, outputDir);
-
-        } else {
-            log.info("[prod] job {}: inputKey={}", jobId, objectName);
-            jobService.updateProgress(jobId, 5, "DOWNLOADING");
-
-            boolean isLarge = storageClient.isLargeImage(objectName);
-
-            if (isLarge) {
-                String ext = extractExtension(objectName);
-                Path tempPath = Path.of(tempFileManager.createJobDir(jobId), "input." + ext);
-                storageClient.downloadToFile(objectName, tempPath);
-                jobService.updateProgress(jobId, 20, "PROCESSING (from file)");
-                results = vipsProcessor.processFromFile(tempPath.toString(), options);
-            } else {
-                byte[] inputBytes = storageClient.downloadToBytes(objectName);
-                jobService.updateProgress(jobId, 20, "PROCESSING (from memory)");
-                results = vipsProcessor.processFromBytes(inputBytes, options);
-            }
-
-            jobService.updateProgress(jobId, 80, "UPLOADING");
-
-            VipsResult thumb = results.stream()
-                    .filter(r -> r.getFileName().equals("thumb.webp"))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("thumb.webp not found in processing results"));
-            VipsResult preview = results.stream()
-                    .filter(r -> r.getFileName().equals("preview.webp"))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("preview.webp not found in processing results"));
-
-            storageClient.uploadThumbnail(objectName, thumb.getData(), thumb.getContentType());
+            ImageReader reader = readers.next();
             try {
-                storageClient.uploadPreview(objectName, preview.getData(), preview.getContentType());
-            } catch (Exception e) {
-                storageClient.rollbackThumbnail(objectName);
-                throw e;
+                reader.setInput(in);
+                long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
+                long max = config.getVips().getMaxPixels();
+                if (max > 0 && pixels > max) {
+                    throw new PermanentJobException("anh qua lon: " + pixels + " pixel, toi da " + max);
+                }
+            } finally {
+                reader.dispose();
             }
-
-            String thumbnailUrl = storageClient.buildThumbnailPublicUrl(objectName);
-            jobService.markCompleted(jobId, List.of(objectName), objectName);
-            resultProducer.sendCompleted(jobId, assetId, metadataId, objectName, thumbnailUrl);
-            log.info("[prod] job {} hoan tat. objectKey: {}", jobId, objectName);
-
-            tempFileManager.deleteJobDir(jobId);
         }
-
-        return results;
     }
 
-    private boolean isCorruptInput(Throwable e) {
-        if (e == null) return false;
-        String msg = e.getMessage();
-        if (msg == null) return false;
-        msg = msg.toLowerCase();
-        return msg.contains("unable to load")
-                || msg.contains("no known loader")
-                || msg.contains("invalid image")
-                || msg.contains("unsupported format");
-    }
-
-    private Throwable unwrapCause(Throwable ex) {
-        Throwable cause = ex;
-        while (cause.getCause() != null && cause.getCause() != cause) {
-            cause = cause.getCause();
-        }
-        return cause;
-    }
-
-    private String extractExtension(String key) {
-        int dot = key.lastIndexOf('.');
-        return dot >= 0 ? key.substring(dot + 1) : "jpg";
+    private Path write(JobContext ctx, List<VipsResult> results, String name) throws IOException, PermanentJobException {
+        VipsResult r = results.stream().filter(x -> x.getFileName().equals(name)).findFirst()
+                .orElseThrow(() -> new PermanentJobException(name + " khong co trong ket qua xu ly"));
+        Path out = ctx.workspace().resolve("out-" + name);
+        Files.write(out, r.getData());
+        return out;
     }
 }

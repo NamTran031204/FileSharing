@@ -15,6 +15,8 @@ import java.util.Map;
 public class ProcessingJobResult {
     private Boolean success;
     private List<String> outputKeys;
+    private String manifestKey;
+    private String thumbnailUrl;
     private String errorMessage;
     private Map<String, Object> errorDetails;
 }

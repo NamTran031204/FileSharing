@@ -13,23 +13,20 @@ import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import org.example.filesharing.entities.dtos.metadata.MetadataUpdateRequestDto;
-import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
-import com.file.service.filesharing.core.enums.ProcessingJobType;
 import com.file.service.filesharing.core.enums.UploadStatus;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.jobs.kafka.EmailProducer;
-import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AuditService;
+import org.example.filesharing.services.JobSubmitService;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
-import org.example.filesharing.services.ProcessingService;
 import org.example.filesharing.services.StorageService;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -56,8 +53,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final StorageService storageService;
     private final PasswordEncoder passwordEncoder;
     private final EmailProducer emailProducer;
-    private final VideoEncodeProducer videoEncodeProducer;
-    private final ProcessingService processingService;
+    private final JobSubmitService jobSubmitService;
     private final AssetAccessService assetAccessService;
 
     @Override
@@ -116,23 +112,7 @@ public class MetadataServiceImpl implements MetadataService {
         }
         metadataRepo.save(entity);
 
-        try {
-            if (entity.getMediaType() == com.file.service.filesharing.core.enums.MediaType.VIDEO) {
-                videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
-            } else {
-                processingService.createPendingJob(
-                        ProcessingJobCreateDTO.builder()
-                                .objectName(entity.getObjectName())
-                                .metadataId(entity.getFileId())
-                                .assetId(entity.getAssetId())
-                                .versionNumber(entity.getVersionNumber())
-                                .jobType(ProcessingJobType.TRANSCODE_IMAGE)
-                                .build()
-                );
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        jobSubmitService.submit(entity);
     }
 
     @Override
@@ -297,27 +277,6 @@ public class MetadataServiceImpl implements MetadataService {
             entity.setProcessingStatus(com.file.service.filesharing.core.enums.ProcessingStatus.READY);
         }
         return metadataRepo.save(entity);
-    }
-
-    @Override
-    public void publishProcessingJob(MetadataEntity entity) {
-        try {
-            if (entity.getMediaType() == com.file.service.filesharing.core.enums.MediaType.VIDEO) {
-                videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
-            } else {
-                processingService.createPendingJob(
-                        ProcessingJobCreateDTO.builder()
-                                .objectName(entity.getObjectName())
-                                .metadataId(entity.getFileId())
-                                .assetId(entity.getAssetId())
-                                .versionNumber(entity.getVersionNumber())
-                                .jobType(ProcessingJobType.TRANSCODE_IMAGE)
-                                .build()
-                );
-            }
-        } catch (Exception e) {
-            throw new FileBusinessException(ErrorCode.FILE_ERROR, "Failed to publish processing job: " + e.getMessage());
-        }
     }
 
     @Override

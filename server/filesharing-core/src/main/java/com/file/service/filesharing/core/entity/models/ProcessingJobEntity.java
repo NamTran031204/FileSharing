@@ -1,8 +1,8 @@
 package com.file.service.filesharing.core.entity.models;
 
 import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
+import com.file.service.filesharing.core.entity.models.processing.JobErrorEntry;
 import com.file.service.filesharing.core.entity.models.processing.JobResourceUsage;
-import com.file.service.filesharing.core.entity.models.processing.OutboxEvent;
 import com.file.service.filesharing.core.entity.models.processing.ProcessingJobConfig;
 import com.file.service.filesharing.core.entity.models.processing.ProcessingJobProgress;
 import com.file.service.filesharing.core.entity.models.processing.ProcessingJobResult;
@@ -58,12 +58,16 @@ public class ProcessingJobEntity extends EntityAuditBase {
     private Integer retryCount;
     private Integer maxRetries;
     private String lastError;
+    // Lich su loi tung lan thu, du de dieu tra tu mongosh khi job vao DEAD_LETTER
+    private List<JobErrorEntry> errorHistory;
+    // null = ket qua cuoi chua duoc relay phat len Kafka (status-as-outbox)
+    private Instant resultPublishedAt;
+    // Lease ngan cua relay khi dang gui ket qua, tranh 2 relay gui cung luc
+    private Instant relayLeaseUntil;
 
     private String workerId;
     private Instant workerHeartbeat;
 
-    // Event cho phat, nhung trong chinh document nay (ADR-001 QD-2)
-    private List<OutboxEvent> outbox;
     // CPU/RSS dinh diem va trung binh, P1-03.c do vao
     private JobResourceUsage resourceUsage;
 }

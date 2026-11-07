@@ -17,6 +17,7 @@ import org.example.filesharing.entities.dtos.upload.UploadResourceResponseDto;
 import org.example.filesharing.entities.dtos.upload.UploadSessionInitResponseDto;
 import org.example.filesharing.entities.dtos.upload.UploadSessionStatusResponseDto;
 import org.example.filesharing.repositories.MetadataRepo;
+import org.example.filesharing.services.JobSubmitService;
 import org.example.filesharing.repositories.UploadSessionRepo;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MetadataService;
@@ -55,6 +56,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
 
     private final UploadSessionRepo uploadSessionRepo;
     private final MetadataRepo metadataRepo;
+    private final JobSubmitService jobSubmitService;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final StorageService storageService;
@@ -497,9 +499,11 @@ public class UploadSessionServiceImpl implements UploadSessionService {
 
         MetadataEntity updatedMetadata = metadataService.markUploadCompleted(session.getMetadataId(), actualSize);
 
+        // Tao job truoc claimCompletion: upsert idempotent nen goi lai khi retry khong tao them job
+        jobSubmitService.submit(updatedMetadata);
+
         UploadSessionEntity claimed = claimCompletion(session, resultEtag);
         if (claimed != null) {
-            metadataService.publishProcessingJob(updatedMetadata);
             return buildResourceResponse(claimed);
         }
 

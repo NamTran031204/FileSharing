@@ -11,7 +11,6 @@ import org.example.filesharing.entities.dtos.metadata.InitiateUploadResponseDto;
 import org.example.filesharing.entities.dtos.metadata.MetadataDTO;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
-import org.example.filesharing.jobs.kafka.VideoEncodeProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
@@ -31,7 +30,6 @@ public class FileMetadataController {
     private final MetadataService metadataService;
     private final MinIoService minIoService;
     private final MetadataRepo metadataRepo;
-    private final VideoEncodeProducer videoEncodeProducer;
 
     @Deprecated
     @PostMapping("/upload-metadata")
@@ -98,23 +96,6 @@ public class FileMetadataController {
         MetadataEntity response = metadataService.saveMetadata(dto, "");
 
         return CommonResponse.success(minIoService.uploadSmallFile(file, response.getObjectName()));
-    }
-
-    @PostMapping(value = "/process-encode")
-    public CommonResponse<String> processEncode(@RequestBody String objectName) {
-        if (objectName == null || objectName.isBlank()) {
-            return CommonResponse.fail(ErrorCode.BAD_REQUEST, "objectName is required");
-        }
-
-        MetadataEntity entity = metadataRepo.findByObjectName(objectName.trim())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid object name: " + objectName));
-
-        if (entity.getMediaType() != com.file.service.filesharing.core.enums.MediaType.VIDEO) {
-            return CommonResponse.fail(ErrorCode.BAD_REQUEST, "Only video can be encoded");
-        }
-
-        videoEncodeProducer.sendEncodeRequest(entity.getFileId(), entity.getObjectName());
-        return CommonResponse.success("queued");
     }
 
     private String detectCompressionAlgo(String fileName, String mimeType) {

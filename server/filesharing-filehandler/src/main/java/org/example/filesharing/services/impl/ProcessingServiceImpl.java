@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import org.example.filesharing.entities.dtos.processing.PlaybackDataResponseDto;
-import org.example.filesharing.entities.dtos.processing.ProcessingJobCreateDTO;
 import org.example.filesharing.entities.dtos.processing.ProcessingStatusResponseDto;
 import com.file.service.filesharing.core.entity.models.MediaRenditionEntity;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
@@ -24,6 +23,11 @@ import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProcessingService;
 import com.file.service.filesharing.core.utils.StringUtils;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -40,27 +44,15 @@ public class ProcessingServiceImpl implements ProcessingService {
     private final MediaRenditionRepo mediaRenditionRepo;
     private final MetadataRepo metadataRepo;
     private final MinIoService minIoService;
-
-    @Override
-    public void createPendingJob(ProcessingJobCreateDTO job) {
-        ProcessingJobEntity ent = ProcessingJobEntity.builder()
-                .jobType(job.getJobType() != null ? job.getJobType() : null)
-                .objectName(job.getObjectName())
-                .metadataId(StringUtils.isNotNullOrBlank(job.getMetadataId()) ? job.getMetadataId() : null)
-                .assetId(StringUtils.isNotNullOrBlank(job.getAssetId()) ? job.getAssetId() : null)
-                .versionNumber(job.getVersionNumber() != null ? job.getVersionNumber() : null)
-                .status(ProcessingJobStatus.PENDING)
-                .priority(job.getPriority() != null ? job.getPriority() : 1)
-                .scheduledAt(Instant.now())
-                .build();
-
-        processingJobRepo.save(ent);
-    }
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber) {
         MetadataEntity version = assetAccessService.getVersion(assetId, versionNumber);
-        ProcessingJobEntity job = processingJobRepo.findById(version.getFileId()).orElse(null);
+        // Job moi theo metadataId; job cu (jobId = fileId) doc qua findById
+        ProcessingJobEntity job = processingJobRepo.findFirstByMetadataIdOrderByJobIdDesc(version.getFileId())
+                .or(() -> processingJobRepo.findById(version.getFileId()))
+                .orElse(null);
 
         String errorMessage = version.getProcessingError();
         if (errorMessage == null && job != null && job.getResult() != null) {
@@ -143,14 +135,17 @@ public class ProcessingServiceImpl implements ProcessingService {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "cannot cancel a processing job");
         }
 
-        job.setStatus(ProcessingJobStatus.CANCELLED);
-        job.setCompletedAt(Instant.now());
-        if (job.getResult() != null) {
-            job.getResult().setSuccess(false);
-            job.getResult().setErrorMessage("CANCELLED");
+        // Huy co dieu kien: chi job con PENDING, khong save() ca document
+        ProcessingJobEntity saved = mongoTemplate.findAndModify(
+                Query.query(Criteria.where("_id").is(jobId).and("status").is(ProcessingJobStatus.PENDING)),
+                new Update().set("status", ProcessingJobStatus.CANCELLED)
+                        .set("completedAt", Instant.now())
+                        .set("result.success", false)
+                        .set("result.errorMessage", "CANCELLED"),
+                FindAndModifyOptions.options().returnNew(true), ProcessingJobEntity.class);
+        if (saved == null) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "only a pending job can be cancelled");
         }
-
-        ProcessingJobEntity saved = processingJobRepo.save(job);
 
         String metadataId = job.getMetadataId() != null ? job.getMetadataId() : job.getJobId();
         metadataRepo.findById(metadataId).ifPresent(version -> {

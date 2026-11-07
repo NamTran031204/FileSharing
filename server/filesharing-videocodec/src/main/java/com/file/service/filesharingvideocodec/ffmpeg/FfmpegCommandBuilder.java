@@ -24,10 +24,11 @@ public class FfmpegCommandBuilder {
      * xây dựng lệnh FFmpeg hoàn chỉnh để mã hoá HLS.
      *
      * @param inputPath   URL presigned (production) hoặc đường dẫn tệp cục bộ (test)
+     * @param logLabel    nhãn dùng thay URL khi ghi log (objectName), không bao giờ log URL có chữ ký
      * @param outputDir   thư mục nơi các tệp .m3u8 và .ts sẽ được ghi
      * @return danh sách các đối số dòng lệnh cho ProcessBuilder
      */
-    public List<String> buildCommand(String inputPath, String outputDir) {
+    public List<String> buildCommand(String inputPath, String outputDir, String logLabel) {
         VideoEncodingConfig.FfmpegConfig ffmpeg = encodingConfig.getFfmpeg();
         VideoEncodingConfig.SegmentConfig segment = encodingConfig.getSegment();
 
@@ -100,7 +101,7 @@ public class FfmpegCommandBuilder {
         // playlist đầu ra
         cmd.add(outputDir + File.separator + "index.m3u8");
 
-        log.info("da xay dung lenh FFmpeg: {}", String.join(" ", cmd));
+        log.info("da xay dung lenh FFmpeg: {}", String.join(" ", cmd).replace(inputPath, logLabel));
         return cmd;
     }
 }

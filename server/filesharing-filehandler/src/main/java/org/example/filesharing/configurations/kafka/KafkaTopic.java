@@ -13,14 +13,8 @@ public class KafkaTopic {
     @Value(value = "${kafka.topics.notification_email_sender}")
     private String notificationEmailSender;
 
-    @Value(value = "${kafka.topics.video_encode_topic}")
-    private String videoEncodeTopic;
-
-    @Value(value = "${kafka.topics.image_process_topic}")
-    private String imageProcessTopic;
-
-    @Value(value = "${kafka.topics.image_process_result_topic}")
-    private String imageProcessResultTopic;
+    @Value(value = "${kafka.topics.job_result_topic}")
+    private String jobResultTopic;
 
     @Bean
     public NewTopic emailSenderTopic() {
@@ -31,24 +25,8 @@ public class KafkaTopic {
     }
 
     @Bean
-    public NewTopic videoEncodeTopic() {
-        return TopicBuilder.name(videoEncodeTopic)
-                .partitions(1)
-                .replicas(1)
-                .build();
-    }
-
-    @Bean
-    public NewTopic imageProcessTopic() {
-        return TopicBuilder.name(imageProcessTopic)
-                .partitions(1)
-                .replicas(1)
-                .build();
-    }
-
-    @Bean
-    public NewTopic imageProcessResultTopic() {
-        return TopicBuilder.name(imageProcessResultTopic)
+    public NewTopic jobResultTopic() {
+        return TopicBuilder.name(jobResultTopic)
                 .partitions(1)
                 .replicas(1)
                 .build();

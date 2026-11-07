@@ -11,20 +11,6 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: video-encoding-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties:
-        max.poll.records: 1
-        max.poll.interval.ms: 600000
-        session.timeout.ms: 30000
-        heartbeat.interval.ms: 10000
-    listener:
-      ack-mode: MANUAL_IMMEDIATE
-      concurrency: 1
 
 minio:
   endpoint: ${MINIO_ENDPOINT}
@@ -36,35 +22,15 @@ minio:
 
 video:
   encoding:
-    is-test: false
     ffmpeg:
       path: ${FFMPEG_PATH:E:/DaiCuongBK/Project3/FileSharing/server/filesharing-videocodec/src/main/resources/ffmpeg/bin/ffmpeg.exe}
       timeout: 3600000
       threads-per-process: 2
       crf: 23
       preset: medium
-    kafka:
-      topic: video_encode_topic
-      result-topic: video_encode_result_topic
     segment:
       duration: 6
       audio-bitrate: 128k
-    profiles:
-      - ORIGINAL
-      - PROFILE_720P
-    bulkhead:
-      max-concurrent: 2
-    queue:
-      max-capacity: 300
-    retry:
-      max-attempts: 3
-      initial-delay-seconds: 5
-      multiplier: 2.0
-    upload:
-      batch-size: 15
-    temp:
-      base-dir: ${java.io.tmpdir}/encode
-      cleanup-age-hours: 24
 
 resilience4j:
   bulkhead:
@@ -72,3 +38,12 @@ resilience4j:
       ffmpeg-encoder:
         maxConcurrentCalls: 2
         maxWaitDuration: 0ms
+
+job-runtime:
+  enabled: true
+  job-types: [TRANSCODE_HLS]
+  bulkhead-name: ffmpeg-encoder
+  workspace-dir: ${java.io.tmpdir}/encode
+
+outbox-relay:
+  enabled: true
