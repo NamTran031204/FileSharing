@@ -34,7 +34,8 @@ public class SseService {
         };
 
         emitter.onCompletion(cleanup);
-        emitter.onTimeout(cleanup);
+        // complete() khi het han de tranh AsyncRequestTimeoutException bi log ERROR; client tu reconnect
+        emitter.onTimeout(() -> { cleanup.run(); emitter.complete(); });
         emitter.onError(e -> cleanup.run());
 
         return emitter;
@@ -67,7 +68,7 @@ public class SseService {
 
         Runnable cleanup = () -> removeAnnotationEmitter(assetId, emitter);
         emitter.onCompletion(cleanup);
-        emitter.onTimeout(cleanup);
+        emitter.onTimeout(() -> { cleanup.run(); emitter.complete(); });
         emitter.onError(e -> cleanup.run());
 
         return emitter;
