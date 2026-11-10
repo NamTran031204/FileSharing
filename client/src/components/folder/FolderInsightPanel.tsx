@@ -1,7 +1,8 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Divider, Progress } from 'antd';
-import { ProcessingStatus } from '../../api/api/index.defs';
+import { ProcessingStatus, type ProjectMemberDTO } from '../../api/api/index.defs';
 import { ApiPendingNote } from '../core/common/ApiPendingNote';
+import ProjectMemberAvatars from './ProjectMemberAvatars';
 import i18n from '../../i18n';
 
 export interface InsightSummaryItem {
@@ -20,6 +21,10 @@ interface FolderInsightPanelProps {
     summaryItems: InsightSummaryItem[];
     /** Asset đang PENDING/PROCESSING của folder đang mở */
     processingItems: InsightProcessingItem[];
+    /** thanh vien project, do trang cha tai */
+    members: ProjectMemberDTO[];
+    membersLoading?: boolean;
+    membersError?: boolean;
     collapsed: boolean;
     onToggle: () => void;
 }
@@ -30,10 +35,10 @@ interface FolderInsightPanelProps {
  * Chỉ hiện từ breakpoint xl trở lên (dưới đó ẩn hoàn toàn để nhường chỗ cho nội dung chính).
  * Gập lại thì thu về thanh dọc 48px còn đúng nút mở.
  *
- * Members + Recent activity: xem ApiPendingNote trong JSX — cần ProjectControllerService.members
- * va ProjectControllerService.auditLog khi API duoc noi.
+ * Members da noi ProjectControllerService.members (trang cha tai, truyen qua props).
+ * Recent activity: xem ApiPendingNote trong JSX — can ProjectControllerService.auditLog khi API duoc noi.
  */
-const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle }: FolderInsightPanelProps) => {
+const FolderInsightPanel = ({ summaryItems, processingItems, members, membersLoading, membersError, collapsed, onToggle }: FolderInsightPanelProps) => {
     if (collapsed) {
         return (
             <div className="hidden w-12 shrink-0 flex-col items-center border-l border-border bg-card py-4 xl:flex">
@@ -110,7 +115,7 @@ const FolderInsightPanel = ({ summaryItems, processingItems, collapsed, onToggle
                 {i18n.t('folder:folderInsightPanel.members')}
             </span>
             <div className="mt-3">
-                <ApiPendingNote label={i18n.t('folder:folderInsightPanel.members')} hint={i18n.t('folder:folderInsightPanel.danhSachThanhVienCo')} />
+                <ProjectMemberAvatars members={members} loading={membersLoading} error={membersError} variant="list" />
             </div>
 
             <Divider className="my-5" />

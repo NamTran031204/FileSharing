@@ -2324,9 +2324,15 @@ export interface JobErrorEntry {
 
   /**  */
   message?: string;
+
+  /**  */
+  detail?: string;
 }
 
 export interface JobResourceUsage {
+  /**  */
+  attemptId?: string;
+
   /**  */
   tool?: string;
 
@@ -2350,6 +2356,21 @@ export interface JobResourceUsage {
 
   /**  */
   stages?: object;
+
+  /**  */
+  bytesIn?: string;
+
+  /**  */
+  bytesOut?: string;
+
+  /**  */
+  mediaSeconds?: number;
+
+  /**  */
+  pixels?: string;
+
+  /**  */
+  toolRuns?: ToolRun[];
 }
 
 export interface ProcessingJobConfig {
@@ -2505,6 +2526,26 @@ export interface ProcessingJobResult {
 
   /**  */
   errorDetails?: object;
+
+  /**  */
+  width?: number;
+
+  /**  */
+  height?: number;
+}
+
+export interface ToolRun {
+  /**  */
+  tool?: string;
+
+  /**  */
+  exitCode?: number;
+
+  /**  */
+  wallMs?: string;
+
+  /**  */
+  cpuMs?: string;
 }
 
 export interface CommonResponseListMediaRenditionEntity {
@@ -2883,6 +2924,9 @@ export interface ProjectMemberDTO {
 
   /**  */
   avatar?: string;
+
+  /**  */
+  projectRole?: GrantedProjectRole;
 }
 
 export interface CommonResponseListProjectCollaborator {

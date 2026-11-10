@@ -1,5 +1,6 @@
 package org.example.filesharing.entities.dtos.project;
 
+import com.file.service.filesharing.core.enums.permission.GrantedProjectRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,4 +15,5 @@ public class ProjectMemberDTO {
     private String username;
     private String name;
     private String avatar;
+    private GrantedProjectRole projectRole;
 }

@@ -3,6 +3,16 @@
     "sua": "Sửa",
     "xoa": "Xoá"
   },
+  "projectMembers": {
+    "role": {
+      "OWNER": "Chủ sở hữu",
+      "REVIEWER": "Người duyệt",
+      "PRODUCER": "Người sản xuất"
+    },
+    "empty": "Chưa có thành viên",
+    "loadError": "Không tải được danh sách thành viên",
+    "moreCount": "+{{count}}"
+  },
   "folderInsightPanel": {
     "danhSachThanhVienCo": "Danh sách thành viên có quyền trên project này",
     "nhatKyHanhDongGan": "Nhật ký hành động gần đây trên folder này",

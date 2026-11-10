@@ -9,6 +9,7 @@ import {
   type JobErrorEntry,
   type Kind,
   type JobResourceUsage,
+  type ToolRun,
   type IList,
   type List,
   type IListResult,

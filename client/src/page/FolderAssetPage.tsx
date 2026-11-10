@@ -9,6 +9,7 @@ import {
     ProcessingStatus,
     UserGrantedRole,
     type ProjectEntity,
+    type ProjectMemberDTO,
     type AssetSummaryDto,
     type FolderEntity,
     type FolderTreeItemDTO,
@@ -24,7 +25,7 @@ import FolderInsightPanel, {
     type InsightProcessingItem,
     type InsightSummaryItem,
 } from '../components/folder/FolderInsightPanel.tsx';
-import { ApiPendingNote } from '../components/core/common/ApiPendingNote';
+import ProjectMemberAvatars from '../components/folder/ProjectMemberAvatars.tsx';
 import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 import { FolderControllerService } from '../api/api/FolderControllerService';
@@ -138,6 +139,23 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         ProjectControllerService.getById({ projectId })
             .then((res) => setProject(res.data ?? null))
             .catch(() => setProject(null));
+    }, [projectId, refreshKey]);
+
+    // thanh vien project cho action bar + folder summary; tai lai khi doi project hoac refreshKey
+    const [members, setMembers] = useState<ProjectMemberDTO[]>([]);
+    const [membersLoading, setMembersLoading] = useState(false);
+    const [membersError, setMembersError] = useState(false);
+
+    useEffect(() => {
+        if (!projectId) return;
+        let cancelled = false;
+        setMembersLoading(true);
+        setMembersError(false);
+        ProjectControllerService.members({ projectId })
+            .then((res) => { if (!cancelled) setMembers(res.data ?? []); })
+            .catch(() => { if (!cancelled) { setMembers([]); setMembersError(true); } })
+            .finally(() => { if (!cancelled) setMembersLoading(false); });
+        return () => { cancelled = true; };
     }, [projectId, refreshKey]);
 
     const canManageVisibility =
@@ -424,10 +442,11 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                             {i18n.t('layout:folderAssetPage.luaChonCuaKhach')}
                         </Button>
                     )}
-                    <ApiPendingNote
-                        compact
-                        label={i18n.t('layout:folderAssetPage.members')}
-                        hint={i18n.t('layout:folderAssetPage.danhSachThanhVienCo')}
+                    <ProjectMemberAvatars
+                        members={members}
+                        loading={membersLoading}
+                        error={membersError}
+                        variant="stack"
                     />
                     {currentFolderId && (
                         <Tag color="purple" className="m-0 rounded-md border-0 font-semibold">
@@ -573,6 +592,9 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                     <FolderInsightPanel
                         summaryItems={summaryItems}
                         processingItems={processingItems}
+                        members={members}
+                        membersLoading={membersLoading}
+                        membersError={membersError}
                         collapsed={insightCollapsed}
                         onToggle={() => setInsightCollapsed((value) => !value)}
                     />

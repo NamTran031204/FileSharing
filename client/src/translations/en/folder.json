@@ -3,6 +3,16 @@
     "sua": "Edit",
     "xoa": "Delete"
   },
+  "projectMembers": {
+    "role": {
+      "OWNER": "Owner",
+      "REVIEWER": "Reviewer",
+      "PRODUCER": "Producer"
+    },
+    "empty": "No members yet",
+    "loadError": "Unable to load members",
+    "moreCount": "+{{count}}"
+  },
   "folderInsightPanel": {
     "danhSachThanhVienCo": "Members with access to this project",
     "nhatKyHanhDongGan": "Recent activity log of this folder",

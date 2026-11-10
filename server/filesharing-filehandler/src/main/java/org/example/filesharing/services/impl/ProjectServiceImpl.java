@@ -392,29 +392,29 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProjectAccessOrAdmin(project);
+        ensureProjectMemberOrThrow(project);
 
-        Set<String> memberIds = new HashSet<>();
-        if (StringUtils.isNotNullOrBlank(project.getOwnerId())) {
-            memberIds.add(project.getOwnerId());
-        }
-
+        // userId -> vai tro; owner dat sau cung de uu tien OWNER hon collaborator
+        Map<String, GrantedProjectRole> roleByUserId = new HashMap<>();
         if (project.getCollaborators() != null) {
             for (ProjectCollaborator collaborator : project.getCollaborators()) {
                 if (StringUtils.isNotNullOrBlank(collaborator.getUserId())) {
-                    memberIds.add(collaborator.getUserId());
+                    roleByUserId.put(collaborator.getUserId(), collaborator.getProjectRole());
                 }
             }
         }
+        if (StringUtils.isNotNullOrBlank(project.getOwnerId())) {
+            roleByUserId.put(project.getOwnerId(), GrantedProjectRole.OWNER);
+        }
 
-        if (memberIds.isEmpty()) {
+        if (roleByUserId.isEmpty()) {
             return Collections.emptyList();
         }
 
         String normalizedQuery = normalizeSearch(searchQuery);
-        List<ProjectMemberDTO> members = userRepo.findAllById(memberIds).stream()
+        List<ProjectMemberDTO> members = userRepo.findAllById(roleByUserId.keySet()).stream()
                 .filter(user -> matchesSearch(user, normalizedQuery))
-                .map(this::mapToProjectMember)
+                .map(user -> mapToProjectMember(user, roleByUserId.get(user.getUserId())))
                 .collect(Collectors.toCollection(ArrayList::new));
 
         Set<String> prioritized = resolveReviewerPriority(project, reviewSessionId);
@@ -841,6 +841,13 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
     }
 
+    // chi owner/collaborator xem duoc danh sach thanh vien, khong bypass ADMIN/SA
+    private void ensureProjectMemberOrThrow(ProjectEntity project) {
+        if (resolveProjectPermission(project, auditService.getCurrentUser()) == null) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
+
     private Set<String> resolveReviewerPriority(ProjectEntity project, String reviewSessionId) {
         if (StringUtils.isNotNullOrBlank(reviewSessionId)) {
             ReviewSessionEntity session = reviewSessionRepo.findByReviewSessionIdAndIsActiveTrue(reviewSessionId.trim())
@@ -866,7 +873,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .collect(Collectors.toSet());
     }
 
-    private ProjectMemberDTO mapToProjectMember(UserEntity user) {
+    private ProjectMemberDTO mapToProjectMember(UserEntity user, GrantedProjectRole projectRole) {
         String name = trimToNull(user.getPublicUserName());
         String fallback = name != null ? name : user.getEmail();
         return ProjectMemberDTO.builder()
@@ -874,6 +881,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .username(fallback)
                 .name(fallback)
                 .avatar(resolveAvatar(user.getMetadata()))
+                .projectRole(projectRole)
                 .build();
     }
 
