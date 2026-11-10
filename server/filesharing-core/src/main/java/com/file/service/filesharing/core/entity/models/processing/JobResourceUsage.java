@@ -5,16 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
-// Vo so lieu tai nguyen cua 1 lan chay job. P1-03.c moi do du lieu vao;
-// o P1-01.a day chi la cho dat san de schema khong phai doi lan hai.
+// So lieu tai nguyen cua lan thu cuoi cung, ghi trong lenh finalize co fencing. Cac lan thu truoc chi con trong log.
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class JobResourceUsage {
-    // Ten tien trinh con duoc do, vi du "ffmpeg", "exiftool"
+    // Lan thu ma so lieu nay thuoc ve. Job bi reaper thu hoi giu so cua lan thu truoc: loc attemptId == job.attemptId
+    private String attemptId;
+    // Ten tien trinh con duoc do (P1-03.c), vi du "ffmpeg", "exiftool"
     private String tool;
     private Double peakCpuPercent;
     private Double avgCpuPercent;
@@ -24,6 +26,23 @@ public class JobResourceUsage {
     // So lan lay mau
     private Integer samples;
     private Double wallSeconds;
-    // Thoi luong tung chang, giay. Vi du { download: 8.1, process: 121.7, upload: 13.4 }
+    // Thoi luong tung chang, giay. Khoa: fetch, probe, process, upload
     private Map<String, Double> stages;
+    private Long bytesIn;
+    private Long bytesOut;
+    // Video: thoi luong noi dung (giay). Anh: so pixel. Lay o PROBE
+    private Double mediaSeconds;
+    private Long pixels;
+    private List<ToolRun> toolRuns;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ToolRun {
+        private String tool;
+        private Integer exitCode;
+        private Long wallMs;
+        private Long cpuMs;
+    }
 }

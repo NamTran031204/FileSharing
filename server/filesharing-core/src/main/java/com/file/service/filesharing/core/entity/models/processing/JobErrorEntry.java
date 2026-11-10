@@ -20,4 +20,6 @@ public class JobErrorEntry {
     private Instant at;
     private Kind kind;
     private String message;
+    // Duoi stderr da che bi mat (<= 1500 ky tu). Khong di vao lastError/result/metadata
+    private String detail;
 }

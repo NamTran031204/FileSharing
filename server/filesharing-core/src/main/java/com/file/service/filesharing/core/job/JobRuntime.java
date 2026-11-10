@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -55,27 +56,39 @@ public class JobRuntime {
         LeaseHeartbeat hb = new LeaseHeartbeat(store, job, identity.workerId(),
                 props.getLeaseDuration().toMillis()).start();
         AttemptScope scope = null;
+        AttemptMetrics metrics = new AttemptMetrics();
         log.info("bat dau job={} attempt={} worker={} type={}", jobId, attemptId, identity.workerId(), job.getJobType());
         try {
             Files.createDirectories(ws);
-            String url = null;
-            Path file = null;
-            if (executor.inputMode() == InputMode.STREAM) {
-                url = storage.presignGet(props.getInputBucket(), job.getObjectName(), props.getPresignTtl());
-            } else {
-                String name = Path.of(job.getObjectName().replace('\\', '/')).getFileName().toString();
-                file = ws.resolve("input").resolve(name);
-                storage.download(props.getInputBucket(), job.getObjectName(), file);
+            String bucket = props.getInputBucket();
+            // Quy tac 1: input khong ton tai hoac 0 byte -> permanent, chung cho moi worker
+            long size = storage.stat(bucket, job.getObjectName());
+            if (size == 0) throw new PermanentJobException("file input 0 byte");
+            boolean stream = executor.inputMode() == InputMode.STREAM;
+            String url = stream ? storage.presignGet(bucket, job.getObjectName(), props.getPresignTtl()) : null;
+            Path file = stream ? null : ws.resolve("input").resolve(localInputName(job.getObjectName()));
+            JobContext ctx = new JobContext(job, ws, url, file, hb, metrics);
+            if (!stream) {
+                try (JobContext.Stage st = ctx.stage("fetch", 0, 30)) {
+                    long n = storage.download(bucket, job.getObjectName(), file, size,
+                            b -> ctx.progress((double) b / size, "FETCH " + mb(b) + "/" + mb(size) + " MB"), hb::isLost);
+                    metrics.bytesIn(n);
+                }
             }
-            JobContext ctx = new JobContext(job, ws, url, file, hb::progress, hb::register);
             JobExecution result = executor.process(ctx);
             checkLease(hb);
             scope = result.attemptScope();
-            storage.uploadAll(result.outputs(), props.getUploadBatchSize());
+            int total = result.outputs().size();
+            try (JobContext.Stage st = ctx.stage("upload", ctx.percent(), JobContext.MAX_PERCENT)) {
+                long out = storage.uploadAll(result.outputs(), props.getUploadBatchSize(), hb::isLost,
+                        done -> ctx.progress((double) done / total, "UPLOAD " + done + "/" + total));
+                metrics.bytesOut(out);
+            }
             checkLease(hb);
-            if (store.finalizeSucceeded(job, result)) {
+            if (store.finalizeSucceeded(job, result, metrics.toUsage(attemptId))) {
                 if (scope != null) storage.removeLosingAttempts(scope, attemptId);
                 log.info("hoan tat job={} attempt={}", jobId, attemptId);
+                log.info(metrics.logLine(job, "success"));
             } else {
                 throw new LeaseLostException();
             }
@@ -83,20 +96,30 @@ public class JobRuntime {
             log.warn("fencing reject: job={} attempt={} mat lease, bo ket qua", jobId, attemptId);
             cleanupScope(scope, attemptId);
         } catch (PermanentJobException e) {
-            if (hb.isLost()) lostLease(job, scope); else fail(job, executor, JobErrorEntry.Kind.PERMANENT, e.getMessage(), true, scope);
+            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.PERMANENT, e.getMessage(), e.getDetail(), true, scope, metrics);
         } catch (TransientJobException e) {
-            if (hb.isLost()) lostLease(job, scope); else fail(job, executor, JobErrorEntry.Kind.TRANSIENT, e.getMessage(), false, scope);
+            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.TRANSIENT, e.getMessage(), e.getDetail(), false, scope, metrics);
         } catch (Exception e) {
             if (hb.isLost()) {
                 lostLease(job, scope);
             } else {
                 log.error("job={} attempt={} loi khong du kien", jobId, attemptId, e);
-                fail(job, executor, JobErrorEntry.Kind.TRANSIENT, String.valueOf(e.getMessage()), false, scope);
+                fail(job, JobErrorEntry.Kind.TRANSIENT, String.valueOf(e.getMessage()), null, false, scope, metrics);
             }
         } finally {
             hb.stop();
             deleteRecursively(ws);
         }
+    }
+
+    // Ten file input trong workspace: source.<ext>. Ten nguoi dung dat (xuong dong, '[', '-if'...) khong bao gio
+    // di vao dong lenh cong cu. ext chi nhan [a-z0-9]{1,8}, khong khop thi bo duoi.
+    static String localInputName(String objectName) {
+        String n = objectName == null ? "" : objectName;
+        String base = n.substring(Math.max(n.lastIndexOf('/'), n.lastIndexOf('\\')) + 1);
+        int dot = base.lastIndexOf('.');
+        String ext = dot < 0 ? "" : base.substring(dot + 1).toLowerCase(Locale.ROOT);
+        return ext.matches("[a-z0-9]{1,8}") ? "source." + ext : "source";
     }
 
     private void lostLease(ProcessingJobEntity job, AttemptScope scope) {
@@ -108,25 +131,31 @@ public class JobRuntime {
         if (hb.isLost()) throw new LeaseLostException();
     }
 
-    private void fail(ProcessingJobEntity job, JobExecutor executor, JobErrorEntry.Kind kind,
-                      String message, boolean permanent, AttemptScope scope) {
+    private static long mb(long bytes) {
+        return bytes / (1024 * 1024);
+    }
+
+    private void fail(ProcessingJobEntity job, JobErrorEntry.Kind kind, String message, String detail,
+                      boolean permanent, AttemptScope scope, AttemptMetrics metrics) {
         cleanupScope(scope, job.getAttemptId());
         int rc = job.getRetryCount() == null ? 0 : job.getRetryCount();
         int max = job.getMaxRetries() == null ? props.getMaxRetries() : job.getMaxRetries();
         JobErrorEntry err = JobErrorEntry.builder().attemptId(job.getAttemptId()).workerId(identity.workerId())
-                .at(Instant.now()).kind(kind).message(JobStore.trim(message)).build();
+                .at(Instant.now()).kind(kind).message(JobStore.trim(message)).detail(detail).build();
         boolean ok;
-        if (permanent || rc + 1 >= max) {
-            ok = store.finalizeDeadLetter(job, err);
+        boolean dead = permanent || rc + 1 >= max;
+        if (dead) {
+            ok = store.finalizeDeadLetter(job, err, metrics.toUsage(job.getAttemptId()));
             log.error("DEAD_LETTER job={} attempt={} kind={} loi={}", job.getJobId(), job.getAttemptId(), kind, message);
         } else {
-            ok = store.finalizeRetry(job, err);
+            ok = store.finalizeRetry(job, err, metrics.toUsage(job.getAttemptId()));
             log.warn("retry job={} attempt={} lan={} loi={}", job.getJobId(), job.getAttemptId(), rc + 1, message);
         }
         if (!ok) {
             log.warn("fencing reject khi finalize loi: job={} attempt={}", job.getJobId(), job.getAttemptId());
             return;
         }
+        log.info(metrics.logLine(job, dead ? "dead_letter" : "retry"));
     }
 
     private void cleanupScope(AttemptScope scope, String attemptId) {

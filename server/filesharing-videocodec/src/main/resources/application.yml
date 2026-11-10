@@ -1,3 +1,6 @@
+server:
+  port: 5004
+
 spring:
   config:
     import: optional:file:./.env[.properties]
@@ -23,8 +26,10 @@ minio:
 video:
   encoding:
     ffmpeg:
-      path: ${FFMPEG_PATH:E:/DaiCuongBK/Project3/FileSharing/server/filesharing-videocodec/src/main/resources/ffmpeg/bin/ffmpeg.exe}
+      path: ${FFMPEG_PATH:ffmpeg}
+      ffprobe-path: ${FFPROBE_PATH:ffprobe}
       timeout: 3600000
+      probe-timeout: 60000
       threads-per-process: 2
       crf: 23
       preset: medium

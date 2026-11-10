@@ -26,4 +26,7 @@ public class JobResultMessage {
     private String thumbnailUrl;
     private String errorMessage;
     private Instant finishedAt;
+    // Tuy chon: kich thuoc anh goc (sau xoay EXIF) cho metadata.mediaInfo. Message cu khong co.
+    private Integer width;
+    private Integer height;
 }

@@ -3,3 +3,7 @@
 dockers/data/minio/.minio.sys
 
 dockers/data/minio
+
+# cong cu tai bang tools/get-tools.ps1, chi commit script
+tools/*/
+dockers/scripts/job-test/

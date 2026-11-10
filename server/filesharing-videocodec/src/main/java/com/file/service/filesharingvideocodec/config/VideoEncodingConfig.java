@@ -15,7 +15,10 @@ public class VideoEncodingConfig {
     @Data
     public static class FfmpegConfig {
         private String path;
+        // ffprobe cho buoc PROBE
+        private String ffprobePath;
         private long timeout;
+        private long probeTimeout = 60000;
         private int threadsPerProcess;
         private int crf;
         private String preset;

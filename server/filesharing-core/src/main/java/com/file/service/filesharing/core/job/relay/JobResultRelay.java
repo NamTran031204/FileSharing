@@ -71,6 +71,8 @@ public class JobResultRelay {
                 .thumbnailUrl(r == null ? null : r.getThumbnailUrl())
                 .errorMessage(ok ? null : job.getLastError())
                 .finishedAt(job.getCompletedAt())
+                .width(r == null ? null : r.getWidth())
+                .height(r == null ? null : r.getHeight())
                 .build();
     }
 }

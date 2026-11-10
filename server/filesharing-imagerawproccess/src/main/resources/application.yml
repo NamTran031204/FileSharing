@@ -1,3 +1,6 @@
+server:
+  port: 5003
+
 spring:
   config:
     import: optional:file:./.env[.properties]
@@ -8,14 +11,11 @@ spring:
       uri: ${MONGO_URI}
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}
-    consumer:
-      group-id: image-raw-processing-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    listener:
-      ack-mode: MANUAL_IMMEDIATE
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1
+      retries: 3
 
 minio:
   endpoint: ${MINIO_ENDPOINT}
@@ -23,4 +23,27 @@ minio:
   secret-key: ${MINIO_SECRET_KEY}
   buckets:
     files: file-sharing
+    thumbnails: thumbnail-bucket
     image-preview: image-preview-bucket
+
+raw:
+  processing:
+    exiftool-path: ${EXIFTOOL_PATH:exiftool}
+    command-timeout: 30s
+    lock-wait: 60s
+
+resilience4j:
+  bulkhead:
+    instances:
+      raw-processor:
+        maxConcurrentCalls: 2
+        maxWaitDuration: 0ms
+
+job-runtime:
+  enabled: true
+  job-types: [TRANSCODE_RAW_IMAGE]
+  bulkhead-name: raw-processor
+  workspace-dir: ${java.io.tmpdir}/raw-input
+
+outbox-relay:
+  enabled: true

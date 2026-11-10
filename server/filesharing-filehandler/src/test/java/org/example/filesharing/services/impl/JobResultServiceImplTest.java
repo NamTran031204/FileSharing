@@ -15,7 +15,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import org.bson.Document;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
 /** DBG-1: SSE phai duoc ban cho ca job TRANSCODE_HLS (video), khong chi job anh. */
@@ -75,5 +78,42 @@ class JobResultServiceImplTest {
 
         verify(sseService, times(1)).sendAssetStatusUpdate(eq("folder-1"), any());
         verify(mediaRenditionRepo, never()).save(any());
+    }
+
+    private JobResultMessage image(Integer width, Integer height) {
+        return JobResultMessage.builder()
+                .jobId("job-2").attemptId("attempt-2").jobType(ProcessingJobType.TRANSCODE_IMAGE)
+                .metadataId("meta-1").assetId("asset-1").status(JobResultStatus.SUCCEEDED)
+                .thumbnailUrl("http://minio/thumbnail-bucket/x.png").width(width).height(height)
+                .build();
+    }
+
+    private Document firstSet() {
+        ArgumentCaptor<Update> u = ArgumentCaptor.forClass(Update.class);
+        verify(mongoTemplate, atLeastOnce()).updateFirst(any(Query.class), u.capture(),
+                eq(com.file.service.filesharing.core.entity.models.MetadataEntity.class));
+        return (Document) u.getAllValues().get(0).getUpdateObject().get("$set");
+    }
+
+    @Test
+    void imageResultSetsMediaInfoWidthHeightOnly() {
+        service.apply(image(5472, 3648));
+        Document set = firstSet();
+        assertEquals(5472, set.get("mediaInfo.width"));
+        assertEquals(3648, set.get("mediaInfo.height"));
+        // khong $set ca object mediaInfo: durationMs/codec co san giu nguyen
+        assertFalse(set.containsKey("mediaInfo"), set.keySet().toString());
+    }
+
+    @Test
+    void resultWithoutSizeLeavesMediaInfo() {
+        service.apply(image(null, null));
+        assertFalse(firstSet().keySet().stream().anyMatch(k -> k.startsWith("mediaInfo")), firstSet().keySet().toString());
+    }
+
+    @Test
+    void resultWithOnlyWidthLeavesMediaInfo() {
+        service.apply(image(5472, null));
+        assertFalse(firstSet().keySet().stream().anyMatch(k -> k.startsWith("mediaInfo")), firstSet().keySet().toString());
     }
 }

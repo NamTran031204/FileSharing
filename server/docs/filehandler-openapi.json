@@ -7275,12 +7275,18 @@
           },
           "message" : {
             "type" : "string"
+          },
+          "detail" : {
+            "type" : "string"
           }
         }
       },
       "JobResourceUsage" : {
         "type" : "object",
         "properties" : {
+          "attemptId" : {
+            "type" : "string"
+          },
           "tool" : {
             "type" : "string"
           },
@@ -7313,6 +7319,28 @@
             "additionalProperties" : {
               "type" : "number",
               "format" : "double"
+            }
+          },
+          "bytesIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bytesOut" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "mediaSeconds" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "pixels" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toolRuns" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ToolRun"
             }
           }
         }
@@ -7516,6 +7544,14 @@
             "additionalProperties" : {
               "type" : "object"
             }
+          },
+          "width" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "height" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -7526,6 +7562,26 @@
       "ProcessingJobType" : {
         "type" : "string",
         "enum" : [ "TRANSCODE_HLS", "TRANSCODE_IMAGE", "TRANSCODE_RAW_IMAGE", "VIRUS_SCAN" ]
+      },
+      "ToolRun" : {
+        "type" : "object",
+        "properties" : {
+          "tool" : {
+            "type" : "string"
+          },
+          "exitCode" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wallMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cpuMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "CommonResponseListMediaRenditionEntity" : {
         "type" : "object",

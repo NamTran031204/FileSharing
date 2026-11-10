@@ -1,6 +1,7 @@
 package com.file.service.filesharing.core.job;
 
 import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
+import com.file.service.filesharing.core.job.tool.ToolRunner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Gia han lease moi lease/3. Fence tra 0 ban ghi hoac >= 3 lan loi lien tiep: danh dau mat lease
- * va destroyForcibly moi tien trinh con da dang ky.
+ * va huy ca cay moi tien trinh con da dang ky (con song).
  */
 @Slf4j
 public class LeaseHeartbeat {
@@ -21,8 +22,11 @@ public class LeaseHeartbeat {
     private final List<Process> processes = new CopyOnWriteArrayList<>();
     private volatile boolean lost;
     private volatile boolean stopped;
-    private volatile Integer percent;
-    private volatile String step;
+    // percent/step/eta doc cung luc trong 1 heartbeat, nen gom vao 1 record
+    private record Progress(Integer percent, String step, Long etaMs) {
+    }
+
+    private volatile Progress progress = new Progress(null, null, null);
     private Thread thread;
 
     public LeaseHeartbeat(JobStore store, ProcessingJobEntity job, String workerId, long leaseMs) {
@@ -43,7 +47,8 @@ public class LeaseHeartbeat {
             try {
                 Thread.sleep(intervalMs);
                 if (stopped) return;
-                if (!store.heartbeat(job.getJobId(), job.getAttemptId(), percent, step)) {
+                Progress pr = progress;
+                if (!store.heartbeat(job.getJobId(), job.getAttemptId(), pr.percent(), pr.step(), pr.etaMs())) {
                     log.warn("fencing reject: job={} attempt={} worker={} da bi thu hoi", job.getJobId(), job.getAttemptId(), workerId);
                     markLost();
                     return;
@@ -64,17 +69,26 @@ public class LeaseHeartbeat {
 
     private void markLost() {
         lost = true;
-        processes.forEach(Process::destroyForcibly);
+        processes.forEach(LeaseHeartbeat::kill);
     }
 
     public void register(Process p) {
         processes.add(p);
-        if (lost) p.destroyForcibly();
+        // tien trinh da thoat thi bo khoi danh sach, tranh huy nham PID da bi tai su dung
+        p.onExit().thenRun(() -> processes.remove(p));
+        if (lost) kill(p);
     }
 
-    public void progress(int percent, String step) {
-        this.percent = percent;
-        this.step = step;
+    private static void kill(Process p) {
+        if (p.isAlive()) ToolRunner.killTree(p.toHandle());
+    }
+
+    public synchronized void progress(int percent, String step) {
+        progress = new Progress(percent, step, progress.etaMs());
+    }
+
+    public synchronized void eta(Long etaMs) {
+        progress = new Progress(progress.percent(), progress.step(), etaMs);
     }
 
     public boolean isLost() {

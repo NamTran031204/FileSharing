@@ -29,12 +29,18 @@ minio:
 image:
   processing:
     vips:
+      path: ${VIPS_PATH:vips}
+      header-path: ${VIPSHEADER_PATH:vipsheader}
       processing-timeout-seconds: 30
       max-pixels: 50000000
+      # thread moi tien trinh vips; bulkhead image-processor (3) x 2 <= so core
+      concurrency: 2
+      allowed-loaders: [jpegload, pngload, webpload, gifload, tiffload, heifload]
     output:
       webp-quality: 82
-      strip-metadata: true
+      webp-effort: 6
       thumbnail-width: 200
+      preview-max-edge: 2560
 
 resilience4j:
   bulkhead:

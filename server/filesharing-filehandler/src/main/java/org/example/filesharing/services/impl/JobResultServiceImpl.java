@@ -63,6 +63,10 @@ public class JobResultServiceImpl implements JobResultService {
         if (ok && isImage && msg.getThumbnailUrl() != null) {
             update.set("thumbnailUrl", msg.getThumbnailUrl());
         }
+        // Kich thuoc goc do worker do (sau xoay EXIF). Chi set 2 field theo dot-path, khong ghi de ca mediaInfo
+        if (ok && isImage && msg.getWidth() != null && msg.getHeight() != null) {
+            update.set("mediaInfo.width", msg.getWidth()).set("mediaInfo.height", msg.getHeight());
+        }
 
         long matched = mongoTemplate.updateFirst(filter, update, MetadataEntity.class).getMatchedCount();
         if (matched == 0) {

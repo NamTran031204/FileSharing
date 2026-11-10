@@ -2,6 +2,7 @@ package com.file.service.filesharing.core.job;
 
 import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 import com.file.service.filesharing.core.entity.models.processing.JobErrorEntry;
+import com.file.service.filesharing.core.entity.models.processing.JobResourceUsage;
 import com.file.service.filesharing.core.enums.ProcessingJobStatus;
 import com.file.service.filesharing.core.enums.ProcessingJobType;
 import org.bson.types.ObjectId;
@@ -63,18 +64,24 @@ public class JobStore {
         return mongo.updateFirst(q, u, ProcessingJobEntity.class).getMatchedCount() > 0;
     }
 
-    public boolean heartbeat(String id, String attemptId, Integer percent, String step) {
+    public boolean heartbeat(String id, String attemptId, Integer percent, String step, Long etaMs) {
         Instant now = Instant.now();
         Update u = new Update()
                 .set("leaseUntil", now.plus(props.getLeaseDuration()))
                 .set("workerHeartbeat", now);
         if (percent != null) {
-            u.set("progress.percent", percent).set("progress.currentStep", step);
+            u.set("progress.percent", percent).set("progress.currentStep", step)
+                    .set("progress.estimatedTimeRemainingMs", etaMs);
         }
         return matched(fence(id, attemptId), u);
     }
 
     public boolean finalizeSucceeded(ProcessingJobEntity job, JobExecution ex) {
+        return finalizeSucceeded(job, ex, null);
+    }
+
+    // usage: so do cua lan thu, ghi trong cung lenh finalize co fence (khong them lenh ghi)
+    public boolean finalizeSucceeded(ProcessingJobEntity job, JobExecution ex, JobResourceUsage usage) {
         List<String> keys = ex.outputs().stream().map(OutputObject::key).toList();
         Update u = new Update()
                 .set("status", ProcessingJobStatus.COMPLETED)
@@ -85,12 +92,20 @@ public class JobStore {
                 .set("result.outputKeys", keys)
                 .set("result.manifestKey", ex.manifestKey())
                 .set("result.thumbnailUrl", ex.thumbnailUrl())
+                .set("progress.estimatedTimeRemainingMs", null)
                 .set("leaseUntil", null)
                 .set("resultPublishedAt", null);
+        if (ex.width() != null) u.set("result.width", ex.width());
+        if (ex.height() != null) u.set("result.height", ex.height());
+        if (usage != null) u.set("resourceUsage", usage);
         return matched(fence(job.getJobId(), job.getAttemptId()), u);
     }
 
     public boolean finalizeRetry(ProcessingJobEntity job, JobErrorEntry err) {
+        return finalizeRetry(job, err, null);
+    }
+
+    public boolean finalizeRetry(ProcessingJobEntity job, JobErrorEntry err, JobResourceUsage usage) {
         int rc = job.getRetryCount() == null ? 0 : job.getRetryCount();
         Instant due = Instant.now().plus(JobBackoff.next(rc, props.getBackoffBase(), props.getBackoffMax(),
                 () -> ThreadLocalRandom.current().nextDouble()));
@@ -101,12 +116,20 @@ public class JobStore {
                 .set("lastError", err.getMessage())
                 .set("workerId", null)
                 .set("leaseUntil", null)
+                .set("progress.estimatedTimeRemainingMs", null)
                 .push("errorHistory", err);
+        if (usage != null) u.set("resourceUsage", usage);
         return matched(fence(job.getJobId(), job.getAttemptId()), u);
     }
 
     public boolean finalizeDeadLetter(ProcessingJobEntity job, JobErrorEntry err) {
-        return matched(fence(job.getJobId(), job.getAttemptId()), deadLetterUpdate(err));
+        return finalizeDeadLetter(job, err, null);
+    }
+
+    public boolean finalizeDeadLetter(ProcessingJobEntity job, JobErrorEntry err, JobResourceUsage usage) {
+        Update u = deadLetterUpdate(err).set("progress.estimatedTimeRemainingMs", null);
+        if (usage != null) u.set("resourceUsage", usage);
+        return matched(fence(job.getJobId(), job.getAttemptId()), u);
     }
 
     private Update deadLetterUpdate(JobErrorEntry err) {

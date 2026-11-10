@@ -19,4 +19,7 @@ public class ProcessingJobResult {
     private String thumbnailUrl;
     private String errorMessage;
     private Map<String, Object> errorDetails;
+    // Kich thuoc output chinh (anh/RAW, sau xoay EXIF), relay dua vao JobResultMessage
+    private Integer width;
+    private Integer height;
 }
