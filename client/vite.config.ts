@@ -42,6 +42,12 @@ const hlsLocalPlugin = () => ({
 // su dung cho mockup phat video
 
 export default defineConfig({
+    resolve: {
+        alias: [
+            { find: '@plugin-core', replacement: path.resolve(__dirname, 'src/admin-core') },
+            { find: /^file-saver$/, replacement: path.resolve(__dirname, 'src/admin-core/shared/excel/fileSaver.shim.ts') },
+        ],
+    },
     // su dung cho mockup phat video
     server: {
         fs: {

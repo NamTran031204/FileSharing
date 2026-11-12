@@ -4,5 +4,62 @@
   "save": "Lưu",
   "delete": "Xóa",
   "language": "Ngôn ngữ",
-  "profile": "Hồ sơ cá nhân"
+  "profile": "Hồ sơ cá nhân",
+  "exportExcel": "Xuất excel",
+  "counter": {
+    "isActive": {
+      "all": "Tất cả",
+      "true": "Hoạt động",
+      "false": "Tạm dừng"
+    }
+  },
+  "errorTextMaxLenght": "Độ dài ký tự giới hạn: ",
+  "filterSelectCommonPlaceholder": "--Chọn--",
+  "filterSearch": "Từ khóa tìm kiếm",
+  "hiddenSearchAdvance": "Ẩn nâng cao",
+  "showSearchAdvance": "Tìm kiếm nâng cao",
+  "refreshDataTable": "Làm mới dữ liệu",
+  "search": "Tìm kiếm",
+  "filterIsActived": "Trạng thái",
+  "dang_hoat_dong": "Hoạt động",
+  "ngung_hoat_dong": "Tạm dừng",
+  "addNewItemSelect": "Thêm mới",
+  "no": "Không",
+  "yes": "Có",
+  "addNewContinue": "Tiếp tục thêm mới",
+  "formInvalid": {
+    "timeAfterOrEqual": "Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian kết thúc",
+    "emptyOrNull": "{{fieldName}} bắt buộc nhập",
+    "emptyOrNullShort": "{{fieldName}} bắt buộc nhập",
+    "mustGreaterThanZero": "Nhập {{fieldName}} lớn hơn 0",
+    "maxLength": "{{fieldName}} vượt quá độ dài {{max}} ký tự",
+    "minLength": "{{fieldName}} phải lớn hơn {{min}} ký tự",
+    "maxValue": "Vui lòng {{fieldName}} nhỏ hơn hoặc bằng {{max}}",
+    "minValue": "Vui lòng {{fieldName}} lớn hơn hoặc bằng {{min}}",
+    "tooLong": "Độ dài không vượt quá {{maxLength}} ký tự",
+    "tooShort": "Độ dài chưa đạt yêu cầu"
+  },
+  "currentField": "Trường này",
+  "status": "Trạng thái",
+  "Show": "Hiển thị",
+  "record": "bản ghi",
+  "confirmDelete": "Xác nhận trước khi xóa",
+  "sttRow": "STT",
+  "action": "Thao tác",
+  "list": "Danh sách",
+  "cancelModal": "Đóng",
+  "paginationTotal": "Hiển thị {{start}}-{{end}}/ {{total}} bản ghi",
+  "totalRecord": "Tổng số",
+  "table": {
+    "density": {
+      "tooltip": "Tùy chỉnh độ rộng",
+      "default": "Mặc định",
+      "medium": "Trung bình",
+      "large": "Cao"
+    },
+    "columns": {
+      "tooltip": "Hiển thị cột",
+      "all": "Tất cả"
+    }
+  }
 }

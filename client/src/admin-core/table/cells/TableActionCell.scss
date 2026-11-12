@@ -1,0 +1,43 @@
+.ord-table-action-cell {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.ord-table-action-cell > * {
+  flex-shrink: 0;
+}
+
+.ant-table-tbody > tr > td:has(.ord-table-action-cell) {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.ord-table-action-icon.ant-btn {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--vtt-text-secondary, var(--color-muted-foreground));
+}
+
+.ord-table-action-trigger.ant-btn {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--vtt-text-secondary, var(--color-muted-foreground));
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ord-table-action-trigger:hover,
+.ord-table-action-trigger:focus-visible {
+  color: var(--vtt-primary, var(--color-primary)) !important;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-card)) !important;
+}

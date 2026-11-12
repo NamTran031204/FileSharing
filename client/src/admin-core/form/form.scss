@@ -1,0 +1,37 @@
+.ord-select .ant-select-selector,
+.ord-select .ant-select-selection-search-input {
+  cursor: pointer !important;
+}
+
+.crud-search-box .ant-form-item {
+  margin-bottom: 8px;
+}
+
+.crud-search-box .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+.crud-search-box .ant-form-item-label > label {
+  height: auto;
+  color: var(--vtt-text, var(--color-foreground));
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 17.5px;
+}
+
+.crud-search-box .ant-row {
+  row-gap: 16px !important;
+}
+
+.crud-search-box .ant-input,
+.crud-search-box .ant-input-affix-wrapper,
+.crud-search-box .ant-select-selector,
+.crud-search-box .ant-picker,
+.crud-search-box .ant-btn {
+  min-height: var(--vtt-control-height, 44px);
+  border-radius: var(--vtt-control-radius, 6px);
+}
+
+.crud-search-box .ant-form-item-control-input {
+  min-height: var(--vtt-control-height, 44px);
+}

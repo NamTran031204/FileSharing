@@ -1,0 +1,20 @@
+{
+  "common": {
+    "title": {
+      "create": "Add New {{entity}}",
+      "edit": "Edit {{entity}}",
+      "view": "View {{entity}} Details"
+    },
+    "success": {
+      "create": "{{entity}} added successfully",
+      "edit": "{{entity}} {{name}} updated successfully",
+      "remove": "{{entity}} {{name}} deleted successfully"
+    },
+    "confirm": {
+      "remove": "Are you sure you want to delete this {{entity}}: <bold>{{name}}</bold>?"
+    }
+  },
+  "entity": {
+    "crudDemo": "sample item"
+  }
+}

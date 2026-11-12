@@ -1,0 +1,24 @@
+{
+  "addNew": "Thêm mới",
+  "modal": {
+    "cancel": "Đóng",
+    "save": "Lưu"
+  },
+  "view": "Chi tiết",
+  "edit": "Sửa",
+  "remove": "Xóa",
+  "save": "Lưu",
+  "more": "Thêm",
+  "lock": "Khoá",
+  "unlock": "Mở khoá",
+  "assignRole": "Gán vai trò",
+  "revokeSessions": "Thu hồi phiên",
+  "retry": "Thử lại job",
+  "cancel": "Huỷ job",
+  "priority": "Đổi ưu tiên",
+  "drain": "Drain",
+  "undrain": "Bỏ drain",
+  "preview": "Xem trước",
+  "test": "Gửi thử",
+  "resetDefault": "Về mặc định"
+}

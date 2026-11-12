@@ -22,7 +22,13 @@
     "noUnusedParameters": false, // off canh bao bien khong su dung
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* admin-core (port plugin-core cua wifi-webapp) */
+    "paths": {
+      "@plugin-core/*": ["./src/admin-core/*"],
+      "file-saver": ["./src/admin-core/shared/excel/fileSaver.shim.ts"]
+    }
   },
   "include": ["src"]
 }

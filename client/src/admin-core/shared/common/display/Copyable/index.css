@@ -1,0 +1,19 @@
+/* Bo sung: layout.scss cua wifi khong duoc clone nen can style toi thieu cho o co the sao chep */
+.copyable-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.copyable-wrapper .copy-icon {
+    display: inline-flex;
+    opacity: 0;
+    color: var(--color-muted-foreground);
+    transition: opacity 0.15s;
+}
+
+.copyable-wrapper:hover .copy-icon,
+.copyable-wrapper .copy-icon.copied {
+    opacity: 1;
+}

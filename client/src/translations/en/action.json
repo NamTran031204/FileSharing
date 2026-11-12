@@ -1,0 +1,24 @@
+{
+  "addNew": "Add New",
+  "modal": {
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "view": "View",
+  "edit": "Edit",
+  "remove": "Delete",
+  "save": "Save",
+  "more": "More",
+  "lock": "Lock",
+  "unlock": "Unlock",
+  "assignRole": "Assign roles",
+  "revokeSessions": "Revoke sessions",
+  "retry": "Retry job",
+  "cancel": "Cancel job",
+  "priority": "Change priority",
+  "drain": "Drain",
+  "undrain": "Undrain",
+  "preview": "Preview",
+  "test": "Send test",
+  "resetDefault": "Reset to default"
+}

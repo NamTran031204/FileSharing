@@ -1,0 +1,22 @@
+.ellipsis-text-container {
+    position: relative;
+    display: inline-block;
+}
+
+.ellipsis-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+}
+
+.ellipsis-text.overflow {
+    cursor: pointer;
+}
+
+.ellipsis-text.no-overflow {
+    cursor: default;
+}

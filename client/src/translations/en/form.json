@@ -1,0 +1,13 @@
+{
+  "filterSearch": "Search Keyword",
+  "refreshDataTable": "Reset",
+  "search": "Search",
+  "hiddenSearchAdvance": "Hide Advanced",
+  "showSearchAdvance": "Show Advanced",
+  "searchTextPlaceholder": {
+    "common": "Enter keyword to search (F3)",
+    "crudDemo": "Search by code/name",
+    "adminUser": "Search by email or display name",
+    "adminJob": "Search by jobId or workerId"
+  }
+}

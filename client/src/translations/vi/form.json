@@ -1,0 +1,13 @@
+{
+  "filterSearch": "Từ khóa tìm kiếm",
+  "refreshDataTable": "Đặt lại",
+  "search": "Tìm kiếm",
+  "hiddenSearchAdvance": "Ẩn nâng cao",
+  "showSearchAdvance": "Hiện nâng cao",
+  "searchTextPlaceholder": {
+    "common": "Nhập từ khóa để tìm kiếm (F3)",
+    "crudDemo": "Tìm theo mã/tên",
+    "adminUser": "Tìm theo email hoặc tên hiển thị",
+    "adminJob": "Tìm theo jobId hoặc workerId"
+  }
+}

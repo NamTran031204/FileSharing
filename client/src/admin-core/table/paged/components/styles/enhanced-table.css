@@ -1,0 +1,240 @@
+.enhanced-table {
+    overflow-x: auto;
+    overflow-y: hidden;
+    color: var(--vtt-text, var(--color-foreground));
+}
+
+.enhanced-table .ant-table-title {
+    padding: 0 0 16px;
+    background: var(--vtt-surface, var(--color-card));
+}
+
+.ord-container-box:has(.ant-table-title) {
+    padding-top: 20px;
+}
+
+.ord-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    gap: 16px;
+}
+
+.ord-table-title {
+    min-width: 0;
+    color: var(--vtt-text, var(--color-foreground));
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 28px;
+    text-transform: uppercase;
+}
+
+.ord-container-box.ord-table-container .enhanced-table .ant-table-wrapper .ant-table .ant-table-container,
+.ord-container-box.ord-table-container .enhanced-table .ant-table-wrapper .ant-table-title + .ant-table-container {
+    border: 1px solid var(--vtt-border, var(--color-border));
+    border-radius: var(--vtt-block-radius, 12px);
+    border-start-start-radius: var(--vtt-block-radius, 12px);
+    border-start-end-radius: var(--vtt-block-radius, 12px);
+    border-end-start-radius: var(--vtt-block-radius, 12px);
+    border-end-end-radius: var(--vtt-block-radius, 12px);
+    overflow: hidden;
+}
+
+.enhanced-table .ant-table {
+    border-radius: 0;
+    overflow: visible;
+}
+.enhanced-table .ant-table-thead > tr:first-child > th:first-child {
+    border-top-left-radius: var(--vtt-block-radius, 12px);
+}
+.enhanced-table .ant-table-thead > tr:first-child > th:last-child {
+    border-top-right-radius: var(--vtt-block-radius, 12px);
+}
+
+.enhanced-table .ant-table-thead > tr > th.ant-table-cell,
+.enhanced-table .ant-table.ant-table-middle .ant-table-thead > tr > th.ant-table-cell,
+.enhanced-table .ant-table-thead > tr > td.ant-table-cell {
+    height: 56px;
+    padding: 12px 16px;
+    color: var(--vtt-text, var(--color-foreground));
+    background: var(--vtt-page, var(--color-background));
+    border-bottom: 1px solid var(--vtt-border-strong, var(--color-border));
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    /* Chữ 16px không vừa cột hẹp (cột thao tác 86px) nên header gãy 2 dòng, hàng thành 73px.
+       nowrap giữ header 1 dòng = 56px; cột tự nới theo nội dung, body vẫn xuống dòng. */
+    white-space: nowrap;
+}
+
+/* Preflight Tailwind (border-width: 0 trên *, ::before) đến sau CSS antd nên vạch ngăn cột
+   mất position: absolute và chiếm chỗ. Khôi phục đúng trong bảng. */
+.enhanced-table .ant-table-thead > tr > th::before {
+    position: absolute;
+}
+
+.enhanced-table .ant-table-tbody > tr > td {
+    height: 56px;
+    padding-block: 12px;
+    padding-inline: 16px;
+    border-bottom: 1px solid var(--vtt-border, var(--color-border));
+    color: var(--vtt-text-secondary, var(--color-muted-foreground));
+    background: var(--vtt-surface, var(--color-card));
+    vertical-align: middle;
+}
+
+.enhanced-table .ant-table-tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+.enhanced-table .ant-table-tbody > tr.ant-table-row:hover > td,
+.enhanced-table .ant-table-tbody > tr > td.ant-table-cell-row-hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-card));
+}
+
+.enhanced-table .ant-table-tbody > tr.ant-table-row-selected > td {
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-card));
+}
+
+.enhanced-table .ant-table-cell-fix-left,
+.enhanced-table .ant-table-cell-fix-right {
+    background: inherit;
+}
+
+.enhanced-table .ant-table-placeholder .ant-table-cell {
+    height: 180px;
+    background: var(--vtt-surface, var(--color-card));
+}
+
+.enhanced-table .ant-empty-description {
+    color: var(--vtt-text-secondary, var(--color-muted-foreground));
+}
+
+.enhanced-table .custom-pagination {
+    min-height: 60px;
+    margin-top: 0 !important;
+    padding-top: 16px;
+    border-top: 0;
+}
+
+.enhanced-table .ant-pagination-item,
+.enhanced-table .ant-pagination-prev,
+.enhanced-table .ant-pagination-next {
+    min-width: 32px;
+    height: 32px;
+    line-height: 30px;
+    margin-inline-end: 4px;
+}
+
+/* Figma "Phân trang" (C24): ô trang viền var(--color-border), chữ 16/500; tổng số bản ghi sát trái 14/400. */
+.enhanced-table .ant-pagination-item {
+    border: 1px solid var(--vtt-border-strong, var(--color-border));
+    font-weight: 500;
+}
+
+.enhanced-table .custom-pagination > div:last-child,
+.enhanced-table .custom-pagination .ant-pagination {
+    flex: 1 1 auto;
+}
+
+.enhanced-table .ant-pagination-total-text {
+    margin-inline-end: auto;
+    color: var(--vtt-text-secondary, var(--color-muted-foreground));
+    font-size: 14px;
+    line-height: 17.5px;
+}
+
+.enhanced-table .ord-pagination-arrow {
+    font-size: 20px;
+}
+
+/* Figma "Scroll ngang/Scrool dọc" (C25, C26): thanh 8px, con trượt var(--color-background) bo 20; chỉ trong bảng. */
+.enhanced-table ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.enhanced-table ::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+    background: var(--color-background);
+}
+
+.enhanced-table ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.enhanced-table .ant-pagination-item-active {
+    border-color: var(--vtt-primary, var(--color-primary));
+}
+
+.enhanced-table .ant-pagination-item-active a {
+    color: var(--vtt-primary, var(--color-primary));
+}
+
+.enhanced-table.density-small .ant-table-tbody > tr > td {
+    height: 44px !important;
+    padding-block: 8px !important;
+    padding-inline: 16px !important;
+}
+
+.enhanced-table.density-middle .ant-table-tbody > tr > td {
+    height: 56px !important;
+    padding-block: 12px !important;
+    padding-inline: 16px !important;
+}
+
+.enhanced-table.density-large .ant-table-tbody > tr > td {
+    height: 64px !important;
+    padding-block: 16px !important;
+    padding-inline: 16px !important;
+}
+
+.ord-table-settings-bar .ant-btn-text:hover {
+    color: var(--vtt-primary, var(--color-primary));
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-card)) !important;
+}
+
+.ord-table-settings-bar .ant-btn-text:active {
+    background: color-mix(in srgb, var(--color-primary) 20%, var(--color-card)) !important;
+}
+
+
+/* Copyable content styling */
+.copyable-content:hover .copy-icon {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+}
+
+.copyable-content:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 5%, transparent) !important;
+}
+
+.copyable-content:active {
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+}
+
+/* Copy icon animations */
+.copy-icon {
+    transform: scale(0.9);
+    transition: all 0.2s ease;
+}
+
+/* Success feedback */
+.copy-success .copy-icon {
+    color: var(--color-success) !important;
+}
+
+/* Text columns */
+.enhanced-table .ant-table-cell[data-type="text"] {
+    word-break: break-word;
+}
+
+/* Image columns */
+.enhanced-table .ant-table-cell[data-type="image"] {
+    padding: 4px;
+}
+
+.ord-chip {
+    border-radius: 999px;
+}

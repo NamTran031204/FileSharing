@@ -4,5 +4,62 @@
   "save": "Save",
   "delete": "Delete",
   "language": "Language",
-  "profile": "Profile"
+  "profile": "Profile",
+  "exportExcel": "Export to Excel",
+  "counter": {
+    "isActive": {
+      "all": "All",
+      "true": "Active",
+      "false": "Inactive"
+    }
+  },
+  "errorTextMaxLenght": "Character limit: ",
+  "filterSelectCommonPlaceholder": "--Select--",
+  "filterSearch": "Search Keyword",
+  "hiddenSearchAdvance": "Hide Advanced Search",
+  "showSearchAdvance": "Advanced Search",
+  "refreshDataTable": "Refresh Data",
+  "search": "Search",
+  "filterIsActived": "Status",
+  "dang_hoat_dong": "Active",
+  "ngung_hoat_dong": "Inactive",
+  "addNewItemSelect": "Add New",
+  "no": "No",
+  "yes": "Yes",
+  "addNewContinue": "Add and Continue",
+  "formInvalid": {
+    "timeAfterOrEqual": "Start time must be greater than or equal to end time.",
+    "emptyOrNull": "{{fieldName}} is required.",
+    "emptyOrNullShort": "{{fieldName}} is required.",
+    "mustGreaterThanZero": "Please enter {{fieldName}} greater than 0.",
+    "maxLength": "{{fieldName}} exceeds the maximum length of {{max}} characters.",
+    "minLength": "{{fieldName}} must be longer than {{min}} characters.",
+    "maxValue": "Please enter {{fieldName}} less than or equal to {{max}}.",
+    "minValue": "Please enter {{fieldName}} greater than or equal to {{min}}.",
+    "tooLong": "Length cannot exceed {{maxLength}} characters.",
+    "tooShort": "Length is too short."
+  },
+  "currentField": "This field",
+  "status": "Status",
+  "Show": "Show",
+  "record": "records",
+  "confirmDelete": "Confirm before deleting",
+  "sttRow": "No.",
+  "action": "Action",
+  "list": "List",
+  "cancelModal": "Close",
+  "paginationTotal": "Showing {{start}}-{{end}} of {{total}} records",
+  "totalRecord": "Total",
+  "table": {
+    "density": {
+      "tooltip": "Customize row height",
+      "default": "Default",
+      "medium": "Medium",
+      "large": "High"
+    },
+    "columns": {
+      "tooltip": "Columns",
+      "all": "All"
+    }
+  }
 }

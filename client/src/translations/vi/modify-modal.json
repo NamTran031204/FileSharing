@@ -1,0 +1,20 @@
+{
+  "common": {
+    "title": {
+      "create": "Thêm mới {{entity}}",
+      "edit": "Sửa {{entity}}",
+      "view": "Xem chi tiết thông tin {{entity}}"
+    },
+    "success": {
+      "create": "Thêm mới thành công {{entity}}",
+      "edit": "Sửa thành công {{entity}} {{name}}",
+      "remove": "Xóa thành công {{entity}} {{name}}"
+    },
+    "confirm": {
+      "remove": "Bạn có muốn xóa {{entity}}: <bold>{{name}}</bold> này không?"
+    }
+  },
+  "entity": {
+    "crudDemo": "mục mẫu"
+  }
+}

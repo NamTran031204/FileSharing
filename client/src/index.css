@@ -17,6 +17,11 @@
   --color-primary-foreground: hsl(0 0% 100%);
   --color-muted-foreground: hsl(244 10% 40%);
 
+  /* Trang thai ngu nghia (admin-core: tag, badge, so lieu) */
+  --color-success: hsl(142 60% 38%);
+  --color-warning: hsl(38 92% 48%);
+  --color-info: hsl(200 80% 42%);
+
   /* Review workspace — dark canvas surfaces */
   --color-canvas: hsl(252 47% 13%);          /* #171130 - nền canvas review */
   --color-canvas-elevated: hsl(252 40% 18%); /* toolbar/capsule nổi trên canvas */
