@@ -20,4 +20,11 @@ public interface AssetAccessService {
     void ensureFolderInProject(FolderEntity folder, ProjectEntity project);
 
     boolean isAdmin(UserEntity user);
+
+    void ensureAssetPermissionById(String assetId, GrantedProjectPermission required);
+
+    // false khi thieu quyen, loi khac (khong tim thay asset...) van nem ra
+    boolean hasAssetPermissionById(String assetId, GrantedProjectPermission required);
+
+    void ensureFolderPermissionById(String folderId, GrantedProjectPermission required);
 }

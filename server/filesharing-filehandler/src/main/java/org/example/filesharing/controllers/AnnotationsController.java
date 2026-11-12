@@ -6,7 +6,6 @@ import org.example.filesharing.entities.dtos.annotations.*;
 import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
 import com.file.service.filesharing.core.enums.AnnotationStatus;
 import org.example.filesharing.services.AnnotationsService;
-import org.example.filesharing.services.SseService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -18,7 +17,6 @@ import java.util.List;
 public class AnnotationsController {
 
     private final AnnotationsService annotationsService;
-    private final SseService sseService;
 
     @PostMapping("/create")
     public CommonResponse<AnnotationsEntity> createAnnotation(@RequestBody AnnotationCreateDTO dto) {
@@ -86,6 +84,6 @@ public class AnnotationsController {
      */
     @GetMapping("/subscribe/{assetId}")
     public SseEmitter subscribeToAnnotations(@PathVariable String assetId) {
-        return sseService.subscribeToAnnotation(assetId);
+        return annotationsService.subscribe(assetId);
     }
 }

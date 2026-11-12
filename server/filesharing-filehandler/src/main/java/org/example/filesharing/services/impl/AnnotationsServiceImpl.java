@@ -6,12 +6,14 @@ import org.example.filesharing.entities.dtos.annotations.*;
 import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
 import org.example.filesharing.entities.models.UserEntity;
 import com.file.service.filesharing.core.enums.AnnotationStatus;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AnnotationsRepo;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AnnotationsService;
+import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.SseService;
 import org.example.filesharing.services.baseService.BaseAuditService;
@@ -26,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Instant;
 import java.util.*;
@@ -42,6 +45,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private final SseService sseService;
     private final MongoTemplate mongoTemplate;
     private final UserRepo userRepo;
+    private final AssetAccessService assetAccessService;
 
     private static final Sort SORT_BY_CREATED_AT_ASC = Sort.by(Sort.Direction.ASC, "createdAt");
 
@@ -77,6 +81,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
         assetRepo.findById(dto.getAssetId().trim())
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.NOT_FOUND, "Asset not found"));
+        assetAccessService.ensureAssetPermissionById(dto.getAssetId().trim(), GrantedProjectPermission.COMMENT);
 
         // 3-8. Build entity
         AnnotationsEntity entity = AnnotationsEntity.builder()
@@ -124,6 +129,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
     private AnnotationsEntity createReply(AnnotationCreateDTO dto, String parentCommentId) {
         // 1. Xac thuc parentCommentId ton tai
         AnnotationsEntity parentAnnotation = getActiveAnnotationOrThrow(parentCommentId);
+        assetAccessService.ensureAssetPermissionById(parentAnnotation.getAssetId(), GrantedProjectPermission.COMMENT);
 
         // 2. Lay threadRootId tu annotation cha
         String threadRootId = parentAnnotation.getThreadRootId() == null ? parentAnnotation.getAnnotationId() : parentAnnotation.getThreadRootId();
@@ -203,7 +209,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+        AnnotationsEntity entity = getActiveCommentableOrThrow(dto.getAnnotationId());
 
         // 3. Kiem tra quyen: chi authorId moi duoc sua
         String currentUserId = auditService.getCurrentUserId();
@@ -254,7 +260,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+        AnnotationsEntity entity = getActiveCommentableOrThrow(dto.getAnnotationId());
 
         // 3. Kiem tra phai la root comment
         if (entity.getParentCommentId() != null) {
@@ -301,7 +307,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+        AnnotationsEntity entity = getActiveCommentableOrThrow(dto.getAnnotationId());
 
         // 3. Kiem tra phai la root comment
         if (entity.getParentCommentId() != null) {
@@ -348,7 +354,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+        AnnotationsEntity entity = getActiveCommentableOrThrow(dto.getAnnotationId());
 
         // 3. Kiem tra phai la root comment
         if (entity.getParentCommentId() != null) {
@@ -397,7 +403,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        AnnotationsEntity entity = getActiveAnnotationOrThrow(dto.getAnnotationId().trim());
+        AnnotationsEntity entity = getActiveCommentableOrThrow(dto.getAnnotationId());
 
         // 3. Kiem tra quyen: chi authorId moi duoc xoa
         String currentUserId = auditService.getCurrentUserId();
@@ -467,6 +473,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
 
+        assetAccessService.ensureAssetPermissionById(assetId.trim(), GrantedProjectPermission.READ);
+
         // query: parentCommentId = null, isActive = true, sap xep theo createdAt ASC
         List<AnnotationsEntity> results;
         if (status != null) {
@@ -494,6 +502,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
             throw new UserBusinessException(ErrorCode.BAD_REQUEST,
                     "threadRootId must refer to a root comment (parentCommentId must be null)");
         }
+        assetAccessService.ensureAssetPermissionById(rootComment.getAssetId(), GrantedProjectPermission.READ);
 
         // 4-6. Query replies, sap xep theo createdAt ASC
         return enrichWithAuthorNames(annotationsRepo.findByThreadRootIdAndParentCommentIdIsNotNullAndIsActiveTrue(
@@ -510,7 +519,9 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         }
 
         // 1-2. Load annotation, kiem tra ton tai va isActive = true
-        return getActiveAnnotationOrThrow(annotationId.trim());
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(annotationId.trim());
+        assetAccessService.ensureAssetPermissionById(entity.getAssetId(), GrantedProjectPermission.READ);
+        return entity;
     }
 
     // ================================================================
@@ -521,6 +532,8 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         if (StringUtils.isNullOrBlank(assetId)) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
         }
+
+        assetAccessService.ensureAssetPermissionById(assetId.trim(), GrantedProjectPermission.READ);
 
         List<AnnotationsEntity> allAnnotations;
         List<AnnotationsEntity> rootComments;
@@ -578,6 +591,7 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
         if (versionNumber == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "versionNumber is required");
         }
+        assetAccessService.ensureAssetPermissionById(assetId.trim(), GrantedProjectPermission.READ);
         long openCount = annotationsRepo
                 .countByAssetIdAndVersionNumberAndParentCommentIdIsNullAndIsActiveTrueAndStatus(
                         assetId.trim(), versionNumber, AnnotationStatus.OPEN);
@@ -590,6 +604,13 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                 .build();
     }
 
+    @Override
+    public SseEmitter subscribe(String assetId) {
+        // kiem quyen truoc khi dang ky emitter
+        assetAccessService.ensureAssetPermissionById(assetId, GrantedProjectPermission.READ);
+        return sseService.subscribeToAnnotation(assetId);
+    }
+
     // ================================================================
     //  Helper
     // ================================================================
@@ -599,6 +620,13 @@ public class AnnotationsServiceImpl extends BaseAuditService<AnnotationsEntity> 
                         ErrorCode.NOT_FOUND,
                         "Cannot find active annotation with id: " + annotationId
                 ));
+    }
+
+    // annotation dang active va nguoi goi co quyen COMMENT tren asset chua no
+    private AnnotationsEntity getActiveCommentableOrThrow(String annotationId) {
+        AnnotationsEntity entity = getActiveAnnotationOrThrow(annotationId.trim());
+        assetAccessService.ensureAssetPermissionById(entity.getAssetId(), GrantedProjectPermission.COMMENT);
+        return entity;
     }
 
     /** Resolve publicUserName from UserEntity; falls back to "Unknown" if not found. */

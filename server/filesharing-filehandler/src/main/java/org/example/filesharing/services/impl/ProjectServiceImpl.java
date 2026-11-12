@@ -30,6 +30,7 @@ import org.example.filesharing.repositories.ReviewSessionRepo;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
+import org.example.filesharing.services.FolderSnapshotSync;
 import org.example.filesharing.services.ProjectService;
 import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.ProjectPermissionResolver;
@@ -58,6 +59,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     private final AuditService auditService;
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
+    private final FolderSnapshotSync folderSnapshotSync;
 
     @Override
     public ProjectCheckResponseDTO checkProject(ProjectCheckInputDTO inputDTO) {
@@ -166,6 +168,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (projectCreateUpdateDTO.getCollaborators() != null) {
             List<ProjectCollaboratorDTO> newCollaborators = projectCreateUpdateDTO.getCollaborators();
             var listNewCollab = buildCollaborators(newCollaborators, project.getOwnerId(), false);
+            syncFolderSnapshots(project, listNewCollab);
             project.setCollaborators(listNewCollab);
         }
 
@@ -255,6 +258,8 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     public ProjectEntity removeCollaboratorFromProject(String projectId, String collaboratorId) {
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
         ensureProducerOrOwner(project);
+        // go snapshot truoc, bi ngat giua chung thi user mat quyen folder chu khong giu quyen thua
+        folderSnapshotSync.removeUser(project.getProjectId(), collaboratorId, project.getOwnerId());
         List<ProjectCollaborator> collabs = project.getCollaborators();
         if (collabs != null) {
             collabs.removeIf(collaborator -> Objects.equals(collaborator.getUserId(), collaboratorId));
@@ -433,6 +438,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (collaborator == null) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
         }
+        requireAssignableRole(collaborator.getProjectRole());
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
         ensureProducerOrOwner(project);
@@ -463,9 +469,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (StringUtils.isNullOrBlank(collaborator.getProjectId())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
         }
-        if (collaborator.getProjectRole() == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectRole is required");
-        }
+        requireAssignableRole(collaborator.getProjectRole());
 
         ProjectEntity project = getActiveProjectOrThrow(collaborator.getProjectId().trim());
         ensureOwnerOrAdminPermission(project);
@@ -490,6 +494,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (!updated) {
             throw new FileBusinessException(ErrorCode.FILE_NOT_FOUND, "collaborator not found");
         }
+        folderSnapshotSync.resetRole(project.getProjectId(), targetUserId, collaborator.getProjectRole(), project.getOwnerId());
 
         buildAudit(project, false);
         ProjectEntity savedProject = projectRepo.save(project);
@@ -525,6 +530,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (!removed) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
+        folderSnapshotSync.removeUser(project.getProjectId(), currentUser.getUserId(), project.getOwnerId());
 
         project.setCollaborators(collabs);
         buildAudit(project, false);
@@ -691,13 +697,8 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         String currentUserId = auditService.getCurrentUserId();
         String currentUserEmail = auditService.getCurrentUserEmail();
 
+        // luon loc theo user hien tai, filter.userId cua nguoi khac bi bo qua
         String targetUserId = currentUserId;
-        if (filter != null && StringUtils.isNotNullOrBlank(filter.getUserId())) {
-            targetUserId = filter.getUserId().trim();
-//            if (!currentUserId.equals(targetUserId)) {
-//                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-//            }
-        }
 
         String targetEmail = currentUserEmail;
         if (filter != null && StringUtils.isNotNullOrBlank(filter.getEmail())) {
@@ -1041,8 +1042,31 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .build();
     }
 
-    // neu danh sach collab moi khong co permission, mac dinh la Guest
+    // user bi bo khoi danh sach -> go snapshot, user doi vai tro -> dat lai quyen snapshot
+    private void syncFolderSnapshots(ProjectEntity project, List<ProjectCollaborator> newCollaborators) {
+        if (project.getCollaborators() == null) {
+            return;
+        }
+        Map<String, GrantedProjectRole> newRoles = new HashMap<>();
+        newCollaborators.forEach(c -> newRoles.put(c.getUserId(), c.getProjectRole()));
+        for (ProjectCollaborator old : project.getCollaborators()) {
+            if (old.getUserId() == null) {
+                continue;
+            }
+            if (!newRoles.containsKey(old.getUserId())) {
+                folderSnapshotSync.removeUser(project.getProjectId(), old.getUserId(), project.getOwnerId());
+            } else if (newRoles.get(old.getUserId()) != old.getProjectRole()) {
+                folderSnapshotSync.resetRole(project.getProjectId(), old.getUserId(),
+                        newRoles.get(old.getUserId()), project.getOwnerId());
+            }
+        }
+    }
+
+    // role cua collaborator do client gui phai la REVIEWER hoac PRODUCER
     private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collaboratorDTOS, String ownerId, Boolean isCreate) {
+        if (collaboratorDTOS != null) {
+            collaboratorDTOS.forEach(x -> requireAssignableRole(x.getProjectRole()));
+        }
 
         List<ProjectCollaborator> collaborators = new ArrayList<>();
         if (isCreate) {
@@ -1082,7 +1106,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                         addCollaborator.add(newCollaborator.getUserId());
                         var newCob = ProjectCollaborator.builder()
                                 .userId(newCollaborator.getUserId())
-                                .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                                .projectRole(newCollaborator.getProjectRole())
                                 .addedAt(Instant.now())
                                 .build();
                         collaborators.add(newCob);
@@ -1096,7 +1120,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                         addCollaborator.add(userId);
                         var newCob = ProjectCollaborator.builder()
                                 .userId(userId)
-                                .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                                .projectRole(newCollaborator.getProjectRole())
                                 .addedAt(Instant.now())
                                 .build();
                         collaborators.add(newCob);
@@ -1109,6 +1133,13 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
     }
 
+    // client chi duoc gan REVIEWER hoac PRODUCER, OWNER chi do he thong gan cho chu project
+    private void requireAssignableRole(GrantedProjectRole role) {
+        if (role != GrantedProjectRole.REVIEWER && role != GrantedProjectRole.PRODUCER) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectRole must be REVIEWER or PRODUCER");
+        }
+    }
+
     private List<ProjectCollaborator> addCollaborator(ProjectCollaboratorDTO newCollaborator, List<ProjectCollaborator> oldCollaborator) {
         Set<String> oldCollaboratorIds = oldCollaborator.stream().map(ProjectCollaborator::getUserId).collect(Collectors.toSet());
         if (newCollaborator.getUserId() != null && !newCollaborator.getUserId().isBlank()) {
@@ -1119,7 +1150,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             if (userOpt.isPresent()) {
                 var newCob = ProjectCollaborator.builder()
                         .userId(newCollaborator.getUserId())
-                        .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                        .projectRole(newCollaborator.getProjectRole())
                         .addedAt(Instant.now())
                         .build();
                 oldCollaborator.add(newCob);
@@ -1135,7 +1166,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 if (!oldCollaboratorIds.contains(userId)) {
                     var newCob = ProjectCollaborator.builder()
                             .userId(userId)
-                            .projectRole(newCollaborator.getProjectRole() != null ? newCollaborator.getProjectRole() : GrantedProjectRole.REVIEWER)
+                            .projectRole(newCollaborator.getProjectRole())
                             .addedAt(Instant.now())
                             .build();
                     oldCollaborator.add(newCob);

@@ -146,6 +146,8 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
         if (!isReviewer(session, currentUserId)) {
             throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
         }
+        // co ten trong reviewers chua du, con phai giu quyen COMMENT hien tai tren asset
+        ensureAssetPermission(getActiveAssetOrThrow(session.getAssetId()), GrantedProjectPermission.COMMENT);
 
         ReviewSessionStatus beforeStatus = session.getStatus();
         session.setStatus(dto.getDecision());

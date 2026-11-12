@@ -16,6 +16,7 @@ import org.example.filesharing.entities.models.UserEntity;
 import com.file.service.filesharing.core.enums.auth.AuthProvider;
 import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AuditService;
@@ -147,6 +148,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(String userId, UpdateUserRequestDto input) {
+        // chi duoc sua tai khoan cua chinh minh
+        if (!userId.equals(auditService.getCurrentUserId())) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundById", userId));
 
@@ -156,18 +161,6 @@ public class UserServiceImpl implements UserService {
 
         if (!StringUtils.isNullOrBlank(input.getPassword())) {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
-        }
-
-        if (input.getRoles() != null && !input.getRoles().isEmpty()) {
-            user.setUserGrantedRoles(input.getRoles());
-        }
-
-        if (input.getEnabled() != null) {
-            user.setEnabled(input.getEnabled());
-        }
-
-        if (input.getEmailVerified() != null) {
-            user.setEmailVerified(input.getEmailVerified());
         }
 
         UserEntity updatedUser = userRepo.save(user);

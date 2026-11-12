@@ -4,6 +4,8 @@ import org.example.filesharing.entities.dtos.annotations.*;
 import com.file.service.filesharing.core.entity.models.AnnotationsEntity;
 import com.file.service.filesharing.core.enums.AnnotationStatus;
 
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.util.List;
 
 public interface AnnotationsService {
@@ -29,4 +31,6 @@ public interface AnnotationsService {
     AnnotationSummaryResponse getSummary(String assetId, Integer versionNumber);
 
     AnnotationCountsDTO getCounts(String assetId, Integer versionNumber);
+
+    SseEmitter subscribe(String assetId);
 }

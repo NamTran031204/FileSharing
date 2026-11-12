@@ -445,10 +445,29 @@ public class FolderServiceImpl extends BaseAuditService<FolderEntity> implements
         // danh cho truong hop xem man trash
         if (Boolean.TRUE.equals(folder.getIsTrash())) {
             ensureFolderPermission(folder, project, GrantedProjectPermission.DELETE);
-            return folder;
+            return maskForViewer(folder, project, currentUser);
         }
 
         ensureFolderPermission(folder, project, GrantedProjectPermission.READ);
+        return maskForViewer(folder, project, currentUser);
+    }
+
+    // nguoi khong phai owner/admin chi thay muc quyen cua minh, token chi hien khi co ADD_USER; khong luu lai DB
+    private FolderEntity maskForViewer(FolderEntity folder, ProjectEntity project, UserEntity user) {
+        if (isAdmin(user) || Objects.equals(project.getOwnerId(), user.getUserId())) {
+            return folder;
+        }
+        List<FolderPermission> own = folder.getUserPermissions() == null ? List.of()
+                : folder.getUserPermissions().stream()
+                        .filter(fp -> Objects.equals(fp.getUserId(), user.getUserId()))
+                        .toList();
+        folder.setUserPermissions(own);
+        boolean canShare = own.stream()
+                .anyMatch(fp -> ProjectPermissionResolver.hasPermission(fp.getPermissions(), GrantedProjectPermission.ADD_USER));
+        if (!canShare) {
+            folder.setShareToken(null);
+            folder.setShareExpiry(null);
+        }
         return folder;
     }
 

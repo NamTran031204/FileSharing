@@ -122,6 +122,34 @@ public class AssetAccessServiceImpl implements AssetAccessService {
                 || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
+    @Override
+    public void ensureAssetPermissionById(String assetId, GrantedProjectPermission required) {
+        ensureAssetPermission(getAssetOrThrow(assetId), required);
+    }
+
+    @Override
+    public boolean hasAssetPermissionById(String assetId, GrantedProjectPermission required) {
+        try {
+            ensureAssetPermissionById(assetId, required);
+            return true;
+        } catch (FileBusinessException e) {
+            if (e.getErrorCode() == ErrorCode.FILE_PERMISSION_ERROR) {
+                return false;
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void ensureFolderPermissionById(String folderId, GrantedProjectPermission required) {
+        if (StringUtils.isNullOrBlank(folderId)) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "folderId is required");
+        }
+        FolderEntity folder = getActiveFolderOrThrow(folderId.trim());
+        ensureFolderInProject(folder, getProjectOrThrow(folder.getProjectId()));
+        ensureFolderPermission(folder, required);
+    }
+
     private ProjectEntity getProjectOrThrow(String projectId) {
         ProjectEntity project = projectRepo.findById(projectId)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND));

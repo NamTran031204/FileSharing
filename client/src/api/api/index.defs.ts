@@ -109,15 +109,6 @@ export interface UpdateUserRequestDto {
 
   /**  */
   password?: string;
-
-  /**  */
-  roles?: UserGrantedRole[];
-
-  /**  */
-  enabled?: boolean;
-
-  /**  */
-  emailVerified?: boolean;
 }
 
 export interface CommonResponseUserDto {
@@ -164,47 +155,6 @@ export interface UserDto {
 
   /**  */
   lastLoginAt?: Date;
-}
-
-export interface PageRequestDtoUserSearchRequestDto {
-  /**  */
-  maxResultCount?: number;
-
-  /**  */
-  skipCount?: number;
-
-  /**  */
-  sorting?: string;
-
-  /**  */
-  filter?: UserSearchRequestDto;
-}
-
-export interface UserSearchRequestDto {
-  /**  */
-  searchText?: string;
-}
-
-export interface CommonResponsePageResultUserDto {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: PageResultUserDto;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface PageResultUserDto {
-  /**  */
-  totalCount?: string;
-
-  /**  */
-  data?: UserDto[];
 }
 
 export interface PartUrlBatchRequestDto {
@@ -3620,15 +3570,15 @@ export interface CommonResponseAbortUploadSessionResponseDto {
   message?: string;
 }
 
+export enum AuthProvider {
+  'LOCAL' = 'LOCAL',
+  'GOOGLE' = 'GOOGLE'
+}
+
 export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
   'ROLE_ADMIN' = 'ROLE_ADMIN',
   'ROLE_SA' = 'ROLE_SA'
-}
-
-export enum AuthProvider {
-  'LOCAL' = 'LOCAL',
-  'GOOGLE' = 'GOOGLE'
 }
 
 export enum MediaType {

@@ -7,6 +7,8 @@ import org.example.filesharing.entities.dtos.asset.ImageViewDataDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.enums.ProcessingStatus;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.SseService;
@@ -27,6 +29,7 @@ public class ImageDataController {
     private final AssetService assetService;
     private final MinIoService minIoService;
     private final SseService sseService;
+    private final AssetAccessService assetAccessService;
 
     @Value("${minio.buckets.image-preview}")
     private String imagePreviewBucket;
@@ -57,13 +60,16 @@ public class ImageDataController {
                 log.error("failed to generate preview URL for asset {}: {}", assetId, e.getMessage());
             }
 
-            try {
-                DownloadFileRequestDto dlReq = new DownloadFileRequestDto();
-                dlReq.setObjectName(version.getObjectName());
-                String originalUrl = minIoService.getPresignedDownloadUrl(dlReq, version.getFileSize());
-                builder.originalUrl(originalUrl);
-            } catch (Exception e) {
-                log.error("failed to generate original URL for asset {}: {}", assetId, e.getMessage());
+            // ban goc chi tra cho nguoi co DOWNLOAD
+            if (assetAccessService.hasAssetPermissionById(assetId, GrantedProjectPermission.DOWNLOAD)) {
+                try {
+                    DownloadFileRequestDto dlReq = new DownloadFileRequestDto();
+                    dlReq.setObjectName(version.getObjectName());
+                    String originalUrl = minIoService.getPresignedDownloadUrl(dlReq, version.getFileSize());
+                    builder.originalUrl(originalUrl);
+                } catch (Exception e) {
+                    log.error("failed to generate original URL for asset {}: {}", assetId, e.getMessage());
+                }
             }
         }
 
@@ -72,6 +78,8 @@ public class ImageDataController {
 
     @GetMapping(value = "/folder/{folderId}/asset-status-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribeToFolderStatus(@PathVariable("folderId") String folderId) {
+        // kiem quyen truoc khi dang ky emitter
+        assetAccessService.ensureFolderPermissionById(folderId, GrantedProjectPermission.READ);
         return sseService.subscribe(folderId);
     }
 }

@@ -13,6 +13,7 @@ import com.file.service.filesharing.core.enums.ProcessingJobStatus;
 import com.file.service.filesharing.core.enums.ProcessingStatus;
 import com.file.service.filesharing.core.enums.RenditionType;
 import com.file.service.filesharing.core.enums.UploadStatus;
+import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
@@ -23,6 +24,7 @@ import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProcessingService;
 import com.file.service.filesharing.core.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -45,6 +47,9 @@ public class ProcessingServiceImpl implements ProcessingService {
     private final MetadataRepo metadataRepo;
     private final MinIoService minIoService;
     private final MongoTemplate mongoTemplate;
+
+    @Value("${minio.buckets.image-preview}")
+    private String imagePreviewBucket;
 
     @Override
     public ProcessingStatusResponseDto getProcessingStatus(String assetId, Integer versionNumber) {
@@ -105,7 +110,10 @@ public class ProcessingServiceImpl implements ProcessingService {
                     .build();
         }
 
-        String imageUrl = resolveDownloadUrl(version);
+        // ban goc chi tra cho nguoi co DOWNLOAD, nguoc lai tra preview
+        String imageUrl = assetAccessService.hasAssetPermissionById(version.getAssetId(), GrantedProjectPermission.DOWNLOAD)
+                ? resolveDownloadUrl(version)
+                : resolvePreviewUrl(version);
         return PlaybackDataResponseDto.builder()
                 .versionNumber(version.getVersionNumber())
                 .assetId(version.getAssetId())
@@ -202,6 +210,18 @@ public class ProcessingServiceImpl implements ProcessingService {
             }
         }
         return result.toString();
+    }
+
+    private String resolvePreviewUrl(MetadataEntity version) {
+        if (version.getProcessingStatus() != ProcessingStatus.READY || version.getObjectName() == null) {
+            return null;
+        }
+        try {
+            return minIoService.generatePresignedUrl(imagePreviewBucket, version.getObjectName(), 30 * 60);
+        } catch (Exception e) {
+            log.error("Failed to create preview URL for version {}: {}", version.getFileId(), e.getMessage());
+            return null;
+        }
     }
 
     private String resolveDownloadUrl(MetadataEntity version) {

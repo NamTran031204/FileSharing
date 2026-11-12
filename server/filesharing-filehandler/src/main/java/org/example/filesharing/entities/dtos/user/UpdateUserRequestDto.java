@@ -4,9 +4,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,10 +14,4 @@ public class UpdateUserRequestDto {
 
     @Size(min = 8, message = "{validation.password.min}")
     private String password;
-
-    private List<UserGrantedRole> roles;
-
-    private Boolean enabled;
-
-    private Boolean emailVerified;
 }

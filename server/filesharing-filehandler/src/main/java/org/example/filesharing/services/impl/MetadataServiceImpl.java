@@ -36,7 +36,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -334,12 +333,8 @@ public class MetadataServiceImpl implements MetadataService {
     // both duplicated logic and the circular bean dependency that used to exist here).
     // -------------------------------------------------------------------------
 
+    // tai ban goc can DOWNLOAD, nguoi upload khong duoc mien kiem tra
     private void ensureDownloadPermission(MetadataEntity metadata) {
-        String currentUserId = auditService.getCurrentUserId();
-        if (Objects.equals(metadata.getOwnerId(), currentUserId)) {
-            return;
-        }
-
         UserEntity currentUser = auditService.getCurrentUser();
         if (assetAccessService.isAdmin(currentUser)) {
             return;
@@ -348,7 +343,7 @@ public class MetadataServiceImpl implements MetadataService {
         if (StringUtils.isNotNullOrBlank(metadata.getAssetId())) {
             AssetEntity asset = assetRepo.findById(metadata.getAssetId()).orElse(null);
             if (asset != null && Boolean.TRUE.equals(asset.getIsActive())) {
-                assetAccessService.ensureAssetPermission(asset, GrantedProjectPermission.READ);
+                assetAccessService.ensureAssetPermission(asset, GrantedProjectPermission.DOWNLOAD);
                 return;
             }
         }
@@ -356,7 +351,7 @@ public class MetadataServiceImpl implements MetadataService {
         if (StringUtils.isNotNullOrBlank(metadata.getProjectId())) {
             ProjectEntity project = projectRepo.findById(metadata.getProjectId()).orElse(null);
             if (project != null) {
-                assetAccessService.ensureProjectPermission(project, currentUser, GrantedProjectPermission.READ);
+                assetAccessService.ensureProjectPermission(project, currentUser, GrantedProjectPermission.DOWNLOAD);
                 return;
             }
         }
