@@ -4,47 +4,49 @@ import lombok.RequiredArgsConstructor;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
+import org.example.filesharing.entities.dtos.access.MyAccessDTO;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogFilterDTO;
+import org.example.filesharing.entities.dtos.folder.FolderBreadcrumbItemDTO;
 import org.example.filesharing.entities.dtos.project.*;
 import com.file.service.filesharing.core.entity.models.auditlog.AuditChanges;
 import com.file.service.filesharing.core.entity.models.project.ProjectCollaborator;
 import com.file.service.filesharing.core.entity.models.project.ProjectStats;
 import com.file.service.filesharing.core.entity.models.AuditLogEntity;
+import com.file.service.filesharing.core.entity.models.FolderEntity;
 import com.file.service.filesharing.core.entity.models.ProjectEntity;
+import com.file.service.filesharing.core.entity.models.access.AccessSettings;
 import com.file.service.filesharing.core.entity.models.ReviewSessionEntity;
 import org.example.filesharing.entities.models.UserEntity;
 import com.file.service.filesharing.core.entity.models.review.ReviewerInfo;
 import com.file.service.filesharing.core.enums.AuditAction;
 import com.file.service.filesharing.core.enums.AuditTargetType;
 import com.file.service.filesharing.core.enums.ProjectStatus;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectRole;
-import com.file.service.filesharing.core.enums.permission.GrantedVisibility;
+import com.file.service.filesharing.core.enums.access.AccessRole;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.CommonException;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
+import org.bson.Document;
 import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.repositories.ReviewSessionRepo;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
-import org.example.filesharing.services.FolderSnapshotSync;
 import org.example.filesharing.services.ProjectService;
 import org.example.filesharing.services.baseService.BaseAuditService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
+import org.example.filesharing.utils.access.AccessContext;
+import org.example.filesharing.utils.access.AccessResolver;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,8 +60,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final AuditLogService auditLogService;
-    private final PasswordEncoder passwordEncoder;
-    private final FolderSnapshotSync folderSnapshotSync;
+    private final AccessService accessService;
 
     @Override
     public ProjectCheckResponseDTO checkProject(ProjectCheckInputDTO inputDTO) {
@@ -104,9 +105,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         String ownerId = auditService.getCurrentUserId();
         String ownerEmail = auditService.getCurrentUserEmail();
         ProjectStatus status = ProjectStatus.ACTIVE;
-        GrantedVisibility visibility = projectCreateUpdateDTO.getVisibility() != null
-            ? projectCreateUpdateDTO.getVisibility()
-            : GrantedVisibility.PRIVATE;
 
         ProjectEntity project = ProjectEntity.builder()
                 .projectName(projectCreateUpdateDTO.getProjectName().trim())
@@ -116,10 +114,10 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .ownerEmail(ownerEmail)
                 .startDate(startDate)
                 .endDate(projectCreateUpdateDTO.getEndDate())
-                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), ownerId, true))
-                .visibility(visibility)
+                .collaborators(buildCollaborators(projectCreateUpdateDTO.getCollaborators(), ownerId))
                 .stats(defaultStats())
                 .status(status)
+                .settings(AccessSettings.builder().viewersCanDownload(true).build())
                 .build();
 
         buildAudit(project, true);
@@ -131,12 +129,19 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     @Override
     public ProjectEntity updateProjectDetail(ProjectCreateUpdateDTO projectCreateUpdateDTO) {
         validateUpdatePayload(projectCreateUpdateDTO);
+        if (projectCreateUpdateDTO.getCollaborators() != null) {
+            // thanh vien chi doi qua /api/access (design 6.2)
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "collaborators khong doi qua update-detail, dung /api/access");
+        }
 
         ProjectEntity project = getActiveProjectOrThrow(projectCreateUpdateDTO.getProjectId().trim());
-        ensureOwnerOrAdminPermission(project);
+        ProjectStatus newStatus = projectCreateUpdateDTO.getStatus();
+        requireProject(project, newStatus != null ? statusAction(project.getStatus(), newStatus) : Action.MANAGE_PROJECT);
+        Update update = new Update();
 
         if (StringUtils.isNotNullOrBlank(projectCreateUpdateDTO.getProjectName())) {
             project.setProjectName(projectCreateUpdateDTO.getProjectName().trim());
+            update.set("projectName", project.getProjectName());
         }
 
         if (StringUtils.isNotNullOrBlank(projectCreateUpdateDTO.getProjectCode())) {
@@ -149,28 +154,25 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 );
             }
             project.setProjectCode(newProjectCode);
+            update.set("projectCode", newProjectCode);
         }
 
         if (projectCreateUpdateDTO.getDescription() != null) {
             project.setDescription(trimToNull(projectCreateUpdateDTO.getDescription()));
+            setOrUnset(update, "description", project.getDescription());
         }
 
         if (projectCreateUpdateDTO.getStartDate() != null) {
             project.setStartDate(projectCreateUpdateDTO.getStartDate());
+            update.set("startDate", project.getStartDate());
         }
 
         if (projectCreateUpdateDTO.getEndDate() != null) {
             project.setEndDate(projectCreateUpdateDTO.getEndDate());
+            update.set("endDate", project.getEndDate());
         }
 
         validateProjectDateRange(project.getStartDate(), project.getEndDate());
-
-        if (projectCreateUpdateDTO.getCollaborators() != null) {
-            List<ProjectCollaboratorDTO> newCollaborators = projectCreateUpdateDTO.getCollaborators();
-            var listNewCollab = buildCollaborators(newCollaborators, project.getOwnerId(), false);
-            syncFolderSnapshots(project, listNewCollab);
-            project.setCollaborators(listNewCollab);
-        }
 
         if (projectCreateUpdateDTO.getStatus() != null) {
             project.setStatus(projectCreateUpdateDTO.getStatus());
@@ -179,11 +181,13 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             } else {
                 project.setTrashedAt(null);
             }
+            update.set("status", project.getStatus());
+            setOrUnset(update, "trashedAt", project.getTrashedAt());
         }
 
         buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
-        return savedProject;
+        updateProject(project.getProjectId(), update);
+        return project;
     }
 
     @Override
@@ -193,14 +197,12 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
+        requireProject(project, Action.ARCHIVE_PROJECT);
 
-        project.setStatus(ProjectStatus.ARCHIVED);
-
-        moveToTrashAudit(project);
-
-        buildAudit(project, false);
-        projectRepo.save(project);
+        // ban save cu: moveToTrashAudit roi buildAudit dat lai isTrash=false, nen chi luu status va trashedAt
+        updateProject(project.getProjectId(), new Update()
+                .set("status", ProjectStatus.ARCHIVED)
+                .set("trashedAt", Instant.now()));
 
         return "Project archived successfully";
     }
@@ -241,66 +243,54 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     }
 
     @Override
-    public ProjectEntity getProjectById(String projectId) {
+    public ProjectDetailDTO getProjectById(String projectId) {
         if (StringUtils.isNullOrBlank(projectId)) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        if (!hasProjectAccess(project)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        MyAccessDTO myAccess = accessService.myAccess(ResourceRef.project(project.getProjectId()));
+        if (myAccess.getRole() != null) {
+            return ProjectDetailDTO.full(project, myAccess);
         }
+        // nguoi chi co grant folder: ban rut gon de trang folder mo duoc (design 3.7)
+        List<FolderBreadcrumbItemDTO> roots = accessRoots(project);
+        if (roots.isEmpty()) {
+            requireProject(project, Action.VIEW);
+        }
+        return ProjectDetailDTO.reduced(project, myAccess, roots);
+    }
 
-        return project;
+    // folder thay duoc ma cha khong thay duoc; 1 query cac folder cua project, chi cho nguoi khong la thanh vien
+    private List<FolderBreadcrumbItemDTO> accessRoots(ProjectEntity project) {
+        Query query = Query.query(Criteria.where("projectId").is(project.getProjectId())
+                .and("isActive").is(true)
+                .and("isTrash").ne(true));
+        query.fields().include("projectId", "parentFolderId", "folderName", "level", "grants", "link", "isTrash");
+        List<FolderEntity> visible = accessService.filterVisible(project, mongoTemplate.find(query, FolderEntity.class));
+        Set<String> visibleIds = visible.stream().map(FolderEntity::getFolderId).collect(Collectors.toSet());
+        return visible.stream()
+                .filter(f -> !visibleIds.contains(f.getParentFolderId()))
+                .sorted(Comparator.comparing(FolderEntity::getFolderName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(f -> FolderBreadcrumbItemDTO.builder()
+                        .folderId(f.getFolderId())
+                        .folderName(f.getFolderName())
+                        .level(f.getLevel())
+                        .build())
+                .toList();
     }
 
     @Override
     public ProjectEntity removeCollaboratorFromProject(String projectId, String collaboratorId) {
+        // xoa chinh minh = tu roi, khong can MANAGE_ACCESS
+        if (Objects.equals(collaboratorId, auditService.getCurrentUserId())) {
+            return leaveProject(projectId);
+        }
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProducerOrOwner(project);
-        // go snapshot truoc, bi ngat giua chung thi user mat quyen folder chu khong giu quyen thua
-        folderSnapshotSync.removeUser(project.getProjectId(), collaboratorId, project.getOwnerId());
-        List<ProjectCollaborator> collabs = project.getCollaborators();
-        if (collabs != null) {
-            collabs.removeIf(collaborator -> Objects.equals(collaborator.getUserId(), collaboratorId));
-        }
-        project.setCollaborators(collabs);
-        projectRepo.save(project);
-        return project;
-    }
-
-    @Override
-    public ShareTokenCreateResponseDTO createShareToken(ShareTokenCreateDTO input) {
-        if (input == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-        if (StringUtils.isNullOrBlank(input.getProjectId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-
-        ProjectEntity project = getActiveProjectOrThrow(input.getProjectId().trim());
-        ensureProducerOrOwner(project);
-        ShareTokenCreateResponseDTO response = createShareTokenInternal(project, input);
-        projectRepo.save(project);
-        writeProjectAuditLog(project, AuditAction.SHARE, null);
-        return response;
-    }
-
-    @Override
-    public ProjectEntity joinProject(String shareToken) {
-        if (shareToken == null || shareToken.isBlank()) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "shareToken is required");
-        }
-
-        var projectOpt = projectRepo.findByShareToken(shareToken);
-
-        if (projectOpt.isEmpty()) {
-            throw new UserBusinessException(ErrorCode.PROJECT_NOT_FOUND);
-        }
-        ProjectEntity project = projectOpt.get();
-
-        ensureShareTokenValid(project);
-        return project;
+        AccessContext caller = requireProject(project, Action.MANAGE_ACCESS);
+        requireNotAbove(caller, project, collaboratorId);
+        removeMember(project, collaboratorId);
+        return getProjectOrThrow(project.getProjectId());
     }
 
     @Override
@@ -309,12 +299,12 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
         }
 
-        ProjectEntity project = getProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
+        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
+        requireProject(project, Action.ARCHIVE_PROJECT);
 
+        // ban save cu goi buildAudit sau setIsActive(false) nen isActive bi dat lai true; nay luu dung isActive=false
         project.setIsActive(false);
-        buildAudit(project, false);
-        projectRepo.save(project);
+        updateProject(project.getProjectId(), new Update().set("isActive", false));
 
         writeProjectAuditLog(project, AuditAction.DELETE, null);
         return "Project deleted successfully";
@@ -326,8 +316,9 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
         }
 
-        ProjectEntity project = getProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
+        // project da xoa (isActive=false) coi nhu khong ton tai, chi khoi phuc tu ARCHIVED
+        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
+        requireProject(project, Action.ARCHIVE_PROJECT);
 
         ProjectStatus beforeStatus = project.getStatus();
         Instant beforeTrashedAt = project.getTrashedAt();
@@ -337,11 +328,15 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         project.setTrashedAt(null);
 
         buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
+        updateProject(project.getProjectId(), new Update()
+                .set("isActive", true)
+                .set("isTrash", false)
+                .set("status", ProjectStatus.ACTIVE)
+                .unset("trashedAt"));
 
         AuditChanges changes = buildStatusChanges(beforeStatus, project.getStatus(), beforeTrashedAt, project.getTrashedAt());
-        writeProjectAuditLog(savedProject, AuditAction.STATUS_CHANGE, changes);
-        return savedProject;
+        writeProjectAuditLog(project, AuditAction.STATUS_CHANGE, changes);
+        return project;
     }
 
     @Override
@@ -354,7 +349,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
+        requireProject(project, statusAction(project.getStatus(), status));
 
         ProjectStatus beforeStatus = project.getStatus();
         Instant beforeTrashedAt = project.getTrashedAt();
@@ -367,27 +362,13 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
+        Update update = new Update().set("status", status);
+        setOrUnset(update, "trashedAt", project.getTrashedAt());
+        updateProject(project.getProjectId(), update);
 
         AuditChanges changes = buildStatusChanges(beforeStatus, project.getStatus(), beforeTrashedAt, project.getTrashedAt());
-        writeProjectAuditLog(savedProject, AuditAction.STATUS_CHANGE, changes);
-        return savedProject;
-    }
-
-    @Override
-    public List<ProjectCollaborator> getProjectCollaborators(String projectId) {
-        if (StringUtils.isNullOrBlank(projectId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-
-        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProjectAccessOrAdmin(project);
-
-        if (project.getCollaborators() == null) {
-            return Collections.emptyList();
-        }
-
-        return project.getCollaborators();
+        writeProjectAuditLog(project, AuditAction.STATUS_CHANGE, changes);
+        return project;
     }
 
     @Override
@@ -397,19 +378,19 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProjectMemberOrThrow(project);
+        requireProject(project, Action.VIEW_PEOPLE);
 
         // userId -> vai tro; owner dat sau cung de uu tien OWNER hon collaborator
-        Map<String, GrantedProjectRole> roleByUserId = new HashMap<>();
+        Map<String, AccessRole> roleByUserId = new HashMap<>();
         if (project.getCollaborators() != null) {
             for (ProjectCollaborator collaborator : project.getCollaborators()) {
                 if (StringUtils.isNotNullOrBlank(collaborator.getUserId())) {
-                    roleByUserId.put(collaborator.getUserId(), collaborator.getProjectRole());
+                    roleByUserId.put(collaborator.getUserId(), collaborator.getRole());
                 }
             }
         }
         if (StringUtils.isNotNullOrBlank(project.getOwnerId())) {
-            roleByUserId.put(project.getOwnerId(), GrantedProjectRole.OWNER);
+            roleByUserId.put(project.getOwnerId(), AccessRole.OWNER);
         }
 
         if (roleByUserId.isEmpty()) {
@@ -431,80 +412,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
     }
 
     @Override
-    public ProjectEntity addCollaboratorToProject(String projectId, ProjectCollaboratorDTO collaborator) {
-        if (StringUtils.isNullOrBlank(projectId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-        if (collaborator == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-        requireAssignableRole(collaborator.getProjectRole());
-
-        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProducerOrOwner(project);
-
-        String resolvedUserId = resolveCollaboratorUserId(collaborator);
-        collaborator.setUserId(resolvedUserId);
-        collaborator.setEmail(null);
-
-        List<ProjectCollaborator> oldCollab = project.getCollaborators();
-        if (oldCollab == null) {
-            oldCollab = new ArrayList<>();
-        }
-
-        List<ProjectCollaborator> updated = addCollaborator(collaborator, oldCollab);
-        project.setCollaborators(updated);
-
-        buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
-        writeProjectAuditLog(savedProject, AuditAction.UPDATE, null);
-        return savedProject;
-    }
-
-    @Override
-    public ProjectEntity changeCollaboratorPermission(ProjectCollaboratorDTO collaborator) {
-        if (collaborator == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-        if (StringUtils.isNullOrBlank(collaborator.getProjectId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-        requireAssignableRole(collaborator.getProjectRole());
-
-        ProjectEntity project = getActiveProjectOrThrow(collaborator.getProjectId().trim());
-        ensureOwnerOrAdminPermission(project);
-
-        String targetUserId = resolveCollaboratorUserId(collaborator);
-        List<ProjectCollaborator> collabs = project.getCollaborators();
-        if (collabs == null || collabs.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_NOT_FOUND, "collaborator not found");
-        }
-
-        GrantedProjectRole beforeRole = null;
-        boolean updated = false;
-        for (ProjectCollaborator collaboratorItem : collabs) {
-            if (Objects.equals(collaboratorItem.getUserId(), targetUserId)) {
-                beforeRole = collaboratorItem.getProjectRole();
-                collaboratorItem.setProjectRole(collaborator.getProjectRole());
-                updated = true;
-                break;
-            }
-        }
-
-        if (!updated) {
-            throw new FileBusinessException(ErrorCode.FILE_NOT_FOUND, "collaborator not found");
-        }
-        folderSnapshotSync.resetRole(project.getProjectId(), targetUserId, collaborator.getProjectRole(), project.getOwnerId());
-
-        buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
-
-        AuditChanges changes = buildPermissionChanges(beforeRole, collaborator.getProjectRole());
-        writeProjectAuditLog(savedProject, AuditAction.PERMISSION_CHANGE, changes);
-        return savedProject;
-    }
-
-    @Override
     public ProjectEntity leaveProject(String projectId) {
         if (StringUtils.isNullOrBlank(projectId)) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
@@ -517,116 +424,17 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "owner cannot leave project");
         }
 
-        if (!hasProjectAccess(project)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-
+        // tu roi khong can Action, chi can dang la thanh vien project
         List<ProjectCollaborator> collabs = project.getCollaborators();
-        if (collabs == null) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        boolean member = collabs != null
+                && collabs.stream().anyMatch(collaborator -> Objects.equals(collaborator.getUserId(), currentUser.getUserId()));
+        if (!member) {
+            throw new FileBusinessException(ErrorCode.ACCESS_DENIED);
         }
+        removeMember(project, currentUser.getUserId());
 
-        boolean removed = collabs.removeIf(collaborator -> Objects.equals(collaborator.getUserId(), currentUser.getUserId()));
-        if (!removed) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-        folderSnapshotSync.removeUser(project.getProjectId(), currentUser.getUserId(), project.getOwnerId());
-
-        project.setCollaborators(collabs);
-        buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
+        ProjectEntity savedProject = getProjectOrThrow(project.getProjectId());
         writeProjectAuditLog(savedProject, AuditAction.UPDATE, null);
-        return savedProject;
-    }
-
-    @Override
-    public String revokeShareToken(String projectId) {
-        if (StringUtils.isNullOrBlank(projectId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-
-        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProducerOrOwner(project);
-
-        project.setShareToken(null);
-        project.setShareExpiry(null);
-
-        buildAudit(project, false);
-        projectRepo.save(project);
-        writeProjectAuditLog(project, AuditAction.SHARE, null);
-
-        return "Share token revoked successfully";
-    }
-
-    @Override
-    public ShareTokenCreateResponseDTO refreshShareToken(String projectId, ShareTokenCreateDTO input) {
-        if (StringUtils.isNullOrBlank(projectId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-        if (input == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-        if (StringUtils.isNotNullOrBlank(input.getProjectId())
-                && !projectId.trim().equals(input.getProjectId().trim())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId mismatch");
-        }
-
-        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProducerOrOwner(project);
-
-        ShareTokenCreateResponseDTO response = createShareTokenInternal(project, input);
-        projectRepo.save(project);
-        writeProjectAuditLog(project, AuditAction.SHARE, null);
-        return response;
-    }
-
-    @Override
-    public ShareTokenInfoDTO getShareTokenInfo(String shareToken) {
-        if (StringUtils.isNullOrBlank(shareToken)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "shareToken is required");
-        }
-
-        ProjectEntity project = projectRepo.findByShareToken(shareToken)
-                .orElseThrow(() -> new UserBusinessException(ErrorCode.PROJECT_NOT_FOUND));
-
-        ensureShareTokenValid(project);
-
-        return ShareTokenInfoDTO.builder()
-                .shareToken(project.getShareToken())
-                .shareExpiry(project.getShareExpiry())
-                .projectId(project.getProjectId())
-                .projectName(project.getProjectName())
-                .visibility(project.getVisibility())
-                .build();
-    }
-
-    @Override
-    public ProjectEntity updateProjectVisibility(String projectId, GrantedVisibility visibility) {
-        if (StringUtils.isNullOrBlank(projectId)) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectId is required");
-        }
-        if (visibility == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "visibility is required");
-        }
-
-        ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
-
-        GrantedVisibility oldVisibility = project.getVisibility();
-        if (oldVisibility == visibility) {
-            return project;
-        }
-
-        project.setVisibility(visibility);
-        buildAudit(project, false);
-        ProjectEntity savedProject = projectRepo.save(project);
-
-        Map<String, Object> before = new HashMap<>();
-        Map<String, Object> after = new HashMap<>();
-        before.put("visibility", oldVisibility);
-        after.put("visibility", visibility);
-        AuditChanges changes = AuditChanges.builder().before(before).after(after).build();
-        writeProjectAuditLog(savedProject, AuditAction.PERMISSION_CHANGE, changes);
         return savedProject;
     }
 
@@ -637,7 +445,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureProjectAccessOrAdmin(project);
+        requireProject(project, Action.VIEW);
         return project.getStats() != null ? project.getStats() : defaultStats();
     }
 
@@ -648,7 +456,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         ProjectEntity project = getActiveProjectOrThrow(projectId.trim());
-        ensureOwnerOrAdminPermission(project);
+        requireProject(project, Action.VIEW_AUDIT_LOG);
 
         PageRequestDto<AuditLogFilterDTO> pageRequest = dto != null ? dto : new PageRequestDto<>();
         AuditLogFilterDTO filter = pageRequest.getFilter();
@@ -704,7 +512,8 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         if (filter != null && StringUtils.isNotNullOrBlank(filter.getEmail())) {
             targetEmail = filter.getEmail().trim();
             if (!currentUserEmail.equalsIgnoreCase(targetEmail)) {
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+                // khong xem danh sach project cua nguoi khac
+                throw new FileBusinessException(ErrorCode.ACCESS_DENIED);
             }
         }
 
@@ -756,96 +565,23 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 ));
     }
 
-    private void ensureOwnerPermission(ProjectEntity project) {
-        String currentUserId = auditService.getCurrentUserId();
-        if (!currentUserId.equals(project.getOwnerId())) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+    private AccessContext requireProject(ProjectEntity project, Action action) {
+        return accessService.require(ResourceRef.project(project.getProjectId()), action);
     }
 
-    private void ensureOwnerOrAdminPermission(ProjectEntity project) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
+    // vao/ra ARCHIVED la luu tru/khoi phuc (chi owner), con lai ACTIVE <-> COMPLETED la quan ly project
+    private static Action statusAction(ProjectStatus from, ProjectStatus to) {
+        if (from != to && (from == ProjectStatus.ARCHIVED || to == ProjectStatus.ARCHIVED)) {
+            return Action.ARCHIVE_PROJECT;
         }
-
-        if (!Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
+        return Action.MANAGE_PROJECT;
     }
 
-    private void ensureProducerOrOwner(ProjectEntity project) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
-        GrantedProjectRole role = resolveProjectPermission(project, currentUser);
-        if (role != GrantedProjectRole.OWNER && role != GrantedProjectRole.PRODUCER) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    private GrantedProjectRole resolveProjectPermission(ProjectEntity project, UserEntity user) {
-        if (project == null || user == null) {
-            return null;
-        }
-
-        if (Objects.equals(project.getOwnerId(), user.getUserId())) {
-            return GrantedProjectRole.OWNER;
-        }
-
-        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
-            return null;
-        }
-
-        String currentUserId = user.getUserId();
-        for (ProjectCollaborator collaborator : project.getCollaborators()) {
-            if (collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId)) {
-                return collaborator.getProjectRole();
-            }
-        }
-
-        return null;
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
-    }
-
-    private boolean hasProjectAccess(ProjectEntity project) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return true;
-        }
-
-        String currentUserId = currentUser.getUserId();
-        if (currentUserId.equals(project.getOwnerId())) {
-            return true;
-        }
-
-        if (project.getCollaborators() == null || project.getCollaborators().isEmpty()) {
-            return false;
-        }
-
-        return project.getCollaborators().stream().anyMatch(collaborator ->
-                (collaborator.getUserId() != null && collaborator.getUserId().equals(currentUserId))
-        );
-    }
-
-    private void ensureProjectAccessOrAdmin(ProjectEntity project) {
-        if (!hasProjectAccess(project)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    // chi owner/collaborator xem duoc danh sach thanh vien, khong bypass ADMIN/SA
-    private void ensureProjectMemberOrThrow(ProjectEntity project) {
-        if (resolveProjectPermission(project, auditService.getCurrentUser()) == null) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    // khong doi/xoa nguoi co vai tro project cao hon minh; owner luon cao nhat
+    private void requireNotAbove(AccessContext caller, ProjectEntity project, String targetUserId) {
+        AccessRole target = AccessResolver.resolve(project, List.of(), targetUserId, Instant.now()).own();
+        if (target != null && caller.own() != null && target.compareTo(caller.own()) > 0) {
+            throw new FileBusinessException(ErrorCode.ACTION_NOT_ALLOWED);
         }
     }
 
@@ -868,13 +604,13 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         }
 
         return project.getCollaborators().stream()
-                .filter(collaborator -> collaborator.getProjectRole() == GrantedProjectRole.REVIEWER)
+                .filter(collaborator -> collaborator.getRole() == AccessRole.COMMENTER)
                 .map(ProjectCollaborator::getUserId)
                 .filter(StringUtils::isNotNullOrBlank)
                 .collect(Collectors.toSet());
     }
 
-    private ProjectMemberDTO mapToProjectMember(UserEntity user, GrantedProjectRole projectRole) {
+    private ProjectMemberDTO mapToProjectMember(UserEntity user, AccessRole role) {
         String name = trimToNull(user.getPublicUserName());
         String fallback = name != null ? name : user.getEmail();
         return ProjectMemberDTO.builder()
@@ -882,7 +618,7 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
                 .username(fallback)
                 .name(fallback)
                 .avatar(resolveAvatar(user.getMetadata()))
-                .projectRole(projectRole)
+                .role(role)
                 .build();
     }
 
@@ -932,35 +668,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         return project;
     }
 
-    private void ensureShareTokenValid(ProjectEntity project) {
-        if (project.getIsActive() != null && !project.getIsActive()) {
-            throw new UserBusinessException(ErrorCode.PROJECT_NOT_FOUND);
-        }
-        if (project.getShareExpiry() != null && project.getShareExpiry().isBefore(Instant.now())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "shareToken already expired");
-        }
-    }
-
-    private String resolveCollaboratorUserId(ProjectCollaboratorDTO collaborator) {
-        if (collaborator == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-
-        if (StringUtils.isNotNullOrBlank(collaborator.getUserId())) {
-            return collaborator.getUserId().trim();
-        }
-
-        if (StringUtils.isNotNullOrBlank(collaborator.getEmail())) {
-            Optional<UserEntity> user = userRepo.findByEmail(collaborator.getEmail().trim());
-            if (user.isPresent()) {
-                return user.get().getUserId();
-            }
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "user not found by email");
-        }
-
-        throw new UserBusinessException(ErrorCode.BAD_REQUEST, "userId or email is required");
-    }
-
     private AuditChanges buildStatusChanges(ProjectStatus beforeStatus,
                                            ProjectStatus afterStatus,
                                            Instant beforeTrashedAt,
@@ -971,17 +678,6 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         before.put("trashedAt", beforeTrashedAt);
         after.put("status", afterStatus);
         after.put("trashedAt", afterTrashedAt);
-        return AuditChanges.builder()
-                .before(before)
-                .after(after)
-                .build();
-    }
-
-    private AuditChanges buildPermissionChanges(GrantedProjectRole beforeRole, GrantedProjectRole afterRole) {
-        Map<String, Object> before = new HashMap<>();
-        Map<String, Object> after = new HashMap<>();
-        before.put("projectRole", beforeRole);
-        after.put("projectRole", afterRole);
         return AuditChanges.builder()
                 .before(before)
                 .after(after)
@@ -1003,127 +699,44 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
         auditLogService.createAuditLog(dto);
     }
 
-    private ShareTokenCreateResponseDTO createShareTokenInternal(ProjectEntity project, ShareTokenCreateDTO input) {
-        if (input == null) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Request body is required");
-        }
-
-        String shareToken = passwordEncoder.encode(project.getProjectName() + UUID.randomUUID());
-        while (projectRepo.existsByShareToken(shareToken)) {
-            passwordEncoder.encode(project.getProjectName() + UUID.randomUUID());
-        }
-        project.setShareToken(shareToken);
-
-        Instant startDate = Instant.now();
-        if (input.getRangeTime() != null) {
-            switch (input.getRangeTime()) {
-                case ONE_DAY -> project.setShareExpiry(startDate.plus(1, ChronoUnit.DAYS));
-                case ONE_MONTH -> project.setShareExpiry(startDate.plus(1, ChronoUnit.MONTHS));
-                case ONE_WEEK -> project.setShareExpiry(startDate.plus(1, ChronoUnit.WEEKS));
-                case ONE_YEAR -> project.setShareExpiry(startDate.plus(1, ChronoUnit.YEARS));
-                case UNLIMITED -> project.setShareExpiry(Instant.MAX);
-                default -> {
-                    if (input.getExpireDate() != null) {
-                        project.setShareExpiry(input.getExpireDate().toInstant(ZoneOffset.UTC));
-                    } else {
-                        throw new UserBusinessException(ErrorCode.BAD_REQUEST, "rangeTime is required");
-                    }
-                }
-            }
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                .withZone(ZoneOffset.UTC);
-        String formattedDate = formatter.format(project.getShareExpiry());
-
-        return ShareTokenCreateResponseDTO.builder()
-                .shareToken(shareToken)
-                .message("Share token created successfully, due date: " + formattedDate)
-                .build();
-    }
-
-    // user bi bo khoi danh sach -> go snapshot, user doi vai tro -> dat lai quyen snapshot
-    private void syncFolderSnapshots(ProjectEntity project, List<ProjectCollaborator> newCollaborators) {
-        if (project.getCollaborators() == null) {
-            return;
-        }
-        Map<String, GrantedProjectRole> newRoles = new HashMap<>();
-        newCollaborators.forEach(c -> newRoles.put(c.getUserId(), c.getProjectRole()));
-        for (ProjectCollaborator old : project.getCollaborators()) {
-            if (old.getUserId() == null) {
-                continue;
-            }
-            if (!newRoles.containsKey(old.getUserId())) {
-                folderSnapshotSync.removeUser(project.getProjectId(), old.getUserId(), project.getOwnerId());
-            } else if (newRoles.get(old.getUserId()) != old.getProjectRole()) {
-                folderSnapshotSync.resetRole(project.getProjectId(), old.getUserId(),
-                        newRoles.get(old.getUserId()), project.getOwnerId());
-            }
-        }
-    }
-
-    // role cua collaborator do client gui phai la REVIEWER hoac PRODUCER
-    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collaboratorDTOS, String ownerId, Boolean isCreate) {
+    // chi dung khi tao project; role cua collaborator do client gui theo pham vi cap project (VIEWER..MANAGER)
+    private List<ProjectCollaborator> buildCollaborators(List<ProjectCollaboratorDTO> collaboratorDTOS, String ownerId) {
         if (collaboratorDTOS != null) {
-            collaboratorDTOS.forEach(x -> requireAssignableRole(x.getProjectRole()));
+            collaboratorDTOS.forEach(x -> AccessGrantServiceImpl.parseRole(x.getRole(), ResourceRef.Type.PROJECT));
         }
 
         List<ProjectCollaborator> collaborators = new ArrayList<>();
-        if (isCreate) {
-            String currentUserId = auditService.getCurrentUserId();
-
-            // owner la mot collaborator
-            ProjectCollaborator projectCollaborator = ProjectCollaborator.builder()
-                    .userId(currentUserId)
-                    .projectRole(GrantedProjectRole.OWNER)
-                    .addedAt(Instant.now())
-                    .build();
-            collaborators.add(projectCollaborator);
-            if (collaboratorDTOS == null || collaboratorDTOS.isEmpty()) {
-                return collaborators;
-            }
-        } else {
-            ProjectCollaborator projectCollaborator = ProjectCollaborator.builder()
-                    .userId(ownerId)
-                    .projectRole(GrantedProjectRole.OWNER)
-                    .addedAt(Instant.now())
-                    .build();
-            collaborators.add(projectCollaborator);
-            if (collaboratorDTOS == null || collaboratorDTOS.isEmpty()) {
-                return collaborators;
-            }
+        String currentUserId = auditService.getCurrentUserId();
+        // owner la mot collaborator vai tro MANAGER, quyen OWNER tinh theo ownerId
+        collaborators.add(newCollaborator(currentUserId, AccessRole.MANAGER, currentUserId));
+        if (collaboratorDTOS == null || collaboratorDTOS.isEmpty()) {
+            return collaborators;
         }
 
-        Set<String> addCollaborator = new HashSet<>();
+        Set<String> added = new HashSet<>();
         if (ownerId == null || !ownerId.isBlank()) {
-            addCollaborator.add(ownerId);
+            added.add(ownerId);
         }
-        collaborators.forEach(x -> addCollaborator.add(x.getUserId()));
+        collaborators.forEach(x -> added.add(x.getUserId()));
         for (var newCollaborator : collaboratorDTOS) {
             if (newCollaborator.getUserId() != null && !newCollaborator.getUserId().isBlank()) {
-                if (!addCollaborator.contains(newCollaborator.getUserId())) {
+                if (!added.contains(newCollaborator.getUserId())) {
                     userRepo.findById(newCollaborator.getUserId()).ifPresent(x -> {
-                        addCollaborator.add(newCollaborator.getUserId());
-                        var newCob = ProjectCollaborator.builder()
-                                .userId(newCollaborator.getUserId())
-                                .projectRole(newCollaborator.getProjectRole())
-                                .addedAt(Instant.now())
-                                .build();
-                        collaborators.add(newCob);
+                        added.add(newCollaborator.getUserId());
+                        collaborators.add(newCollaborator(newCollaborator.getUserId(),
+                                AccessGrantServiceImpl.parseRole(newCollaborator.getRole(), ResourceRef.Type.PROJECT),
+                                currentUserId));
                     });
                 }
             } else if (newCollaborator.getEmail() != null && !newCollaborator.getEmail().isBlank()) {
                 Optional<UserEntity> user = userRepo.findByEmail(newCollaborator.getEmail());
                 if (user.isPresent()) {
                     var userId = user.get().getUserId();
-                    if (!addCollaborator.contains(userId)) {
-                        addCollaborator.add(userId);
-                        var newCob = ProjectCollaborator.builder()
-                                .userId(userId)
-                                .projectRole(newCollaborator.getProjectRole())
-                                .addedAt(Instant.now())
-                                .build();
-                        collaborators.add(newCob);
+                    if (!added.contains(userId)) {
+                        added.add(userId);
+                        collaborators.add(newCollaborator(userId,
+                                AccessGrantServiceImpl.parseRole(newCollaborator.getRole(), ResourceRef.Type.PROJECT),
+                                currentUserId));
                     }
                 }
             }
@@ -1133,51 +746,55 @@ public class ProjectServiceImpl extends BaseAuditService<ProjectEntity> implemen
 
     }
 
-    // client chi duoc gan REVIEWER hoac PRODUCER, OWNER chi do he thong gan cho chu project
-    private void requireAssignableRole(GrantedProjectRole role) {
-        if (role != GrantedProjectRole.REVIEWER && role != GrantedProjectRole.PRODUCER) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "projectRole must be REVIEWER or PRODUCER");
-        }
+    private ProjectCollaborator newCollaborator(String userId, AccessRole role, String addedBy) {
+        return ProjectCollaborator.builder()
+                .userId(userId)
+                .role(role)
+                .addedBy(addedBy)
+                .addedAt(Instant.now())
+                .build();
     }
 
-    private List<ProjectCollaborator> addCollaborator(ProjectCollaboratorDTO newCollaborator, List<ProjectCollaborator> oldCollaborator) {
-        Set<String> oldCollaboratorIds = oldCollaborator.stream().map(ProjectCollaborator::getUserId).collect(Collectors.toSet());
-        if (newCollaborator.getUserId() != null && !newCollaborator.getUserId().isBlank()) {
-            if (oldCollaboratorIds.contains(newCollaborator.getUserId())) {
-                return oldCollaborator;
-            }
-            var userOpt = userRepo.findById(newCollaborator.getUserId());
-            if (userOpt.isPresent()) {
-                var newCob = ProjectCollaborator.builder()
-                        .userId(newCollaborator.getUserId())
-                        .projectRole(newCollaborator.getProjectRole())
-                        .addedAt(Instant.now())
-                        .build();
-                oldCollaborator.add(newCob);
-                return oldCollaborator;
-            } else {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "collaboratorId khong hop le");
-            }
+    // go grant folder truoc, collaborator sau: bi ngat giua chung thi user mat quyen chu khong giu quyen thua
+    private void removeMember(ProjectEntity project, String userId) {
+        pullMemberFromFolders(project, userId);
+        updateProject(project.getProjectId(), new Update().pull("collaborators", new Document("userId", userId)));
+    }
+
+    // mot updateMulti go grant folder cua user trong project; khong dong vao muc cua owner
+    private void pullMemberFromFolders(ProjectEntity project, String userId) {
+        if (userId == null || Objects.equals(userId, project.getOwnerId())) {
+            return;
         }
-        if (newCollaborator.getEmail() != null && !newCollaborator.getEmail().isBlank()) {
-            Optional<UserEntity> user = userRepo.findByEmail(newCollaborator.getEmail());
-            if (user.isPresent()) {
-                var userId = user.get().getUserId();
-                if (!oldCollaboratorIds.contains(userId)) {
-                    var newCob = ProjectCollaborator.builder()
-                            .userId(userId)
-                            .projectRole(newCollaborator.getProjectRole())
-                            .addedAt(Instant.now())
-                            .build();
-                    oldCollaborator.add(newCob);
-                    return oldCollaborator;
-                }
-                return oldCollaborator;
-            }
-            // todo: tam thoi la luong email khong ton tai trong he thong, sau nay se thanh send invite
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "email khong ton tai trong he thong");
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where("projectId").is(project.getProjectId()).and("grants.userId").is(userId)),
+                new Update().pull("grants", new Document("userId", userId)),
+                FolderEntity.class);
+    }
+
+    private void updateProject(String projectId, Update update) {
+        updateProject(projectId, null, update);
+    }
+
+    // $set dung truong doi + truong audit, khong save() ca document de khong ghi de collaborators/settings
+    private void updateProject(String projectId, Criteria extra, Update update) {
+        Query query = Query.query(Criteria.where("_id").is(projectId));
+        if (extra != null) {
+            query.addCriteria(extra);
         }
-        throw new UserBusinessException(ErrorCode.BAD_REQUEST, "collaborator infor missing");
+        update.set("updateBy", auditService.getCurrentUserId())
+                .set("updateByEmail", auditService.getCurrentUserEmail())
+                .set("updatedAt", Instant.now());
+        mongoTemplate.updateFirst(query, update, ProjectEntity.class);
+    }
+
+    // gia tri null thi unset, giong save() cu bo qua field null
+    private static void setOrUnset(Update update, String field, Object value) {
+        if (value == null) {
+            update.unset(field);
+        } else {
+            update.set(field, value);
+        }
     }
 
     private ProjectStats defaultStats() {

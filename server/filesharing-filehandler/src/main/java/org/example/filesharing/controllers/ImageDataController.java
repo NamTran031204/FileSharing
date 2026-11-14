@@ -7,7 +7,7 @@ import org.example.filesharing.entities.dtos.asset.ImageViewDataDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.enums.ProcessingStatus;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import org.example.filesharing.utils.access.Action;
 import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.MinIoService;
@@ -61,7 +61,7 @@ public class ImageDataController {
             }
 
             // ban goc chi tra cho nguoi co DOWNLOAD
-            if (assetAccessService.hasAssetPermissionById(assetId, GrantedProjectPermission.DOWNLOAD)) {
+            if (assetAccessService.hasAssetPermissionById(assetId, Action.DOWNLOAD)) {
                 try {
                     DownloadFileRequestDto dlReq = new DownloadFileRequestDto();
                     dlReq.setObjectName(version.getObjectName());
@@ -79,7 +79,7 @@ public class ImageDataController {
     @GetMapping(value = "/folder/{folderId}/asset-status-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribeToFolderStatus(@PathVariable("folderId") String folderId) {
         // kiem quyen truoc khi dang ky emitter
-        assetAccessService.ensureFolderPermissionById(folderId, GrantedProjectPermission.READ);
+        assetAccessService.ensureFolderAccessById(folderId, Action.VIEW);
         return sseService.subscribe(folderId);
     }
 }

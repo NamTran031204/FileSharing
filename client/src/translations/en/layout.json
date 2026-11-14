@@ -59,9 +59,6 @@
   "folderAssetPage": {
     "daSaoChepLinkFolder": "Folder link copied",
     "trinhDuyetChanClipboardHay": "The browser blocked the clipboard, please copy it manually from the address bar",
-    "inheritTu": "Inherited from {{projectName}}",
-    "hayMoMotFolderDe": "Open a folder to send to a client for photo selection",
-    "banKhongCoQuyenTao": "You do not have permission to create a photo selection link for this folder",
     "dichTenFileVaBinh": "Translate file names and comments — API not connected yet",
     "taiFolderDangZipChua": "Download folder as .zip — API not connected yet",
     "diChuyenFolderChuaNoi": "Move folder — API not connected yet",

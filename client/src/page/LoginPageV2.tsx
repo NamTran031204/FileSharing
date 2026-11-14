@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, type Location, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Checkbox, Divider, Form, Input, theme } from 'antd';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
@@ -19,6 +19,10 @@ const LoginPageV2 = () => {
   const { token } = theme.useToken();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  // ProtectedRoute gui kem trang dang mo, dang nhap xong quay lai do
+  const from = (location.state as { from?: Location } | null)?.from;
+  const redirectTo = from ? `${from.pathname}${from.search}` : '/home';
 
   const handleFinish = async (values: LoginFormValues) => {
     setIsSubmitting(true);
@@ -28,7 +32,7 @@ const LoginPageV2 = () => {
         password: values.password,
       });
       setTimeout(() => {
-        navigate('/home');
+        navigate(redirectTo, { replace: true });
       }, 2000);
     } finally {
       setIsSubmitting(false);
@@ -43,7 +47,7 @@ const LoginPageV2 = () => {
     setIsSubmitting(true);
     try {
       await authApiResource.loginWithGoogle(credentialResponse.credential);
-      navigate('/home');
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
         uiUtils.showError(i18n.t('auth:loginPageV2.chuaCoTaiKhoanVui'));
@@ -135,7 +139,7 @@ const LoginPageV2 = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               {i18n.t('auth:loginPageV2.chuaCoTaiKhoan')}
-              <Link to="/registerv2" className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
+              <Link to="/registerv2" state={location.state} className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
                 {i18n.t('auth:loginPageV2.dangKy')}
               </Link>
             </p>

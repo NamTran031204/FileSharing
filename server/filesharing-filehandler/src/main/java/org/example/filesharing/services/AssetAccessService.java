@@ -4,27 +4,25 @@ import com.file.service.filesharing.core.entity.models.AssetEntity;
 import com.file.service.filesharing.core.entity.models.FolderEntity;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.entity.models.ProjectEntity;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
-import org.example.filesharing.entities.models.UserEntity;
+import org.example.filesharing.utils.access.Action;
 
 public interface AssetAccessService {
 
+    // version cua asset, kiem VIEW tren asset
     MetadataEntity getVersion(String assetId, Integer versionNumber);
 
-    void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required);
+    void ensureAssetPermission(AssetEntity asset, Action action);
 
-    void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required);
+    void ensureProjectPermission(ProjectEntity project, Action action);
 
-    void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required);
+    void ensureFolderAccess(FolderEntity folder, Action action);
 
     void ensureFolderInProject(FolderEntity folder, ProjectEntity project);
 
-    boolean isAdmin(UserEntity user);
-
-    void ensureAssetPermissionById(String assetId, GrantedProjectPermission required);
+    void ensureAssetPermissionById(String assetId, Action action);
 
     // false khi thieu quyen, loi khac (khong tim thay asset...) van nem ra
-    boolean hasAssetPermissionById(String assetId, GrantedProjectPermission required);
+    boolean hasAssetPermissionById(String assetId, Action action);
 
-    void ensureFolderPermissionById(String folderId, GrantedProjectPermission required);
+    void ensureFolderAccessById(String folderId, Action action);
 }

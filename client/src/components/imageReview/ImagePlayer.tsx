@@ -65,6 +65,8 @@ interface ImagePlayerProps {
   viewportCursor: string;
   viewportDivRef: React.MutableRefObject<HTMLDivElement | null>;
   canvas: CanvasState;
+  // thieu COMMENT thi an thanh cong cu ve (ve hinh moi mo duoc o nhap binh luan)
+  canComment: boolean;
   onHighlightAnnotation: (id: string | null) => void;
   onToolClick: (tool: ToolId) => void;
   onColorChange: (c: StrokeColor) => void;
@@ -86,6 +88,7 @@ export function ImagePlayer({
   viewportCursor,
   viewportDivRef,
   canvas,
+  canComment,
   onHighlightAnnotation,
   onToolClick,
   onColorChange,
@@ -115,12 +118,14 @@ export function ImagePlayer({
 
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[var(--color-canvas)]">
-      <FloatingMarkupToolbar
-        activeTool={activeTool}
-        activeColor={activeColor}
-        onToolClick={onToolClick}
-        onColorChange={onColorChange}
-      />
+      {canComment && (
+        <FloatingMarkupToolbar
+          activeTool={activeTool}
+          activeColor={activeColor}
+          onToolClick={onToolClick}
+          onColorChange={onColorChange}
+        />
+      )}
 
       {/* Konva canvas viewport */}
       <div

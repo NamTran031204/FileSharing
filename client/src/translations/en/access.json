@@ -1,0 +1,94 @@
+{
+  "role": {
+    "VIEWER": "Viewer",
+    "COMMENTER": "Commenter",
+    "EDITOR": "Editor",
+    "MANAGER": "Manager",
+    "OWNER": "Owner"
+  },
+  "shareModal": {
+    "titleFolder": "Share folder",
+    "titleProject": "Share project",
+    "loadError": "Could not load sharing info",
+    "actionError": "Something went wrong, please try again",
+    "invitePlaceholder": "Enter the email to invite",
+    "inviteEmailInvalid": "Invalid email",
+    "invite": "Invite",
+    "invited": "Invited {{email}}",
+    "inviteRole": "Role to invite",
+    "peopleWithAccess": "People with access",
+    "directEmpty": "Nobody has been added directly here",
+    "inherited": "Inherited",
+    "inheritedHint": "Inherited access can only be changed at its source.",
+    "fromOwner": "Project owner",
+    "fromProject": "From project",
+    "fromFolder": "From folder {{folderName}}",
+    "viaLink": "Joined via link",
+    "changeRole": "Change role of {{name}}",
+    "roleChanged": "Role changed",
+    "remove": "Remove access",
+    "removeConfirm": "Remove access of {{name}}?",
+    "removed": "Access removed",
+    "generalAccess": "General access",
+    "restricted": "Only people added",
+    "anyoneWithLink": "Anyone with the link",
+    "linkRole": "Role for people with the link",
+    "linkRoleNone": "None (photo selection only)",
+    "allowDownload": "Let people with the link download originals",
+    "allowProofSelection": "Let signed-out guests select photos",
+    "expiry": "Link expiry",
+    "expiresAt": "Expires: {{date}}",
+    "noExpiry": "No expiry",
+    "copyViewLink": "Copy view link",
+    "copyProofLink": "Copy selection link",
+    "copied": "Link copied",
+    "clipboardBlocked": "The browser blocked the clipboard, please copy manually",
+    "regenerate": "Reset link",
+    "regenerateConfirm": "The old link stops working and people who joined through it lose access immediately.",
+    "linkUpdated": "Link updated",
+    "linkSummaryOff": "Only people added can access.",
+    "linkSummaryOn": "Anyone with the link: {{role}}",
+    "viewersCanDownload": "Viewers can download originals",
+    "inheritParent": "Same as parent",
+    "yes": "Yes",
+    "no": "No",
+    "settingsSaved": "Settings saved",
+    "noPermission": "You cannot view sharing here",
+    "range": {
+      "UNLIMITED": "No limit",
+      "ONE_DAY": "1 day",
+      "ONE_WEEK": "1 week",
+      "ONE_MONTH": "1 month",
+      "ONE_YEAR": "1 year"
+    }
+  },
+  "badge": {
+    "link": "Shared by link",
+    "direct": "People added"
+  },
+  "accessDenied": {
+    "title": "You need access",
+    "description": "You do not have permission to view this. Ask the person who shared it to give you access.",
+    "goHome": "Go to home"
+  },
+  "sharedWithMe": {
+    "title": "Shared with me",
+    "subtitle": "Folders shared with you in projects you are not a member of.",
+    "empty": "Nothing has been shared with you yet",
+    "loadError": "Could not load shared items",
+    "inProject": "In project {{projectName}}",
+    "viaLink": "Via link"
+  },
+  "joinLink": {
+    "joining": "Opening shared link...",
+    "expiredTitle": "This link has expired",
+    "expiredDescription": "Ask the person who shared it for a new link.",
+    "invalidTitle": "Invalid link",
+    "invalidDescription": "The link was turned off, reset or does not exist."
+  },
+  "move": {
+    "title": "Move?",
+    "warning": "Inherited access will follow the destination folder. People with access to the old folder may lose access.",
+    "ok": "Move"
+  }
+}

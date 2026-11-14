@@ -3,6 +3,7 @@ import {
   AppstoreOutlined,
   FolderOutlined,
   SettingOutlined,
+  ShareAltOutlined,
   QuestionCircleOutlined,
   LogoutOutlined,
   PlusOutlined,
@@ -52,6 +53,11 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
       icon: <FolderOutlined />,
       label: i18n.t('core:appSidebar.projects'),
       isActive: location.pathname.startsWith('/review') || location.pathname.startsWith('/projects'),
+    },
+    {
+      key: '/shared-with-me',
+      icon: <ShareAltOutlined />,
+      label: i18n.t('access:sharedWithMe.title'),
     },
     {
       key: '/settings',

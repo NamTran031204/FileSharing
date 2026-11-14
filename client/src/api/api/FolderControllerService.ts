@@ -2,26 +2,31 @@ import {
   type FolderUpdateRequestDTO,
   type CommonResponseFolderEntity,
   type FolderEntity,
-  type FolderPermission,
-  type GrantedProjectPermission,
-  type FolderVisibility,
   type FolderStats,
+  type AccessSettings,
   type CommonResponseFolderArchiveResponseDTO,
   type FolderArchiveResponseDTO,
   type PageRequestDtoFolderFilterRequestDTO,
   type FolderFilterRequestDTO,
-  type CommonResponsePageResultFolderEntity,
-  type PageResultFolderEntity,
+  type CommonResponsePageResultFolderListItemDTO,
+  type PageResultFolderListItemDTO,
+  type FolderListItemDTO,
+  type AccessRole,
   type FolderTreeCreateRequestDTO,
   type FolderTreeNodeDTO,
   type CommonResponseFolderTreeCreateResponseDTO,
   type FolderTreeCreateResponseDTO,
   type FolderTreeMappingDTO,
   type FolderCreateRequestDTO,
-  type FolderChangeVisibilityRequestDTO,
   type CommonResponseFolderTreeResponseDTO,
   type FolderTreeResponseDTO,
   type FolderTreeItemDTO,
+  type CommonResponseFolderDetailDTO,
+  type FolderDetailDTO,
+  type MyAccessDTO,
+  type Action,
+  type AccessSourceDTO,
+  type SourceType,
   type CommonResponseString,
   type IList,
   type List,
@@ -112,7 +117,7 @@ export class FolderControllerService {
       body?: PageRequestDtoFolderFilterRequestDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultFolderEntity> {
+  ): Promise<CommonResponsePageResultFolderListItemDTO> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/folder/get-trash';
 
@@ -134,7 +139,7 @@ export class FolderControllerService {
       body?: PageRequestDtoFolderFilterRequestDTO;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponsePageResultFolderEntity> {
+  ): Promise<CommonResponsePageResultFolderListItemDTO> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/folder/get-page';
 
@@ -194,28 +199,6 @@ export class FolderControllerService {
   /**
    *
    */
-  static changeVisibility(
-    params: {
-      /** requestBody */
-      body?: FolderChangeVisibilityRequestDTO;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/change-visibility';
-
-      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
-
-      let data = params.body;
-
-      configs.data = data;
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
   static getTree(
     params: {
       /**  */
@@ -241,7 +224,7 @@ export class FolderControllerService {
       folderId: string;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseFolderEntity> {
+  ): Promise<CommonResponseFolderDetailDTO> {
     return new Promise((resolve, reject) => {
       let url = basePath + '/api/folder/get-by-id/{folderId}';
       url = url.replace('{folderId}', params['folderId'] + '');

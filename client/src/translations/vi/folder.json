@@ -6,8 +6,10 @@
   "projectMembers": {
     "role": {
       "OWNER": "Chủ sở hữu",
-      "REVIEWER": "Người duyệt",
-      "PRODUCER": "Người sản xuất"
+      "MANAGER": "Quản lý",
+      "EDITOR": "Biên tập",
+      "COMMENTER": "Bình luận",
+      "VIEWER": "Xem"
     },
     "empty": "Chưa có thành viên",
     "loadError": "Không tải được danh sách thành viên",
@@ -23,24 +25,6 @@
     "everythingInThisFolderIs": "Mọi thứ trong folder này đã sẵn sàng.",
     "members": "Thành viên",
     "recentActivity": "Hoạt động gần đây"
-  },
-  "visibilityModal": {
-    "choPhepTaoLinkGui": "Cho phép tạo link gửi khách duyệt (proof link) và mọi thành viên project xem được. Folder con INHERIT sẽ theo.",
-    "khongTaiDuocQuyenTruy": "Không tải được quyền truy cập của folder",
-    "daCapNhatQuyenTruy": "Đã cập nhật quyền truy cập",
-    "capNhatQuyenTruyCap": "Cập nhật quyền truy cập thất bại",
-    "chuyenSangPublic": "Chuyển sang Public?",
-    "folderConCoQuyenRieng": "Folder con có quyền riêng",
-    "cacFolderConSauGiu": "Các folder con sau giữ quyền riêng, không đổi theo: {{join}}",
-    "quyenTruyCap": "Quyền truy cập",
-    "luu": "Lưu",
-    "huy": "Hủy",
-    "restrictedChiNguoiDuocChon": "Restricted — chỉ người được chọn",
-    "khongThePublicViFolder": "Không thể Public vì folder cha \"{{folderName}}\" đang Restricted",
-    "thanhVienDuocTruyCap": "Thành viên được truy cập",
-    "owner": "Chủ sở hữu",
-    "inheritFollowsParent": "Inherit — theo folder cha / project",
-    "publicPrefix": "Public — {{note}}"
   },
   "folderTreePanel": {
     "expandFolderTree": "Mở rộng cây folder",

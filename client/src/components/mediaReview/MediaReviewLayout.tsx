@@ -10,7 +10,7 @@ import type { ReviewParticipant } from './layout/ReviewTopBar';
 import { LayersPanel } from './sidebar/LayersPanel';
 import { ReviewSidebar } from './sidebar/ReviewSidebar';
 import type { ReviewSidebarTab } from './sidebar/ReviewSidebar';
-import { MediaType } from '../../api/api/index.defs';
+import { Action, MediaType } from '../../api/api/index.defs';
 import type { ImageViewDataDto } from '../../api/api/index.defs';
 import { useStore } from '../../store';
 
@@ -24,7 +24,7 @@ export interface MediaReviewLayoutProps {
   onVersionChange?: () => void;
   /** Opens the A/B compare modal (image-specific). Undefined disables the Compare button. */
   onCompare?: () => void;
-  /** Undefined disables the Download button — no source download endpoint wired yet. */
+  /** Tai ban goc; nut chi hien khi co ham nay va myAccess co DOWNLOAD. */
   onDownload?: () => void;
   /** imageData for the AssetInfoSection dimensions fallback */
   imageData?: ImageViewDataDto | null;
@@ -176,6 +176,8 @@ const MediaReviewLayout = observer(({
           onResolve={id => reviewStore.resolveAnnotation(id)}
           onReopen={id => reviewStore.reopenAnnotation(id)}
           onDelete={id => reviewStore.deleteAnnotation(id)}
+          canComment={reviewStore.can(Action.COMMENT)}
+          canDecide={reviewStore.canDecide}
           isVersionMetadataLoading={reviewStore.isVersionMetadataLoading}
           currentVersionMetadata={reviewStore.currentVersionMetadata}
           assetDetail={reviewStore.assetDetail}
@@ -192,7 +194,7 @@ const MediaReviewLayout = observer(({
           onApprove={() => reviewStore.approveReview()}
           onRequestChanges={() => reviewStore.requestChanges()}
           onCompare={onCompare}
-          onDownload={onDownload}
+          onDownload={reviewStore.can(Action.DOWNLOAD) ? onDownload : undefined}
         />
       </div>
     </div>

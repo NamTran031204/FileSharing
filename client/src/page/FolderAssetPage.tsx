@@ -1,17 +1,18 @@
-import { CloudUploadOutlined, FolderOpenOutlined, GlobalOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, FolderOpenOutlined, GlobalOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Modal, Select, Tag } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-    FolderVisibility,
-    GrantedProjectPermission,
+    Action,
     ProcessingStatus,
-    UserGrantedRole,
-    type ProjectEntity,
+    type FolderDetailDTO,
+    type FolderEntity,
+    type FolderListItemDTO,
+    type PeopleResponseDTO,
+    type ProjectDetailDTO,
     type ProjectMemberDTO,
     type AssetSummaryDto,
-    type FolderEntity,
     type FolderTreeItemDTO,
 } from '../api/api/index.defs';
 import { type ActionDropdownItem } from '../components/core/common/ActionDropdown.tsx';
@@ -30,11 +31,8 @@ import uiUtils from '../utils/uiUtils.tsx';
 import { useStore } from '../store';
 import { FolderControllerService } from '../api/api/FolderControllerService';
 import { ProjectControllerService } from '../api/api/ProjectControllerService';
-import VisibilityModal from '../components/folder/VisibilityModal.tsx';
-import ProjectVisibilityToggle from '../components/project/ProjectVisibilityToggle.tsx';
-import { describeInheritSource, resolveEffectiveVisibility } from '../utils/visibilityUtils';
-import userApiResource from '../api/userApiResource.ts';
-import ProofLinkModal from '../components/proof/ProofLinkModal.tsx';
+import { AccessControllerService } from '../api/api/AccessControllerService';
+import ShareModal, { type ShareTarget } from '../components/share/ShareModal.tsx';
 import ProofSelectionsDrawer from '../components/proof/ProofSelectionsDrawer.tsx';
 import i18n from '../i18n';
 
@@ -72,6 +70,19 @@ const matchesTypeFilter = (mimeType: string | undefined, filter: string): boolea
     const type = resolveAssetType(mimeType);
     if (filter === 'image') return type === 'image' || type === 'svg';
     return type === filter;
+};
+
+// khach khong goi duoc members cua project, gom nguoi tu people cua folder (moi nguoi 1 dong)
+const peopleToMembers = (people?: PeopleResponseDTO): ProjectMemberDTO[] => {
+    const seen = new Set<string>();
+    return [...(people?.inherited ?? []), ...(people?.direct ?? []), ...(people?.viaLink ?? [])]
+        .filter((p) => !!p.userId && !seen.has(p.userId) && !!seen.add(p.userId))
+        .map((p) => ({
+            userId: p.userId,
+            name: p.publicUserName,
+            username: p.email,
+            role: p.role
+        }));
 };
 
 const buildTreeNodes = (items: FolderTreeItemDTO[], projectName: string): FolderTreeNode[] => {
@@ -117,22 +128,13 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [insightCollapsed, setInsightCollapsed] = useState(true);
-    const [proofLinkOpen, setProofLinkOpen] = useState(false);
+    const [shareTarget, setShareTarget] = useState<{ type: ShareTarget; id: string } | null>(null);
     const [proofSelectionsOpen, setProofSelectionsOpen] = useState(false);
-    // folder hien tai de lay shareToken va userPermissions (folderStore.folders chi chua folder con)
-    const [currentFolder, setCurrentFolder] = useState<FolderEntity | null>(null);
-    // sessionStore.user chua duoc nap o app nen lay userId hien tai truc tiep tu API
-    const [myUserId, setMyUserId] = useState('');
-    // project de biet ownerId/visibility (quyen doi visibility chi cho owner/admin)
-    const [project, setProject] = useState<ProjectEntity | null>(null);
-    const [visibilityFolderId, setVisibilityFolderId] = useState<string | null>(null);
+    // folder hien tai de lay myAccess (folderStore.folders chi chua folder con)
+    const [currentFolder, setCurrentFolder] = useState<FolderDetailDTO | null>(null);
+    // project co myAccess; khach chi co grant folder nhan ban rut gon (khong co ownerId/collaborators)
+    const [project, setProject] = useState<ProjectDetailDTO | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
-
-    useEffect(() => {
-        userApiResource.getCurrentUser()
-            .then((user) => setMyUserId(user?.userId ?? ''))
-            .catch(() => setMyUserId(''));
-    }, []);
 
     useEffect(() => {
         if (!projectId) return;
@@ -140,27 +142,6 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             .then((res) => setProject(res.data ?? null))
             .catch(() => setProject(null));
     }, [projectId, refreshKey]);
-
-    // thanh vien project cho action bar + folder summary; tai lai khi doi project hoac refreshKey
-    const [members, setMembers] = useState<ProjectMemberDTO[]>([]);
-    const [membersLoading, setMembersLoading] = useState(false);
-    const [membersError, setMembersError] = useState(false);
-
-    useEffect(() => {
-        if (!projectId) return;
-        let cancelled = false;
-        setMembersLoading(true);
-        setMembersError(false);
-        ProjectControllerService.members({ projectId })
-            .then((res) => { if (!cancelled) setMembers(res.data ?? []); })
-            .catch(() => { if (!cancelled) { setMembers([]); setMembersError(true); } })
-            .finally(() => { if (!cancelled) setMembersLoading(false); });
-        return () => { cancelled = true; };
-    }, [projectId, refreshKey]);
-
-    const canManageVisibility =
-        sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_ADMIN) ||
-        (!!myUserId && project?.ownerId === myUserId);
 
     useEffect(() => {
         if (!currentFolderId) {
@@ -172,21 +153,47 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             .then((res) => { if (!cancelled) setCurrentFolder(res.data ?? null); })
             .catch(() => { if (!cancelled) setCurrentFolder(null); });
         return () => { cancelled = true; };
-    }, [currentFolderId, proofLinkOpen, refreshKey]);
+    }, [currentFolderId, refreshKey]);
 
-    const currentFolderPermissions = useMemo(
-        () => (currentFolder && currentFolder.folderId === currentFolderId ? currentFolder.userPermissions ?? [] : [])
-            .filter((p) => p.userId === myUserId)
-            .flatMap((p) => p.permissions ?? []),
-        [currentFolder, currentFolderId, myUserId],
-    );
-    const effectiveVisibility = currentFolderId
-        ? resolveEffectiveVisibility(currentFolderId, folderStore.treeItems, project?.visibility)
-        : undefined;
-    const canShareProof =
-        currentFolderPermissions.includes(GrantedProjectPermission.ADD_USER) &&
-        effectiveVisibility === FolderVisibility.PUBLIC;
-    const canViewProof = currentFolderPermissions.includes(GrantedProjectPermission.READ);
+    // quyen o vi tri dang mo: goc project dung myAccess cua project, trong folder dung myAccess cua folder
+    const projectLoaded = !!project && project.projectId === projectId;
+    const folderLoaded = !!currentFolder && currentFolder.folderId === currentFolderId;
+    const currentAccess = currentFolderId
+        ? (folderLoaded ? currentFolder?.myAccess : undefined)
+        : (projectLoaded ? project?.myAccess : undefined);
+
+    useEffect(() => {
+        folderStore.setMyAccess(currentAccess ?? null);
+    }, [currentAccess, folderStore]);
+
+    // thanh vien cho action bar + folder summary. Chi thanh vien (co ownRole o project) goi members;
+    // khach co VIEW_PEOPLE o folder thi lay people cua folder; con lai de trong
+    const isProjectMember = projectLoaded && !!project?.myAccess?.ownRole;
+    const peopleFolderId = !isProjectMember && folderLoaded
+        && currentFolder?.myAccess?.capabilities?.includes(Action.VIEW_PEOPLE) ? currentFolderId : undefined;
+    const [members, setMembers] = useState<ProjectMemberDTO[]>([]);
+    const [membersLoading, setMembersLoading] = useState(false);
+    const [membersError, setMembersError] = useState(false);
+
+    useEffect(() => {
+        if (!projectId || !projectLoaded) return;
+        if (!isProjectMember && !peopleFolderId) {
+            setMembers([]);
+            setMembersError(false);
+            return;
+        }
+        let cancelled = false;
+        setMembersLoading(true);
+        setMembersError(false);
+        const load = isProjectMember
+            ? ProjectControllerService.members({ projectId }).then((res) => res.data ?? [])
+            : AccessControllerService.people({ type: 'folder', id: peopleFolderId ?? '' }).then((res) => peopleToMembers(res.data));
+        load
+            .then((list) => { if (!cancelled) setMembers(list); })
+            .catch(() => { if (!cancelled) { setMembers([]); setMembersError(true); } })
+            .finally(() => { if (!cancelled) setMembersLoading(false); });
+        return () => { cancelled = true; };
+    }, [projectId, projectLoaded, isProjectMember, peopleFolderId, refreshKey]);
 
     const searchSkipRef = useRef(false);
 
@@ -247,7 +254,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         }
     };
 
-    const handleFolderClick = (folder: FolderEntity) => {
+    const handleFolderClick = (folder: FolderListItemDTO) => {
         if (!folder.folderId || !projectId) return;
         navigate(`/projects/${projectId}?folderId=${folder.folderId}`);
     };
@@ -295,7 +302,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         }
     };
 
-    const handleVisibilityChanged = () => {
+    const handleAccessChanged = () => {
         if (!projectId) return;
         void folderStore.fetchTree(projectId);
         void folderStore.fetchFolders(projectId, currentFolderId);
@@ -365,14 +372,31 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         { label: i18n.t('layout:folderAssetPage.processing'), value: processingItems.length },
     ];
 
-    const visibilityTag = currentFolderId ? (
-        <Tag className="m-0 rounded-md border-0 font-semibold">
-            {effectiveVisibility === FolderVisibility.PUBLIC ? <GlobalOutlined /> : <LockOutlined />}{' '}
-            {breadcrumbFolders.at(-1)?.visibility && breadcrumbFolders.at(-1)?.visibility !== FolderVisibility.INHERIT
-                ? breadcrumbFolders.at(-1)?.visibility
-                : i18n.t('layout:folderAssetPage.inheritTu', {projectName: describeInheritSource(currentFolderId, folderStore.treeItems, projectName)})}
-        </Tag>
+    // badge: globe khi folder hoac to tien co link, nguoi khi folder co grant truc tiep
+    const chainHasLink = breadcrumbFolders.some((f) => f.hasLink);
+    const accessBadges = currentFolderId ? (
+        <>
+            {chainHasLink && (
+                <Tag icon={<GlobalOutlined />} className="m-0 rounded-md border-0 font-semibold">
+                    {i18n.t('access:badge.link')}
+                </Tag>
+            )}
+            {breadcrumbFolders.at(-1)?.hasDirectGrants && (
+                <Tag icon={<UserOutlined />} className="m-0 rounded-md border-0 font-semibold">
+                    {i18n.t('access:badge.direct')}
+                </Tag>
+            )}
+        </>
     ) : null;
+
+    const openShare = () => {
+        if (!projectId) return;
+        if (!folderStore.can(Action.VIEW_PEOPLE)) {
+            uiUtils.showInfor(i18n.t('access:shareModal.noPermission'));
+            return;
+        }
+        setShareTarget(currentFolderId ? { type: 'folder', id: currentFolderId } : { type: 'project', id: projectId });
+    };
 
     const contextBar = (
         <ContextActionBar
@@ -381,17 +405,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             // danh sach thanh vien that se do tu ProjectControllerService.members — xem note "right" ben duoi
             participants={[]}
             onBack={currentFolderId ? handleBackToParent : undefined}
-            onShare={() => {
-                if (!currentFolderId) {
-                    uiUtils.showInfor(i18n.t('layout:folderAssetPage.hayMoMotFolderDe'));
-                    return;
-                }
-                if (!canShareProof) {
-                    uiUtils.showInfor(i18n.t('layout:folderAssetPage.banKhongCoQuyenTao'));
-                    return;
-                }
-                setProofLinkOpen(true);
-            }}
+            onShare={openShare}
             onTranslate={() => uiUtils.showInfor(i18n.t('layout:folderAssetPage.dichTenFileVaBinh'))}
             onDownload={() => uiUtils.showInfor(i18n.t('layout:folderAssetPage.taiFolderDangZipChua'))}
             onCopyLink={handleCopyLink}
@@ -406,17 +420,17 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 {
                     key: 'rename',
                     label: i18n.t('layout:folderAssetPage.rename'),
-                    disabled: !currentFolderId,
+                    disabled: !currentFolderId || !folderStore.can(Action.EDIT),
                     onClick: () => {
                         if (!currentFolderId) return;
                         folderStore.openEditFolderModal(currentFolderId);
                     },
                 },
-                ...(currentFolderId && canManageVisibility
+                ...(currentFolderId && folderStore.can(Action.MANAGE_ACCESS)
                     ? [{
                         key: 'visibility',
                         label: i18n.t('layout:folderAssetPage.quyenTruyCap'),
-                        onClick: () => setVisibilityFolderId(currentFolderId),
+                        onClick: () => setShareTarget({ type: 'folder', id: currentFolderId }),
                     }]
                     : []),
                 { type: 'divider' },
@@ -429,15 +443,8 @@ const FolderAssetPage = observer(function FolderAssetPage() {
             ]}
             right={
                 <>
-                    {!currentFolderId && canManageVisibility && projectId && (
-                        <ProjectVisibilityToggle
-                            projectId={projectId}
-                            visibility={project?.visibility}
-                            onChanged={handleVisibilityChanged}
-                        />
-                    )}
-                    {currentFolderId && visibilityTag}
-                    {currentFolderId && canViewProof && (
+                    {accessBadges}
+                    {currentFolderId && folderStore.can(Action.VIEW_PROOF_SELECTIONS) && (
                         <Button className="h-9 rounded-lg" onClick={() => setProofSelectionsOpen(true)}>
                             {i18n.t('layout:folderAssetPage.luaChonCuaKhach')}
                         </Button>
@@ -458,21 +465,21 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         />
     );
 
-    const folderActions: ActionDropdownItem<FolderEntity>[] = [
-        ...(canManageVisibility
-            ? [{
-                title: 'visibility',
-                titleCustom: i18n.t('layout:folderAssetPage.quyenTruyCap'),
-                icon: <SafetyOutlined className="text-base" />,
-                onClick: (record?: FolderEntity) => {
-                    if (record?.folderId) setVisibilityFolderId(record.folderId);
-                },
-            }]
-            : []),
+    // permission la ten capability; quyen o folder con khong thap hon vi tri dang mo (ke thua chi cong)
+    const folderActions: ActionDropdownItem<FolderListItemDTO>[] = [
+        {
+            title: 'visibility',
+            titleCustom: i18n.t('layout:folderAssetPage.quyenTruyCap'),
+            icon: <SafetyOutlined className="text-base" />,
+            permission: Action.MANAGE_ACCESS,
+            onClick: (record?: FolderListItemDTO) => {
+                if (record?.folderId) setShareTarget({ type: 'folder', id: record.folderId });
+            },
+        },
         {
             title: 'edit',
             titleCustom: i18n.t('layout:folderAssetPage.sua'),
-            permission: GrantedProjectPermission.CREATE_FOLDER_ASSET,
+            permission: Action.EDIT,
             onClick: (record) => {
                 if (!record?.folderId) return;
                 folderStore.openEditFolderModal(record.folderId);
@@ -481,7 +488,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         {
             title: 'remove',
             titleCustom: i18n.t('layout:folderAssetPage.xoa'),
-            permission: GrantedProjectPermission.DELETE,
+            permission: Action.TRASH,
             isDanger: true,
             onClick: (record) => {
                 if (!record?.folderId) return;
@@ -494,7 +501,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         {
             title: 'edit',
             titleCustom: i18n.t('layout:folderAssetPage.sua'),
-            permission: GrantedProjectPermission.UPDATE,
+            permission: Action.EDIT,
             onClick: (record) => {
                 const assetId = record?.asset?.assetId;
                 if (!assetId) return;
@@ -504,7 +511,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
         {
             title: 'remove',
             titleCustom: i18n.t('layout:folderAssetPage.xoa'),
-            permission: GrantedProjectPermission.DELETE,
+            permission: Action.TRASH,
             isDanger: true,
             onClick: (record) => {
                 const assetId = record?.asset?.assetId;
@@ -517,17 +524,23 @@ const FolderAssetPage = observer(function FolderAssetPage() {
     const newActions: ActionDropdownItem<unknown>[] = [
         {
             title: 'uploadFile',
+            permission: Action.UPLOAD,
             titleCustom: i18n.t('layout:folderAssetPage.uploadFile'),
             icon: <CloudUploadOutlined className="text-base text-primary" />,
             onClick: () => folderStore.openUploadAssetModal(),
         },
         {
             title: 'uploadFolder',
+            permission: Action.UPLOAD,
             titleCustom: i18n.t('layout:folderAssetPage.uploadFolder'),
             icon: <FolderOpenOutlined className="text-base text-primary" />,
             onClick: () => folderStore.openUploadFolderModal(),
         },
     ];
+
+    // ActionDropdown trong FolderAssetBody khong nhan canAccess nen loc theo capability truoc khi truyen
+    const allowed = <T,>(actions: ActionDropdownItem<T>[]) =>
+        actions.filter((a) => !a.permission || folderStore.can(a.permission));
 
     const contentTop = showAdvancedSearch ? (
         <div className="flex shrink-0 items-end gap-4 rounded-xl border border-border bg-card px-6 py-5">
@@ -569,7 +582,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
 
     return (
         <>
-            <FolderAssetCommonCrudPage<FolderEntity, AssetSummaryDto>
+            <FolderAssetCommonCrudPage<FolderListItemDTO, AssetSummaryDto>
                 sidebarCollapsed
                 topBarSlot={contextBar}
                 folderTreeSlot={
@@ -585,7 +598,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         onTypeFilterChange={setTypeFilter}
                         advancedOpen={showAdvancedSearch}
                         onToggleAdvanced={() => setShowAdvancedSearch((value) => !value)}
-                        newActions={newActions}
+                        newActions={allowed(newActions)}
                     />
                 }
                 asideSlot={
@@ -606,10 +619,16 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 mapFolderToCard={(folder) => ({
                     name: folder.folderName ?? '—',
                     itemCount: folder.stats?.assetCount ?? 0,
-                    visibilityBadge:
-                        folder.visibility === FolderVisibility.RESTRICTED ? <LockOutlined className="text-xs text-muted-foreground" />
-                        : folder.visibility === FolderVisibility.PUBLIC ? <GlobalOutlined className="text-xs text-primary" />
-                        : undefined,
+                    visibilityBadge: chainHasLink || folder.hasLink || folder.hasDirectGrants ? (
+                        <span className="inline-flex items-center gap-1">
+                            {(chainHasLink || folder.hasLink) && (
+                                <GlobalOutlined className="text-xs text-primary" aria-label={i18n.t('access:badge.link')} />
+                            )}
+                            {folder.hasDirectGrants && (
+                                <UserOutlined className="text-xs text-muted-foreground" aria-label={i18n.t('access:badge.direct')} />
+                            )}
+                        </span>
+                    ) : undefined,
                 })}
                 mapAssetToCard={(summary) => {
                     const version = summary.latestVersion;
@@ -623,8 +642,8 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         processingStatus: version?.processingStatus,
                     };
                 }}
-                folderActions={folderActions}
-                assetActions={assetActions}
+                folderActions={allowed(folderActions)}
+                assetActions={allowed(assetActions)}
                 onFolderClick={handleFolderClick}
                 onAssetClick={handleAssetClick}
                 getFolderKey={(folder) => folder.folderId ?? ''}
@@ -635,7 +654,7 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                         ? i18n.t('layout:folderAssetPage.noAssetsMatchYourSearch')
                         : i18n.t('layout:folderAssetPage.noAssetsInThisFolder')
                 }
-                emptyAssetsAction={
+                emptyAssetsAction={folderStore.can(Action.UPLOAD) &&
                     <Button
                         type="primary"
                         icon={<CloudUploadOutlined />}
@@ -648,33 +667,22 @@ const FolderAssetPage = observer(function FolderAssetPage() {
                 contentTop={contentTop}
             />
 
-            {visibilityFolderId && projectId && (
-                <VisibilityModal
+            {shareTarget && (
+                <ShareModal
                     open
-                    folderId={visibilityFolderId}
-                    projectId={projectId}
-                    ownerId={project?.ownerId}
-                    treeItems={folderStore.treeItems}
-                    onClose={() => setVisibilityFolderId(null)}
-                    onChanged={handleVisibilityChanged}
+                    type={shareTarget.type}
+                    id={shareTarget.id}
+                    onClose={() => setShareTarget(null)}
+                    onChanged={handleAccessChanged}
                 />
             )}
 
             {currentFolderId && (
-                <>
-                    <ProofLinkModal
-                        open={proofLinkOpen}
-                        folderId={currentFolderId}
-                        initialToken={currentFolder?.shareToken}
-                        initialExpiry={currentFolder?.shareExpiry}
-                        onClose={() => setProofLinkOpen(false)}
-                    />
-                    <ProofSelectionsDrawer
-                        open={proofSelectionsOpen}
-                        folderId={currentFolderId}
-                        onClose={() => setProofSelectionsOpen(false)}
-                    />
-                </>
+                <ProofSelectionsDrawer
+                    open={proofSelectionsOpen}
+                    folderId={currentFolderId}
+                    onClose={() => setProofSelectionsOpen(false)}
+                />
             )}
 
             <Modal

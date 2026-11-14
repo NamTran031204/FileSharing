@@ -5,7 +5,6 @@ import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.review.ReviewSessionCreateDTO;
 import org.example.filesharing.entities.dtos.review.ReviewSessionDecisionDTO;
 import com.file.service.filesharing.core.entity.models.AssetEntity;
-import com.file.service.filesharing.core.entity.models.FolderEntity;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.entity.models.ProjectEntity;
 import com.file.service.filesharing.core.entity.models.ReviewSessionEntity;
@@ -18,22 +17,22 @@ import com.file.service.filesharing.core.enums.AuditAction;
 import com.file.service.filesharing.core.enums.AuditTargetType;
 import com.file.service.filesharing.core.enums.ReviewSessionStatus;
 import com.file.service.filesharing.core.enums.ReviewerRole;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import com.file.service.filesharing.core.enums.access.AccessRole;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AssetRepo;
-import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.repositories.ProjectRepo;
 import org.example.filesharing.repositories.ReviewSessionRepo;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.ReviewSessionService;
 import org.example.filesharing.services.baseService.BaseAuditService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,10 +52,10 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
     private final ProjectRepo projectRepo;
     private final AssetRepo assetRepo;
     private final MetadataRepo metadataRepo;
-    private final FolderRepo folderRepo;
     private final UserRepo userRepo;
     private final AuditService auditService;
     private final AuditLogService auditLogService;
+    private final AccessService accessService;
 
     @Override
     @Transactional
@@ -75,7 +74,7 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
         ProjectEntity project = getActiveProjectOrThrow(projectId);
         AssetEntity asset = getActiveAssetOrThrow(assetId);
         ensureAssetInProject(asset, project);
-        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+        accessService.require(ResourceRef.asset(asset.getAssetId()), Action.CREATE_REVIEW);
 
         MetadataEntity version = metadataRepo.findByAssetIdAndVersionNumber(asset.getAssetId(), versionNumber)
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.BAD_REQUEST, "Asset version not found"));
@@ -91,7 +90,7 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Review session already in progress");
         }
 
-        List<ReviewerInfo> reviewers = buildReviewers(project, dto.getReviewerIds());
+        List<ReviewerInfo> reviewers = buildReviewers(asset.getAssetId(), dto.getReviewerIds());
 
         ReviewStatusHistory initialHistory = ReviewStatusHistory.builder()
                 .status(ReviewSessionStatus.IN_REVIEW)
@@ -138,16 +137,16 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
         }
 
         ReviewSessionEntity session = getActiveReviewSessionOrThrow(reviewSessionId.trim());
-        if (session.getStatus() != ReviewSessionStatus.IN_REVIEW) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Review session is not active");
-        }
+        // vai tro hien tai tren asset tinh lai luc duyet; mat quyen thi bi tu choi truoc khi doi session
+        accessService.require(ResourceRef.asset(session.getAssetId()), Action.REVIEW_DECIDE);
 
         String currentUserId = auditService.getCurrentUserId();
         if (!isReviewer(session, currentUserId)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+            throw new FileBusinessException(ErrorCode.ACTION_NOT_ALLOWED);
         }
-        // co ten trong reviewers chua du, con phai giu quyen COMMENT hien tai tren asset
-        ensureAssetPermission(getActiveAssetOrThrow(session.getAssetId()), GrantedProjectPermission.COMMENT);
+        if (session.getStatus() != ReviewSessionStatus.IN_REVIEW) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Review session is not active");
+        }
 
         ReviewSessionStatus beforeStatus = session.getStatus();
         session.setStatus(dto.getDecision());
@@ -178,17 +177,14 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "assetId is required");
         }
 
-        AssetEntity asset = getActiveAssetOrThrow(assetId.trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
+        String id = assetId.trim();
+        accessService.require(ResourceRef.asset(id), Action.VIEW);
 
         if (versionNumber != null) {
-            return reviewSessionRepo.findByAssetIdAndVersionNumberAndIsActiveTrueOrderByCreatedAtDesc(
-                    asset.getAssetId(),
-                    versionNumber
-            );
+            return reviewSessionRepo.findByAssetIdAndVersionNumberAndIsActiveTrueOrderByCreatedAtDesc(id, versionNumber);
         }
 
-        return reviewSessionRepo.findByAssetIdAndIsActiveTrueOrderByCreatedAtDesc(asset.getAssetId());
+        return reviewSessionRepo.findByAssetIdAndIsActiveTrueOrderByCreatedAtDesc(id);
     }
 
     private void writeReviewDecisionAuditLog(ReviewSessionEntity session, ReviewSessionStatus beforeStatus) {
@@ -209,7 +205,8 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
         auditLogService.createAuditLog(dto);
     }
 
-    private List<ReviewerInfo> buildReviewers(ProjectEntity project, List<String> reviewerIds) {
+    // nguoi duoc chi dinh can vai tro >= COMMENTER tai asset, khong can la thanh vien project (design 3.6)
+    private List<ReviewerInfo> buildReviewers(String assetId, List<String> reviewerIds) {
         if (reviewerIds == null || reviewerIds.isEmpty()) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "reviewerIds is required");
         }
@@ -235,8 +232,9 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
         List<ReviewerInfo> reviewers = new ArrayList<>();
         for (String reviewerId : normalizedIds) {
             UserEntity user = userMap.get(reviewerId);
-            if (!ProjectPermissionResolver.isProjectMember(project, user)) {
-                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Reviewer must be a project member");
+            AccessRole role = accessService.resolve(ResourceRef.asset(assetId), reviewerId).role();
+            if (role == null || !role.atLeast(AccessRole.COMMENTER)) {
+                throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Reviewer must have COMMENTER role or higher");
             }
             reviewers.add(ReviewerInfo.builder()
                     .userId(user.getUserId())
@@ -287,74 +285,6 @@ public class ReviewSessionServiceImpl extends BaseAuditService<ReviewSessionEnti
             throw new FileBusinessException(ErrorCode.NOT_FOUND);
         }
         return asset;
-    }
-
-    private FolderEntity getActiveFolderOrThrow(String folderId) {
-        FolderEntity folder = folderRepo.findById(folderId)
-                .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
-        if (Boolean.FALSE.equals(folder.getIsActive())) {
-            throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
-        }
-        return folder;
-    }
-
-    private void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
-        ProjectEntity project = getActiveProjectOrThrow(asset.getProjectId());
-        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
-            FolderEntity folder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, required);
-        } else {
-            ensureProjectPermission(project, auditService.getCurrentUser(), required);
-        }
-    }
-
-    private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {
-        if (!Objects.equals(folder.getProjectId(), project.getProjectId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Folder does not belong to project");
-        }
-    }
-
-    private void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required) {
-        List<GrantedProjectPermission> permissions = ProjectPermissionResolver.resolveProjectPermissions(
-                project,
-                user,
-                isAdmin(user)
-        );
-        if (!ProjectPermissionResolver.hasPermission(permissions, required)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
-
-        List<com.file.service.filesharing.core.entity.models.folder.FolderPermission> userPermissions = folder.getUserPermissions();
-        if (userPermissions == null || userPermissions.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-
-        String currentUserId = currentUser.getUserId();
-        for (com.file.service.filesharing.core.entity.models.folder.FolderPermission fp : userPermissions) {
-            if (Objects.equals(fp.getUserId(), currentUserId)) {
-                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
-                    return;
-                }
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-        }
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 
     private void applyUpdateAudit(EntityAuditBase entity) {

@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
-import com.file.service.filesharing.core.entity.models.AssetEntity;
-import com.file.service.filesharing.core.entity.models.ProjectEntity;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
@@ -19,15 +17,15 @@ import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.jobs.kafka.EmailProducer;
-import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.MetadataRepo;
-import org.example.filesharing.repositories.ProjectRepo;
-import org.example.filesharing.services.AssetAccessService;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.JobSubmitService;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.StorageService;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,8 +42,6 @@ import java.util.UUID;
 public class MetadataServiceImpl implements MetadataService {
 
     private final MetadataRepo metadataRepo;
-    private final AssetRepo assetRepo;
-    private final ProjectRepo projectRepo;
     private final MongoTemplate mongoTemplate;
     private final AuditService auditService;
     private final MinIoService minIoService;
@@ -53,7 +49,7 @@ public class MetadataServiceImpl implements MetadataService {
     private final PasswordEncoder passwordEncoder;
     private final EmailProducer emailProducer;
     private final JobSubmitService jobSubmitService;
-    private final AssetAccessService assetAccessService;
+    private final AccessService accessService;
 
     @Override
     public MetadataEntity saveMetadata(MetadataDTO metadataDTO, String uploadId) {
@@ -327,35 +323,27 @@ public class MetadataServiceImpl implements MetadataService {
         return head.contentLength();
     }
 
-    // -------------------------------------------------------------------------
-    // E6 permission check — delegates the project/folder permission structure to
-    // AssetAccessService (shared with AssetServiceImpl/ProcessingServiceImpl to avoid
-    // both duplicated logic and the circular bean dependency that used to exist here).
-    // -------------------------------------------------------------------------
-
-    // tai ban goc can DOWNLOAD, nguoi upload khong duoc mien kiem tra
+    // tai ban goc can DOWNLOAD theo AccessService; nguoi upload va admin khong duoc mien kiem tra (Q5)
     private void ensureDownloadPermission(MetadataEntity metadata) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (assetAccessService.isAdmin(currentUser)) {
+        if (StringUtils.isNotNullOrBlank(metadata.getAssetId())) {
+            accessService.require(ResourceRef.asset(metadata.getAssetId()), Action.DOWNLOAD);
             return;
         }
-
-        if (StringUtils.isNotNullOrBlank(metadata.getAssetId())) {
-            AssetEntity asset = assetRepo.findById(metadata.getAssetId()).orElse(null);
-            if (asset != null && Boolean.TRUE.equals(asset.getIsActive())) {
-                assetAccessService.ensureAssetPermission(asset, GrantedProjectPermission.DOWNLOAD);
-                return;
-            }
-        }
-
         if (StringUtils.isNotNullOrBlank(metadata.getProjectId())) {
-            ProjectEntity project = projectRepo.findById(metadata.getProjectId()).orElse(null);
-            if (project != null) {
-                assetAccessService.ensureProjectPermission(project, currentUser, GrantedProjectPermission.DOWNLOAD);
-                return;
-            }
+            accessService.require(ResourceRef.project(metadata.getProjectId()), Action.DOWNLOAD);
+            return;
         }
+        // file Phase1 khong gan asset/project: chi admin tai duoc, khong thiet ke quyen cho file ca nhan
+        if (!isAdmin(auditService.getCurrentUser())) {
+            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+        }
+    }
 
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
+    private boolean isAdmin(UserEntity user) {
+        if (user == null || user.getUserGrantedRoles() == null) {
+            return false;
+        }
+        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
+                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
     }
 }

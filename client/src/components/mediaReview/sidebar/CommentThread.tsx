@@ -19,6 +19,8 @@ interface CommentThreadProps {
   onReopen: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleExpand: (id: string) => void;
+  // thieu COMMENT: an tra loi, resolve/reopen; xoa van de server kiem tac gia nhu cu
+  canComment: boolean;
 }
 
 export function CommentThread({
@@ -36,6 +38,7 @@ export function CommentThread({
   onReopen,
   onDelete,
   onToggleExpand,
+  canComment,
 }: CommentThreadProps) {
   const isOpen = ann.status === 'OPEN';
   const annId = ann.annotationId ?? '';
@@ -92,7 +95,7 @@ export function CommentThread({
         </div>
       )}
 
-      {replyingToId === ann.annotationId && (
+      {canComment && replyingToId === ann.annotationId && (
         <form
           onSubmit={e => onSubmitReply(e, annId)}
           onClick={e => e.stopPropagation()}
@@ -130,7 +133,7 @@ export function CommentThread({
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">
-          {isOpen ? (
+          {canComment && (isOpen ? (
             <button
               onClick={() => onResolve(annId)}
               className="cursor-pointer text-[10px] font-bold text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]"
@@ -144,13 +147,15 @@ export function CommentThread({
             >
               {i18n.t('review:commentThread.reopen')}
             </button>
+          ))}
+          {canComment && (
+            <button
+              onClick={() => onReplyOpen(annId)}
+              className="cursor-pointer text-[10px] font-bold text-[var(--color-primary)] hover:underline"
+            >
+              {i18n.t('review:commentThread.reply')}
+            </button>
           )}
-          <button
-            onClick={() => onReplyOpen(annId)}
-            className="cursor-pointer text-[10px] font-bold text-[var(--color-primary)] hover:underline"
-          >
-            {i18n.t('review:commentThread.reply')}
-          </button>
           {(ann.replyCount ?? 0) > 0 && (
             <button
               onClick={() => onToggleExpand(annId)}

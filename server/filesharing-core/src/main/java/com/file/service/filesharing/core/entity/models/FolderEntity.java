@@ -1,14 +1,15 @@
 package com.file.service.filesharing.core.entity.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.file.service.filesharing.core.entity.models.access.AccessGrant;
+import com.file.service.filesharing.core.entity.models.access.AccessSettings;
+import com.file.service.filesharing.core.entity.models.access.LinkAccess;
 import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
-import com.file.service.filesharing.core.entity.models.folder.FolderPermission;
 import com.file.service.filesharing.core.entity.models.folder.FolderStats;
-import com.file.service.filesharing.core.enums.FolderVisibility;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
 import java.util.List;
 
 @Document(collection = "folder")
@@ -31,13 +32,13 @@ public class FolderEntity extends EntityAuditBase {
     private List<String> ancestorIds;
     private Integer level;
 
-    private List<FolderPermission> userPermissions;
-    private FolderVisibility visibility;
-
     private FolderStats stats;
 
-    private String shareToken;
-    private Instant shareExpiry;
-    // userId nguoi tao/lam moi proof link, nhan notification khi khach gui
-    private String shareCreatedBy;
+    // chi grant truc tiep tai folder nay; token link chi tra o API quan ly link
+    @JsonIgnore
+    private List<AccessGrant> grants;
+    @JsonIgnore
+    private LinkAccess link;
+    // null = theo cha
+    private AccessSettings settings;
 }

@@ -5,9 +5,10 @@ import com.file.service.filesharing.core.entity.CommonResponse;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.folder.FolderArchiveResponseDTO;
-import org.example.filesharing.entities.dtos.folder.FolderChangeVisibilityRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderCreateRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderDetailDTO;
 import org.example.filesharing.entities.dtos.folder.FolderFilterRequestDTO;
+import org.example.filesharing.entities.dtos.folder.FolderListItemDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateRequestDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeCreateResponseDTO;
 import org.example.filesharing.entities.dtos.folder.FolderTreeResponseDTO;
@@ -39,12 +40,12 @@ public class FolderController {
     }
 
     @GetMapping("/get-by-id/{folderId}")
-    public CommonResponse<FolderEntity> getFolderById(@PathVariable("folderId") String folderId) {
+    public CommonResponse<FolderDetailDTO> getFolderById(@PathVariable("folderId") String folderId) {
         return CommonResponse.success(folderService.getFolderById(folderId));
     }
 
     @PostMapping("/get-page")
-    public CommonResponse<PageResult<FolderEntity>> getFolderPage(@RequestBody PageRequestDto<FolderFilterRequestDTO> dto) {
+    public CommonResponse<PageResult<FolderListItemDTO>> getFolderPage(@RequestBody PageRequestDto<FolderFilterRequestDTO> dto) {
         return CommonResponse.success(folderService.getFolderPage(dto));
     }
 
@@ -65,7 +66,7 @@ public class FolderController {
     }
 
     @PostMapping("/get-trash")
-    public CommonResponse<PageResult<FolderEntity>> getFolderTrash(@RequestBody PageRequestDto<FolderFilterRequestDTO> dto) {
+    public CommonResponse<PageResult<FolderListItemDTO>> getFolderTrash(@RequestBody PageRequestDto<FolderFilterRequestDTO> dto) {
         return CommonResponse.success(folderService.getFolderTrash(dto));
     }
 
@@ -73,10 +74,5 @@ public class FolderController {
     public CommonResponse<String> deleteFolder(@PathVariable("folderId") String folderId) {
         folderService.deleteFolder(folderId);
         return CommonResponse.success("Folder permanently deleted");
-    }
-
-    @PostMapping("/change-visibility")
-    public CommonResponse<FolderEntity> changeFolderVisibility(@RequestBody FolderChangeVisibilityRequestDTO request) {
-        return CommonResponse.success(folderService.changeFolderVisibility(request));
     }
 }

@@ -20,7 +20,7 @@ const roleLabel = (role?: string) =>
 const displayName = (member: ProjectMemberDTO) => member.name || member.username || member.userId || '';
 
 const tooltipText = (member: ProjectMemberDTO) => {
-    const role = roleLabel(member.projectRole);
+    const role = roleLabel(member.role);
     return role ? `${displayName(member)} - ${role}` : displayName(member);
 };
 
@@ -50,9 +50,9 @@ const ProjectMemberAvatars = ({ members, loading, error, variant }: ProjectMembe
                     <li key={member.userId} className="flex items-center gap-2">
                         <UserAvatar name={displayName(member)} avatarUrl={member.avatar} size={28} />
                         <span className="min-w-0 flex-1 truncate text-sm text-foreground">{displayName(member)}</span>
-                        {member.projectRole && (
+                        {member.role && (
                             <span className="shrink-0 rounded-md bg-background px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                                {roleLabel(member.projectRole)}
+                                {roleLabel(member.role)}
                             </span>
                         )}
                     </li>

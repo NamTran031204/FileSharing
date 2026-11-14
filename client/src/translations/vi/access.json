@@ -1,0 +1,94 @@
+{
+  "role": {
+    "VIEWER": "Người xem",
+    "COMMENTER": "Người nhận xét",
+    "EDITOR": "Người chỉnh sửa",
+    "MANAGER": "Quản lý",
+    "OWNER": "Chủ sở hữu"
+  },
+  "shareModal": {
+    "titleFolder": "Chia sẻ folder",
+    "titleProject": "Chia sẻ project",
+    "loadError": "Không tải được thông tin chia sẻ",
+    "actionError": "Có lỗi xảy ra, hãy thử lại",
+    "invitePlaceholder": "Nhập email người cần mời",
+    "inviteEmailInvalid": "Email không hợp lệ",
+    "invite": "Mời",
+    "invited": "Đã mời {{email}}",
+    "inviteRole": "Vai trò khi mời",
+    "peopleWithAccess": "Người có quyền",
+    "directEmpty": "Chưa có ai được thêm trực tiếp tại đây",
+    "inherited": "Kế thừa",
+    "inheritedHint": "Quyền kế thừa chỉ sửa được tại nguồn.",
+    "fromOwner": "Chủ sở hữu project",
+    "fromProject": "Từ project",
+    "fromFolder": "Từ folder {{folderName}}",
+    "viaLink": "Vào qua link",
+    "changeRole": "Đổi vai trò của {{name}}",
+    "roleChanged": "Đã đổi vai trò",
+    "remove": "Gỡ quyền",
+    "removeConfirm": "Gỡ quyền của {{name}}?",
+    "removed": "Đã gỡ quyền",
+    "generalAccess": "Truy cập chung",
+    "restricted": "Chỉ người được thêm",
+    "anyoneWithLink": "Bất kỳ ai có link",
+    "linkRole": "Vai trò của người có link",
+    "linkRoleNone": "Không (chỉ chọn ảnh)",
+    "allowDownload": "Cho người có link tải bản gốc",
+    "allowProofSelection": "Cho khách chưa đăng nhập chọn ảnh",
+    "expiry": "Hạn dùng link",
+    "expiresAt": "Hết hạn: {{date}}",
+    "noExpiry": "Không giới hạn thời gian",
+    "copyViewLink": "Copy link xem",
+    "copyProofLink": "Copy link chọn ảnh",
+    "copied": "Đã sao chép link",
+    "clipboardBlocked": "Trình duyệt chặn clipboard, hãy sao chép thủ công",
+    "regenerate": "Đổi link",
+    "regenerateConfirm": "Link cũ sẽ ngừng hoạt động và người vào qua link cũ mất quyền ngay.",
+    "linkUpdated": "Đã cập nhật link",
+    "linkSummaryOff": "Chỉ người được thêm mới truy cập được.",
+    "linkSummaryOn": "Bất kỳ ai có link: {{role}}",
+    "viewersCanDownload": "Người xem được tải bản gốc",
+    "inheritParent": "Theo cha",
+    "yes": "Có",
+    "no": "Không",
+    "settingsSaved": "Đã lưu cài đặt",
+    "noPermission": "Bạn không có quyền xem chia sẻ ở đây",
+    "range": {
+      "UNLIMITED": "Không giới hạn",
+      "ONE_DAY": "1 ngày",
+      "ONE_WEEK": "1 tuần",
+      "ONE_MONTH": "1 tháng",
+      "ONE_YEAR": "1 năm"
+    }
+  },
+  "badge": {
+    "link": "Có link chia sẻ",
+    "direct": "Có người được thêm"
+  },
+  "accessDenied": {
+    "title": "Bạn cần quyền truy cập",
+    "description": "Bạn không có quyền xem nội dung này. Hãy liên hệ người chia sẻ để được cấp quyền.",
+    "goHome": "Về trang chủ"
+  },
+  "sharedWithMe": {
+    "title": "Được chia sẻ với tôi",
+    "subtitle": "Folder người khác chia sẻ với bạn ở những project bạn không là thành viên.",
+    "empty": "Chưa có folder nào được chia sẻ với bạn",
+    "loadError": "Không tải được danh sách được chia sẻ",
+    "inProject": "Trong project {{projectName}}",
+    "viaLink": "Qua link"
+  },
+  "joinLink": {
+    "joining": "Đang mở link chia sẻ...",
+    "expiredTitle": "Link đã hết hạn",
+    "expiredDescription": "Hãy liên hệ người chia sẻ để nhận link mới.",
+    "invalidTitle": "Link không hợp lệ",
+    "invalidDescription": "Link đã bị tắt, bị đổi hoặc không tồn tại."
+  },
+  "move": {
+    "title": "Di chuyển?",
+    "warning": "Quyền kế thừa sẽ theo folder đích. Người có quyền ở folder cũ có thể mất quyền.",
+    "ok": "Di chuyển"
+  }
+}

@@ -1,8 +1,4 @@
 import {
-  type ProofLinkCreateRequestDto,
-  type ShareTokenTime,
-  type CommonResponseProofLinkResponseDto,
-  type ProofLinkResponseDto,
   type CommonResponseProofSelectionDetailDto,
   type ProofSelectionDetailDto,
   type ProofSelectionStatus,
@@ -29,50 +25,6 @@ export class ProofControllerService {
   // @ts-nocheck
   /* eslint-disable */
 
-  /**
-   *
-   */
-  static proofLink(
-    params: {
-      /**  */
-      folderId: string;
-      /** requestBody */
-      body?: ProofLinkCreateRequestDto;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseProofLinkResponseDto> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/{folderId}/proof-link';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
-
-      let data = params.body;
-
-      configs.data = data;
-
-      axios(configs, resolve, reject);
-    });
-  }
-  /**
-   *
-   */
-  static proofLink1(
-    params: {
-      /**  */
-      folderId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseProofLinkResponseDto> {
-    return new Promise((resolve, reject) => {
-      let url = basePath + '/api/folder/{folderId}/proof-link';
-      url = url.replace('{folderId}', params['folderId'] + '');
-
-      const configs: IRequestConfig = getConfigs('delete', 'application/json', url, options);
-
-      axios(configs, resolve, reject);
-    });
-  }
   /**
    *
    */

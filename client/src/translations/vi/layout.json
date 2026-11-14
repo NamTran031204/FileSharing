@@ -59,9 +59,6 @@
   "folderAssetPage": {
     "daSaoChepLinkFolder": "Đã sao chép link folder",
     "trinhDuyetChanClipboardHay": "Trình duyệt chặn clipboard, hãy sao chép thủ công từ thanh địa chỉ",
-    "inheritTu": "Inherit từ {{projectName}}",
-    "hayMoMotFolderDe": "Hãy mở một folder để gửi khách chọn ảnh",
-    "banKhongCoQuyenTao": "Bạn không có quyền tạo link chọn ảnh cho folder này",
     "dichTenFileVaBinh": "Dịch tên file và bình luận — chưa nối API",
     "taiFolderDangZipChua": "Tải folder dạng .zip — chưa nối API",
     "diChuyenFolderChuaNoi": "Di chuyển folder — chưa nối API",

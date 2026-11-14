@@ -12,6 +12,7 @@ import i18n from '../i18n';
 const errorText = (code: string): string | undefined => ({
     '5601': i18n.t('proof:proofGuestPage.linkKhongHopLeHoac'),
     '5602': i18n.t('proof:proofGuestPage.linkNayDaHetHan'),
+    '5703': i18n.t('proof:proofGuestPage.linkNayDaHetHan'),
 } as Record<string, string>)[code];
 
 const ProofGuestPage = observer(() => {
@@ -40,7 +41,7 @@ const ProofGuestPage = observer(() => {
         try {
             await store.enterName(name);
         } catch (e) {
-            if (e instanceof ApiError && (e.code === '5601' || e.code === '5602')) {
+            if (e instanceof ApiError && (e.code === '5601' || e.code === '5602' || e.code === '5703')) {
                 store.fail(e);
                 return;
             }

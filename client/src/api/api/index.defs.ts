@@ -157,6 +157,84 @@ export interface UserDto {
   lastLoginAt?: Date;
 }
 
+export interface AccessSettingsRequestDTO {
+  /**  */
+  viewersCanDownload?: boolean;
+}
+
+export interface CommonResponseVoid {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: object;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface GrantRoleRequestDTO {
+  /**  */
+  role?: string;
+}
+
+export interface LinkRequestDTO {
+  /**  */
+  enabled?: boolean;
+
+  /**  */
+  role?: string;
+
+  /**  */
+  allowDownload?: boolean;
+
+  /**  */
+  allowProofSelection?: boolean;
+
+  /**  */
+  expiry?: ShareTokenTime;
+
+  /**  */
+  regenerate?: boolean;
+}
+
+export interface CommonResponseLinkSettingsDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: LinkSettingsDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface LinkSettingsDTO {
+  /**  */
+  enabled?: boolean;
+
+  /**  */
+  token?: string;
+
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  allowDownload?: boolean;
+
+  /**  */
+  allowProofSelection?: boolean;
+
+  /**  */
+  expiresAt?: Date;
+}
+
 export interface PartUrlBatchRequestDto {
   /**  */
   partNumbers?: number[];
@@ -482,9 +560,14 @@ export interface ProofSessionResponseDto {
   guestName?: string;
 }
 
-export interface ProjectVisibilityUpdateDTO {
+export interface ProjectStatusUpdateDTO {
   /**  */
-  visibility?: GrantedVisibility;
+  status?: ProjectStatus;
+}
+
+export interface AccessSettings {
+  /**  */
+  viewersCanDownload?: boolean;
 }
 
 export interface CommonResponseProjectEntity {
@@ -506,13 +589,13 @@ export interface ProjectCollaborator {
   userId?: string;
 
   /**  */
-  projectRole?: GrantedProjectRole;
-
-  /**  */
-  projectPermissions?: GrantedProjectPermission[];
-
-  /**  */
   addedAt?: Date;
+
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  addedBy?: string;
 }
 
 export interface ProjectEntity {
@@ -574,19 +657,13 @@ export interface ProjectEntity {
   collaborators?: ProjectCollaborator[];
 
   /**  */
-  visibility?: GrantedVisibility;
-
-  /**  */
   stats?: ProjectStats;
 
   /**  */
   status?: ProjectStatus;
 
   /**  */
-  shareToken?: string;
-
-  /**  */
-  shareExpiry?: Date;
+  settings?: AccessSettings;
 }
 
 export interface ProjectStats {
@@ -603,44 +680,6 @@ export interface ProjectStats {
   pendingReviews?: number;
 }
 
-export interface ProjectStatusUpdateDTO {
-  /**  */
-  status?: ProjectStatus;
-}
-
-export interface ShareTokenCreateDTO {
-  /**  */
-  rangeTime?: ShareTokenTime;
-
-  /**  */
-  expireDate?: Date;
-
-  /**  */
-  projectId?: string;
-}
-
-export interface CommonResponseShareTokenCreateResponseDTO {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: ShareTokenCreateResponseDTO;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface ShareTokenCreateResponseDTO {
-  /**  */
-  shareToken?: string;
-
-  /**  */
-  message?: string;
-}
-
 export interface ProjectCollaboratorDTO {
   /**  */
   projectId?: string;
@@ -652,7 +691,7 @@ export interface ProjectCollaboratorDTO {
   userId?: string;
 
   /**  */
-  projectRole?: GrantedProjectRole;
+  role?: string;
 }
 
 export interface ProjectCreateUpdateDTO {
@@ -676,9 +715,6 @@ export interface ProjectCreateUpdateDTO {
 
   /**  */
   collaborators?: ProjectCollaboratorDTO[];
-
-  /**  */
-  visibility?: GrantedVisibility;
 
   /**  */
   status?: ProjectStatus;
@@ -991,33 +1027,6 @@ export interface PageResultNotificationEntity {
   data?: NotificationEntity[];
 }
 
-export interface ProofLinkCreateRequestDto {
-  /**  */
-  rangeTime?: ShareTokenTime;
-}
-
-export interface CommonResponseProofLinkResponseDto {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: ProofLinkResponseDto;
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
-}
-
-export interface ProofLinkResponseDto {
-  /**  */
-  shareToken?: string;
-
-  /**  */
-  shareExpiry?: Date;
-}
-
 export interface FolderUpdateRequestDTO {
   /**  */
   folderId?: string;
@@ -1033,9 +1042,6 @@ export interface FolderUpdateRequestDTO {
 
   /**  */
   isActive?: boolean;
-
-  /**  */
-  restrictedUserIds?: string[];
 }
 
 export interface CommonResponseFolderEntity {
@@ -1102,36 +1108,10 @@ export interface FolderEntity {
   level?: number;
 
   /**  */
-  userPermissions?: FolderPermission[];
-
-  /**  */
-  visibility?: FolderVisibility;
-
-  /**  */
   stats?: FolderStats;
 
   /**  */
-  shareToken?: string;
-
-  /**  */
-  shareExpiry?: Date;
-
-  /**  */
-  shareCreatedBy?: string;
-}
-
-export interface FolderPermission {
-  /**  */
-  userId?: string;
-
-  /**  */
-  permissions?: GrantedProjectPermission[];
-
-  /**  */
-  isPrivateCollaborator?: boolean;
-
-  /**  */
-  grantedAt?: Date;
+  settings?: AccessSettings;
 }
 
 export interface FolderStats {
@@ -1198,12 +1178,12 @@ export interface PageRequestDtoFolderFilterRequestDTO {
   filter?: FolderFilterRequestDTO;
 }
 
-export interface CommonResponsePageResultFolderEntity {
+export interface CommonResponsePageResultFolderListItemDTO {
   /**  */
   isSuccessful?: boolean;
 
   /**  */
-  data?: PageResultFolderEntity;
+  data?: PageResultFolderListItemDTO;
 
   /**  */
   code?: string;
@@ -1212,12 +1192,77 @@ export interface CommonResponsePageResultFolderEntity {
   message?: string;
 }
 
-export interface PageResultFolderEntity {
+export interface FolderListItemDTO {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  ancestorIds?: string[];
+
+  /**  */
+  level?: number;
+
+  /**  */
+  stats?: FolderStats;
+
+  /**  */
+  settings?: AccessSettings;
+
+  /**  */
+  myRole?: AccessRole;
+
+  /**  */
+  hasLink?: boolean;
+
+  /**  */
+  hasDirectGrants?: boolean;
+}
+
+export interface PageResultFolderListItemDTO {
   /**  */
   totalCount?: string;
 
   /**  */
-  data?: FolderEntity[];
+  data?: FolderListItemDTO[];
 }
 
 export interface FolderTreeCreateRequestDTO {
@@ -1314,20 +1359,6 @@ export interface FolderCreateRequestDTO {
 
   /**  */
   description?: string;
-
-  /**  */
-  visibility?: FolderVisibility;
-}
-
-export interface FolderChangeVisibilityRequestDTO {
-  /**  */
-  folderId?: string;
-
-  /**  */
-  visibility?: FolderVisibility;
-
-  /**  */
-  restrictedUserIds?: string[];
 }
 
 export interface MetadataUpdateRequestDto {
@@ -2498,6 +2529,36 @@ export interface ToolRun {
   cpuMs?: string;
 }
 
+export interface GrantRequestDTO {
+  /**  */
+  email?: string;
+
+  /**  */
+  role?: string;
+}
+
+export interface CommonResponseJoinLinkResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: JoinLinkResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface JoinLinkResponseDTO {
+  /**  */
+  projectId?: string;
+
+  /**  */
+  folderId?: string;
+}
+
 export interface CommonResponseListMediaRenditionEntity {
   /**  */
   isSuccessful?: boolean;
@@ -2876,21 +2937,7 @@ export interface ProjectMemberDTO {
   avatar?: string;
 
   /**  */
-  projectRole?: GrantedProjectRole;
-}
-
-export interface CommonResponseListProjectCollaborator {
-  /**  */
-  isSuccessful?: boolean;
-
-  /**  */
-  data?: ProjectCollaborator[];
-
-  /**  */
-  code?: string;
-
-  /**  */
-  message?: string;
+  role?: AccessRole;
 }
 
 export interface AuditLogFilterDTO {
@@ -3042,12 +3089,23 @@ export interface PageResultAuditLogEntity {
   data?: AuditLogEntity[];
 }
 
-export interface CommonResponseShareTokenInfoDTO {
+export interface AccessSourceDTO {
+  /**  */
+  type?: SourceType;
+
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  folderId?: string;
+}
+
+export interface CommonResponseProjectDetailDTO {
   /**  */
   isSuccessful?: boolean;
 
   /**  */
-  data?: ShareTokenInfoDTO;
+  data?: ProjectDetailDTO;
 
   /**  */
   code?: string;
@@ -3056,12 +3114,58 @@ export interface CommonResponseShareTokenInfoDTO {
   message?: string;
 }
 
-export interface ShareTokenInfoDTO {
+export interface FolderBreadcrumbItemDTO {
   /**  */
-  shareToken?: string;
+  folderId?: string;
 
   /**  */
-  shareExpiry?: Date;
+  folderName?: string;
+
+  /**  */
+  level?: number;
+}
+
+export interface MyAccessDTO {
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  ownRole?: AccessRole;
+
+  /**  */
+  capabilities?: Action[];
+
+  /**  */
+  sources?: AccessSourceDTO[];
+}
+
+export interface ProjectDetailDTO {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
 
   /**  */
   projectId?: string;
@@ -3070,7 +3174,43 @@ export interface ShareTokenInfoDTO {
   projectName?: string;
 
   /**  */
-  visibility?: GrantedVisibility;
+  projectCode?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  ownerId?: string;
+
+  /**  */
+  ownerEmail?: string;
+
+  /**  */
+  category?: string;
+
+  /**  */
+  startDate?: Date;
+
+  /**  */
+  endDate?: Date;
+
+  /**  */
+  collaborators?: ProjectCollaborator[];
+
+  /**  */
+  stats?: ProjectStats;
+
+  /**  */
+  status?: ProjectStatus;
+
+  /**  */
+  settings?: AccessSettings;
+
+  /**  */
+  myAccess?: MyAccessDTO;
+
+  /**  */
+  accessRoots?: FolderBreadcrumbItemDTO[];
 }
 
 export interface CommonResponseProcessingStatusResponseDto {
@@ -3177,10 +3317,16 @@ export interface FolderTreeItemDTO {
   level?: number;
 
   /**  */
-  visibility?: FolderVisibility;
+  stats?: FolderStats;
 
   /**  */
-  stats?: FolderStats;
+  myRole?: AccessRole;
+
+  /**  */
+  hasLink?: boolean;
+
+  /**  */
+  hasDirectGrants?: boolean;
 }
 
 export interface FolderTreeResponseDTO {
@@ -3189,6 +3335,88 @@ export interface FolderTreeResponseDTO {
 
   /**  */
   tree?: FolderTreeItemDTO[];
+}
+
+export interface CommonResponseFolderDetailDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: FolderDetailDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface FolderDetailDTO {
+  /**  */
+  isTrash?: boolean;
+
+  /**  */
+  trashedAt?: Date;
+
+  /**  */
+  createdBy?: string;
+
+  /**  */
+  createdByEmail?: string;
+
+  /**  */
+  updateBy?: string;
+
+  /**  */
+  updateByEmail?: string;
+
+  /**  */
+  isActive?: boolean;
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  parentFolderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  ancestorIds?: string[];
+
+  /**  */
+  level?: number;
+
+  /**  */
+  stats?: FolderStats;
+
+  /**  */
+  settings?: AccessSettings;
+
+  /**  */
+  myRole?: AccessRole;
+
+  /**  */
+  hasLink?: boolean;
+
+  /**  */
+  hasDirectGrants?: boolean;
+
+  /**  */
+  myAccess?: MyAccessDTO;
 }
 
 export interface CommonResponseStorageStatsDTO {
@@ -3545,6 +3773,119 @@ export interface CommonResponseAnnotationCountsDTO {
   message?: string;
 }
 
+export interface CommonResponsePeopleResponseDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PeopleResponseDTO;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PeopleResponseDTO {
+  /**  */
+  link?: LinkSettingsDTO;
+
+  /**  */
+  direct?: Person[];
+
+  /**  */
+  inherited?: Person[];
+
+  /**  */
+  viaLink?: Person[];
+}
+
+export interface Person {
+  /**  */
+  userId?: string;
+
+  /**  */
+  publicUserName?: string;
+
+  /**  */
+  email?: string;
+
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  source?: SourceType;
+
+  /**  */
+  folderId?: string;
+
+  /**  */
+  folderName?: string;
+}
+
+export interface CommonResponseListMentionUserDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: MentionUserDTO[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface MentionUserDTO {
+  /**  */
+  userId?: string;
+
+  /**  */
+  publicUserName?: string;
+
+  /**  */
+  email?: string;
+}
+
+export interface CommonResponseListSharedFolderDTO {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: SharedFolderDTO[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface SharedFolderDTO {
+  /**  */
+  folderId?: string;
+
+  /**  */
+  folderName?: string;
+
+  /**  */
+  projectId?: string;
+
+  /**  */
+  projectName?: string;
+
+  /**  */
+  role?: AccessRole;
+
+  /**  */
+  viaLink?: boolean;
+
+  /**  */
+  grantedAt?: Date;
+}
+
 export interface AbortUploadSessionResponseDto {
   /**  */
   sessionId?: string;
@@ -3581,6 +3922,22 @@ export enum UserGrantedRole {
   'ROLE_SA' = 'ROLE_SA'
 }
 
+export enum ShareTokenTime {
+  'ONE_DAY' = 'ONE_DAY',
+  'ONE_WEEK' = 'ONE_WEEK',
+  'ONE_MONTH' = 'ONE_MONTH',
+  'ONE_YEAR' = 'ONE_YEAR',
+  'UNLIMITED' = 'UNLIMITED'
+}
+
+export enum AccessRole {
+  'VIEWER' = 'VIEWER',
+  'COMMENTER' = 'COMMENTER',
+  'EDITOR' = 'EDITOR',
+  'MANAGER' = 'MANAGER',
+  'OWNER' = 'OWNER'
+}
+
 export enum MediaType {
   'IMAGE' = 'IMAGE',
   'VIDEO' = 'VIDEO',
@@ -3612,45 +3969,10 @@ export enum ReviewerRole {
   'APPROVER' = 'APPROVER'
 }
 
-export enum GrantedVisibility {
-  'PUBLIC' = 'PUBLIC',
-  'PRIVATE' = 'PRIVATE'
-}
-
-export enum GrantedProjectPermission {
-  'READ' = 'READ',
-  'SELECT_AND_SUBMIT' = 'SELECT_AND_SUBMIT',
-  'DOWNLOAD' = 'DOWNLOAD',
-  'COMMENT' = 'COMMENT',
-  'CREATE_FOLDER_ASSET' = 'CREATE_FOLDER_ASSET',
-  'UPDATE' = 'UPDATE',
-  'ARCHIVE' = 'ARCHIVE',
-  'DELETE' = 'DELETE',
-  'ADD_USER' = 'ADD_USER',
-  'PROJECT_APPROVE' = 'PROJECT_APPROVE',
-  'AUDIT_LOG' = 'AUDIT_LOG'
-}
-
-export enum GrantedProjectRole {
-  'OWNER' = 'OWNER',
-  'REVIEWER' = 'REVIEWER',
-  'PRODUCER' = 'PRODUCER',
-  'GUEST' = 'GUEST',
-  'VIEWER' = 'VIEWER'
-}
-
 export enum ProjectStatus {
   'ACTIVE' = 'ACTIVE',
   'ARCHIVED' = 'ARCHIVED',
   'COMPLETED' = 'COMPLETED'
-}
-
-export enum ShareTokenTime {
-  'ONE_DAY' = 'ONE_DAY',
-  'ONE_WEEK' = 'ONE_WEEK',
-  'ONE_MONTH' = 'ONE_MONTH',
-  'ONE_YEAR' = 'ONE_YEAR',
-  'UNLIMITED' = 'UNLIMITED'
 }
 
 export enum DeliveryStatus {
@@ -3670,12 +3992,6 @@ export enum NotificationType {
   'ANNOTATION_RESOLVED' = 'ANNOTATION_RESOLVED',
   'DEADLINE_REMINDER' = 'DEADLINE_REMINDER',
   'PROOF_SUBMITTED' = 'PROOF_SUBMITTED'
-}
-
-export enum FolderVisibility {
-  'INHERIT' = 'INHERIT',
-  'RESTRICTED' = 'RESTRICTED',
-  'PUBLIC' = 'PUBLIC'
 }
 
 export enum ObjectPermission {
@@ -3803,4 +4119,31 @@ export enum AuditTargetType {
   'REVIEW_SESSION' = 'REVIEW_SESSION',
   'USER' = 'USER',
   'PERMISSION' = 'PERMISSION'
+}
+
+export enum Action {
+  'VIEW' = 'VIEW',
+  'VIEW_PEOPLE' = 'VIEW_PEOPLE',
+  'DOWNLOAD' = 'DOWNLOAD',
+  'COMMENT' = 'COMMENT',
+  'REVIEW_DECIDE' = 'REVIEW_DECIDE',
+  'UPLOAD' = 'UPLOAD',
+  'EDIT' = 'EDIT',
+  'TRASH' = 'TRASH',
+  'DELETE_PERMANENT' = 'DELETE_PERMANENT',
+  'CREATE_REVIEW' = 'CREATE_REVIEW',
+  'VIEW_PROOF_SELECTIONS' = 'VIEW_PROOF_SELECTIONS',
+  'INVITE' = 'INVITE',
+  'MANAGE_ACCESS' = 'MANAGE_ACCESS',
+  'MANAGE_SETTINGS' = 'MANAGE_SETTINGS',
+  'VIEW_AUDIT_LOG' = 'VIEW_AUDIT_LOG',
+  'MANAGE_PROJECT' = 'MANAGE_PROJECT',
+  'ARCHIVE_PROJECT' = 'ARCHIVE_PROJECT'
+}
+
+export enum SourceType {
+  'OWNER' = 'OWNER',
+  'PROJECT' = 'PROJECT',
+  'FOLDER' = 'FOLDER',
+  'LINK' = 'LINK'
 }

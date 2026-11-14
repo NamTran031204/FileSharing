@@ -56,13 +56,15 @@ public class PlaybackController {
     @GetMapping("/{assetId}/{versionNumber}/hls/segment/{filename}")
     public ResponseEntity<StreamingResponseBody> getHlsSegment(@PathVariable("assetId") String assetId,
                                                                @PathVariable("versionNumber") Integer versionNumber,
-                                                               @PathVariable("filename") String filename) {
+                                                               @PathVariable("filename") String filename) throws Exception {
         if (!filename.matches(SAFE_SEGMENT_PATTERN)) {
             return ResponseEntity.badRequest().build();
         }
 
+        // mo stream truoc khi tra body de loi quyen/not found di qua GlobalExceptionHandler (co .code)
+        InputStream segment = processingService.getHlsSegment(assetId, versionNumber, filename);
         StreamingResponseBody body = outputStream -> {
-            try (InputStream stream = processingService.getHlsSegment(assetId, versionNumber, filename)) {
+            try (InputStream stream = segment) {
                 stream.transferTo(outputStream);
             } catch (Exception e) {
                 log.error("Failed to stream HLS segment {}/{}/{}: {}", assetId, versionNumber, filename, e.getMessage());

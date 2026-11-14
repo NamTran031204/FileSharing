@@ -13,7 +13,7 @@ import com.file.service.filesharing.core.enums.ProcessingJobStatus;
 import com.file.service.filesharing.core.enums.ProcessingStatus;
 import com.file.service.filesharing.core.enums.RenditionType;
 import com.file.service.filesharing.core.enums.UploadStatus;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
+import org.example.filesharing.utils.access.Action;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
@@ -111,7 +111,7 @@ public class ProcessingServiceImpl implements ProcessingService {
         }
 
         // ban goc chi tra cho nguoi co DOWNLOAD, nguoc lai tra preview
-        String imageUrl = assetAccessService.hasAssetPermissionById(version.getAssetId(), GrantedProjectPermission.DOWNLOAD)
+        String imageUrl = assetAccessService.hasAssetPermissionById(version.getAssetId(), Action.DOWNLOAD)
                 ? resolveDownloadUrl(version)
                 : resolvePreviewUrl(version);
         return PlaybackDataResponseDto.builder()

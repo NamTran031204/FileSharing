@@ -4,10 +4,12 @@ import type {
   AnnotationSummaryResponse,
   AssetDetailResponseDto,
   MetadataEntity,
+  MyAccessDTO,
   ReviewSessionEntity,
   ShapeInfo,
 } from '../../api/api/index.defs';
 import {
+  Action,
   AnnotationStatus,
   MediaType,
   ReviewSessionStatus,
@@ -15,8 +17,11 @@ import {
 import { AnnotationsControllerService } from '../../api/api/AnnotationsControllerService';
 import { AssetControllerService } from '../../api/api/AssetControllerService';
 import { AssetVersionControllerService } from '../../api/api/AssetVersionControllerService';
+import { FolderControllerService } from '../../api/api/FolderControllerService';
+import { ProjectControllerService } from '../../api/api/ProjectControllerService';
 import { ReviewSessionControllerService } from '../../api/api/ReviewSessionControllerService';
 import { API_BASE, tokenManager } from '../../api/baseApi';
+import userApiResource from '../../api/userApiResource';
 import i18n from '../../i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -50,6 +55,10 @@ export class ReviewCoreStore {
 
   // ── Asset detail ───────────────────────────────────────────────────────────
   assetDetail: AssetDetailResponseDto | null = null;
+
+  // myAccess cua folder chua asset (asset o goc project thi lay cua project); null = chua tai, an nut
+  myAccess: MyAccessDTO | null = null;
+  currentUserId: string = '';
 
   // ── Version list ───────────────────────────────────────────────────────────
   versions: MetadataEntity[] = [];
@@ -89,6 +98,8 @@ export class ReviewCoreStore {
       assetId: observable,
       currentVersionNumber: observable,
       assetDetail: observable,
+      myAccess: observable,
+      currentUserId: observable,
       versions: observable,
       isVersionsLoading: observable,
       currentVersionMetadata: observable,
@@ -110,6 +121,7 @@ export class ReviewCoreStore {
       openCount: computed,
       resolvedCount: computed,
       reviewStatus: computed,
+      canDecide: computed,
 
       init: action,
       destroy: action,
@@ -127,6 +139,7 @@ export class ReviewCoreStore {
       fetchAnnotationSummary: action,
       fetchReplies: action,
       fetchReviewSession: action,
+      fetchMyAccess: action,
 
       createAnnotation: action,
       addReply: action,
@@ -171,6 +184,17 @@ export class ReviewCoreStore {
     }
   }
 
+  can(action: Action): boolean {
+    return (this.myAccess?.capabilities ?? []).includes(action);
+  }
+
+  // duyet can REVIEW_DECIDE va phai nam trong danh sach reviewer cua session (server kiem lai ca hai)
+  get canDecide(): boolean {
+    return this.can(Action.REVIEW_DECIDE)
+      && !!this.currentUserId
+      && !!this.reviewSession?.reviewers?.some(r => r.userId === this.currentUserId);
+  }
+
   // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
   async init(assetId: string, versionNumber?: number): Promise<void> {
@@ -202,6 +226,7 @@ export class ReviewCoreStore {
       this.fetchAnnotationSummary(),
       this.fetchReviewSession(),
       this.fetchCurrentVersionMetadata(),
+      this.fetchMyAccess(),
     ]);
 
     this.subscribeAnnotationSSE();
@@ -211,6 +236,7 @@ export class ReviewCoreStore {
     this.unsubscribeAnnotationSSE();
     this.annotations = [];
     this.assetDetail = null;
+    this.myAccess = null;
     this.versions = [];
     this.currentVersionMetadata = null;
     this.summary = null;
@@ -230,6 +256,19 @@ export class ReviewCoreStore {
         runInAction(() => { this.assetDetail = response.data ?? null; });
       }
     } catch { /* non-blocking */ }
+  }
+
+  async fetchMyAccess(): Promise<void> {
+    const asset = this.assetDetail?.asset;
+    if (!asset?.folderId && !asset?.projectId) return;
+    const detail = asset.folderId
+      ? FolderControllerService.getById({ folderId: asset.folderId })
+      : ProjectControllerService.getById({ projectId: asset.projectId! });
+    const [access, user] = await Promise.allSettled([detail, userApiResource.getCurrentUser()]);
+    runInAction(() => {
+      this.myAccess = access.status === 'fulfilled' ? access.value?.data?.myAccess ?? null : null;
+      this.currentUserId = user.status === 'fulfilled' ? user.value?.userId ?? '' : '';
+    });
   }
 
   async fetchVersionList(assetId: string): Promise<void> {

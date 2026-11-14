@@ -38,6 +38,9 @@ export interface ReviewSidebarProps {
   onResolve: (id: string) => void;
   onReopen: (id: string) => void;
   onDelete: (id: string) => void;
+  // theo myAccess.capabilities: COMMENT, va REVIEW_DECIDE + co trong danh sach reviewer
+  canComment: boolean;
+  canDecide: boolean;
 
   isVersionMetadataLoading: boolean;
   currentVersionMetadata: MetadataEntity | null;
@@ -90,6 +93,8 @@ export function ReviewSidebar({
   onResolve,
   onReopen,
   onDelete,
+  canComment,
+  canDecide,
   isVersionMetadataLoading,
   currentVersionMetadata,
   assetDetail,
@@ -173,6 +178,7 @@ export function ReviewSidebar({
                 onResolve={onResolve}
                 onReopen={onReopen}
                 onDelete={onDelete}
+                canComment={canComment}
               />
             )}
 
@@ -191,6 +197,7 @@ export function ReviewSidebar({
                 onSelectVersion={onSelectVersion}
                 reviewStatus={reviewStatus}
                 isReviewLoading={isReviewLoading}
+                canDecide={canDecide}
                 onApprove={onApprove}
                 onRequestChanges={onRequestChanges}
                 onCompare={onCompare}

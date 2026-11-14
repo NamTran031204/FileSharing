@@ -6,9 +6,7 @@ import {
     VideoCameraOutlined,
 } from '@ant-design/icons';
 import {Tag} from 'antd';
-import type {GrantedVisibility} from '../../api/api/index.defs';
 import UserAvatar from "../core/common/UserAvatar.tsx";
-import ProjectVisibilityToggle from "./ProjectVisibilityToggle.tsx";
 import i18n from '../../i18n';
 
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED';
@@ -36,10 +34,6 @@ export interface ProjectOverviewCardProps {
     members: ProjectMember[];
     extraMembers?: number;
     ownerId?: string;
-    visibility?: GrantedVisibility;
-    /** owner/admin moi thay toggle doi visibility */
-    canManage?: boolean;
-    onVisibilityChange?: (visibility: GrantedVisibility) => void;
     onClick?: () => void;
 }
 
@@ -58,26 +52,11 @@ const ProjectOverviewCard = ({
     updatedAt,
     members,
     extraMembers = 0,
-    projectId,
-    visibility,
-    canManage,
-    onVisibilityChange,
     onClick,
 }: ProjectOverviewCardProps) => {
     const isActive = status === 'ACTIVE';
 
-    // toggle nam ngoai the button goc de khong long phan tu tuong tac
     return (
-        <div className="relative">
-        {canManage && projectId && (
-            <div className="absolute right-4 top-3 z-10">
-                <ProjectVisibilityToggle
-                    projectId={projectId}
-                    visibility={visibility}
-                    onChanged={(v) => onVisibilityChange?.(v)}
-                />
-            </div>
-        )}
         <button
             type="button"
             onClick={onClick}
@@ -173,7 +152,6 @@ const ProjectOverviewCard = ({
                 </div>
             </div>
         </button>
-        </div>
     );
 };
 

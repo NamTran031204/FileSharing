@@ -1,16 +1,4 @@
 {
-  "projectVisibilityToggle": {
-    "projectDaChuyenSang": "Project đã chuyển sang {{Private}}",
-    "doiVisibilityThatBai": "Đổi visibility thất bại",
-    "chuyenProjectSangPublic": "Chuyển project sang Public?",
-    "moiUserDaDangNhap": "Mọi user đã đăng nhập xem được project, cây thư mục và asset ở gốc.",
-    "chuyenProjectSangPrivate": "Chuyển project sang Private?",
-    "coFolderPublicCoThe": "Có {{publicCount}} folder Public (có thể đã có proof link). Link vẫn kiểm tra quyền mỗi lần truy cập.",
-    "chiThanhVienProjectXem": "Chỉ thành viên project xem được.",
-    "doiPrivatePublic": "Đổi Private / Public",
-    "public": "Công khai",
-    "private": "Riêng tư"
-  },
   "createProjectModal": {
     "createProject": "Tạo dự án",
     "cancel": "Hủy",

@@ -90,6 +90,10 @@ async function requestRaw<T>(path: string, init?: RequestInit): Promise<T> {
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
         }
         const errorData = await res.json().catch(() => ({}));
+        // ACCESS_DENIED: App hien man "Ban can quyen truy cap"
+        if (errorData.code === '5701') {
+            window.dispatchEvent(new CustomEvent('access:denied'));
+        }
         throw new ApiError(
             errorData.code || 'UNKNOWN_ERROR',
             errorData.message || `HTTP ${res.status}`,

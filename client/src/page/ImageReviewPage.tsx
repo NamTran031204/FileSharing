@@ -14,6 +14,7 @@ import uiUtils from '../utils/uiUtils.tsx';
 import { downloadService, type DownloadProgress as DownloadProgressType } from '../service/downloadService';
 import DownloadProgress from '../components/uploadDownloadProgress/DownloadProgress';
 import i18n from '../i18n';
+import { Action } from '../api/api/index.defs';
 
 const ImageReviewPage = observer(() => {
   const { imageReviewStore: store } = useStore();
@@ -247,6 +248,7 @@ const ImageReviewPage = observer(() => {
             handlers: { handleStageMouseDown, handleStageMouseMove, handleStageWheel, handleStageDragEnd, handleZoomIn, handleZoomOut, handleDragEnd, handleTransformEnd },
             helpers: { getCircleProps, getRectProps },
           }}
+          canComment={store.core.can(Action.COMMENT)}
           onHighlightAnnotation={id => store.setHighlightedAnnotation(id)}
           onToolClick={handleToolClick}
           onColorChange={c => setActiveColor(c)}

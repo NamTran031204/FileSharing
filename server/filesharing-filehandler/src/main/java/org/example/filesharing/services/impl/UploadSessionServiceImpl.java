@@ -19,11 +19,14 @@ import org.example.filesharing.entities.dtos.upload.UploadSessionStatusResponseD
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.JobSubmitService;
 import org.example.filesharing.repositories.UploadSessionRepo;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.MetadataService;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.StorageService;
 import org.example.filesharing.services.UploadSessionService;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.DurationStyle;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -62,6 +65,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     private final StorageService storageService;
     private final MetadataService metadataService;
     private final MinIoService minIoService;
+    private final AccessService accessService;
 
     @Value("${upload.max-file-size}")
     private long maxFileSize;
@@ -401,6 +405,8 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     public UploadResourceResponseDto complete(String sessionId, List<CompletedPartDto> parts) {
         String currentUserId = auditService.getCurrentUserId();
         UploadSessionEntity session = get(sessionId, currentUserId);
+        // chu session van phai con UPLOAD tai folder dich luc commit (vai tro co the da bi ha)
+        accessService.require(ResourceRef.asset(session.getAssetId()), Action.UPLOAD);
 
         if (session.getStatus() == UploadSessionStatus.COMPLETED) {
             return buildResourceResponse(session);

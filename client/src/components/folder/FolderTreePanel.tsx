@@ -140,6 +140,7 @@ const FolderTreePanel = ({
             <SearchOutlined className="text-base" />
           </button>
         </Tooltip>
+        {newActions.length > 0 && (
         <ActionDropdown
           actions={newActions}
           trigger={
@@ -154,6 +155,7 @@ const FolderTreePanel = ({
             </Tooltip>
           }
         />
+        )}
         <Tooltip title={i18n.t('folder:folderTreePanel.folderTree')} placement="right">
           <button
             type="button"
@@ -170,6 +172,7 @@ const FolderTreePanel = ({
 
   return (
     <div className="flex w-[280px] flex-shrink-0 flex-col bg-card border-r border-border overflow-y-auto p-4">
+      {newActions.length > 0 && (
       <ActionDropdown
         actions={newActions}
         trigger={
@@ -182,6 +185,7 @@ const FolderTreePanel = ({
           </button>
         }
       />
+      )}
 
       <Input
         value={searchValue}

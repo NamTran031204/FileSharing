@@ -1,11 +1,12 @@
 import { action, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { Modal } from 'antd';
 import {
+    type Action,
     type AssetDetailResponseDto,
     type AssetSummaryDto,
-    type FolderEntity,
-    type FolderPermission,
+    type FolderListItemDTO,
     type FolderTreeItemDTO,
-    GrantedProjectPermission,
+    type MyAccessDTO,
 } from '../api/api/index.defs';
 import { FolderControllerService } from '../api/api/FolderControllerService';
 import { AssetControllerService } from '../api/api/AssetControllerService';
@@ -48,11 +49,13 @@ function flattenTree(items: FolderTreeItemWithChildren[]): FolderTreeItemDTO[] {
 }
 
 class FolderAssetStore extends CommonPagingStore {
-    folders: FolderEntity[] = [];
+    folders: FolderListItemDTO[] = [];
     assets: AssetSummaryDto[] = [];
     selectedAsset: AssetDetailResponseDto | null = null;
 
     treeItems: FolderTreeItemDTO[] = [];
+    // myAccess cua project (o goc) hoac folder dang mo, lay tu get-by-id
+    myAccess: MyAccessDTO | null = null;
     keyword: string = '';
 
     sortDirection: string = 'asc';
@@ -84,6 +87,7 @@ class FolderAssetStore extends CommonPagingStore {
             assets: observable,
             selectedAsset: observable,
             treeItems: observable,
+            myAccess: observable,
             keyword: observable,
             sortBy: observable,
             sortDirection: observable,
@@ -102,7 +106,6 @@ class FolderAssetStore extends CommonPagingStore {
             currentProjectId: computed,
             currentFolderId: computed,
             currentUserId: computed,
-            folderPermissionMap: computed,
             isUploadAssetOpen: computed,
             isUploadFolderOpen: computed,
             isEditFolderOpen: computed,
@@ -112,6 +115,7 @@ class FolderAssetStore extends CommonPagingStore {
 
             setSorting: action,
             setKeyword: action,
+            setMyAccess: action,
             fetchFolders: action,
             fetchAssetsPage: action,
             fetchAssetDetail: action,
@@ -193,26 +197,12 @@ class FolderAssetStore extends CommonPagingStore {
         this.keyword = keyword;
     }
 
-    get folderPermissionMap(): Map<string, GrantedProjectPermission[]> {
-        const map = new Map<string, GrantedProjectPermission[]>();
-
-        if (!this.currentUserId) {
-            return map;
-        }
-
-        this.folders.forEach((folder) => {
-            if (!folder.folderId) return;
-            const perms: GrantedProjectPermission[] = (folder.userPermissions ?? [] as FolderPermission[])
-                .filter((permission: FolderPermission) => permission.userId === this.currentUserId)
-                .flatMap((permission: FolderPermission) => permission.permissions ?? []);
-            map.set(folder.folderId, perms);
-        });
-
-        return map;
+    setMyAccess(myAccess: MyAccessDTO | null) {
+        this.myAccess = myAccess;
     }
 
-    hasFolderPermission(folderId: string, permission: GrantedProjectPermission): boolean {
-        return this.folderPermissionMap.get(folderId)?.includes(permission) ?? false;
+    can(action?: Action | string): boolean {
+        return !!action && (this.myAccess?.capabilities ?? []).includes(action as Action);
     }
 
     async fetchFolders(projectId: string, parentFolderId?: string): Promise<void> {
@@ -291,6 +281,17 @@ class FolderAssetStore extends CommonPagingStore {
     }
 
     async moveAsset(assetId: string, targetFolderId: string): Promise<void> {
+        // quyen ke thua di theo folder dich, nguoi dung phai xac nhan truoc khi doi
+        const confirmed = await new Promise<boolean>((resolve) => {
+            Modal.confirm({
+                title: i18n.t('access:move.title'),
+                content: i18n.t('access:move.warning'),
+                okText: i18n.t('access:move.ok'),
+                onOk: () => resolve(true),
+                onCancel: () => resolve(false),
+            });
+        });
+        if (!confirmed) return;
         try {
             this.actionErrorMessage = null;
             const response = await AssetControllerService.move({ body: { assetId, targetFolderId } });
@@ -451,6 +452,7 @@ class FolderAssetStore extends CommonPagingStore {
         this.assets = [];
         this.selectedAsset = null;
         this.treeItems = [];
+        this.myAccess = null;
         this.keyword = '';
         this.page = 1;
         this.totalCount = 0;

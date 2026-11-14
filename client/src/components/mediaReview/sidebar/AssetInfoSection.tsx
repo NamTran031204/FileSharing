@@ -33,9 +33,12 @@ export interface AssetInfoSectionProps {
 
   reviewStatus: 'PENDING' | 'APPROVED' | 'REQUEST_CHANGES';
   isReviewLoading: boolean;
+  // false thi an nut duyet (thieu REVIEW_DECIDE hoac khong phai reviewer cua session)
+  canDecide: boolean;
   onApprove: () => void;
   onRequestChanges: () => void;
   onCompare?: () => void;
+  // undefined thi an nut tai (thieu DOWNLOAD)
   onDownload?: () => void;
 }
 
@@ -66,6 +69,7 @@ export function AssetInfoSection({
   onSelectVersion,
   reviewStatus,
   isReviewLoading,
+  canDecide,
   onApprove,
   onRequestChanges,
   onCompare,
@@ -159,20 +163,24 @@ export function AssetInfoSection({
       </InfoRow>
 
       <div className="mt-4 flex flex-col gap-2">
-        <button
-          onClick={onApprove}
-          disabled={isReviewLoading}
-          className="cursor-pointer rounded-lg bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-60"
-        >
-          {i18n.t('review:assetInfoSection.approve')}
-        </button>
-        <button
-          onClick={onRequestChanges}
-          disabled={isReviewLoading}
-          className="cursor-pointer rounded-lg border border-rose-300 py-2 text-xs font-bold text-rose-700 transition-all hover:bg-rose-50 disabled:opacity-60"
-        >
-          {i18n.t('review:assetInfoSection.requestChanges')}
-        </button>
+        {canDecide && (
+          <>
+            <button
+              onClick={onApprove}
+              disabled={isReviewLoading}
+              className="cursor-pointer rounded-lg bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {i18n.t('review:assetInfoSection.approve')}
+            </button>
+            <button
+              onClick={onRequestChanges}
+              disabled={isReviewLoading}
+              className="cursor-pointer rounded-lg border border-rose-300 py-2 text-xs font-bold text-rose-700 transition-all hover:bg-rose-50 disabled:opacity-60"
+            >
+              {i18n.t('review:assetInfoSection.requestChanges')}
+            </button>
+          </>
+        )}
         <div className="mt-1 flex gap-2">
           <button
             onClick={onCompare}
@@ -182,14 +190,15 @@ export function AssetInfoSection({
             <IconDiff />
             <span>{i18n.t('review:assetInfoSection.compare')}</span>
           </button>
-          <button
-            onClick={onDownload}
-            disabled={!onDownload}
-            className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <IconDownload />
-            <span>{i18n.t('review:assetInfoSection.download')}</span>
-          </button>
+          {onDownload && (
+            <button
+              onClick={onDownload}
+              className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-xs font-bold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-background)]"
+            >
+              <IconDownload />
+              <span>{i18n.t('review:assetInfoSection.download')}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

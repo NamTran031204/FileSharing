@@ -28,6 +28,7 @@ interface CommentsSectionProps {
   onResolve: (id: string) => void;
   onReopen: (id: string) => void;
   onDelete: (id: string) => void;
+  canComment: boolean;
 }
 
 export function CommentsSection({
@@ -54,6 +55,7 @@ export function CommentsSection({
   onResolve,
   onReopen,
   onDelete,
+  canComment,
 }: CommentsSectionProps) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 p-4">
@@ -125,6 +127,7 @@ export function CommentsSection({
               onReopen={onReopen}
               onDelete={onDelete}
               onToggleExpand={onToggleExpand}
+              canComment={canComment}
             />
           ))
         )}

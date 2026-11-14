@@ -1,9 +1,10 @@
-import {useEffect} from 'react';
-import {BrowserRouter, Navigate, Route, Routes, useNavigate} from 'react-router-dom';
+import {type ReactNode, useEffect, useState} from 'react';
+import {BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import BusyOverlay from "./components/core/common/BusyOverlay";
+import AccessDeniedScreen from "./components/share/AccessDeniedScreen.tsx";
 import {type AppRoute, ROUTER_CONFIG} from './utils/RouterConfigUtil.tsx';
 
 const normalizePath = (path: string) => {
@@ -88,13 +89,29 @@ const UnauthorizedRedirect = () => {
     return null;
 };
 
+// API tra ACCESS_DENIED (5701) thi thay trang dang mo bang man "Ban can quyen truy cap"; doi trang thi tu bo
+const AccessDeniedGate = ({children}: {children: ReactNode}) => {
+    const location = useLocation();
+    const [deniedKey, setDeniedKey] = useState<string | null>(null);
+
+    useEffect(() => {
+        const onDenied = () => setDeniedKey(location.key);
+        window.addEventListener('access:denied', onDenied);
+        return () => window.removeEventListener('access:denied', onDenied);
+    }, [location.key]);
+
+    return deniedKey === location.key ? <AccessDeniedScreen/> : <>{children}</>;
+};
+
 const App = () => {
     const normalizedRoutes = flattenRoutes(ROUTER_CONFIG);
 
     return (
         <BrowserRouter>
             <UnauthorizedRedirect/>
-            <Routes>{normalizedRoutes.map(renderRoute)}</Routes>
+            <AccessDeniedGate>
+                <Routes>{normalizedRoutes.map(renderRoute)}</Routes>
+            </AccessDeniedGate>
             <ToastContainer />
             <BusyOverlay />
         </BrowserRouter>

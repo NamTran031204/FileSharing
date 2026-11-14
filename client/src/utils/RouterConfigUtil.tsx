@@ -18,6 +18,8 @@ import VideoReviewPage from "../page/VideoReviewPage.tsx";
 import FolderAssetPage from "../page/FolderAssetPage.tsx";
 import DashboardPage from "../page/DashboardPage.tsx";
 import ProofGuestPage from "../page/ProofGuestPage.tsx";
+import SharedWithMePage from "../page/SharedWithMePage.tsx";
+import JoinLinkPage from "../page/JoinLinkPage.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -125,6 +127,19 @@ export const ROUTER_CONFIG: AppRoute[] = [
         name: 'Projects',
         element: <ProjectMain/>,
         isShow: true,
+    },
+    {
+        path: '/shared-with-me',
+        name: 'Shared With Me',
+        element: <SharedWithMePage/>,
+        isShow: true,
+    },
+    {
+        // link xem cua folder: can dang nhap, ProtectedRoute dua ve login roi quay lai
+        path: '/s/:token',
+        name: 'Join Link',
+        element: <JoinLinkPage/>,
+        isShow: false,
     },
     {
         path: '/mockup/hls-video',

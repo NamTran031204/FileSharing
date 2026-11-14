@@ -109,10 +109,11 @@ public class MongoIndexBootstrapConfig {
         ops.createIndex(new Index().on("folderId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("parentFolderId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("ancestorIds", Sort.Direction.ASC));
-        ops.createIndex(new Index().on("permissions.userId", Sort.Direction.ASC));
-        // unique chi tren shareToken kieu string; sparse van index gia tri null ghi tuong minh nen dung partial
-        ops.createIndex(new Index().on("shareToken", Sort.Direction.ASC).unique()
-                .partial(PartialIndexFilter.of(new Document("shareToken", new Document("$type", "string")))));
+        // shared-with-me tim theo grants.userId; link tim theo token, unique chi tren token kieu string
+        // (sparse van index gia tri null ghi tuong minh nen dung partial)
+        ops.createIndex(new Index().on("grants.userId", Sort.Direction.ASC));
+        ops.createIndex(new Index().on("link.token", Sort.Direction.ASC).unique()
+                .partial(PartialIndexFilter.of(new Document("link.token", new Document("$type", "string")))));
     }
 
     private void applyProofSelectionIndexes() {

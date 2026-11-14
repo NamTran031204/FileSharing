@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Circle } from 'react-konva';
 import { ReviewCoreStore } from '../store/review/ReviewCoreStore';
 import type { AnnotationCore } from '../store/review/ReviewCoreStore';
-import { MediaType, ProcessingStatus, UserGrantedRole } from '../api/api/index.defs';
+import { Action, MediaType, ProcessingStatus, UserGrantedRole } from '../api/api/index.defs';
 import type { MediaAdapter } from '../components/mediaReview/bridge/MediaAdapter';
 import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
 import HlsVideoPlayer from '../components/mediaReview/HlsVideoPlayer';
@@ -467,8 +467,8 @@ const VideoReviewPage = observer(() => {
             )}
           </HlsVideoPlayer>
 
-          {/* Markup toolbar — chỉ hiện khi video đang pause (giữ nguyên hành vi cũ) */}
-          {isPaused && (
+          {/* Markup toolbar — chỉ hiện khi video đang pause; thieu COMMENT thi an (ve hinh moi mo o nhap binh luan) */}
+          {isPaused && store.can(Action.COMMENT) && (
             <FloatingMarkupToolbar
               activeTool={displayTool}
               activeColor={activeColor}

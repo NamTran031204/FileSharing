@@ -27,6 +27,15 @@ apiClient.interceptors.response.use(
             tokenManager.clearTokens();
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
         }
+        // ACCESS_DENIED: App hien man "Ban can quyen truy cap"
+        if (error?.response?.data?.code === '5701') {
+            window.dispatchEvent(new CustomEvent('access:denied'));
+        }
+        // dung message da dich cua server (vd 5702 can vai tro COMMENTER) thay "Request failed with status code ..."
+        const serverMessage = error?.response?.data?.message;
+        if (typeof serverMessage === 'string' && serverMessage) {
+            error.message = serverMessage;
+        }
 
         return Promise.reject(error);
     },

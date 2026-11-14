@@ -2,7 +2,6 @@ package org.example.filesharing.entities.dtos.project;
 
 import lombok.Data;
 import com.file.service.filesharing.core.enums.ProjectStatus;
-import com.file.service.filesharing.core.enums.permission.GrantedVisibility;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,7 +21,6 @@ public class ProjectCreateUpdateDTO {
     // danh sach user va quyen
     private List<ProjectCollaboratorDTO> collaborators;
 
-    private GrantedVisibility visibility;
 
     // voi mode create mac dinh la ACTIVE
     private ProjectStatus status;

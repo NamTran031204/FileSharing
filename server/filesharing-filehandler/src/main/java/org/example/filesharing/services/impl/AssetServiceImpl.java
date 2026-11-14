@@ -7,12 +7,9 @@ import org.example.filesharing.entities.dtos.asset.*;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.upload.UploadSessionInitResponseDto;
 import com.file.service.filesharing.core.entity.models.*;
-import org.example.filesharing.entities.models.UserEntity;
 import com.file.service.filesharing.core.entity.models.folder.FolderStats;
 import com.file.service.filesharing.core.entity.models.project.ProjectStats;
-import com.file.service.filesharing.core.entity.models.base.EntityAuditBase;
 import com.file.service.filesharing.core.enums.*;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
@@ -20,6 +17,7 @@ import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.FolderRepo;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.repositories.ProjectRepo;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AssetAccessService;
 import org.example.filesharing.services.AssetService;
 import org.example.filesharing.services.AuditLogService;
@@ -27,6 +25,8 @@ import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.StorageService;
 import org.example.filesharing.services.UploadSessionService;
 import org.example.filesharing.services.baseService.BaseAuditService;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +34,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +60,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     private final StorageService storageService;
     private final PasswordEncoder passwordEncoder;
     private final AssetAccessService assetAccessService;
+    private final AccessService accessService;
 
     private static final long SMALL_FILE_THRESHOLD = 8_388_608L; // 8 MiB — 01_api_contract.md §0.5
 
@@ -72,16 +74,15 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
         String projectId = request.getProjectId().trim();
         ProjectEntity project = getProjectOrThrow(projectId);
-        ensureProjectWritable(project);
 
         FolderEntity folder = null;
         String folderId = trimToNull(request.getFolderId());
         if (folderId != null) {
             folder = getActiveFolderOrThrow(folderId);
             ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+            ensureFolderAccess(folder, Action.UPLOAD);
         } else {
-            ensureProjectModify(project, auditService.getCurrentUser());
+            ensureProjectPermission(project, Action.UPLOAD);
         }
 
         String fileName = requireNormalized(request.getFileName(), "fileName is required");
@@ -152,7 +153,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Override
     public AssetDetailResponseDto getAssetById(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
+        ensureAssetPermission(asset, Action.VIEW);
 
         MetadataEntity latestVersion = findLatestCompletedVersion(asset.getAssetId());
 
@@ -172,14 +173,21 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         ProjectEntity project = getProjectOrThrow(filter.getProjectId().trim());
-        ensureProjectRead(project, auditService.getCurrentUser());
 
         Query query = new Query();
         query.addCriteria(Criteria.where("projectId").is(project.getProjectId()));
 
         if (StringUtils.isNotNullOrBlank(filter.getFolderId())) {
+            assetAccessService.ensureFolderAccessById(filter.getFolderId().trim(), Action.VIEW);
             query.addCriteria(Criteria.where("folderId").is(filter.getFolderId().trim()));
         } else {
+            // asset o goc project chi danh cho thanh vien; nguoi chi co grant folder nhan trang rong
+            if (accessService.resolve(ResourceRef.project(project.getProjectId())).role() == null) {
+                return PageResult.<AssetSummaryDto>builder()
+                        .totalCount(0)
+                        .data(Collections.emptyList())
+                        .build();
+            }
             query.addCriteria(new Criteria().orOperator(
                     Criteria.where("folderId").is(null),
                     Criteria.where("folderId").exists(false)
@@ -240,7 +248,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         validateUpdateAssetRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+        ensureAssetPermission(asset, Action.EDIT);
 
         if (StringUtils.isNotNullOrBlank(request.getAssetName())) {
             asset.setAssetName(request.getAssetName().trim());
@@ -270,13 +278,11 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         validateMoveRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
+        ensureAssetPermission(asset, Action.EDIT);
         ProjectEntity project = getProjectOrThrow(asset.getProjectId());
         FolderEntity currentFolder = null;
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             currentFolder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderPermission(currentFolder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
-        } else {
-            ensureProjectModify(project, auditService.getCurrentUser());
         }
 
         FolderEntity targetFolder = null;
@@ -284,9 +290,9 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (targetFolderId != null) {
             targetFolder = getActiveFolderOrThrow(targetFolderId);
             ensureFolderInProject(targetFolder, project);
-            ensureFolderPermission(targetFolder, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+            ensureFolderAccess(targetFolder, Action.UPLOAD);
         } else {
-            ensureProjectModify(project, auditService.getCurrentUser());
+            ensureProjectPermission(project, Action.UPLOAD);
         }
 
         asset.setFolderId(targetFolderId);
@@ -308,7 +314,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Transactional
     public void moveToTrash(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+        ensureAssetPermission(asset, Action.TRASH);
 
         if (Boolean.TRUE.equals(asset.getIsTrash())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "asset is already in trash");
@@ -334,10 +340,18 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Transactional
     public void restoreFromTrash(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+        ensureAssetPermission(asset, Action.TRASH);
 
         if (!Boolean.TRUE.equals(asset.getIsTrash())) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "asset is not in trash");
+        }
+
+        FolderEntity folder = StringUtils.isNotNullOrBlank(asset.getFolderId())
+                ? folderRepo.findById(asset.getFolderId()).orElse(null)
+                : null;
+        // folder chua con trong thung rac thi phai khoi phuc folder truoc
+        if (folder != null && Boolean.TRUE.equals(folder.getIsTrash())) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Folder is in trash, restore it first");
         }
 
         restoreTrashAudit(asset);
@@ -346,11 +360,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         ProjectEntity project = getProjectOrThrow(asset.getProjectId());
         incrementProjectAssetCount(project, 1);
 
-        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
-            FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
-            if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
-                incrementFolderAssetCount(folder, 1);
-            }
+        if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
+            incrementFolderAssetCount(folder, 1);
         }
         writeAssetAuditLog(asset, AuditAction.RESTORE);
     }
@@ -359,7 +370,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Transactional
     public void deleteAsset(String assetId) {
         AssetEntity asset = getAssetOrThrow(assetId);
-        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+        ensureAssetPermission(asset, Action.DELETE_PERMANENT);
 
         softDeleteAudit(asset);
         assetRepo.save(asset);
@@ -389,7 +400,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
     @Transactional
     public void undoDelete(String assetId) {
         AssetEntity asset = getInactiveAssetOrThrow(assetId);
-        ensureDeletedAssetPermission(asset, GrantedProjectPermission.DELETE);
+        ensureDeletedAssetPermission(asset, Action.TRASH);
 
         undoDeleteAudit(asset);
         assetRepo.save(asset);
@@ -403,7 +414,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         validateCreateVersionRequest(request);
 
         AssetEntity asset = getAssetOrThrow(request.getAssetId().trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+        ensureAssetPermission(asset, Action.UPLOAD);
         return createNewVersion(request, asset);
 
     }
@@ -465,7 +476,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(fileVersion.getAssetId());
-        ensureAssetPermission(asset, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+        ensureAssetPermission(asset, Action.EDIT);
 
         if (StringUtils.isNotNullOrBlank(request.getDownloadFileName())) {
             fileVersion.setDownloadFileName(request.getDownloadFileName().trim());
@@ -498,7 +509,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         AssetEntity asset = getAssetOrThrow(filter.getAssetId().trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
+        ensureAssetPermission(asset, Action.VIEW);
 
         Query query = new Query();
         query.addCriteria(Criteria.where("assetId").is(asset.getAssetId()));
@@ -543,7 +554,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         }
 
         AssetEntity asset = getAssetOrThrow(assetId.trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
+        ensureAssetPermission(asset, Action.VIEW);
 
         return findLatestCompletedVersion(asset.getAssetId());
     }
@@ -562,7 +573,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.FILE_NOT_FOUND));
 
         AssetEntity asset = getAssetOrThrow(version.getAssetId());
-        ensureAssetPermission(asset, GrantedProjectPermission.DELETE);
+        // xoa mem version (isTrash), khong xoa cung
+        ensureAssetPermission(asset, Action.TRASH);
 
         long activeCount = metadataRepo.countByAssetIdAndIsTrashFalse(asset.getAssetId());
         if (activeCount <= 1) {
@@ -796,68 +808,74 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         return asset;
     }
 
-    private void ensureDeletedAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
+    // asset da xoa (isActive=false) thi AccessService coi la khong ton tai, nen kiem tren folder chua hoac project
+    private void ensureDeletedAssetPermission(AssetEntity asset, Action action) {
         ProjectEntity project = getProjectOrThrow(asset.getProjectId());
         if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
             FolderEntity folder = folderRepo.findById(asset.getFolderId()).orElse(null);
             if (folder != null && Boolean.TRUE.equals(folder.getIsActive())) {
                 assetAccessService.ensureFolderInProject(folder, project);
-                assetAccessService.ensureFolderPermission(folder, required);
+                assetAccessService.ensureFolderAccess(folder, action);
                 return;
             }
         }
-        assetAccessService.ensureProjectPermission(project, auditService.getCurrentUser(), required);
+        assetAccessService.ensureProjectPermission(project, action);
     }
 
     private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {
         assetAccessService.ensureFolderInProject(folder, project);
     }
 
-    private void ensureProjectWritable(ProjectEntity project) {
-        if (project.getStatus() == ProjectStatus.ARCHIVED || project.getStatus() == ProjectStatus.COMPLETED) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Project is not editable");
-        }
+    // cong trang thai project (ARCHIVED/COMPLETED) nam trong AccessResolver.can
+    private void ensureAssetPermission(AssetEntity asset, Action action) {
+        assetAccessService.ensureAssetPermission(asset, action);
     }
 
-    private void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
-        assetAccessService.ensureAssetPermission(asset, required);
+    private void ensureFolderAccess(FolderEntity folder, Action action) {
+        assetAccessService.ensureFolderAccess(folder, action);
     }
 
-    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
-        assetAccessService.ensureFolderPermission(folder, required);
-    }
-
-    private void ensureProjectRead(ProjectEntity project, UserEntity user) {
-        assetAccessService.ensureProjectPermission(project, user, GrantedProjectPermission.READ);
-    }
-
-    private void ensureProjectModify(ProjectEntity project, UserEntity user) {
-        assetAccessService.ensureProjectPermission(project, user, GrantedProjectPermission.CREATE_FOLDER_ASSET);
+    private void ensureProjectPermission(ProjectEntity project, Action action) {
+        assetAccessService.ensureProjectPermission(project, action);
     }
 
     private void incrementProjectAssetCount(ProjectEntity project, int delta) {
-        ProjectStats stats = ensureProjectStats(project);
-        int current = stats.getAssetCount() != null ? stats.getAssetCount() : 0;
-        stats.setAssetCount(Math.max(0, current + delta));
-        project.setStats(stats);
-        projectRepo.save(project);
+        incrementProjectStat(project, "stats.assetCount", delta);
     }
 
     private void incrementProjectTotalVersions(ProjectEntity project, int delta) {
-        ProjectStats stats = ensureProjectStats(project);
-        int current = stats.getTotalVersions() != null ? stats.getTotalVersions() : 0;
-        stats.setTotalVersions(Math.max(0, current + delta));
-        project.setStats(stats);
-        projectRepo.save(project);
+        incrementProjectStat(project, "stats.totalVersions", delta);
     }
 
+    // $inc de khong ghi de collaborators/settings cua project khi chay dong thoi (giong FolderServiceImpl)
+    private void incrementProjectStat(ProjectEntity project, String field, int delta) {
+        if (project.getStats() == null) {
+            // stats null thi $inc vao object null loi, khoi tao truoc
+            ensureProjectStats(project);
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(project.getProjectId()).and("stats").is(null)),
+                    new Update().set("stats", project.getStats()), ProjectEntity.class);
+        }
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(project.getProjectId())),
+                new Update().inc(field, delta), ProjectEntity.class);
+    }
+
+    // $inc de khong ghi de grants/link cua folder (giong FolderServiceImpl.incrementParentSubfolderCount)
     private void incrementFolderAssetCount(FolderEntity folder, int delta) {
-        FolderStats stats = ensureFolderStats(folder);
-        int current = stats.getAssetCount() != null ? stats.getAssetCount() : 0;
-        stats.setAssetCount(Math.max(0, current + delta));
-        folder.setStats(stats);
-        applyUpdateAudit(folder);
-        folderRepo.save(folder);
+        if (folder.getStats() == null) {
+            // stats null thi $inc loi, khoi tao truoc
+            ensureFolderStats(folder);
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(folder.getFolderId()).and("stats").is(null)),
+                    new Update().set("stats", folder.getStats()), FolderEntity.class);
+        }
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(folder.getFolderId())),
+                new Update().inc("stats.assetCount", delta)
+                        .set("updateBy", auditService.getCurrentUserId())
+                        .set("updateByEmail", auditService.getCurrentUserEmail()),
+                FolderEntity.class);
     }
 
     private ProjectStats ensureProjectStats(ProjectEntity project) {
@@ -881,11 +899,6 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
                     .build());
         }
         return folder.getStats();
-    }
-
-    private void applyUpdateAudit(EntityAuditBase entity) {
-        entity.setUpdateBy(auditService.getCurrentUserId());
-        entity.setUpdateByEmail(auditService.getCurrentUserEmail());
     }
 
     private void writeAssetAuditLog(AssetEntity asset, AuditAction action) {

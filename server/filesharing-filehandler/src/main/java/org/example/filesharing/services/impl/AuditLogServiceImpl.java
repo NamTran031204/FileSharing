@@ -6,26 +6,23 @@ import org.example.filesharing.entities.dtos.auditlog.AuditLogCreateDTO;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogItemDTO;
 import com.file.service.filesharing.core.entity.models.AssetEntity;
 import com.file.service.filesharing.core.entity.models.FolderEntity;
-import com.file.service.filesharing.core.entity.models.ProjectEntity;
 import org.example.filesharing.entities.models.UserEntity;
 import com.file.service.filesharing.core.entity.models.auditlog.AuditChanges;
 import com.file.service.filesharing.core.entity.models.AuditLogEntity;
-import com.file.service.filesharing.core.entity.models.folder.FolderPermission;
 import com.file.service.filesharing.core.enums.AuditAction;
 import com.file.service.filesharing.core.enums.AuditActorType;
 import com.file.service.filesharing.core.enums.AuditTargetType;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.AssetRepo;
 import org.example.filesharing.repositories.AuditLogRepo;
 import org.example.filesharing.repositories.FolderRepo;
-import org.example.filesharing.repositories.ProjectRepo;
+import org.example.filesharing.services.AccessService;
 import org.example.filesharing.services.AuditLogService;
 import org.example.filesharing.services.AuditService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
+import org.example.filesharing.utils.access.Action;
+import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -41,7 +38,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static com.file.service.filesharing.core.utils.StringUtils.trimToNull;
@@ -54,8 +50,8 @@ public class AuditLogServiceImpl implements AuditLogService {
     private final AuditService auditService;
     private final MongoTemplate mongoTemplate;
     private final AssetRepo assetRepo;
-    private final ProjectRepo projectRepo;
     private final FolderRepo folderRepo;
+    private final AccessService accessService;
 
     private static final Set<AuditAction> WORKSPACE_ACTIONS = EnumSet.of(
             AuditAction.UPLOAD_NEW_VERSION,
@@ -103,7 +99,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
 
         AssetEntity asset = getActiveAssetOrThrow(assetId.trim());
-        ensureAssetPermission(asset, GrantedProjectPermission.READ);
+        accessService.require(ResourceRef.asset(asset.getAssetId()), Action.VIEW);
 
         int resolvedSize = size != null && size > 0 ? size : 20;
         int resolvedPage = page != null && page >= 0 ? page : 0;
@@ -344,84 +340,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         return asset;
     }
-
-    private ProjectEntity getActiveProjectOrThrow(String projectId) {
-        ProjectEntity project = projectRepo.findById(projectId)
-                .orElseThrow(() -> new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND));
-        if (Boolean.FALSE.equals(project.getIsActive())) {
-            throw new FileBusinessException(ErrorCode.PROJECT_NOT_FOUND);
-        }
-        return project;
-    }
-
-    private FolderEntity getActiveFolderOrThrow(String folderId) {
-        FolderEntity folder = folderRepo.findById(folderId)
-                .orElseThrow(() -> new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND));
-        if (Boolean.FALSE.equals(folder.getIsActive())) {
-            throw new FileBusinessException(ErrorCode.FOLDER_NOT_FOUND);
-        }
-        return folder;
-    }
-
-    private void ensureAssetPermission(AssetEntity asset, GrantedProjectPermission required) {
-        ProjectEntity project = getActiveProjectOrThrow(asset.getProjectId());
-        if (StringUtils.isNotNullOrBlank(asset.getFolderId())) {
-            FolderEntity folder = getActiveFolderOrThrow(asset.getFolderId());
-            ensureFolderInProject(folder, project);
-            ensureFolderPermission(folder, required);
-        } else {
-            ensureProjectPermission(project, auditService.getCurrentUser(), required);
-        }
-    }
-
-    private void ensureFolderInProject(FolderEntity folder, ProjectEntity project) {
-        if (!Objects.equals(folder.getProjectId(), project.getProjectId())) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "Folder does not belong to project");
-        }
-    }
-
-    private void ensureProjectPermission(ProjectEntity project, UserEntity user, GrantedProjectPermission required) {
-        List<GrantedProjectPermission> permissions = ProjectPermissionResolver.resolveProjectPermissions(
-                project,
-                user,
-                isAdmin(user)
-        );
-        if (!ProjectPermissionResolver.hasPermission(permissions, required)) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    private void ensureFolderPermission(FolderEntity folder, GrantedProjectPermission required) {
-        UserEntity currentUser = auditService.getCurrentUser();
-        if (isAdmin(currentUser)) {
-            return;
-        }
-
-        List<FolderPermission> userPermissions = folder.getUserPermissions();
-        if (userPermissions == null || userPermissions.isEmpty()) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-
-        String currentUserId = currentUser.getUserId();
-        for (FolderPermission fp : userPermissions) {
-            if (Objects.equals(fp.getUserId(), currentUserId)) {
-                if (ProjectPermissionResolver.hasPermission(fp.getPermissions(), required)) {
-                    return;
-                }
-                throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-            }
-        }
-        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
-    }
-
 
     private static class ResolvedActor {
         private final String actorId;

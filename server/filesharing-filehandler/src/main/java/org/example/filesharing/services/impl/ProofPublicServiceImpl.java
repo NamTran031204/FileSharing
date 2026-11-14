@@ -7,6 +7,7 @@ import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.entity.models.NotificationEntity;
 import com.file.service.filesharing.core.entity.models.ProjectEntity;
 import com.file.service.filesharing.core.entity.models.ProofSelectionEntity;
+import com.file.service.filesharing.core.entity.models.access.LinkAccess;
 import com.file.service.filesharing.core.entity.models.notification.NotificationContext;
 import com.file.service.filesharing.core.entity.models.notification.NotificationDelivery;
 import com.file.service.filesharing.core.enums.DeliveryStatus;
@@ -16,7 +17,6 @@ import com.file.service.filesharing.core.enums.ProcessingStatus;
 import com.file.service.filesharing.core.enums.ProjectStatus;
 import com.file.service.filesharing.core.enums.ProofSelectionStatus;
 import com.file.service.filesharing.core.enums.UploadStatus;
-import com.file.service.filesharing.core.enums.permission.GrantedProjectPermission;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,6 @@ import org.example.filesharing.repositories.ProofSelectionRepo;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProofPublicService;
-import org.example.filesharing.utils.ProjectPermissionResolver;
 import org.example.filesharing.utils.ProofTokenUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -96,7 +95,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
         return new ProofLandingResponseDto(
                 folder.getFolderName(),
                 mongoTemplate.count(buildImageQuery(folder.getFolderId()), AssetEntity.class),
-                folder.getShareExpiry());
+                folder.getLink().getExpiresAt());
     }
 
     @Override
@@ -238,14 +237,17 @@ public class ProofPublicServiceImpl implements ProofPublicService {
 
     // ---- link / session ----
 
-    // moi truong hop khong hop le (ke ca folder het PUBLIC) tra cung PROOF_LINK_INVALID de khong lo thong tin
+    // tim theo link.token; moi truong hop khong hop le tra cung PROOF_LINK_INVALID de khong lo thong tin, het han tra LINK_EXPIRED
     private FolderEntity resolveLink(String shareToken) {
         if (shareToken == null || shareToken.isBlank()) {
             throw new FileBusinessException(ErrorCode.PROOF_LINK_INVALID);
         }
-        FolderEntity folder = folderRepo.findByShareToken(shareToken)
+        FolderEntity folder = folderRepo.findByLinkToken(shareToken)
                 .orElseThrow(() -> new FileBusinessException(ErrorCode.PROOF_LINK_INVALID));
-        if (Boolean.FALSE.equals(folder.getIsActive()) || Boolean.TRUE.equals(folder.getIsTrash())) {
+        LinkAccess link = folder.getLink();
+        // thung rac danh dau ca cay con (archiveFolder) nen chi can xet chinh folder
+        if (link == null || !Boolean.TRUE.equals(link.getAllowProofSelection())
+                || Boolean.FALSE.equals(folder.getIsActive()) || Boolean.TRUE.equals(folder.getIsTrash())) {
             throw new FileBusinessException(ErrorCode.PROOF_LINK_INVALID);
         }
 
@@ -256,15 +258,8 @@ public class ProofPublicServiceImpl implements ProofPublicService {
             throw new FileBusinessException(ErrorCode.PROOF_LINK_INVALID);
         }
 
-        List<GrantedProjectPermission> permissions =
-                ProjectPermissionResolver.resolveGuestFolderPermissions(projectOpt.get(), folder, folderRepo);
-        if (!permissions.contains(GrantedProjectPermission.READ)
-                || !permissions.contains(GrantedProjectPermission.SELECT_AND_SUBMIT)) {
-            throw new FileBusinessException(ErrorCode.PROOF_LINK_INVALID);
-        }
-
-        if (folder.getShareExpiry() != null && !folder.getShareExpiry().isAfter(Instant.now())) {
-            throw new FileBusinessException(ErrorCode.PROOF_LINK_EXPIRED);
+        if (link.getExpiresAt() != null && !link.getExpiresAt().isAfter(Instant.now())) {
+            throw new FileBusinessException(ErrorCode.LINK_EXPIRED);
         }
         return folder;
     }
@@ -307,7 +302,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
     // loi notification khong lam hong submit
     private void notifyOwner(FolderEntity folder, ProofSelectionEntity selection) {
         try {
-            String ownerId = folder.getShareCreatedBy();
+            String ownerId = folder.getLink().getCreatedBy();
             if (ownerId == null || userRepo.findById(ownerId).isEmpty()) {
                 return;
             }

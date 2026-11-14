@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, type Location, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Divider, Form, Input, theme } from 'antd';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
@@ -20,13 +20,17 @@ const RegisterPageV2 = () => {
   const { token } = theme.useToken();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  // giu trang dang mo truoc khi bi chuyen ve login de dang ky/dang nhap xong quay lai
+  const from = (location.state as { from?: Location } | null)?.from;
+  const redirectTo = from ? `${from.pathname}${from.search}` : '/home';
 
   const handleFinish = async (values: RegisterFormValues) => {
     setIsSubmitting(true);
     try {
       await authApiResource.register(values);
       uiUtils.showSuccess(i18n.t('auth:registerPageV2.dangKyThanhCongVui'));
-      navigate('/loginv2');
+      navigate('/loginv2', { state: location.state });
     } catch (err) {
       uiUtils.showError(err instanceof Error ? err.message : i18n.t('auth:registerPageV2.dangKyThatBai'));
     } finally {
@@ -42,7 +46,7 @@ const RegisterPageV2 = () => {
     setIsSubmitting(true);
     try {
       await authApiResource.registerWithGoogle(credentialResponse.credential);
-      navigate('/home');
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.code === '5203') {
         uiUtils.showError(i18n.t('auth:registerPageV2.emailNayDaDuocLien'));
@@ -159,7 +163,7 @@ const RegisterPageV2 = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               {i18n.t('auth:registerPageV2.daCoTaiKhoan')}
-              <Link to="/loginv2" className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
+              <Link to="/loginv2" state={location.state} className="font-bold text-primary-dark hover:underline underline-offset-4 ml-1">
                 {i18n.t('auth:registerPageV2.dangNhap')}
               </Link>
             </p>

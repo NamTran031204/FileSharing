@@ -7,16 +7,11 @@ import com.file.service.filesharing.core.entity.PageResult;
 import org.example.filesharing.entities.dtos.auditlog.AuditLogFilterDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCheckInputDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCheckResponseDTO;
-import org.example.filesharing.entities.dtos.project.ProjectCollaboratorDTO;
 import org.example.filesharing.entities.dtos.project.ProjectCreateUpdateDTO;
+import org.example.filesharing.entities.dtos.project.ProjectDetailDTO;
 import org.example.filesharing.entities.dtos.project.ProjectFilterDTO;
 import org.example.filesharing.entities.dtos.project.ProjectMemberDTO;
 import org.example.filesharing.entities.dtos.project.ProjectStatusUpdateDTO;
-import org.example.filesharing.entities.dtos.project.ProjectVisibilityUpdateDTO;
-import org.example.filesharing.entities.dtos.project.ShareTokenCreateDTO;
-import org.example.filesharing.entities.dtos.project.ShareTokenCreateResponseDTO;
-import org.example.filesharing.entities.dtos.project.ShareTokenInfoDTO;
-import com.file.service.filesharing.core.entity.models.project.ProjectCollaborator;
 import com.file.service.filesharing.core.entity.models.project.ProjectStats;
 import com.file.service.filesharing.core.entity.models.AuditLogEntity;
 import com.file.service.filesharing.core.entity.models.ProjectEntity;
@@ -60,7 +55,7 @@ public class ProjectController {
     }
 
     @GetMapping("/get-by-id/{projectId}")
-    public CommonResponse<ProjectEntity> getProjectById(@PathVariable("projectId") String projectId) {
+    public CommonResponse<ProjectDetailDTO> getProjectById(@PathVariable("projectId") String projectId) {
         return CommonResponse.success(projectService.getProjectById(projectId));
     }
 
@@ -81,12 +76,6 @@ public class ProjectController {
         return CommonResponse.success(projectService.updateProjectStatus(projectId, dto != null ? dto.getStatus() : null));
     }
 
-    @GetMapping("/{projectId}/getCollaborators")
-    public CommonResponse<List<ProjectCollaborator>> getProjectCollaborators(
-            @PathVariable("projectId") String projectId) {
-        return CommonResponse.success(projectService.getProjectCollaborators(projectId));
-    }
-
     @GetMapping("/{projectId}/members")
     public CommonResponse<List<ProjectMemberDTO>> getProjectMembers(
             @PathVariable("projectId") String projectId,
@@ -95,63 +84,9 @@ public class ProjectController {
         return CommonResponse.success(projectService.getProjectMembers(projectId, searchQuery, reviewSessionId));
     }
 
-    @PostMapping("/{projectId}/addCollaborator")
-    public CommonResponse<ProjectEntity> addCollaboratorToProject(
-            @PathVariable("projectId") String projectId,
-            @RequestBody ProjectCollaboratorDTO collaborator) {
-        return CommonResponse.success(projectService.addCollaboratorToProject(projectId, collaborator));
-    }
-
-    @PostMapping("/collaborators/changePermission")
-    public CommonResponse<ProjectEntity> changeCollaboratorPermission(
-            @RequestBody ProjectCollaboratorDTO collaborator) {
-        return CommonResponse.success(projectService.changeCollaboratorPermission(collaborator));
-    }
-
     @PostMapping("/{projectId}/leave")
     public CommonResponse<ProjectEntity> leaveProject(@PathVariable("projectId") String projectId) {
         return CommonResponse.success(projectService.leaveProject(projectId));
-    }
-
-    @PostMapping("/remove-collaborator/{projectId}/{collaboratorId}")
-    public CommonResponse<ProjectEntity> removeCollaboratorFromProject(
-            @PathVariable("projectId") String projectId,
-            @PathVariable("collaboratorId") String collaboratorId) {
-        return CommonResponse.success(projectService.removeCollaboratorFromProject(projectId, collaboratorId));
-    }
-
-    @PostMapping("/create-share-token")
-    public CommonResponse<ShareTokenCreateResponseDTO> createShareToken(@RequestBody ShareTokenCreateDTO input) {
-        return CommonResponse.success(projectService.createShareToken(input));
-    }
-
-    @DeleteMapping("/{projectId}/delete-share-token")
-    public CommonResponse<String> revokeShareToken(@PathVariable("projectId") String projectId) {
-        return CommonResponse.success(projectService.revokeShareToken(projectId));
-    }
-
-    @GetMapping("/share-token/{shareToken}")
-    public CommonResponse<ShareTokenInfoDTO> getShareTokenInfo(@PathVariable("shareToken") String shareToken) {
-        return CommonResponse.success(projectService.getShareTokenInfo(shareToken));
-    }
-
-    @PostMapping("/{projectId}/share-token/refresh")
-    public CommonResponse<ShareTokenCreateResponseDTO> refreshShareToken(
-            @PathVariable("projectId") String projectId,
-            @RequestBody ShareTokenCreateDTO input) {
-        return CommonResponse.success(projectService.refreshShareToken(projectId, input));
-    }
-
-    @GetMapping("/join-project/{shareToken}")
-    public CommonResponse<ProjectEntity> joinProject(@PathVariable("shareToken") String shareToken) {
-        return CommonResponse.success(projectService.joinProject(shareToken));
-    }
-
-    @PostMapping("/{projectId}/visibility")
-    public CommonResponse<ProjectEntity> updateProjectVisibility(
-            @PathVariable("projectId") String projectId,
-            @RequestBody ProjectVisibilityUpdateDTO dto) {
-        return CommonResponse.success(projectService.updateProjectVisibility(projectId, dto != null ? dto.getVisibility() : null));
     }
 
     @GetMapping("/{projectId}/stats")

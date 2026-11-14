@@ -53,6 +53,10 @@ public enum ErrorCode {
     PROOF_ALREADY_SUBMITTED("5604", "Proof selection already submitted", HttpStatus.CONFLICT),
     PROOF_ASSET_NOT_IN_FOLDER("5605", "Asset does not belong to the proof folder", HttpStatus.BAD_REQUEST),
 
+    ACCESS_DENIED("5701", "Access denied", HttpStatus.FORBIDDEN),
+    ACTION_NOT_ALLOWED("5702", "Action not allowed", HttpStatus.FORBIDDEN),
+    LINK_EXPIRED("5703", "Link has expired", HttpStatus.GONE),
+
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),
 

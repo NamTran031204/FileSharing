@@ -1,16 +1,4 @@
 {
-  "projectVisibilityToggle": {
-    "projectDaChuyenSang": "Project switched to {{Private}}",
-    "doiVisibilityThatBai": "Failed to change visibility",
-    "chuyenProjectSangPublic": "Switch project to Public?",
-    "moiUserDaDangNhap": "Any signed-in user can view the project, the folder tree and root-level assets.",
-    "chuyenProjectSangPrivate": "Switch project to Private?",
-    "coFolderPublicCoThe": "{{publicCount}} folder(s) are Public (they may already have proof links). Links still check permissions on every access.",
-    "chiThanhVienProjectXem": "Only project members can view.",
-    "doiPrivatePublic": "Toggle Private / Public",
-    "public": "Public",
-    "private": "Private"
-  },
   "createProjectModal": {
     "createProject": "Create Project",
     "cancel": "Cancel",
