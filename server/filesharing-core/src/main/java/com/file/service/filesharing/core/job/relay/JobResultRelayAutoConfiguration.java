@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.file.service.filesharing.core.job.JobRuntimeAutoConfiguration;
 import com.file.service.filesharing.core.job.JobRuntimeProperties;
 import com.file.service.filesharing.core.job.JobStore;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -22,7 +24,9 @@ public class JobResultRelayAutoConfiguration {
 
     @Bean
     public JobResultRelay jobResultRelay(JobStore store, KafkaTemplate<String, String> kafka, ObjectMapper mapper,
-                                         OutboxRelayProperties props, JobRuntimeProperties runtimeProps) {
+                                         OutboxRelayProperties props, JobRuntimeProperties runtimeProps,
+                                         ObjectProvider<RuntimeSettings> settings) {
+        props.attach(settings.getIfAvailable());
         return new JobResultRelay(store, kafka, mapper, props, runtimeProps);
     }
 }

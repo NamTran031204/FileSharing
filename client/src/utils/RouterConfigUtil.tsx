@@ -20,6 +20,11 @@ import DashboardPage from "../page/DashboardPage.tsx";
 import ProofGuestPage from "../page/ProofGuestPage.tsx";
 import SharedWithMePage from "../page/SharedWithMePage.tsx";
 import JoinLinkPage from "../page/JoinLinkPage.tsx";
+import AdminHomePage from "../page/admin/AdminHomePage.tsx";
+import AdminUserPage from "../page/admin/AdminUserPage.tsx";
+import AdminSettingPage from "../page/admin/AdminSettingPage.tsx";
+import AdminEmailTemplatePage from "../page/admin/AdminEmailTemplatePage.tsx";
+import AdminNodePage from "../page/admin/AdminNodePage.tsx";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -159,5 +164,17 @@ export const ROUTER_CONFIG: AppRoute[] = [
         name: 'Project Assets',
         element: <FolderAssetPage/>,
         isShow: false,
-    }
+    },
+    {
+        // trang quan tri he thong: chi ROLE_SA (FE chi la UX, backend chan that o /api/admin/**)
+        path: '/admin',
+        name: 'Admin',
+        element: <AdminHomePage/>,
+        roles: ['ROLE_SA'],
+        isShow: false,
+    },
+    {path: '/admin/users', name: 'Admin Users', element: <AdminUserPage/>, roles: ['ROLE_SA'], isShow: false},
+    {path: '/admin/settings', name: 'Admin Settings', element: <AdminSettingPage/>, roles: ['ROLE_SA'], isShow: false},
+    {path: '/admin/email-templates', name: 'Admin Email Templates', element: <AdminEmailTemplatePage/>, roles: ['ROLE_SA'], isShow: false},
+    {path: '/admin/nodes', name: 'Admin Nodes', element: <AdminNodePage/>, roles: ['ROLE_SA'], isShow: false},
 ];

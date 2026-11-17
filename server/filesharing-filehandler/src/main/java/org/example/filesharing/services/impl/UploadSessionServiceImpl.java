@@ -6,6 +6,8 @@ import com.file.service.filesharing.core.enums.UploadMode;
 import com.file.service.filesharing.core.enums.UploadSessionStatus;
 import com.file.service.filesharing.core.enums.UploadStatus;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +29,6 @@ import org.example.filesharing.services.StorageService;
 import org.example.filesharing.services.UploadSessionService;
 import org.example.filesharing.utils.access.Action;
 import org.example.filesharing.utils.access.ResourceRef;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.convert.DurationStyle;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -53,8 +53,6 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     private static final long SMALL_FILE_THRESHOLD = 8_388_608L; // 8 MiB
     private static final long[] PART_SIZE_STEPS = {8_388_608L, 16_777_216L, 33_554_432L, 67_108_864L}; // 8/16/32/64 MiB
     private static final int S3_MAX_PARTS = 10_000;
-    private static final Duration HARD_EXPIRY = Duration.ofDays(7);
-    private static final int INITIAL_URL_BATCH_SIZE = 20;
     private static final int MAX_URL_BATCH_SIZE = 50;
 
     private final UploadSessionRepo uploadSessionRepo;
@@ -67,36 +65,16 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     private final MinIoService minIoService;
     private final AccessService accessService;
 
-    @Value("${upload.max-file-size}")
-    private long maxFileSize;
-
-    @Value("${upload.verify-etag-md5}")
-    private boolean verifyEtagMd5;
-
-    @Value("${upload.max-sessions-per-user}")
-    private int maxSessionsPerUser;
-
-    private Duration sessionIdleTtl;
-
-    @Value("${upload.session-idle-ttl}")
-    public void setSessionIdleTtl(String rawSessionIdleTtl) {
-        this.sessionIdleTtl = DurationStyle.detectAndParse(rawSessionIdleTtl);
-    }
-
-    private Duration partUrlTtl;
-
-    @Value("${upload.part-url-ttl}")
-    public void setPartUrlTtl(String rawPartUrlTtl) {
-        this.partUrlTtl = DurationStyle.detectAndParse(rawPartUrlTtl);
-    }
+    // key LIVE doc tai thoi diem dung, khong cache trong field
+    private final RuntimeSettings settings;
 
     @Override
     public void ensureSessionQuota(String ownerId) {
         long openSessions = uploadSessionRepo.countByOwnerIdAndStatusIn(
                 ownerId, List.of(UploadSessionStatus.INITIATED, UploadSessionStatus.UPLOADING));
-        if (openSessions >= maxSessionsPerUser) {
+        if (openSessions >= settings.intValue(SettingKey.UPLOAD_MAX_SESSIONS_PER_USER)) {
             throw new FileBusinessException(ErrorCode.SESSION_LIMIT_EXCEEDED,
-                    "Too many concurrent upload sessions: " + maxSessionsPerUser);
+                    "Too many concurrent upload sessions: " + settings.intValue(SettingKey.UPLOAD_MAX_SESSIONS_PER_USER));
         }
     }
 
@@ -106,8 +84,8 @@ public class UploadSessionServiceImpl implements UploadSessionService {
         if (declaredSize <= 0) {
             throw new FileBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
-        if (declaredSize > maxFileSize) {
-            throw new FileBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
+        if (declaredSize > settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes()) {
+            throw new FileBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes() + " bytes");
         }
         ensureSessionQuota(ownerId);
 
@@ -115,7 +93,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
         int partCount = (int) Math.ceil(declaredSize / (double) partSize);
 
         Instant now = Instant.now();
-        Instant hardExpiresAt = now.plus(HARD_EXPIRY);
+        Instant hardExpiresAt = now.plus(settings.duration(SettingKey.UPLOAD_SESSION_HARD_EXPIRY));
 
         UploadSessionEntity session = UploadSessionEntity.builder()
                 .sessionId(UUID.randomUUID().toString())
@@ -151,7 +129,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
     }
 
     private Instant slideExpiry(Instant now, Instant hardExpiresAt) {
-        Instant slidingExpiry = now.plus(sessionIdleTtl);
+        Instant slidingExpiry = now.plus(settings.duration(SettingKey.UPLOAD_SESSION_IDLE_TTL));
         return slidingExpiry.isAfter(hardExpiresAt) ? hardExpiresAt : slidingExpiry;
     }
 
@@ -210,7 +188,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
 
     @Override
     public UploadSessionInitResponseDto buildInitResponse(UploadSessionEntity session) {
-        int batchSize = Math.min(session.getPartCount(), INITIAL_URL_BATCH_SIZE);
+        int batchSize = Math.min(session.getPartCount(), settings.intValue(SettingKey.UPLOAD_INITIAL_URL_BATCH));
         Map<Integer, String> urls = presignParts(session, rangeClosed(1, batchSize));
 
         return UploadSessionInitResponseDto.builder()
@@ -220,7 +198,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
                 .partCount(session.getPartCount())
                 .declaredSize(session.getDeclaredSize())
                 .urls(urls)
-                .urlExpiresAt(Instant.now().plus(partUrlTtl))
+                .urlExpiresAt(Instant.now().plus(settings.duration(SettingKey.UPLOAD_PART_URL_TTL)))
                 .expiresAt(session.getExpiresAt())
                 .hardExpiresAt(session.getHardExpiresAt())
                 .build();
@@ -264,7 +242,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
         return PartUrlBatchResponseDto.builder()
                 .sessionId(touched.getSessionId())
                 .urls(urls)
-                .urlExpiresAt(Instant.now().plus(partUrlTtl))
+                .urlExpiresAt(Instant.now().plus(settings.duration(SettingKey.UPLOAD_PART_URL_TTL)))
                 .expiresAt(touched.getExpiresAt())
                 .build();
     }
@@ -436,7 +414,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
                 throw new FileBusinessException(ErrorCode.SIZE_MISMATCH,
                         "Expected " + session.getDeclaredSize() + " bytes, got " + head.contentLength());
             }
-            if (verifyEtagMd5) {
+            if (settings.boolValue(SettingKey.UPLOAD_VERIFY_ETAG_MD5)) {
                 String md5 = partMd5.get(1);
                 if (md5 == null) {
                     throw new FileBusinessException(ErrorCode.CHECKSUM_MISMATCH, "Missing md5 for part 1");
@@ -483,7 +461,7 @@ public class UploadSessionServiceImpl implements UploadSessionService {
                 throw new FileBusinessException(ErrorCode.CHECKSUM_MISMATCH, "Missing md5 for part " + missingMd5.get(0));
             }
 
-            if (verifyEtagMd5) {
+            if (settings.boolValue(SettingKey.UPLOAD_VERIFY_ETAG_MD5)) {
                 List<Integer> mismatched = new ArrayList<>();
                 for (StorageService.PartSummary ps : listParts) {
                     String expected = partMd5.get(ps.partNumber());

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.services.JwtService;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
@@ -53,7 +57,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
             // Validate token với user details
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            // khoa tai khoan hoac thu hoi phien co hieu luc ngay
+            if (userDetails.isEnabled() && jwtService.isTokenValid(jwt, userDetails)
+                    && !isRevoked(jwt, userDetails)) {
 
                 // Tạo Authentication object
                 // UsernamePasswordAuthenticationToken là implementation của Authentication
@@ -76,5 +82,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Continue với filter tiếp theo trong chain
         filterChain.doFilter(request, response);
+    }
+
+    // iat cat ve giay nho hon moc thu hoi, thieu iat ma co moc thi tu choi
+    private boolean isRevoked(String jwt, UserDetails userDetails) {
+        if (!(userDetails instanceof UserEntity user) || user.getSessionsValidAfter() == null) {
+            return false;
+        }
+        Date iat = jwtService.extractIssuedAt(jwt);
+        if (iat == null) return true;
+        Instant issuedAt = Instant.ofEpochSecond(iat.getTime() / 1000);
+        return issuedAt.isBefore(user.getSessionsValidAfter().truncatedTo(ChronoUnit.SECONDS));
     }
 }

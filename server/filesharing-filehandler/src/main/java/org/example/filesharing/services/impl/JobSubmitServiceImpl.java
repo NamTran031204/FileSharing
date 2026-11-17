@@ -1,5 +1,7 @@
 package org.example.filesharing.services.impl;
 
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
 import com.file.service.filesharing.core.enums.MediaType;
@@ -8,7 +10,6 @@ import com.file.service.filesharing.core.enums.ProcessingJobType;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.example.filesharing.services.JobSubmitService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -27,12 +28,12 @@ public class JobSubmitServiceImpl implements JobSubmitService {
     private static final Set<String> RAW_EXTENSIONS = Set.of("cr2", "nef", "arw");
 
     private final MongoTemplate mongoTemplate;
-    private final int maxRetries;
+    private final RuntimeSettings settings;
 
     public JobSubmitServiceImpl(MongoTemplate mongoTemplate,
-                                @Value("${job-submit.max-retries:3}") int maxRetries) {
+                                RuntimeSettings settings) {
         this.mongoTemplate = mongoTemplate;
-        this.maxRetries = maxRetries;
+        this.settings = settings;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class JobSubmitServiceImpl implements JobSubmitService {
                 .setOnInsert("createdAt", now)
                 .setOnInsert("scheduledAt", now)
                 .setOnInsert("retryCount", 0)
-                .setOnInsert("maxRetries", maxRetries)
+                .setOnInsert("maxRetries", settings.intValue(SettingKey.JOB_MAX_RETRIES))
                 .setOnInsert("priority", 1)
                 .setOnInsert("objectName", metadata.getObjectName())
                 .setOnInsert("assetId", metadata.getAssetId())

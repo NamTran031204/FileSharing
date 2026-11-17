@@ -8,6 +8,7 @@ import com.file.service.filesharing.core.job.JobExecutor;
 import com.file.service.filesharing.core.job.OutputObject;
 import com.file.service.filesharing.core.job.exception.PermanentJobException;
 import com.file.service.filesharing.core.job.exception.TransientJobException;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
 import com.file.service.filesharingimagecodec.storage.MinioStorageClient;
 import jakarta.annotation.PostConstruct;
@@ -29,7 +30,7 @@ public class ImageJobExecutor implements JobExecutor {
 
     private final ImageProcessingConfig config;
     private final MinioStorageClient storageClient;
-    private VipsTool vips;
+    private final RuntimeSettings settings;
 
     @Value("${minio.buckets.thumbnails}")
     private String thumbnailBucket;
@@ -48,14 +49,16 @@ public class ImageJobExecutor implements JobExecutor {
 
     @PostConstruct
     void verifyTools() {
-        vips = new VipsTool(config);
-        vips.verify();
+        // chi de kiem duong dan cong cu luc khoi dong; moi job tao VipsTool rieng trong process
+        new VipsTool(config, settings).verify();
     }
 
     @Override
     public JobExecution process(JobContext ctx) throws PermanentJobException, TransientJobException {
         Path input = ctx.inputFile();
         String objectName = ctx.job().getObjectName();
+        // chup setting image.* o dau job
+        VipsTool vips = new VipsTool(config, settings);
 
         VipsTool.Header h;
         try (JobContext.Stage st = ctx.stage("probe", 30, 35)) {

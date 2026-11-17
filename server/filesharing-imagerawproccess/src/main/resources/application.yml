@@ -1,3 +1,7 @@
+# loai node hien tren trang quan tri (WORKER duoc drain)
+node:
+  kind: WORKER
+
 server:
   port: 5003
 
@@ -29,14 +33,11 @@ minio:
 raw:
   processing:
     exiftool-path: ${EXIFTOOL_PATH:exiftool}
-    command-timeout: 30s
-    lock-wait: 60s
 
 resilience4j:
   bulkhead:
     instances:
       raw-processor:
-        maxConcurrentCalls: 2
         maxWaitDuration: 0ms
 
 job-runtime:

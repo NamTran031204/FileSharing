@@ -1,3 +1,6 @@
 com.file.service.filesharing.core.CoreAutoConfiguration
 com.file.service.filesharing.core.job.JobRuntimeAutoConfiguration
 com.file.service.filesharing.core.job.relay.JobResultRelayAutoConfiguration
+com.file.service.filesharing.core.setting.SettingAutoConfiguration
+com.file.service.filesharing.core.mail.MailAutoConfiguration
+com.file.service.filesharing.core.node.NodeHeartbeatAutoConfiguration

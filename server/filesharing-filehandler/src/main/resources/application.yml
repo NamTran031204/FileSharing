@@ -1,3 +1,7 @@
+# loai node hien tren trang quan tri (WORKER duoc drain)
+node:
+  kind: API
+
 server:
   port: 5000
 
@@ -17,20 +21,6 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${GMAIL_USERNAME}
-    password: ${GMAIL_APP_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}
     producer:
@@ -83,22 +73,20 @@ minio:
 #  secret-key: ZXd4xWM3hmiTZbgGVZ+LUJG2suVh0Vr3QiPjZjn0
 
 upload:
-  max-file-size: 53687091200
-  part-url-ttl: 900s
-  max-threads: 6
-  session-idle-ttl: 86400s
-  max-sessions-per-user: 20
-  verify-etag-md5: true
   gc-interval: 900s
   reconcile-interval: 86400s
+
+admin:
+  # tai khoan admin khoi tao lan dau, chi luu hash bcrypt, ghi de bang env ADMIN_SEED_PASSWORD_HASH
+  seed:
+    email: tpnam0312@gmail.com
+    public-user-name: Admin
+    password-hash: "${ADMIN_SEED_PASSWORD_HASH:$2a$10$Ya4nVPoHAUI2q3kQC.qrGuoWrZEl99F/VV/trGNN5oEISZWbHBBia}"
 
 application:
   security:
     jwt:
-      expiration: 86400000 # 24 hours
       secret-key: ${JWT_SECRET_KEY}
-      refresh-token:
-        expiration: 604800000     # 7 days
 
 google:
   oauth:

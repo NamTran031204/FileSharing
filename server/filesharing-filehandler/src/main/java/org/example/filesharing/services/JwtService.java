@@ -1,5 +1,7 @@
 package org.example.filesharing.services;
 
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -21,11 +23,12 @@ public class JwtService {
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+    // ttl doc luc cap token (LIVE), khong cache trong field
+    private final RuntimeSettings settings;
 
-    @Value("${application.security.jwt.refresh-token.expiration}")
-    private long refreshExpiration;
+    public JwtService(RuntimeSettings settings) {
+        this.settings = settings;
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -41,11 +44,11 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        return buildToken(extraClaims, userDetails, settings.duration(SettingKey.AUTH_JWT_ACCESS_TTL).toMillis());
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+        return buildToken(new HashMap<>(), userDetails, settings.duration(SettingKey.AUTH_JWT_REFRESH_TTL).toMillis());
     }
 
     private String buildToken(
@@ -69,6 +72,10 @@ public class JwtService {
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     private Date extractExpiration(String token) {
@@ -95,7 +102,7 @@ public class JwtService {
         claims.put("provider", provider.name());
         if (providerId != null) claims.put("providerId", providerId);
         String accessToken = generateToken(claims, userDetails);
-        String refreshToken = buildToken(claims, userDetails, refreshExpiration);
+        String refreshToken = buildToken(claims, userDetails, settings.duration(SettingKey.AUTH_JWT_REFRESH_TTL).toMillis());
         return new TokenPair(accessToken, refreshToken);
     }
 }

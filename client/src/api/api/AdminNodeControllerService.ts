@@ -1,15 +1,13 @@
 import {
-  type CommonResponseProcessingJobEntity,
-  type ProcessingJobEntity,
-  type ProcessingJobType,
-  type ProcessingJobConfig,
-  type ProcessingJobStatus,
-  type ProcessingJobProgress,
-  type ProcessingJobResult,
-  type JobErrorEntry,
-  type Kind,
-  type JobResourceUsage,
-  type ToolRun,
+  type AdminNodeDrainRequestDto,
+  type CommonResponseAdminNodeDto,
+  type AdminNodeDto,
+  type Cpu,
+  type Memory,
+  type Worker,
+  type Sample,
+  type AdminNodeRunningJobDto,
+  type CommonResponseListAdminNodeDto,
   type IList,
   type List,
   type IListResult,
@@ -25,7 +23,7 @@ import {
   basePath
 } from './index.defs';
 
-export class AdminProcessingControllerService {
+export class AdminNodeControllerService {
   /** Generate by swagger-axios-codegen */
   // @ts-nocheck
   /* eslint-disable */
@@ -33,18 +31,24 @@ export class AdminProcessingControllerService {
   /**
    *
    */
-  static cancel(
+  static drain(
     params: {
       /**  */
-      jobId: string;
+      nodeId: string;
+      /** requestBody */
+      body?: AdminNodeDrainRequestDto;
     } = {} as any,
     options: IRequestOptions = {}
-  ): Promise<CommonResponseProcessingJobEntity> {
+  ): Promise<CommonResponseAdminNodeDto> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/admin/processing/job/cancel/{jobId}';
-      url = url.replace('{jobId}', params['jobId'] + '');
+      let url = basePath + '/api/admin/nodes/{nodeId}/drain';
+      url = url.replace('{nodeId}', params['nodeId'] + '');
 
       const configs: IRequestConfig = getConfigs('post', 'application/json', url, options);
+
+      let data = params.body;
+
+      configs.data = data;
 
       axios(configs, resolve, reject);
     });
@@ -52,16 +56,9 @@ export class AdminProcessingControllerService {
   /**
    *
    */
-  static job(
-    params: {
-      /**  */
-      jobId: string;
-    } = {} as any,
-    options: IRequestOptions = {}
-  ): Promise<CommonResponseProcessingJobEntity> {
+  static nodes(options: IRequestOptions = {}): Promise<CommonResponseListAdminNodeDto> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/admin/processing/job/{jobId}';
-      url = url.replace('{jobId}', params['jobId'] + '');
+      let url = basePath + '/api/admin/nodes';
 
       const configs: IRequestConfig = getConfigs('get', 'application/json', url, options);
 

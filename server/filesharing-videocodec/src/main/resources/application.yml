@@ -1,3 +1,7 @@
+# loai node hien tren trang quan tri (WORKER duoc drain)
+node:
+  kind: WORKER
+
 server:
   port: 5004
 
@@ -28,20 +32,11 @@ video:
     ffmpeg:
       path: ${FFMPEG_PATH:ffmpeg}
       ffprobe-path: ${FFPROBE_PATH:ffprobe}
-      timeout: 3600000
-      probe-timeout: 60000
-      threads-per-process: 2
-      crf: 23
-      preset: medium
-    segment:
-      duration: 6
-      audio-bitrate: 128k
 
 resilience4j:
   bulkhead:
     instances:
       ffmpeg-encoder:
-        maxConcurrentCalls: 2
         maxWaitDuration: 0ms
 
 job-runtime:

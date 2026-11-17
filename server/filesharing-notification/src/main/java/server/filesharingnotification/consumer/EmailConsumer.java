@@ -1,6 +1,8 @@
 package server.filesharingnotification.consumer;
 
 import jakarta.mail.MessagingException;
+import com.file.service.filesharing.core.exceptions.ErrorCode;
+import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,6 +37,15 @@ public class EmailConsumer {
 
             acknowledgment.acknowledge();
             log.info("Message acknowledged successfully for: {}", messages.getToEmail());
+        } catch (FileBusinessException e) {
+            if (e.getErrorCode() == ErrorCode.SETTING_CIPHER_FAILED) {
+                // khong ack de message duoc gui lai sau khi SA sua khoa/mat khau; chi log ma loi, khong log secret
+                log.error("Khong gui duoc email den {}: SETTING_CIPHER_FAILED (kiem tra JASYPT_ENCRYPTOR_PASSWORD), khong ack",
+                        messages.getToEmail());
+            } else {
+                log.error("Email loi nghiep vu {}, bo qua message", e.getErrorCode());
+                acknowledgment.acknowledge();
+            }
         } catch (MessagingException e) {
             log.error("Failed to send email to {}: {}", messages.getToEmail(), e.getMessage(), e);
         } catch (Exception e) {

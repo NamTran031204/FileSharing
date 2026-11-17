@@ -77,7 +77,8 @@ class ProofPublicServiceImplTest {
         messageSource = mock(MessageSource.class);
         service = new ProofPublicServiceImpl(messageSource, folderRepo, projectRepo, assetRepo,
                 mock(MetadataRepo.class), proofSelectionRepo, notificationRepo, userRepo, mongoTemplate,
-                mock(MinIoService.class));
+                mock(MinIoService.class),
+                new com.file.service.filesharing.core.setting.RuntimeSettings(mongoTemplate, null, new org.springframework.mock.env.MockEnvironment(), java.time.Duration.ofSeconds(10)));
 
         // proof chi xet link cua folder
         folder = FolderEntity.builder().folderId(F2).projectId(PX).folderName("RAW noi bo")

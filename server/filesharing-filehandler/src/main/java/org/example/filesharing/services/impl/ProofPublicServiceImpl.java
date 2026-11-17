@@ -1,5 +1,7 @@
 package org.example.filesharing.services.impl;
 
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharing.core.entity.PageResult;
 import com.file.service.filesharing.core.entity.models.AssetEntity;
 import com.file.service.filesharing.core.entity.models.FolderEntity;
@@ -38,13 +40,13 @@ import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.MinIoService;
 import org.example.filesharing.services.ProofPublicService;
 import org.example.filesharing.utils.ProofTokenUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -67,11 +69,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProofPublicServiceImpl implements ProofPublicService {
 
-    private static final int MAX_NAME_LENGTH = 100;
-    private static final int MAX_NOTE_LENGTH = 1000;
-    private static final int MAX_SUBMIT_ASSETS = 5000;
-    private static final int MAX_PAGE_SIZE = 100;
-    private static final int PREVIEW_URL_SECONDS = 3600;
     // ponytail: thong bao luu DB mot ngon ngu (vi) vi chua co ngon ngu uu tien cua owner; them truong locale cho user neu can
     private static final Locale NOTIFY_LOCALE = Locale.forLanguageTag("vi");
 
@@ -85,6 +82,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
     private final UserRepo userRepo;
     private final MongoTemplate mongoTemplate;
     private final MinIoService minIoService;
+    private final RuntimeSettings settings;
 
     @Value("${minio.buckets.image-preview}")
     private String imagePreviewBucket;
@@ -103,7 +101,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
         FolderEntity folder = resolveLink(shareToken);
 
         String name = request != null && request.getGuestName() != null ? request.getGuestName().trim() : "";
-        if (name.isEmpty() || name.length() > MAX_NAME_LENGTH) {
+        if (name.isEmpty() || name.length() > settings.intValue(SettingKey.PROOF_MAX_NAME_LENGTH)) {
             throw new FileBusinessException(ErrorCode.BAD_REQUEST, "Ten khach phai tu 1 den 100 ky tu");
         }
 
@@ -133,7 +131,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
         resolveSession(folder, guestKey);
 
         int safePage = Math.max(page, 0);
-        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        int safeSize = Math.min(Math.max(size, 1), settings.intValue(SettingKey.PROOF_MAX_PAGE_SIZE));
 
         Query countQuery = buildImageQuery(folder.getFolderId());
         long total = mongoTemplate.count(countQuery, AssetEntity.class);
@@ -188,11 +186,11 @@ public class ProofPublicServiceImpl implements ProofPublicService {
         List<String> assetIds = request != null && request.getAssetIds() != null
                 ? new ArrayList<>(new LinkedHashSet<>(request.getAssetIds()))
                 : List.of();
-        if (assetIds.isEmpty() || assetIds.size() > MAX_SUBMIT_ASSETS) {
+        if (assetIds.isEmpty() || assetIds.size() > settings.intValue(SettingKey.PROOF_MAX_SUBMIT_ASSETS)) {
             throw new FileBusinessException(ErrorCode.BAD_REQUEST, "Danh sach anh phai tu 1 den 5000");
         }
         String note = request.getNote() != null ? request.getNote().trim() : null;
-        if (note != null && note.length() > MAX_NOTE_LENGTH) {
+        if (note != null && note.length() > settings.intValue(SettingKey.PROOF_MAX_NOTE_LENGTH)) {
             throw new FileBusinessException(ErrorCode.BAD_REQUEST, "Loi nhan toi da 1000 ky tu");
         }
         if (note != null && note.isEmpty()) {
@@ -292,7 +290,7 @@ public class ProofPublicServiceImpl implements ProofPublicService {
             return null;
         }
         try {
-            return minIoService.generatePresignedUrl(imagePreviewBucket, version.getObjectName(), PREVIEW_URL_SECONDS);
+            return minIoService.generatePresignedUrl(imagePreviewBucket, version.getObjectName(), (int) settings.duration(SettingKey.PROOF_PREVIEW_URL_TTL).toSeconds());
         } catch (Exception e) {
             log.error("khong tao duoc preview url cho asset {}: {}", version.getAssetId(), e.getMessage());
             return null;

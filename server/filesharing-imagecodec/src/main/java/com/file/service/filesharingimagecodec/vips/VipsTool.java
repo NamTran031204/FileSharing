@@ -7,6 +7,8 @@ import com.file.service.filesharing.core.job.tool.LineParser;
 import com.file.service.filesharing.core.job.tool.ToolCommand;
 import com.file.service.filesharing.core.job.tool.ToolResult;
 import com.file.service.filesharing.core.job.tool.ToolRunner;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharingimagecodec.config.ImageProcessingConfig;
 
 import java.io.IOException;
@@ -30,12 +32,23 @@ public final class VipsTool {
     public record Header(int width, int height, String loader, int orientation) {
     }
 
-    private final ImageProcessingConfig.VipsConfig vips;
-    private final ImageProcessingConfig.OutputConfig output;
+    // Anh chup setting image.* luc tao; executor tao 1 VipsTool moi cho moi job nen khong doi giua chung
+    private record Live(Duration timeout, long maxPixels, int concurrency, List<String> allowedLoaders,
+                        int webpQuality, int webpEffort, int thumbnailWidth, int previewMaxEdge) {
+        static Live read(RuntimeSettings s) {
+            return new Live(s.duration(SettingKey.IMAGE_PROCESSING_TIMEOUT), s.longValue(SettingKey.IMAGE_MAX_PIXELS),
+                    s.intValue(SettingKey.IMAGE_VIPS_CONCURRENCY), s.list(SettingKey.IMAGE_ALLOWED_LOADERS),
+                    s.intValue(SettingKey.IMAGE_WEBP_QUALITY), s.intValue(SettingKey.IMAGE_WEBP_EFFORT),
+                    s.intValue(SettingKey.IMAGE_THUMBNAIL_WIDTH), s.intValue(SettingKey.IMAGE_PREVIEW_MAX_EDGE));
+        }
+    }
 
-    public VipsTool(ImageProcessingConfig cfg) {
+    private final ImageProcessingConfig.VipsConfig vips;
+    private final Live live;
+
+    public VipsTool(ImageProcessingConfig cfg, RuntimeSettings settings) {
         this.vips = cfg.getVips();
-        this.output = cfg.getOutput();
+        this.live = Live.read(settings);
     }
 
     // Sai duong dan cong cu thi worker khong khoi dong
@@ -61,12 +74,12 @@ public final class VipsTool {
     private Map<String, String> env() {
         Map<String, String> env = new HashMap<>();
         env.put("VIPS_BLOCK_UNTRUSTED", "1");
-        env.put("VIPS_CONCURRENCY", String.valueOf(vips.getConcurrency()));
+        env.put("VIPS_CONCURRENCY", String.valueOf(live.concurrency()));
         return env;
     }
 
     private Duration timeout() {
-        return Duration.ofSeconds(vips.getProcessingTimeoutSeconds());
+        return live.timeout();
     }
 
     public Header probe(JobContext ctx, Path input) throws PermanentJobException, TransientJobException {
@@ -75,7 +88,7 @@ public final class VipsTool {
                 timeout(), List.of(), env(), (stderr, line) -> {
                     if (!stderr && out.length() < 256 * 1024) out.append(line).append('\n');
                 }));
-        return classify(r, out.toString(), vips.getMaxPixels(), vips.getAllowedLoaders());
+        return classify(r, out.toString(), live.maxPixels(), live.allowedLoaders());
     }
 
     static Header classify(ToolResult r, String stdout, long maxPixels, List<String> allowedLoaders)
@@ -137,16 +150,16 @@ public final class VipsTool {
 
     // Preview: canh dai <= previewMaxEdge, khong phong to, WebP Q/effort, doi ve sRGB, bo metadata (RES 2.10)
     public void preview(JobContext ctx, Path input, Path out) throws TransientJobException {
-        String target = out + "[Q=" + output.getWebpQuality() + ",effort=" + output.getWebpEffort() + ",keep=none]";
-        run(ctx, List.of(vips.getPath(), "thumbnail", input.toString(), target, String.valueOf(output.getPreviewMaxEdge()),
+        String target = out + "[Q=" + live.webpQuality() + ",effort=" + live.webpEffort() + ",keep=none]";
+        run(ctx, List.of(vips.getPath(), "thumbnail", input.toString(), target, String.valueOf(live.previewMaxEdge()),
                 "--size", "down", "--export-profile", "srgb", "--vips-progress"), out,
                 progressParser(0.0, 0.9, "PREVIEW", ctx::progress));
     }
 
     // Thumbnail: rong thumbnailWidth (chieu cao tu do), khong phong to
     public void thumbnail(JobContext ctx, Path input, Path out) throws TransientJobException {
-        String target = out + "[Q=" + output.getWebpQuality() + ",keep=none]";
-        run(ctx, List.of(vips.getPath(), "thumbnail", input.toString(), target, String.valueOf(output.getThumbnailWidth()),
+        String target = out + "[Q=" + live.webpQuality() + ",keep=none]";
+        run(ctx, List.of(vips.getPath(), "thumbnail", input.toString(), target, String.valueOf(live.thumbnailWidth()),
                 "--height", "100000", "--size", "down", "--export-profile", "srgb", "--vips-progress"), out,
                 progressParser(0.9, 1.0, "THUMB", ctx::progress));
     }

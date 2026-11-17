@@ -45,7 +45,9 @@ class JobSubmitServiceImplIT {
     void setUp() {
         mongo.dropCollection("processing_jobs");
         mongo.dropCollection("metadata");
-        service = new JobSubmitServiceImpl(mongo, 3);
+        service = new JobSubmitServiceImpl(mongo,
+                new com.file.service.filesharing.core.setting.RuntimeSettings(mongo, null,
+                        new org.springframework.mock.env.MockEnvironment(), java.time.Duration.ofSeconds(10)));
     }
 
     private MetadataEntity meta(String objectName, MediaType type) {

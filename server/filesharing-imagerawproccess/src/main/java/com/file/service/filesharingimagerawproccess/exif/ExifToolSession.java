@@ -43,8 +43,9 @@ public class ExifToolSession implements AutoCloseable {
     }
 
     private final List<String> launch;
-    private final Duration commandTimeout;
-    private final Duration lockWait;
+    // doi duoc luc chay (raw.command-timeout, raw.lock-wait); executor dat lai o dau moi job
+    private volatile Duration commandTimeout;
+    private volatile Duration lockWait;
     private final ReentrantLock lock = new ReentrantLock(true);
 
     // chi doc/ghi khi dang giu khoa
@@ -58,6 +59,11 @@ public class ExifToolSession implements AutoCloseable {
     /** launch: lenh goc (duong dan exiftool), phien them -stay_open True -@ -. */
     public ExifToolSession(List<String> launch, Duration commandTimeout, Duration lockWait) {
         this.launch = List.copyOf(launch);
+        this.commandTimeout = commandTimeout;
+        this.lockWait = lockWait;
+    }
+
+    public void setTimeouts(Duration commandTimeout, Duration lockWait) {
         this.commandTimeout = commandTimeout;
         this.lockWait = lockWait;
     }

@@ -57,6 +57,17 @@ public enum ErrorCode {
     ACTION_NOT_ALLOWED("5702", "Action not allowed", HttpStatus.FORBIDDEN),
     LINK_EXPIRED("5703", "Link has expired", HttpStatus.GONE),
 
+    // Trang quan tri SA: tai khoan, setting, email template, node
+    ADMIN_SELF_ACTION_FORBIDDEN("5801", "Admin cannot perform this action on own account", HttpStatus.BAD_REQUEST),
+    ADMIN_LAST_SA("5802", "Cannot remove the last system administrator", HttpStatus.CONFLICT),
+    SETTING_UNKNOWN_KEY("5803", "Unknown setting key", HttpStatus.BAD_REQUEST),
+    SETTING_INVALID_VALUE("5804", "Invalid setting value", HttpStatus.BAD_REQUEST),
+    SETTING_CIPHER_FAILED("5805", "Setting cipher failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    EMAIL_TEMPLATE_INVALID("5806", "Email template is invalid", HttpStatus.BAD_REQUEST),
+    MAIL_TEST_FAILED("5807", "Mail test failed", HttpStatus.BAD_GATEWAY),
+    NODE_NOT_FOUND("5808", "Node not found", HttpStatus.NOT_FOUND),
+    SETTING_READ_ONLY("5809", "Setting group is read-only", HttpStatus.BAD_REQUEST),
+
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),
 

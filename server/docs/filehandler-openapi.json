@@ -69,6 +69,195 @@
         }
       }
     },
+    "/api/admin/users/{userId}/roles" : {
+      "put" : {
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "updateRoles",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminRoleUpdateDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/settings/{group}" : {
+      "put" : {
+        "tags" : [ "admin-setting-controller" ],
+        "operationId" : "updateGroup",
+        "parameters" : [ {
+          "name" : "group",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Origin",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminSettingUpdateRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListAdminSettingItemDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-templates/{code}/{locale}" : {
+      "get" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "get",
+        "parameters" : [ {
+          "name" : "code",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "locale",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminEmailTemplateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "update",
+        "parameters" : [ {
+          "name" : "code",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "locale",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminEmailTemplateUpdateDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminEmailTemplateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/access/{type}/{id}/settings" : {
       "put" : {
         "tags" : [ "access-controller" ],
@@ -2250,12 +2439,49 @@
         }
       }
     },
-    "/api/admin/processing/job/cancel/{jobId}" : {
+    "/api/admin/users" : {
       "post" : {
-        "tags" : [ "admin-processing-controller" ],
-        "operationId" : "cancelJob",
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminCreateUserRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{userId}/unlock" : {
+      "post" : {
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "unlock",
         "parameters" : [ {
-          "name" : "jobId",
+          "name" : "userId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -2268,7 +2494,369 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseProcessingJobEntity"
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{userId}/revoke-sessions" : {
+      "post" : {
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "revokeSessions",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{userId}/lock" : {
+      "post" : {
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "lock",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/get-paged" : {
+      "post" : {
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "getPaged",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoAdminUserFilterDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAdminUserRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/settings/{key}/reset" : {
+      "post" : {
+        "tags" : [ "admin-setting-controller" ],
+        "operationId" : "reset",
+        "parameters" : [ {
+          "name" : "key",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Origin",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminSettingItemDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/settings/mail/test" : {
+      "post" : {
+        "tags" : [ "admin-setting-controller" ],
+        "operationId" : "testMail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMailTestRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminMailTestResultDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/nodes/{nodeId}/drain" : {
+      "post" : {
+        "tags" : [ "admin-node-controller" ],
+        "operationId" : "drain",
+        "parameters" : [ {
+          "name" : "nodeId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminNodeDrainRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminNodeDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-templates/{code}/{locale}/send-test" : {
+      "post" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "sendTest",
+        "parameters" : [ {
+          "name" : "code",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "locale",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMailTestRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseBoolean"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-templates/{code}/{locale}/reset" : {
+      "post" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "reset",
+        "parameters" : [ {
+          "name" : "code",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "locale",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminEmailTemplateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-templates/preview" : {
+      "post" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "preview",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminEmailPreviewRequestDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminEmailPreviewDto"
                 }
               }
             }
@@ -3799,12 +4387,12 @@
         }
       }
     },
-    "/api/admin/processing/job/{jobId}" : {
+    "/api/admin/users/{userId}" : {
       "get" : {
-        "tags" : [ "admin-processing-controller" ],
-        "operationId" : "getJob",
+        "tags" : [ "admin-user-controller" ],
+        "operationId" : "getDetail",
         "parameters" : [ {
-          "name" : "jobId",
+          "name" : "userId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -3817,7 +4405,88 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CommonResponseProcessingJobEntity"
+                  "$ref" : "#/components/schemas/CommonResponseAdminUserDetailDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/settings" : {
+      "get" : {
+        "tags" : [ "admin-setting-controller" ],
+        "operationId" : "getAll",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListAdminSettingGroupDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/nodes" : {
+      "get" : {
+        "tags" : [ "admin-node-controller" ],
+        "operationId" : "getAll",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListAdminNodeDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-templates" : {
+      "get" : {
+        "tags" : [ "admin-email-template-controller" ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListAdminEmailTemplateRowDto"
                 }
               }
             }
@@ -4169,6 +4838,226 @@
       "UserGrantedRole" : {
         "type" : "string",
         "enum" : [ "ROLE_USER", "ROLE_ADMIN", "ROLE_SA" ]
+      },
+      "AdminRoleUpdateDto" : {
+        "required" : [ "roles" ],
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserGrantedRole"
+            }
+          }
+        }
+      },
+      "AdminUserRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "publicUserName" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserGrantedRole"
+            }
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
+          "providers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuthProvider"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastLoginAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAdminUserRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminUserRowDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminSettingUpdateRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "values" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "clear" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "AdminSettingItemDto" : {
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "group" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "apply" : {
+            "type" : "string"
+          },
+          "secret" : {
+            "type" : "boolean"
+          },
+          "value" : {
+            "type" : "string"
+          },
+          "maskedSet" : {
+            "type" : "boolean"
+          },
+          "defaultValue" : {
+            "type" : "string"
+          },
+          "overridden" : {
+            "type" : "boolean"
+          },
+          "min" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "max" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedBy" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseListAdminSettingItemDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminSettingItemDto"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminEmailTemplateUpdateDto" : {
+        "type" : "object",
+        "properties" : {
+          "subject" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminEmailTemplateDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "locale" : {
+            "type" : "string"
+          },
+          "subject" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "overridden" : {
+            "type" : "boolean"
+          },
+          "variables" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedBy" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseAdminEmailTemplateDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminEmailTemplateDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
       },
       "AccessSettingsRequestDTO" : {
         "type" : "object",
@@ -6931,14 +7820,67 @@
           }
         }
       },
-      "CommonResponseProcessingJobEntity" : {
+      "AdminCreateUserRequestDto" : {
+        "required" : [ "email", "password", "publicUserName" ],
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "publicUserName" : {
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 72,
+            "minLength" : 8,
+            "type" : "string"
+          }
+        }
+      },
+      "AdminUserFilterDto" : {
+        "type" : "object",
+        "properties" : {
+          "searchText" : {
+            "type" : "string"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/UserGrantedRole"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "provider" : {
+            "$ref" : "#/components/schemas/AuthProvider"
+          }
+        }
+      },
+      "PageRequestDtoAdminUserFilterDto" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/AdminUserFilterDto"
+          }
+        }
+      },
+      "CommonResponsePageResultAdminUserRowDto" : {
         "type" : "object",
         "properties" : {
           "isSuccessful" : {
             "type" : "boolean"
           },
           "data" : {
-            "$ref" : "#/components/schemas/ProcessingJobEntity"
+            "$ref" : "#/components/schemas/PageResultAdminUserRowDto"
           },
           "code" : {
             "type" : "string"
@@ -6948,254 +7890,162 @@
           }
         }
       },
-      "JobErrorEntry" : {
+      "PageResultAdminUserRowDto" : {
         "type" : "object",
         "properties" : {
-          "attemptId" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminUserRowDto"
+            }
+          }
+        }
+      },
+      "CommonResponseAdminSettingItemDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminSettingItemDto"
+          },
+          "code" : {
             "type" : "string"
-          },
-          "workerId" : {
-            "type" : "string"
-          },
-          "at" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "kind" : {
-            "$ref" : "#/components/schemas/Kind"
           },
           "message" : {
             "type" : "string"
+          }
+        }
+      },
+      "AdminMailTestRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "mode" : {
+            "type" : "string"
           },
-          "detail" : {
+          "toEmail" : {
             "type" : "string"
           }
         }
       },
-      "JobResourceUsage" : {
+      "AdminMailTestResultDto" : {
         "type" : "object",
         "properties" : {
-          "attemptId" : {
-            "type" : "string"
-          },
-          "tool" : {
-            "type" : "string"
-          },
-          "peakCpuPercent" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "avgCpuPercent" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "peakRssBytes" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "peakTempBytes" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "samples" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "wallSeconds" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "stages" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "number",
-              "format" : "double"
-            }
-          },
-          "bytesIn" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "bytesOut" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "mediaSeconds" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "pixels" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "toolRuns" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ToolRun"
-            }
-          }
-        }
-      },
-      "Kind" : {
-        "type" : "string",
-        "enum" : [ "TRANSIENT", "PERMANENT", "LEASE_EXPIRED" ]
-      },
-      "ProcessingJobConfig" : {
-        "type" : "object",
-        "properties" : {
-          "profiles" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "intervalSeconds" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "maxThumbnails" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "scanEngine" : {
-            "type" : "string"
-          }
-        }
-      },
-      "ProcessingJobEntity" : {
-        "type" : "object",
-        "properties" : {
-          "isTrash" : {
+          "ok" : {
             "type" : "boolean"
           },
-          "trashedAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "latencyMs" : {
+            "type" : "integer",
+            "format" : "int64"
           },
-          "createdBy" : {
+          "error" : {
             "type" : "string"
-          },
-          "createdByEmail" : {
-            "type" : "string"
-          },
-          "updateBy" : {
-            "type" : "string"
-          },
-          "updateByEmail" : {
-            "type" : "string"
-          },
-          "isActive" : {
+          }
+        }
+      },
+      "CommonResponseAdminMailTestResultDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
             "type" : "boolean"
           },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "data" : {
+            "$ref" : "#/components/schemas/AdminMailTestResultDto"
           },
-          "updatedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "jobId" : {
+          "code" : {
             "type" : "string"
           },
-          "metadataId" : {
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminNodeDrainRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "draining" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "AdminNodeDto" : {
+        "type" : "object",
+        "properties" : {
+          "nodeId" : {
             "type" : "string"
           },
-          "versionNumber" : {
+          "service" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "host" : {
+            "type" : "string"
+          },
+          "pid" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cores" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "assetId" : {
-            "type" : "string"
-          },
-          "objectName" : {
-            "type" : "string"
-          },
-          "jobType" : {
-            "$ref" : "#/components/schemas/ProcessingJobType"
-          },
-          "config" : {
-            "$ref" : "#/components/schemas/ProcessingJobConfig"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/ProcessingJobStatus"
-          },
-          "priority" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "progress" : {
-            "$ref" : "#/components/schemas/ProcessingJobProgress"
-          },
-          "result" : {
-            "$ref" : "#/components/schemas/ProcessingJobResult"
-          },
-          "scheduledAt" : {
-            "type" : "string",
-            "format" : "date-time"
           },
           "startedAt" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "completedAt" : {
+          "lastSeenAt" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "dueAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "leaseUntil" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "attemptId" : {
+          "status" : {
             "type" : "string"
           },
-          "traceId" : {
-            "type" : "string"
+          "draining" : {
+            "type" : "boolean"
           },
-          "retryCount" : {
+          "cpu" : {
+            "$ref" : "#/components/schemas/Cpu"
+          },
+          "memory" : {
+            "$ref" : "#/components/schemas/Memory"
+          },
+          "workspaceFreeBytes" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
-          "maxRetries" : {
-            "type" : "integer",
-            "format" : "int32"
+          "worker" : {
+            "$ref" : "#/components/schemas/Worker"
           },
-          "lastError" : {
-            "type" : "string"
-          },
-          "errorHistory" : {
+          "samples" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/JobErrorEntry"
+              "$ref" : "#/components/schemas/Sample"
             }
           },
-          "resultPublishedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "relayLeaseUntil" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "workerId" : {
-            "type" : "string"
-          },
-          "workerHeartbeat" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "resourceUsage" : {
-            "$ref" : "#/components/schemas/JobResourceUsage"
+          "runningJobs" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminNodeRunningJobDto"
+            }
           }
         }
       },
-      "ProcessingJobProgress" : {
+      "AdminNodeRunningJobDto" : {
         "type" : "object",
         "properties" : {
+          "jobId" : {
+            "type" : "string"
+          },
+          "jobType" : {
+            "type" : "string"
+          },
           "percent" : {
             "type" : "integer",
             "format" : "int32"
@@ -7203,74 +8053,170 @@
           "currentStep" : {
             "type" : "string"
           },
-          "estimatedTimeRemainingMs" : {
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAdminNodeDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminNodeDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Cpu" : {
+        "type" : "object",
+        "properties" : {
+          "system" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "process" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "children" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "Memory" : {
+        "type" : "object",
+        "properties" : {
+          "heapUsed" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "heapMax" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "systemTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "systemFree" : {
             "type" : "integer",
             "format" : "int64"
           }
         }
       },
-      "ProcessingJobResult" : {
+      "Sample" : {
         "type" : "object",
         "properties" : {
-          "success" : {
-            "type" : "boolean"
+          "t" : {
+            "type" : "string",
+            "format" : "date-time"
           },
-          "outputKeys" : {
+          "sys" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "proc" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "child" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "heap" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Worker" : {
+        "type" : "object",
+        "properties" : {
+          "jobTypes" : {
             "type" : "array",
             "items" : {
               "type" : "string"
             }
           },
-          "manifestKey" : {
+          "bulkheadName" : {
             "type" : "string"
           },
-          "thumbnailUrl" : {
-            "type" : "string"
-          },
-          "errorMessage" : {
-            "type" : "string"
-          },
-          "errorDetails" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
-          },
-          "width" : {
+          "maxConcurrent" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "height" : {
+          "inUse" : {
             "type" : "integer",
             "format" : "int32"
           }
         }
       },
-      "ProcessingJobStatus" : {
-        "type" : "string",
-        "enum" : [ "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED", "DEAD_LETTER" ]
-      },
-      "ProcessingJobType" : {
-        "type" : "string",
-        "enum" : [ "TRANSCODE_HLS", "TRANSCODE_IMAGE", "TRANSCODE_RAW_IMAGE", "VIRUS_SCAN" ]
-      },
-      "ToolRun" : {
+      "CommonResponseBoolean" : {
         "type" : "object",
         "properties" : {
-          "tool" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "boolean"
+          },
+          "code" : {
             "type" : "string"
           },
-          "exitCode" : {
-            "type" : "integer",
-            "format" : "int32"
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminEmailPreviewRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
           },
-          "wallMs" : {
-            "type" : "integer",
-            "format" : "int64"
+          "subject" : {
+            "type" : "string"
           },
-          "cpuMs" : {
-            "type" : "integer",
-            "format" : "int64"
+          "body" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminEmailPreviewDto" : {
+        "type" : "object",
+        "properties" : {
+          "subject" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseAdminEmailPreviewDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminEmailPreviewDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
           }
         }
       },
@@ -7817,7 +8763,7 @@
       },
       "AuditAction" : {
         "type" : "string",
-        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION", "RESTORE" ]
+        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION", "RESTORE", "USER_CREATED", "USER_LOCKED", "USER_UNLOCKED", "USER_ROLES_CHANGED", "SESSIONS_REVOKED", "SETTING_UPDATED", "SETTING_RESET", "TEMPLATE_UPDATED", "TEMPLATE_RESET", "NODE_DRAINED" ]
       },
       "AuditLogFilterDTO" : {
         "type" : "object",
@@ -7862,7 +8808,7 @@
       },
       "AuditActorType" : {
         "type" : "string",
-        "enum" : [ "USER", "SYSTEM", "API_KEY" ]
+        "enum" : [ "USER", "SYSTEM", "API_KEY", "ADMIN" ]
       },
       "AuditChanges" : {
         "type" : "object",
@@ -7983,7 +8929,7 @@
       },
       "AuditTargetType" : {
         "type" : "string",
-        "enum" : [ "PROJECT", "FOLDER", "FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION" ]
+        "enum" : [ "PROJECT", "FOLDER", "FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION", "SETTING", "EMAIL_TEMPLATE", "NODE" ]
       },
       "CommonResponsePageResultAuditLogEntity" : {
         "type" : "object",
@@ -8198,6 +9144,26 @@
             "type" : "string"
           }
         }
+      },
+      "ProcessingJobProgress" : {
+        "type" : "object",
+        "properties" : {
+          "percent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "currentStep" : {
+            "type" : "string"
+          },
+          "estimatedTimeRemainingMs" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ProcessingJobStatus" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED", "DEAD_LETTER" ]
       },
       "ProcessingStatusResponseDto" : {
         "type" : "object",
@@ -8911,6 +9877,200 @@
             "type" : "string"
           },
           "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminUserDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "publicUserName" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserGrantedRole"
+            }
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
+          "providers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuthProvider"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastLoginAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "ownedProjectCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fileCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "storageBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sessionsValidAfter" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CommonResponseAdminUserDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminUserDetailDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminSettingGroupDto" : {
+        "type" : "object",
+        "properties" : {
+          "group" : {
+            "type" : "string"
+          },
+          "readOnly" : {
+            "type" : "boolean"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminSettingItemDto"
+            }
+          }
+        }
+      },
+      "CommonResponseListAdminSettingGroupDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminSettingGroupDto"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CommonResponseListAdminNodeDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminNodeDto"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminEmailTemplateRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "variables" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "locales" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LocaleState"
+            }
+          }
+        }
+      },
+      "CommonResponseListAdminEmailTemplateRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminEmailTemplateRowDto"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LocaleState" : {
+        "type" : "object",
+        "properties" : {
+          "locale" : {
+            "type" : "string"
+          },
+          "overridden" : {
+            "type" : "boolean"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedBy" : {
             "type" : "string"
           }
         }

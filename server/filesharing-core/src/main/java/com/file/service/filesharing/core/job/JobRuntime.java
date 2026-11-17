@@ -51,6 +51,8 @@ public class JobRuntime {
     public void run(ProcessingJobEntity job) {
         String attemptId = job.getAttemptId();
         String jobId = job.getJobId();
+        // chup setting LIVE mot lan, ca job dung chung gia tri nay
+        JobRuntimeProperties.Snapshot snap = props.snapshot();
         Path ws = Path.of(props.getWorkspaceDir()).resolve(attemptId);
         JobExecutor executor = executors.get(job.getJobType());
         LeaseHeartbeat hb = new LeaseHeartbeat(store, job, identity.workerId(),
@@ -65,7 +67,7 @@ public class JobRuntime {
             long size = storage.stat(bucket, job.getObjectName());
             if (size == 0) throw new PermanentJobException("file input 0 byte");
             boolean stream = executor.inputMode() == InputMode.STREAM;
-            String url = stream ? storage.presignGet(bucket, job.getObjectName(), props.getPresignTtl()) : null;
+            String url = stream ? storage.presignGet(bucket, job.getObjectName(), snap.presignTtl()) : null;
             Path file = stream ? null : ws.resolve("input").resolve(localInputName(job.getObjectName()));
             JobContext ctx = new JobContext(job, ws, url, file, hb, metrics);
             if (!stream) {
@@ -80,7 +82,7 @@ public class JobRuntime {
             scope = result.attemptScope();
             int total = result.outputs().size();
             try (JobContext.Stage st = ctx.stage("upload", ctx.percent(), JobContext.MAX_PERCENT)) {
-                long out = storage.uploadAll(result.outputs(), props.getUploadBatchSize(), hb::isLost,
+                long out = storage.uploadAll(result.outputs(), snap.uploadBatchSize(), hb::isLost,
                         done -> ctx.progress((double) done / total, "UPLOAD " + done + "/" + total));
                 metrics.bytesOut(out);
             }
@@ -96,15 +98,15 @@ public class JobRuntime {
             log.warn("fencing reject: job={} attempt={} mat lease, bo ket qua", jobId, attemptId);
             cleanupScope(scope, attemptId);
         } catch (PermanentJobException e) {
-            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.PERMANENT, e.getMessage(), e.getDetail(), true, scope, metrics);
+            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.PERMANENT, e.getMessage(), e.getDetail(), true, scope, metrics, snap);
         } catch (TransientJobException e) {
-            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.TRANSIENT, e.getMessage(), e.getDetail(), false, scope, metrics);
+            if (hb.isLost()) lostLease(job, scope); else fail(job, JobErrorEntry.Kind.TRANSIENT, e.getMessage(), e.getDetail(), false, scope, metrics, snap);
         } catch (Exception e) {
             if (hb.isLost()) {
                 lostLease(job, scope);
             } else {
                 log.error("job={} attempt={} loi khong du kien", jobId, attemptId, e);
-                fail(job, JobErrorEntry.Kind.TRANSIENT, String.valueOf(e.getMessage()), null, false, scope, metrics);
+                fail(job, JobErrorEntry.Kind.TRANSIENT, String.valueOf(e.getMessage()), null, false, scope, metrics, snap);
             }
         } finally {
             hb.stop();
@@ -136,10 +138,11 @@ public class JobRuntime {
     }
 
     private void fail(ProcessingJobEntity job, JobErrorEntry.Kind kind, String message, String detail,
-                      boolean permanent, AttemptScope scope, AttemptMetrics metrics) {
+                      boolean permanent, AttemptScope scope, AttemptMetrics metrics,
+                      JobRuntimeProperties.Snapshot snap) {
         cleanupScope(scope, job.getAttemptId());
         int rc = job.getRetryCount() == null ? 0 : job.getRetryCount();
-        int max = job.getMaxRetries() == null ? props.getMaxRetries() : job.getMaxRetries();
+        int max = job.getMaxRetries() == null ? snap.maxRetries() : job.getMaxRetries();
         JobErrorEntry err = JobErrorEntry.builder().attemptId(job.getAttemptId()).workerId(identity.workerId())
                 .at(Instant.now()).kind(kind).message(JobStore.trim(message)).detail(detail).build();
         boolean ok;
@@ -171,12 +174,12 @@ public class JobRuntime {
         }
     }
 
-    // Don workspace mo coi cu hon 24h (JVM chet giua chung)
+    // Don workspace mo coi cu hon job.workspace-cleanup-age (JVM chet giua chung)
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanupStaleWorkspaces() {
         Path root = Path.of(props.getWorkspaceDir());
         if (!Files.isDirectory(root)) return;
-        Instant limit = Instant.now().minus(Duration.ofHours(24));
+        Instant limit = Instant.now().minus(props.getWorkspaceCleanupAge());
         try (Stream<Path> s = Files.list(root)) {
             s.filter(p -> {
                 try {

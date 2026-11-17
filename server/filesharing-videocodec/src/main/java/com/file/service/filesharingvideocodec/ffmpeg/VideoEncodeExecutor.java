@@ -5,6 +5,8 @@ import com.file.service.filesharing.core.enums.ProcessingJobType;
 import com.file.service.filesharing.core.job.AttemptScope;
 import com.file.service.filesharing.core.job.InputMode;
 import com.file.service.filesharing.core.job.JobContext;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharing.core.job.JobExecution;
 import com.file.service.filesharing.core.job.JobExecutor;
 import com.file.service.filesharing.core.job.OutputObject;
@@ -42,6 +44,7 @@ public class VideoEncodeExecutor implements JobExecutor {
 
     private final VideoEncodingConfig encodingConfig;
     private final FfmpegCommandBuilder commandBuilder;
+    private final RuntimeSettings settings;
 
     @Value("${minio.buckets.hls}")
     private String hlsBucket;
@@ -82,10 +85,13 @@ public class VideoEncodeExecutor implements JobExecutor {
         ProcessingJobEntity job = ctx.job();
         VideoEncodingConfig.FfmpegConfig cfg = encodingConfig.getFfmpeg();
         String url = ctx.inputUrl();
+        // chup timeout o dau job, khong doi giua chung
+        Duration probeTimeout = settings.duration(SettingKey.VIDEO_PROBE_TIMEOUT);
+        Duration encodeTimeout = settings.duration(SettingKey.VIDEO_TIMEOUT);
 
         FfprobeTool.Probe probe;
         try (JobContext.Stage st = ctx.stage("probe", 0, 2)) {
-            probe = FfprobeTool.run(ctx, cfg.getFfprobePath(), url, Duration.ofMillis(cfg.getProbeTimeout()));
+            probe = FfprobeTool.run(ctx, cfg.getFfprobePath(), url, probeTimeout);
         }
         ctx.metrics().mediaSeconds(probe.durationSec());
 
@@ -99,7 +105,7 @@ public class VideoEncodeExecutor implements JobExecutor {
         ToolResult r;
         try (JobContext.Stage st = ctx.stage("process", 2, 90)) {
             r = ctx.exec(new ToolCommand("ffmpeg", commandBuilder.buildCommand(url, outDir.toString()),
-                    Duration.ofMillis(cfg.getTimeout()), List.of(url), Map.of(), progress));
+                    encodeTimeout, List.of(url), Map.of(), progress));
         }
         if (progress.bytesRead() != null) ctx.metrics().bytesIn(progress.bytesRead());
         // Exit code ffmpeg khong on dinh (S4, W0 muc 7): sau PROBE thanh cong, moi loi encode la transient

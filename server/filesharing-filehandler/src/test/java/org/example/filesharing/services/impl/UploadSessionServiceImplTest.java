@@ -39,7 +39,8 @@ class UploadSessionServiceImplTest {
         AuditService auditService = mock(AuditService.class);
         UploadSessionServiceImpl service = new UploadSessionServiceImpl(uploadSessionRepo, mock(MetadataRepo.class),
                 mock(JobSubmitService.class), mock(MongoTemplate.class), auditService, storageService, metadataService,
-                mock(MinIoService.class), accessService);
+                mock(MinIoService.class), accessService,
+                new com.file.service.filesharing.core.setting.RuntimeSettings(mock(MongoTemplate.class), null, new org.springframework.mock.env.MockEnvironment(), java.time.Duration.ofSeconds(10)));
 
         UploadSessionEntity session = UploadSessionEntity.builder().sessionId("s1").ownerId("u2").assetId("a1")
                 .status(UploadSessionStatus.INITIATED).expiresAt(Instant.now().plusSeconds(600)).build();

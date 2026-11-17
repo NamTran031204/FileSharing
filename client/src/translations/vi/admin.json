@@ -1,0 +1,410 @@
+{
+  "sidebar": "Quản trị",
+  "menu": {
+    "home": "Tổng quan",
+    "users": "Tài khoản",
+    "settings": "Cấu hình",
+    "emailTemplates": "Mẫu email",
+    "nodes": "Worker / Node"
+  },
+  "home": {
+    "title": "Quản trị hệ thống",
+    "description": "Chọn một mục ở menu bên trái để quản lý hệ thống."
+  },
+  "common": {
+    "error": "Có lỗi xảy ra",
+    "search": "Tìm kiếm",
+    "edit": "Sửa",
+    "save": "Lưu",
+    "cancel": "Đóng"
+  },
+  "user": {
+    "title": "Quản lý tài khoản",
+    "create": "Tạo tài khoản vận hành",
+    "createTitle": "Tạo tài khoản vận hành",
+    "createdOk": "Đã tạo tài khoản",
+    "email": "Email",
+    "publicUserName": "Tên hiển thị",
+    "password": "Mật khẩu (tối thiểu 8 ký tự)",
+    "roles": "Vai trò",
+    "status": "Trạng thái",
+    "enabled": "Hoạt động",
+    "locked": "Đã khoá",
+    "provider": "Nguồn đăng nhập",
+    "createdAt": "Ngày tạo",
+    "lastLoginAt": "Đăng nhập gần nhất",
+    "searchText": "Tìm kiếm",
+    "searchPlaceholder": "Email hoặc tên hiển thị",
+    "detailTitle": "Chi tiết tài khoản",
+    "ownedProjectCount": "Số dự án sở hữu",
+    "fileCount": "Số file",
+    "storageBytes": "Dung lượng",
+    "sessionsValidAfter": "Phiên hợp lệ từ",
+    "assignRoleTitle": "Gán vai trò",
+    "rolesOk": "Đã cập nhật vai trò",
+    "lockConfirmTitle": "Khoá tài khoản này?",
+    "unlockConfirmTitle": "Mở khoá tài khoản này?",
+    "lockedOk": "Đã khoá tài khoản",
+    "unlockedOk": "Đã mở khoá tài khoản",
+    "revokeConfirmTitle": "Thu hồi toàn bộ phiên đăng nhập?",
+    "revokeConfirmContent": "Tài khoản {{email}} sẽ phải đăng nhập lại.",
+    "revokedOk": "Đã thu hồi phiên"
+  },
+  "setting": {
+    "title": "Cấu hình hệ thống",
+    "group": {
+      "APP": "Ứng dụng",
+      "AUTH": "Xác thực",
+      "UPLOAD": "Tải lên",
+      "DOWNLOAD": "Tải xuống",
+      "PROOF": "Bằng chứng (Proof)",
+      "DASHBOARD": "Bảng điều khiển",
+      "RETENTION": "Lưu giữ dữ liệu",
+      "JOB": "Tác vụ xử lý (Job)",
+      "WORKER": "Worker (giới hạn song song)",
+      "VIDEO": "Video",
+      "IMAGE": "Ảnh",
+      "RAW": "Ảnh RAW",
+      "MAIL": "Email"
+    },
+    "overridden": "đã ghi đè",
+    "needRestart": "cần restart",
+    "notConfigured": "chưa cấu hình",
+    "secretKeepHint": "Để trống = giữ nguyên",
+    "clearValue": "Xoá giá trị",
+    "default": "Mặc định",
+    "reset": "Về mặc định",
+    "resetConfirm": "Đặt lại về mặc định?",
+    "resetOk": "Đã đặt lại",
+    "savedOk": "Đã lưu cấu hình",
+    "mailConnect": "Kiểm tra kết nối",
+    "mailSend": "Gửi email thử",
+    "mailOk": "Thành công ({{ms}} ms)",
+    "item": {
+      "app_frontend_base_url": {
+        "label": "Địa chỉ giao diện web",
+        "desc": "Địa chỉ gốc của web dùng khi tạo liên kết trong email"
+      },
+      "security_cors_allowed_origins": {
+        "label": "Nguồn được phép gọi API (CORS)",
+        "desc": "Danh sách origin trình duyệt được phép gọi API"
+      },
+      "auth_jwt_access_ttl": {
+        "label": "Thời hạn access token",
+        "desc": "Access token hết hạn sau khoảng thời gian này"
+      },
+      "auth_jwt_refresh_ttl": {
+        "label": "Thời hạn refresh token",
+        "desc": "Refresh token hết hạn sau khoảng thời gian này"
+      },
+      "upload_max_file_size": {
+        "label": "Dung lượng file tối đa",
+        "desc": "Giới hạn dung lượng một file tải lên"
+      },
+      "upload_part_url_ttl": {
+        "label": "Hạn liên kết tải từng phần",
+        "desc": "Thời hạn URL ký sẵn cho mỗi phần của file"
+      },
+      "upload_max_threads": {
+        "label": "Số luồng tải lên tối đa",
+        "desc": "Số phần tải song song tối đa mỗi file"
+      },
+      "upload_session_idle_ttl": {
+        "label": "Thời gian chờ phiên tải lên",
+        "desc": "Phiên tải lên không hoạt động quá thời gian này sẽ hết hạn"
+      },
+      "upload_max_sessions_per_user": {
+        "label": "Số phiên tải lên tối đa mỗi người",
+        "desc": "Số phiên tải lên đang mở tối đa của một người dùng"
+      },
+      "upload_verify_etag_md5": {
+        "label": "Kiểm tra ETag MD5",
+        "desc": "Bật kiểm tra toàn vẹn ETag MD5 khi hoàn tất tải lên"
+      },
+      "upload_session_hard_expiry": {
+        "label": "Hạn tuyệt đối của phiên tải lên",
+        "desc": "Phiên tải lên bị huỷ sau thời gian này dù còn hoạt động"
+      },
+      "upload_initial_url_batch": {
+        "label": "Số URL cấp ban đầu",
+        "desc": "Số URL phần được cấp ngay khi mở phiên"
+      },
+      "upload_reconcile_orphan_min_age": {
+        "label": "Tuổi tối thiểu của file mồ côi",
+        "desc": "File chưa gắn phiên chỉ bị dọn khi cũ hơn mức này"
+      },
+      "upload_reconcile_submit_window": {
+        "label": "Cửa sổ đối soát nộp file",
+        "desc": "Khoảng thời gian đối soát file đã tải xong nhưng chưa nộp"
+      },
+      "upload_gc_interval": {
+        "label": "Chu kỳ dọn phiên tải lên",
+        "desc": "Tần suất dọn các phiên tải lên hết hạn"
+      },
+      "upload_reconcile_interval": {
+        "label": "Chu kỳ đối soát tải lên",
+        "desc": "Tần suất chạy đối soát tải lên"
+      },
+      "download_url_ttl_min": {
+        "label": "Hạn tối thiểu liên kết tải xuống",
+        "desc": "Thời hạn tối thiểu của URL tải xuống"
+      },
+      "download_url_ttl_max": {
+        "label": "Hạn tối đa liên kết tải xuống",
+        "desc": "Thời hạn tối đa của URL tải xuống"
+      },
+      "proof_max_name_length": {
+        "label": "Độ dài tên tối đa",
+        "desc": "Số ký tự tối đa của tên người gửi proof"
+      },
+      "proof_max_note_length": {
+        "label": "Độ dài ghi chú tối đa",
+        "desc": "Số ký tự tối đa của ghi chú proof"
+      },
+      "proof_max_submit_assets": {
+        "label": "Số tệp tối đa mỗi lần nộp",
+        "desc": "Số tệp tối đa trong một lần nộp proof"
+      },
+      "proof_max_page_size": {
+        "label": "Kích thước trang tối đa",
+        "desc": "Số bản ghi tối đa mỗi trang danh sách proof"
+      },
+      "proof_preview_url_ttl": {
+        "label": "Hạn liên kết xem trước",
+        "desc": "Thời hạn URL xem trước ảnh của proof"
+      },
+      "dashboard_recent_default_limit": {
+        "label": "Số mục gần đây mặc định",
+        "desc": "Số mục hiển thị mặc định ở danh sách gần đây"
+      },
+      "dashboard_recent_max_limit": {
+        "label": "Số mục gần đây tối đa",
+        "desc": "Số mục tối đa có thể yêu cầu ở danh sách gần đây"
+      },
+      "retention_processing_jobs": {
+        "label": "Thời gian lưu job xử lý",
+        "desc": "Job xử lý được xoá sau khoảng thời gian này"
+      },
+      "retention_upload_sessions": {
+        "label": "Thời gian lưu phiên tải lên",
+        "desc": "Phiên tải lên được xoá sau khoảng thời gian này"
+      },
+      "job_max_retries": {
+        "label": "Số lần thử lại tối đa",
+        "desc": "Số lần thử lại một job lỗi tạm thời"
+      },
+      "job_backoff_base": {
+        "label": "Độ trễ thử lại ban đầu",
+        "desc": "Thời gian chờ trước lần thử lại đầu tiên"
+      },
+      "job_backoff_max": {
+        "label": "Độ trễ thử lại tối đa",
+        "desc": "Trần thời gian chờ giữa hai lần thử lại"
+      },
+      "job_presign_ttl": {
+        "label": "Hạn URL ký sẵn của job",
+        "desc": "Thời hạn URL ký sẵn worker dùng để tải và trả file"
+      },
+      "job_upload_batch_size": {
+        "label": "Số tệp mỗi lượt tải lên",
+        "desc": "Số tệp worker tải lên mỗi lượt"
+      },
+      "job_workspace_cleanup_age": {
+        "label": "Tuổi dọn thư mục làm việc",
+        "desc": "Thư mục tạm của job cũ hơn mức này sẽ bị dọn"
+      },
+      "job_lease_duration": {
+        "label": "Thời hạn lease job",
+        "desc": "Thời gian worker giữ job trước khi cần gia hạn"
+      },
+      "job_poll_interval": {
+        "label": "Chu kỳ lấy job",
+        "desc": "Tần suất worker hỏi job mới"
+      },
+      "job_reaper_interval": {
+        "label": "Chu kỳ thu hồi job",
+        "desc": "Tần suất thu hồi job quá hạn lease"
+      },
+      "job_relay_interval": {
+        "label": "Chu kỳ gửi kết quả",
+        "desc": "Tần suất gửi kết quả job lên Kafka"
+      },
+      "job_relay_lease": {
+        "label": "Lease gửi kết quả",
+        "desc": "Thời gian một node giữ quyền gửi kết quả"
+      },
+      "worker_bulkhead_ffmpeg_encoder_max_concurrent": {
+        "label": "Số job video chạy song song",
+        "desc": "Số tiến trình mã hoá video chạy đồng thời"
+      },
+      "worker_bulkhead_image_processor_max_concurrent": {
+        "label": "Số job ảnh chạy song song",
+        "desc": "Số tiến trình xử lý ảnh chạy đồng thời"
+      },
+      "worker_bulkhead_raw_processor_max_concurrent": {
+        "label": "Số job ảnh RAW chạy song song",
+        "desc": "Số tiến trình xử lý ảnh RAW chạy đồng thời"
+      },
+      "video_timeout": {
+        "label": "Thời gian tối đa mã hoá video",
+        "desc": "Quá thời gian này job video bị huỷ"
+      },
+      "video_probe_timeout": {
+        "label": "Thời gian tối đa dò video",
+        "desc": "Thời gian tối đa để đọc thông tin video"
+      },
+      "video_threads_per_process": {
+        "label": "Số luồng mỗi tiến trình",
+        "desc": "Số luồng CPU cho mỗi tiến trình mã hoá"
+      },
+      "video_crf": {
+        "label": "Chất lượng video (CRF)",
+        "desc": "CRF càng nhỏ chất lượng càng cao, dung lượng càng lớn"
+      },
+      "video_preset": {
+        "label": "Mức nén video",
+        "desc": "Preset tốc độ mã hoá, chậm hơn thì nén tốt hơn"
+      },
+      "video_segment_duration": {
+        "label": "Độ dài mỗi đoạn HLS",
+        "desc": "Số giây của mỗi đoạn video HLS"
+      },
+      "video_audio_bitrate": {
+        "label": "Bitrate âm thanh",
+        "desc": "Bitrate âm thanh khi mã hoá, ví dụ 128k"
+      },
+      "image_processing_timeout": {
+        "label": "Thời gian tối đa xử lý ảnh",
+        "desc": "Quá thời gian này tác vụ ảnh bị huỷ"
+      },
+      "image_max_pixels": {
+        "label": "Số điểm ảnh tối đa",
+        "desc": "Ảnh vượt số điểm ảnh này bị từ chối"
+      },
+      "image_vips_concurrency": {
+        "label": "Số luồng libvips",
+        "desc": "Số luồng libvips dùng cho mỗi tác vụ"
+      },
+      "image_allowed_loaders": {
+        "label": "Bộ đọc ảnh được phép",
+        "desc": "Danh sách loader libvips được phép dùng"
+      },
+      "image_webp_quality": {
+        "label": "Chất lượng WebP",
+        "desc": "Chất lượng ảnh WebP khi tạo bản xem trước"
+      },
+      "image_webp_effort": {
+        "label": "Mức nỗ lực WebP",
+        "desc": "Mức nén WebP, cao hơn thì chậm hơn"
+      },
+      "image_thumbnail_width": {
+        "label": "Chiều rộng ảnh thu nhỏ",
+        "desc": "Chiều rộng ảnh thu nhỏ tính bằng điểm ảnh"
+      },
+      "image_preview_max_edge": {
+        "label": "Cạnh dài ảnh xem trước",
+        "desc": "Cạnh dài tối đa của ảnh xem trước tính bằng điểm ảnh"
+      },
+      "raw_command_timeout": {
+        "label": "Thời gian chờ lệnh RAW",
+        "desc": "Thời gian tối đa cho mỗi lệnh xử lý ảnh RAW"
+      },
+      "raw_lock_wait": {
+        "label": "Thời gian chờ khoá RAW",
+        "desc": "Thời gian tối đa chờ khoá khi xử lý ảnh RAW"
+      },
+      "mail_host": {
+        "label": "Máy chủ SMTP",
+        "desc": "Địa chỉ máy chủ gửi email"
+      },
+      "mail_port": {
+        "label": "Cổng SMTP",
+        "desc": "Cổng của máy chủ gửi email"
+      },
+      "mail_username": {
+        "label": "Tài khoản SMTP",
+        "desc": "Tên đăng nhập máy chủ email"
+      },
+      "mail_password": {
+        "label": "Mật khẩu SMTP",
+        "desc": "Mật khẩu máy chủ email, không hiển thị lại"
+      },
+      "mail_auth": {
+        "label": "Yêu cầu xác thực SMTP",
+        "desc": "Bật xác thực khi kết nối máy chủ email"
+      },
+      "mail_starttls": {
+        "label": "Bật STARTTLS",
+        "desc": "Dùng STARTTLS để mã hoá kết nối"
+      },
+      "mail_connection_timeout": {
+        "label": "Thời gian chờ kết nối",
+        "desc": "Thời gian tối đa để kết nối máy chủ email"
+      },
+      "mail_timeout": {
+        "label": "Thời gian chờ đọc",
+        "desc": "Thời gian tối đa chờ phản hồi từ máy chủ email"
+      },
+      "mail_write_timeout": {
+        "label": "Thời gian chờ ghi",
+        "desc": "Thời gian tối đa để gửi dữ liệu tới máy chủ email"
+      },
+      "mail_from_address": {
+        "label": "Địa chỉ người gửi",
+        "desc": "Địa chỉ email hiển thị là người gửi, trống thì dùng tài khoản SMTP"
+      },
+      "mail_from_name": {
+        "label": "Tên người gửi",
+        "desc": "Tên hiển thị của người gửi email"
+      }
+    },
+    "fixedBadge": "Cố định bởi hệ thống",
+    "fixedHint": "Thông số lõi do đội phát triển quản lý, quản trị viên chỉ xem."
+  },
+  "template": {
+    "title": "Mẫu email",
+    "code": "Mã",
+    "locale": "Ngôn ngữ",
+    "subject": "Tiêu đề",
+    "state": "Trạng thái",
+    "edited": "Đã sửa",
+    "default": "Mặc định",
+    "updatedAt": "Sửa lần cuối",
+    "variables": "Biến",
+    "preview": "Xem trước",
+    "sendTest": "Gửi thử",
+    "testTo": "Email nhận thử",
+    "reset": "Về mặc định",
+    "resetConfirm": "Đặt lại mẫu về mặc định?",
+    "savedOk": "Đã lưu mẫu",
+    "resetOk": "Đã đặt lại mẫu",
+    "testSentOk": "Đã gửi email thử",
+    "name": "Tên",
+    "description": "Mô tả",
+    "variablesInsert": "Biến (bấm để chèn)",
+    "searchText": "Từ khoá",
+    "searchPlaceholder": "Mã, tên hoặc mô tả",
+    "localeVi": "Tiếng Việt",
+    "localeEn": "Tiếng Anh"
+  },
+  "node": {
+    "title": "Worker / Node",
+    "empty": "Chưa có node nào gửi heartbeat. Kiểm tra service đã chạy và kết nối được MongoDB.",
+    "cores": "nhân",
+    "uptime": "Uptime",
+    "cpuSystem": "CPU máy",
+    "cpuProcess": "CPU JVM",
+    "cpuChildren": "CPU tiến trình con",
+    "diskFree": "Ổ tạm còn trống",
+    "ram": "RAM trống / tổng",
+    "heap": "Heap",
+    "slots": "Slot đang dùng",
+    "runningJobs": "Job đang chạy",
+    "drain": "Drain",
+    "undrain": "Bỏ drain",
+    "drainConfirm": "Drain node này? Node ngừng nhận job mới, job đang chạy chạy tiếp.",
+    "undrainConfirm": "Bỏ drain, node nhận job trở lại?",
+    "drainedOk": "Đã drain node",
+    "undrainedOk": "Đã bỏ drain"
+  }
+}

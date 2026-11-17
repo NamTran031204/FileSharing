@@ -9,5 +9,8 @@ public enum AuditTargetType {
     COMMENT,
     REVIEW_SESSION,
     USER,
-    PERMISSION
+    PERMISSION,
+    SETTING,
+    EMAIL_TEMPLATE,
+    NODE
 }

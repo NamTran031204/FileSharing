@@ -1,5 +1,7 @@
 package org.example.filesharing.services.impl;
 
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import lombok.RequiredArgsConstructor;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
@@ -28,7 +30,6 @@ import org.example.filesharing.services.baseService.BaseAuditService;
 import org.example.filesharing.utils.access.Action;
 import org.example.filesharing.utils.access.ResourceRef;
 import com.file.service.filesharing.core.utils.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -64,8 +65,7 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
 
     private static final long SMALL_FILE_THRESHOLD = 8_388_608L; // 8 MiB — 01_api_contract.md §0.5
 
-    @Value("${upload.max-file-size}")
-    private long maxFileSize;
+    private final RuntimeSettings settings;
 
     @Override
     @Transactional
@@ -602,8 +602,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (request.getFileSize() == null || request.getFileSize() <= 0) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
-        if (request.getFileSize() > maxFileSize) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
+        if (request.getFileSize() > settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes()) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes() + " bytes");
         }
 
         // mediaType is required for backward compatibility, but server computes it from mimeType
@@ -638,8 +638,8 @@ public class AssetServiceImpl extends BaseAuditService<AssetEntity> implements A
         if (request.getFileSize() == null || request.getFileSize() <= 0) {
             throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize is required");
         }
-        if (request.getFileSize() > maxFileSize) {
-            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + maxFileSize + " bytes");
+        if (request.getFileSize() > settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes()) {
+            throw new UserBusinessException(ErrorCode.BAD_REQUEST, "fileSize exceeds limit: " + settings.dataSize(SettingKey.UPLOAD_MAX_FILE_SIZE).toBytes() + " bytes");
         }
 
         if (request.getMediaType() == null) {

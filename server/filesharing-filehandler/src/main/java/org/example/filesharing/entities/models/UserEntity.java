@@ -65,6 +65,9 @@ public class UserEntity extends EntityAuditBase implements UserDetails {
      */
     private Instant lastLoginAt;
 
+    // token cap truoc moc nay (cat ve giay) bi tu choi, null la hop le
+    private Instant sessionsValidAfter;
+
     public void addRole(UserGrantedRole role) {
         if (this.userGrantedRoles == null) this.userGrantedRoles = new ArrayList<>();
         if (!this.userGrantedRoles.contains(role)) this.userGrantedRoles.add(role);

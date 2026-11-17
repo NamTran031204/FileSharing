@@ -2,10 +2,13 @@ package org.example.filesharing.configurations;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import org.bson.Document;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
@@ -19,11 +22,12 @@ import java.time.Duration;
 @Slf4j
 public class MongoIndexBootstrapConfig {
 
-    private static final Duration PROCESSING_JOBS_TTL = Duration.ofDays(30);
-
     private final MongoTemplate mongoTemplate;
+    private final RuntimeSettings runtimeSettings;
 
+    // order 0 de AdminSeedRunner (order 10) luon chay sau khi index user da co
     @Bean
+    @Order(0)
     public ApplicationRunner mongoIndexBootstrapRunner() {
         return args -> {
             applyUsersIndexes();
@@ -40,6 +44,7 @@ public class MongoIndexBootstrapConfig {
             applyNotificationsIndexes();
             applyUploadSessionsIndexes();
             applyProofSelectionIndexes();
+            applyWorkerNodesIndexes();
 
             log.info("Mongo indexes bootstrap completed.");
         };
@@ -114,6 +119,13 @@ public class MongoIndexBootstrapConfig {
         ops.createIndex(new Index().on("grants.userId", Sort.Direction.ASC));
         ops.createIndex(new Index().on("link.token", Sort.Direction.ASC).unique()
                 .partial(PartialIndexFilter.of(new Document("link.token", new Document("$type", "string")))));
+    }
+
+    // heartbeat 5s, TTL 60s: node chet bien mat sau khoang 60-120s (TTL monitor quet moi 60s)
+    private void applyWorkerNodesIndexes() {
+        IndexOperations ops = mongoTemplate.indexOps("worker_nodes");
+        ops.createIndex(new Index().on("lastSeenAt", Sort.Direction.ASC).expire(Duration.ofSeconds(60)));
+        ops.createIndex(new Index().on("service", Sort.Direction.ASC));
     }
 
     private void applyProofSelectionIndexes() {
@@ -222,7 +234,27 @@ public class MongoIndexBootstrapConfig {
                 .on("workerId", Sort.Direction.ASC)
                 .on("status", Sort.Direction.ASC));
         ops.createIndex(new Index().on("workerHeartbeat", Sort.Direction.ASC));
-        ops.createIndex(new Index().on("createdAt", Sort.Direction.ASC).expire(PROCESSING_JOBS_TTL));
+        applyTtlIndex("processing_jobs", ops,
+                new Index().on("createdAt", Sort.Direction.ASC).named("createdAt_1"),
+                "createdAt_1", runtimeSettings.duration(SettingKey.RETENTION_PROCESSING_JOBS));
+    }
+
+    // index TTL da co thi doi expireAfterSeconds bang collMod (createIndex lai se loi IndexOptionsConflict)
+    private void applyTtlIndex(String collection, IndexOperations ops, Index index, String name, Duration ttl) {
+        boolean exists = ops.getIndexInfo().stream().anyMatch(i -> name.equals(i.getName()));
+        if (!exists) {
+            ops.createIndex(index.expire(ttl));
+            return;
+        }
+        long seconds = ttl.toSeconds();
+        boolean same = ops.getIndexInfo().stream()
+                .filter(i -> name.equals(i.getName()))
+                .anyMatch(i -> i.getExpireAfter().map(d -> d.toSeconds() == seconds).orElse(false));
+        if (!same) {
+            mongoTemplate.getDb().runCommand(new Document("collMod", collection)
+                    .append("index", new Document("name", name).append("expireAfterSeconds", seconds)));
+            log.info("Doi TTL index {}.{} thanh {}s", collection, name, seconds);
+        }
     }
 
     private void applyAuditLogsIndexes() {
@@ -259,10 +291,9 @@ public class MongoIndexBootstrapConfig {
 
     private void applyUploadSessionsIndexes() {
         IndexOperations ops = mongoTemplate.indexOps("upload_sessions");
-        ops.createIndex(new Index()
-                .on("expiresAt", Sort.Direction.ASC)
-                .named("idx_upload_sessions_ttl")
-                .expire(Duration.ofSeconds(172800)));
+        applyTtlIndex("upload_sessions", ops,
+                new Index().on("expiresAt", Sort.Direction.ASC).named("idx_upload_sessions_ttl"),
+                "idx_upload_sessions_ttl", runtimeSettings.duration(SettingKey.RETENTION_UPLOAD_SESSIONS));
         ops.createIndex(new Index()
                 .on("ownerId", Sort.Direction.ASC)
                 .on("status", Sort.Direction.ASC)

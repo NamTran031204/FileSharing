@@ -3,6 +3,9 @@ package org.example.filesharing.configurations;
 import lombok.RequiredArgsConstructor;
 import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import org.example.filesharing.filters.JwtAuthenticationFilter;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +27,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,6 +39,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    // ObjectProvider de context test khong co RuntimeSettings van dung duoc, mac dinh localhost:5173
+    private final ObjectProvider<RuntimeSettings> runtimeSettings;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,7 +55,7 @@ public class SecurityConfig {
                         // proof link cho khach khong tai khoan, tu kiem token trong service
                         .requestMatchers("/api/public/**").permitAll()
 
-                        .requestMatchers("/api/admin/**").hasAuthority(UserGrantedRole.ROLE_ADMIN.toString())
+                        .requestMatchers("/api/admin/**").hasAuthority(UserGrantedRole.ROLE_SA.name())
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -93,11 +99,24 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource() {
+            // dung lai viec khop duong dan /api/**, nhung origin doc tu setting moi request
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                return super.getCorsConfiguration(request) == null ? null : buildCorsConfiguration();
+            }
+        };
+        source.registerCorsConfiguration("/api/**", buildCorsConfiguration());
+        return source;
+    }
+
+    private CorsConfiguration buildCorsConfiguration() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173"
-        ));
+        RuntimeSettings rs = runtimeSettings.getIfAvailable();
+        configuration.setAllowedOrigins(rs == null
+                ? List.of("http://localhost:5173")
+                : rs.list(SettingKey.SECURITY_CORS_ALLOWED_ORIGINS));
 
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
@@ -120,9 +139,6 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
-        return source;
+        return configuration;
     }
 }

@@ -1,6 +1,8 @@
 package com.file.service.filesharingvideocodec.ffmpeg;
 
 import com.file.service.filesharingvideocodec.config.VideoEncodingConfig;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,7 @@ public class FfmpegCommandBuilder {
             "-reconnect_streamed", "1", "-reconnect_delay_max", "5");
 
     private final VideoEncodingConfig encodingConfig;
+    private final RuntimeSettings settings;
 
     static boolean isHttp(String input) {
         return input.startsWith("http://") || input.startsWith("https://");
@@ -30,8 +33,8 @@ public class FfmpegCommandBuilder {
      */
     public List<String> buildCommand(String inputPath, String outputDir) {
         VideoEncodingConfig.FfmpegConfig ffmpeg = encodingConfig.getFfmpeg();
-        VideoEncodingConfig.SegmentConfig segment = encodingConfig.getSegment();
-        String threads = String.valueOf(ffmpeg.getThreadsPerProcess());
+        // moi job goi 1 lan nen cac gia tri video.* la anh chup cua job do
+        String threads = String.valueOf(settings.intValue(SettingKey.VIDEO_THREADS_PER_PROCESS));
 
         List<String> cmd = new ArrayList<>(List.of(ffmpeg.getPath(), "-hide_banner", "-y",
                 // tien do dang key=value tren stdout moi 5s; -v verbose de co "Statistics: N bytes read"
@@ -43,10 +46,11 @@ public class FfmpegCommandBuilder {
         }
         // -threads truoc -i: gioi han decoder; sau -i: gioi han encoder
         cmd.addAll(List.of("-threads", threads, "-i", inputPath));
-        cmd.addAll(List.of("-c:v", "libx264", "-preset", ffmpeg.getPreset(), "-crf", String.valueOf(ffmpeg.getCrf()),
+        cmd.addAll(List.of("-c:v", "libx264", "-preset", settings.string(SettingKey.VIDEO_PRESET), "-crf",
+                String.valueOf(settings.intValue(SettingKey.VIDEO_CRF)),
                 "-threads", threads,
-                "-c:a", "aac", "-b:a", segment.getAudioBitrate(),
-                "-f", "hls", "-hls_time", String.valueOf(segment.getDuration()),
+                "-c:a", "aac", "-b:a", settings.string(SettingKey.VIDEO_AUDIO_BITRATE),
+                "-f", "hls", "-hls_time", String.valueOf(settings.intValue(SettingKey.VIDEO_SEGMENT_DURATION)),
                 "-hls_playlist_type", "vod", "-hls_list_size", "0",
                 "-hls_segment_filename", outputDir + File.separator + "seg_%04d.ts",
                 outputDir + File.separator + "index.m3u8"));

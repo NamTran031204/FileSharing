@@ -7,14 +7,16 @@ import {
   QuestionCircleOutlined,
   LogoutOutlined,
   PlusOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
+import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CreateProjectModal, {type CreateProjectFormValues} from "../../project/CreateProjectModal.tsx";
 import {useState} from "react";
 import uiUtils from "../../../utils/uiUtils.tsx";
 import {ProjectControllerService} from "../../../api/api/ProjectControllerService";
-import type {ProjectStatus} from "../../../api/api/index.defs";
+import {UserGrantedRole, type ProjectStatus} from "../../../api/api/index.defs";
 import {useStore} from "../../../store";
 import i18n from '../../../i18n';
 
@@ -27,7 +29,7 @@ interface AppSidebarProps {
  * AppSidebar - Sidebar chung cho toan bo ung dung
  * Navy-Purple background, fixed width
  */
-const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
+const AppSidebar = observer(({ collapsed = false }: AppSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const {sessionStore} = useStore();
@@ -69,6 +71,15 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
       icon: <QuestionCircleOutlined />,
       label: i18n.t('core:appSidebar.help'),
     },
+    // chi ROLE_SA thay muc quan tri (backend van chan that)
+    ...(sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_SA)
+      ? [{
+          key: '/admin',
+          icon: <SafetyCertificateOutlined />,
+          label: i18n.t('admin:sidebar'),
+          isActive: location.pathname.startsWith('/admin'),
+        }]
+      : []),
   ];
 
   const handleItemClick = (key: string) => {
@@ -219,6 +230,6 @@ const AppSidebar = ({ collapsed = false }: AppSidebarProps) => {
           />
       </>
   );
-};
+});
 
 export default AppSidebar;

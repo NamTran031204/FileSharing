@@ -37,7 +37,8 @@ class AssetServiceImplTest {
         AssetServiceImpl service = new AssetServiceImpl(assetRepo, mock(MetadataRepo.class), mock(ProjectRepo.class),
                 folderRepo, mock(MongoTemplate.class), mock(AuditService.class), mock(AuditLogService.class),
                 mock(UploadSessionService.class), mock(StorageService.class), mock(PasswordEncoder.class),
-                assetAccessService, mock(AccessService.class));
+                assetAccessService, mock(AccessService.class),
+                new com.file.service.filesharing.core.setting.RuntimeSettings(mock(MongoTemplate.class), null, new org.springframework.mock.env.MockEnvironment(), java.time.Duration.ofSeconds(10)));
 
         AssetEntity asset = AssetEntity.builder().assetId("a1").projectId("px").folderId("f1").build();
         asset.setIsActive(true);

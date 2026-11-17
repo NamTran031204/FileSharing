@@ -2,11 +2,12 @@ package org.example.filesharing.services.impl;
 
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.services.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -41,8 +42,6 @@ import java.util.List;
 @Slf4j
 public class S3StorageServiceImpl implements StorageService {
 
-    private static final long DOWNLOAD_TTL_MIN_SECONDS = 900L;
-    private static final long DOWNLOAD_TTL_MAX_SECONDS = 14400L;
     private static final String NO_SUCH_UPLOAD_ERROR_CODE = "NoSuchUpload";
 
     private final S3Client s3Client;
@@ -52,19 +51,16 @@ public class S3StorageServiceImpl implements StorageService {
     @Value("${minio.buckets.files}")
     private String bucketName;
 
-    private Duration partUrlTtl;
+    private final RuntimeSettings settings;
 
     public S3StorageServiceImpl(S3Client s3Client,
                                  @Qualifier("uploadPresigner") S3Presigner uploadPresigner,
-                                 @Qualifier("downloadPresigner") S3Presigner downloadPresigner) {
+                                 @Qualifier("downloadPresigner") S3Presigner downloadPresigner,
+                                 RuntimeSettings settings) {
+        this.settings = settings;
         this.s3Client = s3Client;
         this.uploadPresigner = uploadPresigner;
         this.downloadPresigner = downloadPresigner;
-    }
-
-    @Value("${upload.part-url-ttl}")
-    public void setPartUrlTtl(String rawPartUrlTtl) {
-        this.partUrlTtl = DurationStyle.detectAndParse(rawPartUrlTtl);
     }
 
     @Override
@@ -91,7 +87,7 @@ public class S3StorageServiceImpl implements StorageService {
                         .key(objectName)
                         .build();
                 var presigned = uploadPresigner.presignPutObject(b -> b
-                        .signatureDuration(partUrlTtl)
+                        .signatureDuration(settings.duration(SettingKey.UPLOAD_PART_URL_TTL))
                         .putObjectRequest(putObjectRequest));
                 return presigned.url().toString();
             }
@@ -103,7 +99,7 @@ public class S3StorageServiceImpl implements StorageService {
                     .partNumber(partNumber)
                     .build();
             var presigned = uploadPresigner.presignUploadPart(b -> b
-                    .signatureDuration(partUrlTtl)
+                    .signatureDuration(settings.duration(SettingKey.UPLOAD_PART_URL_TTL))
                     .uploadPartRequest(uploadPartRequest));
             return presigned.url().toString();
         } catch (SdkException e) {
@@ -208,8 +204,8 @@ public class S3StorageServiceImpl implements StorageService {
     @Override
     public String presignGetObject(String objectName, String downloadFileName, long fileSize) {
         try {
-            long ttlSeconds = Math.max(DOWNLOAD_TTL_MIN_SECONDS,
-                    Math.min(DOWNLOAD_TTL_MAX_SECONDS, fileSize / 1_000_000L));
+            long ttlSeconds = Math.max(settings.duration(SettingKey.DOWNLOAD_URL_TTL_MIN).toSeconds(),
+                    Math.min(settings.duration(SettingKey.DOWNLOAD_URL_TTL_MAX).toSeconds(), fileSize / 1_000_000L));
 
             GetObjectRequest.Builder getObjectRequestBuilder = GetObjectRequest.builder()
                     .bucket(bucketName)

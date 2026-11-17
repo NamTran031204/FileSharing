@@ -2,6 +2,8 @@ package org.example.filesharing.jobs.scheduled;
 
 import com.file.service.filesharing.core.entity.models.UploadSessionEntity;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import lombok.extern.slf4j.Slf4j;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.JobSubmitService;
@@ -11,7 +13,6 @@ import org.example.filesharing.services.UploadSessionService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
  * between MongoDB and storage.
  * <p>
  * Storage → Mongo: a multipart upload with no matching session is an orphan. Only orphans older
- * than {@link #ORPHAN_MIN_AGE} are aborted, so multipart uploads still in flight through the
+ * than upload.reconcile.orphan-min-age are aborted, so multipart uploads still in flight through the
  * legacy (E7) endpoints are never killed mid-transfer.
  * <p>
  * Mongo → storage: a session marked COMPLETED whose object is gone means the commit was lost;
@@ -32,21 +33,20 @@ import java.util.List;
 @Slf4j
 public class UploadReconcileJob {
 
-    private static final Duration ORPHAN_MIN_AGE = Duration.ofHours(24);
-    // Chi tao bu job cho session hoan tat gan day, tranh dung lai lich su cu
-    private static final Duration SUBMIT_WINDOW = Duration.ofHours(48);
-
     private final UploadSessionService uploadSessionService;
     private final StorageService storageService;
     private final MetadataService metadataService;
     private final MetadataRepo metadataRepo;
     private final JobSubmitService jobSubmitService;
+    private final RuntimeSettings settings;
 
     public UploadReconcileJob(UploadSessionService uploadSessionService,
                               StorageService storageService,
                               MetadataService metadataService,
                               MetadataRepo metadataRepo,
-                              JobSubmitService jobSubmitService) {
+                              JobSubmitService jobSubmitService,
+                              RuntimeSettings settings) {
+        this.settings = settings;
         this.uploadSessionService = uploadSessionService;
         this.storageService = storageService;
         this.metadataService = metadataService;
@@ -72,7 +72,7 @@ public class UploadReconcileJob {
             return 0;
         }
 
-        Instant cutoff = now.minus(ORPHAN_MIN_AGE);
+        Instant cutoff = now.minus(settings.duration(SettingKey.UPLOAD_RECONCILE_ORPHAN_MIN_AGE));
         int aborted = 0;
         for (StorageService.MultipartUploadSummary upload : uploads) {
             if (uploadSessionService.findByUploadId(upload.uploadId()).isPresent()) {
@@ -120,7 +120,7 @@ public class UploadReconcileJob {
     // Tao bu job neu session COMPLETED chua co job (upsert idempotent, co job roi thi khong lam gi)
     private void ensureJob(UploadSessionEntity session) {
         if (session.getMetadataId() == null || session.getCompletedAt() == null
-                || session.getCompletedAt().isBefore(Instant.now().minus(SUBMIT_WINDOW))) {
+                || session.getCompletedAt().isBefore(Instant.now().minus(settings.duration(SettingKey.UPLOAD_RECONCILE_SUBMIT_WINDOW)))) {
             return;
         }
         try {

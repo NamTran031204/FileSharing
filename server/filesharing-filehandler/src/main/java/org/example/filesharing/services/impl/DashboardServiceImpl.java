@@ -1,5 +1,7 @@
 package org.example.filesharing.services.impl;
 
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.example.filesharing.entities.dtos.dashboard.DashboardOverviewDTO;
@@ -36,11 +38,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
-    private static final int DEFAULT_LIMIT = 10;
-    private static final int MAX_LIMIT = 50;
     private static final String COLLECTION_REVIEW_SESSIONS = "review_sessions";
 
     private final MongoTemplate mongoTemplate;
+    private final RuntimeSettings settings;
     private final AuditService auditService;
     private final AssetRepo assetRepo;
     private final MetadataRepo metadataRepo;
@@ -176,9 +177,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     private int resolveLimit(int limit) {
         if (limit <= 0) {
-            return DEFAULT_LIMIT;
+            return settings.intValue(SettingKey.DASHBOARD_RECENT_DEFAULT_LIMIT);
         }
-        return Math.min(limit, MAX_LIMIT);
+        return Math.min(limit, settings.intValue(SettingKey.DASHBOARD_RECENT_MAX_LIMIT));
     }
 
     private List<ProjectEntity> getAccessibleProjects(String userId) {

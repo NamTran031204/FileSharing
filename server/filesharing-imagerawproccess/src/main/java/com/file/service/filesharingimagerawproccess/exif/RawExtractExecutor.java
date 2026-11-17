@@ -9,6 +9,8 @@ import com.file.service.filesharing.core.job.JobContext;
 import com.file.service.filesharing.core.job.JobExecution;
 import com.file.service.filesharing.core.job.JobExecutor;
 import com.file.service.filesharing.core.job.OutputObject;
+import com.file.service.filesharing.core.setting.RuntimeSettings;
+import com.file.service.filesharing.core.setting.SettingKey;
 import com.file.service.filesharing.core.job.exception.PermanentJobException;
 import com.file.service.filesharing.core.job.exception.TransientJobException;
 import com.file.service.filesharing.core.job.tool.ToolCommand;
@@ -51,6 +53,7 @@ public class RawExtractExecutor implements JobExecutor {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private final RawProcessingConfig config;
+    private final RuntimeSettings settings;
     private ExifToolSession session;
 
     @Value("${minio.buckets.thumbnails}")
@@ -94,7 +97,8 @@ public class RawExtractExecutor implements JobExecutor {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("exiftool bi ngat khi kiem: " + path, e);
         }
-        session = new ExifToolSession(List.of(path), config.getCommandTimeout(), config.getLockWait());
+        session = new ExifToolSession(List.of(path), settings.duration(SettingKey.RAW_COMMAND_TIMEOUT),
+                settings.duration(SettingKey.RAW_LOCK_WAIT));
     }
 
     @PreDestroy
@@ -104,6 +108,8 @@ public class RawExtractExecutor implements JobExecutor {
 
     @Override
     public JobExecution process(JobContext ctx) throws PermanentJobException, TransientJobException {
+        // chup raw.* o dau job; phien exiftool dung chung nen dat lai timeout cho job nay
+        session.setTimeouts(settings.duration(SettingKey.RAW_COMMAND_TIMEOUT), settings.duration(SettingKey.RAW_LOCK_WAIT));
         String objectName = ctx.job().getObjectName();
         int dot = objectName.lastIndexOf('.');
         String ext = dot < 0 ? "" : objectName.substring(dot + 1).toLowerCase(Locale.ROOT);

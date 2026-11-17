@@ -1,0 +1,410 @@
+{
+  "sidebar": "Admin",
+  "menu": {
+    "home": "Overview",
+    "users": "Accounts",
+    "settings": "Settings",
+    "emailTemplates": "Email templates",
+    "nodes": "Workers / Nodes"
+  },
+  "home": {
+    "title": "System administration",
+    "description": "Pick an item in the left menu to manage the system."
+  },
+  "common": {
+    "error": "Something went wrong",
+    "search": "Search",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Close"
+  },
+  "user": {
+    "title": "Account management",
+    "create": "Create operator account",
+    "createTitle": "Create operator account",
+    "createdOk": "Account created",
+    "email": "Email",
+    "publicUserName": "Display name",
+    "password": "Password (min 8 characters)",
+    "roles": "Roles",
+    "status": "Status",
+    "enabled": "Active",
+    "locked": "Locked",
+    "provider": "Provider",
+    "createdAt": "Created",
+    "lastLoginAt": "Last login",
+    "searchText": "Search",
+    "searchPlaceholder": "Email or display name",
+    "detailTitle": "Account detail",
+    "ownedProjectCount": "Owned projects",
+    "fileCount": "Files",
+    "storageBytes": "Storage",
+    "sessionsValidAfter": "Sessions valid after",
+    "assignRoleTitle": "Assign roles",
+    "rolesOk": "Roles updated",
+    "lockConfirmTitle": "Lock this account?",
+    "unlockConfirmTitle": "Unlock this account?",
+    "lockedOk": "Account locked",
+    "unlockedOk": "Account unlocked",
+    "revokeConfirmTitle": "Revoke all sessions?",
+    "revokeConfirmContent": "{{email}} will have to sign in again.",
+    "revokedOk": "Sessions revoked"
+  },
+  "setting": {
+    "title": "System settings",
+    "group": {
+      "APP": "Application",
+      "AUTH": "Authentication",
+      "UPLOAD": "Upload",
+      "DOWNLOAD": "Download",
+      "PROOF": "Proof",
+      "DASHBOARD": "Dashboard",
+      "RETENTION": "Retention",
+      "JOB": "Processing jobs",
+      "WORKER": "Worker (concurrency)",
+      "VIDEO": "Video",
+      "IMAGE": "Image",
+      "RAW": "RAW image",
+      "MAIL": "Email"
+    },
+    "overridden": "overridden",
+    "needRestart": "needs restart",
+    "notConfigured": "not configured",
+    "secretKeepHint": "Leave blank to keep",
+    "clearValue": "Clear value",
+    "default": "Default",
+    "reset": "Reset",
+    "resetConfirm": "Reset to default?",
+    "resetOk": "Reset done",
+    "savedOk": "Settings saved",
+    "mailConnect": "Test connection",
+    "mailSend": "Send test email",
+    "mailOk": "Success ({{ms}} ms)",
+    "item": {
+      "app_frontend_base_url": {
+        "label": "Web app base URL",
+        "desc": "Base URL of the web app used for links in emails"
+      },
+      "security_cors_allowed_origins": {
+        "label": "Allowed CORS origins",
+        "desc": "Browser origins allowed to call the API"
+      },
+      "auth_jwt_access_ttl": {
+        "label": "Access token lifetime",
+        "desc": "Access token expires after this period"
+      },
+      "auth_jwt_refresh_ttl": {
+        "label": "Refresh token lifetime",
+        "desc": "Refresh token expires after this period"
+      },
+      "upload_max_file_size": {
+        "label": "Max file size",
+        "desc": "Size limit of a single uploaded file"
+      },
+      "upload_part_url_ttl": {
+        "label": "Part URL lifetime",
+        "desc": "Lifetime of the presigned URL for each file part"
+      },
+      "upload_max_threads": {
+        "label": "Max upload threads",
+        "desc": "Maximum parallel parts per file"
+      },
+      "upload_session_idle_ttl": {
+        "label": "Upload session idle timeout",
+        "desc": "Upload session expires after this idle period"
+      },
+      "upload_max_sessions_per_user": {
+        "label": "Max sessions per user",
+        "desc": "Maximum open upload sessions per user"
+      },
+      "upload_verify_etag_md5": {
+        "label": "Verify ETag MD5",
+        "desc": "Verify ETag MD5 integrity when an upload completes"
+      },
+      "upload_session_hard_expiry": {
+        "label": "Upload session hard expiry",
+        "desc": "Upload session is cancelled after this period even if active"
+      },
+      "upload_initial_url_batch": {
+        "label": "Initial URL batch",
+        "desc": "Number of part URLs issued when a session opens"
+      },
+      "upload_reconcile_orphan_min_age": {
+        "label": "Orphan minimum age",
+        "desc": "Unlinked files are only cleaned when older than this"
+      },
+      "upload_reconcile_submit_window": {
+        "label": "Reconcile submit window",
+        "desc": "Window used to reconcile finished but unsubmitted uploads"
+      },
+      "upload_gc_interval": {
+        "label": "Upload GC interval",
+        "desc": "How often expired upload sessions are cleaned"
+      },
+      "upload_reconcile_interval": {
+        "label": "Upload reconcile interval",
+        "desc": "How often upload reconciliation runs"
+      },
+      "download_url_ttl_min": {
+        "label": "Min download URL lifetime",
+        "desc": "Minimum lifetime of a download URL"
+      },
+      "download_url_ttl_max": {
+        "label": "Max download URL lifetime",
+        "desc": "Maximum lifetime of a download URL"
+      },
+      "proof_max_name_length": {
+        "label": "Max name length",
+        "desc": "Maximum characters of the proof submitter name"
+      },
+      "proof_max_note_length": {
+        "label": "Max note length",
+        "desc": "Maximum characters of the proof note"
+      },
+      "proof_max_submit_assets": {
+        "label": "Max assets per submission",
+        "desc": "Maximum assets in a single proof submission"
+      },
+      "proof_max_page_size": {
+        "label": "Max page size",
+        "desc": "Maximum records per page in proof lists"
+      },
+      "proof_preview_url_ttl": {
+        "label": "Preview URL lifetime",
+        "desc": "Lifetime of proof preview URLs"
+      },
+      "dashboard_recent_default_limit": {
+        "label": "Default recent items",
+        "desc": "Default number of recent items shown"
+      },
+      "dashboard_recent_max_limit": {
+        "label": "Max recent items",
+        "desc": "Maximum recent items that can be requested"
+      },
+      "retention_processing_jobs": {
+        "label": "Processing job retention",
+        "desc": "Processing jobs are deleted after this period"
+      },
+      "retention_upload_sessions": {
+        "label": "Upload session retention",
+        "desc": "Upload sessions are deleted after this period"
+      },
+      "job_max_retries": {
+        "label": "Max retries",
+        "desc": "Retries allowed for a job with a transient failure"
+      },
+      "job_backoff_base": {
+        "label": "Backoff base",
+        "desc": "Delay before the first retry"
+      },
+      "job_backoff_max": {
+        "label": "Backoff max",
+        "desc": "Upper bound of the delay between retries"
+      },
+      "job_presign_ttl": {
+        "label": "Job presign lifetime",
+        "desc": "Lifetime of presigned URLs workers use to fetch and return files"
+      },
+      "job_upload_batch_size": {
+        "label": "Upload batch size",
+        "desc": "Files a worker uploads per batch"
+      },
+      "job_workspace_cleanup_age": {
+        "label": "Workspace cleanup age",
+        "desc": "Job temp folders older than this are cleaned"
+      },
+      "job_lease_duration": {
+        "label": "Lease duration",
+        "desc": "How long a worker holds a job before renewing"
+      },
+      "job_poll_interval": {
+        "label": "Poll interval",
+        "desc": "How often workers poll for new jobs"
+      },
+      "job_reaper_interval": {
+        "label": "Reaper interval",
+        "desc": "How often jobs with expired leases are reclaimed"
+      },
+      "job_relay_interval": {
+        "label": "Relay interval",
+        "desc": "How often job results are relayed to Kafka"
+      },
+      "job_relay_lease": {
+        "label": "Relay lease",
+        "desc": "How long a node holds the right to relay results"
+      },
+      "worker_bulkhead_ffmpeg_encoder_max_concurrent": {
+        "label": "Concurrent video jobs",
+        "desc": "Concurrent video encoding processes"
+      },
+      "worker_bulkhead_image_processor_max_concurrent": {
+        "label": "Concurrent image jobs",
+        "desc": "Concurrent image processing tasks"
+      },
+      "worker_bulkhead_raw_processor_max_concurrent": {
+        "label": "Concurrent RAW jobs",
+        "desc": "Concurrent RAW processing tasks"
+      },
+      "video_timeout": {
+        "label": "Video timeout",
+        "desc": "A video job is cancelled after this period"
+      },
+      "video_probe_timeout": {
+        "label": "Video probe timeout",
+        "desc": "Maximum time to read video info"
+      },
+      "video_threads_per_process": {
+        "label": "Threads per process",
+        "desc": "CPU threads per encoding process"
+      },
+      "video_crf": {
+        "label": "Video quality (CRF)",
+        "desc": "Lower CRF means higher quality and larger files"
+      },
+      "video_preset": {
+        "label": "Video preset",
+        "desc": "Encoding speed preset; slower compresses better"
+      },
+      "video_segment_duration": {
+        "label": "HLS segment length",
+        "desc": "Seconds per HLS segment"
+      },
+      "video_audio_bitrate": {
+        "label": "Audio bitrate",
+        "desc": "Audio bitrate when encoding, e.g. 128k"
+      },
+      "image_processing_timeout": {
+        "label": "Image processing timeout",
+        "desc": "An image task is cancelled after this period"
+      },
+      "image_max_pixels": {
+        "label": "Max pixels",
+        "desc": "Images above this pixel count are rejected"
+      },
+      "image_vips_concurrency": {
+        "label": "libvips concurrency",
+        "desc": "libvips threads per task"
+      },
+      "image_allowed_loaders": {
+        "label": "Allowed image loaders",
+        "desc": "libvips loaders that are allowed"
+      },
+      "image_webp_quality": {
+        "label": "WebP quality",
+        "desc": "WebP quality for generated previews"
+      },
+      "image_webp_effort": {
+        "label": "WebP effort",
+        "desc": "WebP compression effort; higher is slower"
+      },
+      "image_thumbnail_width": {
+        "label": "Thumbnail width",
+        "desc": "Thumbnail width in pixels"
+      },
+      "image_preview_max_edge": {
+        "label": "Preview max edge",
+        "desc": "Longest edge of preview images in pixels"
+      },
+      "raw_command_timeout": {
+        "label": "RAW command timeout",
+        "desc": "Maximum time for each RAW processing command"
+      },
+      "raw_lock_wait": {
+        "label": "RAW lock wait",
+        "desc": "Maximum time to wait for the RAW lock"
+      },
+      "mail_host": {
+        "label": "SMTP host",
+        "desc": "Mail server address"
+      },
+      "mail_port": {
+        "label": "SMTP port",
+        "desc": "Mail server port"
+      },
+      "mail_username": {
+        "label": "SMTP username",
+        "desc": "Mail server login"
+      },
+      "mail_password": {
+        "label": "SMTP password",
+        "desc": "Mail server password, never shown again"
+      },
+      "mail_auth": {
+        "label": "SMTP authentication",
+        "desc": "Authenticate when connecting to the mail server"
+      },
+      "mail_starttls": {
+        "label": "STARTTLS",
+        "desc": "Use STARTTLS to encrypt the connection"
+      },
+      "mail_connection_timeout": {
+        "label": "Connection timeout",
+        "desc": "Maximum time to connect to the mail server"
+      },
+      "mail_timeout": {
+        "label": "Read timeout",
+        "desc": "Maximum time to wait for the mail server"
+      },
+      "mail_write_timeout": {
+        "label": "Write timeout",
+        "desc": "Maximum time to send data to the mail server"
+      },
+      "mail_from_address": {
+        "label": "Sender address",
+        "desc": "Sender email address; falls back to the SMTP username when empty"
+      },
+      "mail_from_name": {
+        "label": "Sender name",
+        "desc": "Display name of the email sender"
+      }
+    },
+    "fixedBadge": "Fixed by system",
+    "fixedHint": "Core parameters owned by developers; administrators can only view them."
+  },
+  "template": {
+    "title": "Email templates",
+    "code": "Code",
+    "locale": "Locale",
+    "subject": "Subject",
+    "state": "State",
+    "edited": "Edited",
+    "default": "Default",
+    "updatedAt": "Last updated",
+    "variables": "Variables",
+    "preview": "Preview",
+    "sendTest": "Send test",
+    "testTo": "Test recipient",
+    "reset": "Reset to default",
+    "resetConfirm": "Reset template to default?",
+    "savedOk": "Template saved",
+    "resetOk": "Template reset",
+    "testSentOk": "Test email sent",
+    "name": "Name",
+    "description": "Description",
+    "variablesInsert": "Variables (click to insert)",
+    "searchText": "Keyword",
+    "searchPlaceholder": "Code, name or description",
+    "localeVi": "Vietnamese",
+    "localeEn": "English"
+  },
+  "node": {
+    "title": "Workers / Nodes",
+    "empty": "No node has sent a heartbeat yet. Check that services are running and can reach MongoDB.",
+    "cores": "cores",
+    "uptime": "Uptime",
+    "cpuSystem": "System CPU",
+    "cpuProcess": "JVM CPU",
+    "cpuChildren": "Child process CPU",
+    "diskFree": "Temp disk free",
+    "ram": "RAM free / total",
+    "heap": "Heap",
+    "slots": "Slots in use",
+    "runningJobs": "Running jobs",
+    "drain": "Drain",
+    "undrain": "Undrain",
+    "drainConfirm": "Drain this node? It stops taking new jobs; running jobs continue.",
+    "undrainConfirm": "Undrain and resume taking jobs?",
+    "drainedOk": "Node drained",
+    "undrainedOk": "Node undrained"
+  }
+}

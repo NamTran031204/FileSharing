@@ -1,3 +1,7 @@
+# loai node hien tren trang quan tri (WORKER duoc drain)
+node:
+  kind: NOTIFICATION
+
 server:
   port: 5001
 
@@ -10,20 +14,9 @@ spring:
     import: optional:file:./.env[.properties]
   application:
     name: filesharing-notification
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${GMAIL_USERNAME}
-    password: ${GMAIL_APP_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}
     producer:

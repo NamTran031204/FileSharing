@@ -190,6 +190,18 @@
     padding-inline: 16px !important;
 }
 
+/* antd chen tr.ant-table-measure-row (do scroll.x) vao tbody de do do rong cot; hang nay phai cao 0.
+   Cac rule td o tren (height/padding, ke ca density !important) lam no cao 56px thanh khoang trang
+   giua header va hang dau. Dat sau density va tang do uu tien de thang. */
+.enhanced-table .ant-table-tbody > tr.ant-table-measure-row > td,
+.enhanced-table.density-small .ant-table-tbody > tr.ant-table-measure-row > td,
+.enhanced-table.density-middle .ant-table-tbody > tr.ant-table-measure-row > td,
+.enhanced-table.density-large .ant-table-tbody > tr.ant-table-measure-row > td {
+    height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
 .ord-table-settings-bar .ant-btn-text:hover {
     color: var(--vtt-primary, var(--color-primary));
     background: color-mix(in srgb, var(--color-primary) 12%, var(--color-card)) !important;

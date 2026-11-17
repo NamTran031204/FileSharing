@@ -157,6 +157,168 @@ export interface UserDto {
   lastLoginAt?: Date;
 }
 
+export interface AdminRoleUpdateDto {
+  /**  */
+  roles?: UserGrantedRole[];
+}
+
+export interface AdminUserRowDto {
+  /**  */
+  userId?: string;
+
+  /**  */
+  email?: string;
+
+  /**  */
+  publicUserName?: string;
+
+  /**  */
+  roles?: UserGrantedRole[];
+
+  /**  */
+  enabled?: boolean;
+
+  /**  */
+  emailVerified?: boolean;
+
+  /**  */
+  providers?: AuthProvider[];
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  lastLoginAt?: Date;
+}
+
+export interface CommonResponseAdminUserRowDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminUserRowDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminSettingUpdateRequestDto {
+  /**  */
+  values?: object;
+
+  /**  */
+  clear?: string[];
+}
+
+export interface AdminSettingItemDto {
+  /**  */
+  key?: string;
+
+  /**  */
+  group?: string;
+
+  /**  */
+  type?: string;
+
+  /**  */
+  apply?: string;
+
+  /**  */
+  secret?: boolean;
+
+  /**  */
+  value?: string;
+
+  /**  */
+  maskedSet?: boolean;
+
+  /**  */
+  defaultValue?: string;
+
+  /**  */
+  overridden?: boolean;
+
+  /**  */
+  min?: string;
+
+  /**  */
+  max?: string;
+
+  /**  */
+  options?: string[];
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  updatedBy?: string;
+}
+
+export interface CommonResponseListAdminSettingItemDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminSettingItemDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminEmailTemplateUpdateDto {
+  /**  */
+  subject?: string;
+
+  /**  */
+  body?: string;
+}
+
+export interface AdminEmailTemplateDto {
+  /**  */
+  code?: string;
+
+  /**  */
+  locale?: string;
+
+  /**  */
+  subject?: string;
+
+  /**  */
+  body?: string;
+
+  /**  */
+  overridden?: boolean;
+
+  /**  */
+  variables?: string[];
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  updatedBy?: string;
+}
+
+export interface CommonResponseAdminEmailTemplateDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminEmailTemplateDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
 export interface AccessSettingsRequestDTO {
   /**  */
   viewersCanDownload?: boolean;
@@ -2276,12 +2438,51 @@ export interface AnnotationCreateDTO {
   parentCommentId?: string;
 }
 
-export interface CommonResponseProcessingJobEntity {
+export interface AdminCreateUserRequestDto {
+  /**  */
+  email?: string;
+
+  /**  */
+  publicUserName?: string;
+
+  /**  */
+  password?: string;
+}
+
+export interface AdminUserFilterDto {
+  /**  */
+  searchText?: string;
+
+  /**  */
+  role?: UserGrantedRole;
+
+  /**  */
+  enabled?: boolean;
+
+  /**  */
+  provider?: AuthProvider;
+}
+
+export interface PageRequestDtoAdminUserFilterDto {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: AdminUserFilterDto;
+}
+
+export interface CommonResponsePageResultAdminUserRowDto {
   /**  */
   isSuccessful?: boolean;
 
   /**  */
-  data?: ProcessingJobEntity;
+  data?: PageResultAdminUserRowDto;
 
   /**  */
   code?: string;
@@ -2290,195 +2491,123 @@ export interface CommonResponseProcessingJobEntity {
   message?: string;
 }
 
-export interface JobErrorEntry {
+export interface PageResultAdminUserRowDto {
   /**  */
-  attemptId?: string;
+  totalCount?: string;
 
   /**  */
-  workerId?: string;
+  data?: AdminUserRowDto[];
+}
+
+export interface CommonResponseAdminSettingItemDto {
+  /**  */
+  isSuccessful?: boolean;
 
   /**  */
-  at?: Date;
+  data?: AdminSettingItemDto;
 
   /**  */
-  kind?: Kind;
+  code?: string;
 
   /**  */
   message?: string;
-
-  /**  */
-  detail?: string;
 }
 
-export interface JobResourceUsage {
+export interface AdminMailTestRequestDto {
   /**  */
-  attemptId?: string;
+  mode?: string;
 
   /**  */
-  tool?: string;
-
-  /**  */
-  peakCpuPercent?: number;
-
-  /**  */
-  avgCpuPercent?: number;
-
-  /**  */
-  peakRssBytes?: string;
-
-  /**  */
-  peakTempBytes?: string;
-
-  /**  */
-  samples?: number;
-
-  /**  */
-  wallSeconds?: number;
-
-  /**  */
-  stages?: object;
-
-  /**  */
-  bytesIn?: string;
-
-  /**  */
-  bytesOut?: string;
-
-  /**  */
-  mediaSeconds?: number;
-
-  /**  */
-  pixels?: string;
-
-  /**  */
-  toolRuns?: ToolRun[];
+  toEmail?: string;
 }
 
-export interface ProcessingJobConfig {
+export interface AdminMailTestResultDto {
   /**  */
-  profiles?: string[];
+  ok?: boolean;
 
   /**  */
-  intervalSeconds?: number;
+  latencyMs?: string;
 
   /**  */
-  maxThumbnails?: number;
-
-  /**  */
-  scanEngine?: string;
+  error?: string;
 }
 
-export interface ProcessingJobEntity {
+export interface CommonResponseAdminMailTestResultDto {
   /**  */
-  isTrash?: boolean;
+  isSuccessful?: boolean;
 
   /**  */
-  trashedAt?: Date;
+  data?: AdminMailTestResultDto;
 
   /**  */
-  createdBy?: string;
+  code?: string;
 
   /**  */
-  createdByEmail?: string;
+  message?: string;
+}
+
+export interface AdminNodeDrainRequestDto {
+  /**  */
+  draining?: boolean;
+}
+
+export interface AdminNodeDto {
+  /**  */
+  nodeId?: string;
 
   /**  */
-  updateBy?: string;
+  service?: string;
 
   /**  */
-  updateByEmail?: string;
+  kind?: string;
 
   /**  */
-  isActive?: boolean;
+  host?: string;
 
   /**  */
-  createdAt?: Date;
+  pid?: string;
 
   /**  */
-  updatedAt?: Date;
-
-  /**  */
-  jobId?: string;
-
-  /**  */
-  metadataId?: string;
-
-  /**  */
-  versionNumber?: number;
-
-  /**  */
-  assetId?: string;
-
-  /**  */
-  objectName?: string;
-
-  /**  */
-  jobType?: ProcessingJobType;
-
-  /**  */
-  config?: ProcessingJobConfig;
-
-  /**  */
-  status?: ProcessingJobStatus;
-
-  /**  */
-  priority?: number;
-
-  /**  */
-  progress?: ProcessingJobProgress;
-
-  /**  */
-  result?: ProcessingJobResult;
-
-  /**  */
-  scheduledAt?: Date;
+  cores?: number;
 
   /**  */
   startedAt?: Date;
 
   /**  */
-  completedAt?: Date;
+  lastSeenAt?: Date;
 
   /**  */
-  dueAt?: Date;
+  status?: string;
 
   /**  */
-  leaseUntil?: Date;
+  draining?: boolean;
 
   /**  */
-  attemptId?: string;
+  cpu?: Cpu;
 
   /**  */
-  traceId?: string;
+  memory?: Memory;
 
   /**  */
-  retryCount?: number;
+  workspaceFreeBytes?: string;
 
   /**  */
-  maxRetries?: number;
+  worker?: Worker;
 
   /**  */
-  lastError?: string;
+  samples?: Sample[];
 
   /**  */
-  errorHistory?: JobErrorEntry[];
-
-  /**  */
-  resultPublishedAt?: Date;
-
-  /**  */
-  relayLeaseUntil?: Date;
-
-  /**  */
-  workerId?: string;
-
-  /**  */
-  workerHeartbeat?: Date;
-
-  /**  */
-  resourceUsage?: JobResourceUsage;
+  runningJobs?: AdminNodeRunningJobDto[];
 }
 
-export interface ProcessingJobProgress {
+export interface AdminNodeRunningJobDto {
+  /**  */
+  jobId?: string;
+
+  /**  */
+  jobType?: string;
+
   /**  */
   percent?: number;
 
@@ -2486,47 +2615,124 @@ export interface ProcessingJobProgress {
   currentStep?: string;
 
   /**  */
-  estimatedTimeRemainingMs?: string;
+  startedAt?: Date;
 }
 
-export interface ProcessingJobResult {
+export interface CommonResponseAdminNodeDto {
   /**  */
-  success?: boolean;
+  isSuccessful?: boolean;
 
   /**  */
-  outputKeys?: string[];
+  data?: AdminNodeDto;
 
   /**  */
-  manifestKey?: string;
+  code?: string;
 
   /**  */
-  thumbnailUrl?: string;
-
-  /**  */
-  errorMessage?: string;
-
-  /**  */
-  errorDetails?: object;
-
-  /**  */
-  width?: number;
-
-  /**  */
-  height?: number;
+  message?: string;
 }
 
-export interface ToolRun {
+export interface Cpu {
   /**  */
-  tool?: string;
+  system?: number;
 
   /**  */
-  exitCode?: number;
+  process?: number;
 
   /**  */
-  wallMs?: string;
+  children?: number;
+}
+
+export interface Memory {
+  /**  */
+  heapUsed?: string;
 
   /**  */
-  cpuMs?: string;
+  heapMax?: string;
+
+  /**  */
+  systemTotal?: string;
+
+  /**  */
+  systemFree?: string;
+}
+
+export interface Sample {
+  /**  */
+  t?: Date;
+
+  /**  */
+  sys?: number;
+
+  /**  */
+  proc?: number;
+
+  /**  */
+  child?: number;
+
+  /**  */
+  heap?: string;
+}
+
+export interface Worker {
+  /**  */
+  jobTypes?: string[];
+
+  /**  */
+  bulkheadName?: string;
+
+  /**  */
+  maxConcurrent?: number;
+
+  /**  */
+  inUse?: number;
+}
+
+export interface CommonResponseBoolean {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: boolean;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminEmailPreviewRequestDto {
+  /**  */
+  code?: string;
+
+  /**  */
+  subject?: string;
+
+  /**  */
+  body?: string;
+}
+
+export interface AdminEmailPreviewDto {
+  /**  */
+  subject?: string;
+
+  /**  */
+  body?: string;
+}
+
+export interface CommonResponseAdminEmailPreviewDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminEmailPreviewDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
 }
 
 export interface GrantRequestDTO {
@@ -3227,6 +3433,17 @@ export interface CommonResponseProcessingStatusResponseDto {
   message?: string;
 }
 
+export interface ProcessingJobProgress {
+  /**  */
+  percent?: number;
+
+  /**  */
+  currentStep?: string;
+
+  /**  */
+  estimatedTimeRemainingMs?: string;
+}
+
 export interface ProcessingStatusResponseDto {
   /**  */
   versionNumber?: number;
@@ -3773,6 +3990,145 @@ export interface CommonResponseAnnotationCountsDTO {
   message?: string;
 }
 
+export interface AdminUserDetailDto {
+  /**  */
+  userId?: string;
+
+  /**  */
+  email?: string;
+
+  /**  */
+  publicUserName?: string;
+
+  /**  */
+  roles?: UserGrantedRole[];
+
+  /**  */
+  enabled?: boolean;
+
+  /**  */
+  emailVerified?: boolean;
+
+  /**  */
+  providers?: AuthProvider[];
+
+  /**  */
+  createdAt?: Date;
+
+  /**  */
+  lastLoginAt?: Date;
+
+  /**  */
+  ownedProjectCount?: string;
+
+  /**  */
+  fileCount?: string;
+
+  /**  */
+  storageBytes?: string;
+
+  /**  */
+  sessionsValidAfter?: Date;
+}
+
+export interface CommonResponseAdminUserDetailDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminUserDetailDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminSettingGroupDto {
+  /**  */
+  group?: string;
+
+  /**  */
+  readOnly?: boolean;
+
+  /**  */
+  items?: AdminSettingItemDto[];
+}
+
+export interface CommonResponseListAdminSettingGroupDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminSettingGroupDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface CommonResponseListAdminNodeDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminNodeDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminEmailTemplateRowDto {
+  /**  */
+  code?: string;
+
+  /**  */
+  name?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  variables?: string[];
+
+  /**  */
+  locales?: LocaleState[];
+}
+
+export interface CommonResponseListAdminEmailTemplateRowDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminEmailTemplateRowDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface LocaleState {
+  /**  */
+  locale?: string;
+
+  /**  */
+  overridden?: boolean;
+
+  /**  */
+  updatedAt?: Date;
+
+  /**  */
+  updatedBy?: string;
+}
+
 export interface CommonResponsePeopleResponseDTO {
   /**  */
   isSuccessful?: boolean;
@@ -4036,28 +4392,6 @@ export enum Shape {
   'DOT' = 'DOT'
 }
 
-export enum Kind {
-  'TRANSIENT' = 'TRANSIENT',
-  'PERMANENT' = 'PERMANENT',
-  'LEASE_EXPIRED' = 'LEASE_EXPIRED'
-}
-
-export enum ProcessingJobStatus {
-  'PENDING' = 'PENDING',
-  'PROCESSING' = 'PROCESSING',
-  'COMPLETED' = 'COMPLETED',
-  'FAILED' = 'FAILED',
-  'CANCELLED' = 'CANCELLED',
-  'DEAD_LETTER' = 'DEAD_LETTER'
-}
-
-export enum ProcessingJobType {
-  'TRANSCODE_HLS' = 'TRANSCODE_HLS',
-  'TRANSCODE_IMAGE' = 'TRANSCODE_IMAGE',
-  'TRANSCODE_RAW_IMAGE' = 'TRANSCODE_RAW_IMAGE',
-  'VIRUS_SCAN' = 'VIRUS_SCAN'
-}
-
 export enum RenditionStatus {
   'PENDING' = 'PENDING',
   'PROCESSING' = 'PROCESSING',
@@ -4100,13 +4434,24 @@ export enum AuditAction {
   'DOWNLOAD' = 'DOWNLOAD',
   'UPLOAD_COMPLETE' = 'UPLOAD_COMPLETE',
   'UPLOAD_NEW_VERSION' = 'UPLOAD_NEW_VERSION',
-  'RESTORE' = 'RESTORE'
+  'RESTORE' = 'RESTORE',
+  'USER_CREATED' = 'USER_CREATED',
+  'USER_LOCKED' = 'USER_LOCKED',
+  'USER_UNLOCKED' = 'USER_UNLOCKED',
+  'USER_ROLES_CHANGED' = 'USER_ROLES_CHANGED',
+  'SESSIONS_REVOKED' = 'SESSIONS_REVOKED',
+  'SETTING_UPDATED' = 'SETTING_UPDATED',
+  'SETTING_RESET' = 'SETTING_RESET',
+  'TEMPLATE_UPDATED' = 'TEMPLATE_UPDATED',
+  'TEMPLATE_RESET' = 'TEMPLATE_RESET',
+  'NODE_DRAINED' = 'NODE_DRAINED'
 }
 
 export enum AuditActorType {
   'USER' = 'USER',
   'SYSTEM' = 'SYSTEM',
-  'API_KEY' = 'API_KEY'
+  'API_KEY' = 'API_KEY',
+  'ADMIN' = 'ADMIN'
 }
 
 export enum AuditTargetType {
@@ -4118,7 +4463,10 @@ export enum AuditTargetType {
   'COMMENT' = 'COMMENT',
   'REVIEW_SESSION' = 'REVIEW_SESSION',
   'USER' = 'USER',
-  'PERMISSION' = 'PERMISSION'
+  'PERMISSION' = 'PERMISSION',
+  'SETTING' = 'SETTING',
+  'EMAIL_TEMPLATE' = 'EMAIL_TEMPLATE',
+  'NODE' = 'NODE'
 }
 
 export enum Action {
@@ -4146,4 +4494,13 @@ export enum SourceType {
   'PROJECT' = 'PROJECT',
   'FOLDER' = 'FOLDER',
   'LINK' = 'LINK'
+}
+
+export enum ProcessingJobStatus {
+  'PENDING' = 'PENDING',
+  'PROCESSING' = 'PROCESSING',
+  'COMPLETED' = 'COMPLETED',
+  'FAILED' = 'FAILED',
+  'CANCELLED' = 'CANCELLED',
+  'DEAD_LETTER' = 'DEAD_LETTER'
 }

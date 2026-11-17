@@ -1,6 +1,7 @@
 package com.file.service.filesharing.core.job;
 
 import com.file.service.filesharing.core.entity.models.ProcessingJobEntity;
+import com.file.service.filesharing.core.node.NodeControl;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +20,8 @@ public class JobDispatcher {
     private final JobRuntime runtime;
     private final JobRuntimeProperties props;
     private final String workerId;
+    // null khi service khong bat node heartbeat
+    private final NodeControl nodeControl;
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean rerun = new AtomicBoolean();
     private final AtomicBoolean wakePending = new AtomicBoolean();
@@ -30,6 +33,12 @@ public class JobDispatcher {
 
     public JobDispatcher(Bulkhead bulkhead, JobStore store, JobRuntime runtime,
                          JobRuntimeProperties props, WorkerIdentity identity) {
+        this(bulkhead, store, runtime, props, identity, null);
+    }
+
+    public JobDispatcher(Bulkhead bulkhead, JobStore store, JobRuntime runtime,
+                         JobRuntimeProperties props, WorkerIdentity identity, NodeControl nodeControl) {
+        this.nodeControl = nodeControl;
         this.bulkhead = bulkhead;
         this.store = store;
         this.runtime = runtime;
@@ -71,7 +80,9 @@ public class JobDispatcher {
         }
     }
 
-    private void drain() {
+    // package-private cho test. Drain: khong claim job moi (job moi giu PENDING), job dang chay chay tiep
+    void drain() {
+        if (nodeControl != null && nodeControl.isDraining()) return;
         while (bulkhead.tryAcquirePermission()) {
             ProcessingJobEntity job;
             try {

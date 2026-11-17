@@ -10,29 +10,12 @@ import org.springframework.context.annotation.Configuration;
 public class VideoEncodingConfig {
 
     private FfmpegConfig ffmpeg;
-    private SegmentConfig segment;
 
     @Data
     public static class FfmpegConfig {
         private String path;
         // ffprobe cho buoc PROBE
         private String ffprobePath;
-        private long timeout;
-        private long probeTimeout = 60000;
-        private int threadsPerProcess;
-        private int crf;
-        private String preset;
+        // timeout, probe-timeout, threads, crf, preset, segment doc tu RuntimeSettings (video.*)
     }
-
-
-    @Data
-    public static class SegmentConfig {
-        private int duration;
-        private String audioBitrate;
-    }
-
-
-
-
-
 }

@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import BusyOverlay from "./components/core/common/BusyOverlay";
 import AccessDeniedScreen from "./components/share/AccessDeniedScreen.tsx";
 import {type AppRoute, ROUTER_CONFIG} from './utils/RouterConfigUtil.tsx';
+import {rootStore} from './store';
+import {tokenManager} from './api/baseApi.ts';
 
 const normalizePath = (path: string) => {
     const trimmedPath = path.trim();
@@ -62,7 +64,7 @@ const resolveRouteElement = (route: AppRoute) => {
         : route.element ?? null;
 
     if (!route.isPublic) {
-        return <ProtectedRoute>{baseElement}</ProtectedRoute>;
+        return <ProtectedRoute roles={route.roles}>{baseElement}</ProtectedRoute>;
     }
 
     return baseElement;
@@ -81,10 +83,29 @@ const UnauthorizedRedirect = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const onUnauthorized = () => navigate('/login', {replace: true});
+        const onUnauthorized = () => {
+            // het phien: bo user cu de lan dang nhap sau nap lai dung role
+            rootStore.sessionStore.clearSession();
+            navigate('/login', {replace: true});
+        };
         window.addEventListener('auth:unauthorized', onUnauthorized);
         return () => window.removeEventListener('auth:unauthorized', onUnauthorized);
     }, [navigate]);
+
+    return null;
+};
+
+// co token ma chua co user thi nap user hien tai (roles) vao sessionStore; chay lai khi doi trang
+// nen cung bat duoc truong hop vua dang nhap xong va navigate
+const SessionBootstrap = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        const {sessionStore} = rootStore;
+        if (tokenManager.isAuthenticated() && !sessionStore.user) {
+            void sessionStore.loadCurrentUser();
+        }
+    }, [location.pathname]);
 
     return null;
 };
@@ -109,6 +130,7 @@ const App = () => {
     return (
         <BrowserRouter>
             <UnauthorizedRedirect/>
+            <SessionBootstrap/>
             <AccessDeniedGate>
                 <Routes>{normalizedRoutes.map(renderRoute)}</Routes>
             </AccessDeniedGate>

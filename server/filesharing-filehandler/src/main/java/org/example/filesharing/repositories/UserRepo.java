@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
+
 import java.util.Optional;
 
 @Repository
@@ -42,4 +44,9 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
      * @return page of all users
      */
     Page<UserEntity> findAll(Pageable pageable);
+
+    /**
+     * Dem so user con hoat dong theo role, dung de chan khoa hoac go SA cuoi cung
+     */
+    long countByUserGrantedRolesContainingAndEnabled(UserGrantedRole role, boolean enabled);
 }

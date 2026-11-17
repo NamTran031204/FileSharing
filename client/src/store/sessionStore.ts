@@ -1,4 +1,5 @@
-import {action, computed, makeObservable, observable} from 'mobx';
+import {action, computed, makeObservable, observable, runInAction} from 'mobx';
+import {UserControllerService} from '../api/api/UserControllerService';
 import type {FolderEntity, FolderTreeItemDTO, ProjectEntity, UserGrantedRole} from '../api/api/index.defs';
 import type {UserRole} from '../api/enums';
 import {tokenManager} from '../api/baseApi';
@@ -50,10 +51,14 @@ export class AppSessionDto {
 
 class SessionStore {
     appSession: AppSessionDto = new AppSessionDto();
+    // true khi da thu nap user hien tai xong (thanh cong hoac loi); ProtectedRoute co roles doi co nay
+    userLoaded = false;
 
     constructor() {
         makeObservable(this, {
             appSession: observable,
+            userLoaded: observable,
+            loadCurrentUser: action,
             isLogined: computed,
             user: computed,
             currentProject: computed,
@@ -160,6 +165,45 @@ class SessionStore {
 
     clearSession() {
         this.appSession = new AppSessionDto();
+        this.userLoaded = false;
+    }
+
+    /**
+     * Nap user hien tai (GET /api/users) vao session de co roles -> permissionGranted.
+     * Goi boi SessionBootstrap (App.tsx) khi co token ma chua co user. Loi thi bo qua: guard FE chi la UX,
+     * backend van la chot chan that.
+     */
+    async loadCurrentUser() {
+        try {
+            const res = await UserControllerService.users1();
+            const dto = res?.data;
+            if (res?.isSuccessful && dto) {
+                const prev = this.appSession;
+                const session = new AppSessionDto();
+                session.user = {
+                    userId: dto.userId,
+                    email: dto.email,
+                    publicUserName: dto.publicUserName,
+                    userGrantedRoles: dto.roles,
+                    enabled: dto.enabled,
+                    emailVerified: dto.emailVerified,
+                    lastLoginAt: dto.lastLoginAt?.toString(),
+                    createdAt: dto.createdAt?.toString(),
+                    updatedAt: dto.updatedAt?.toString(),
+                };
+                // giu ngu canh project/folder dang chon
+                session.currentProject = prev.currentProject;
+                session.currentFolder = prev.currentFolder;
+                session.projectTree = prev.projectTree;
+                runInAction(() => this.setSession(session));
+            }
+        } catch (error) {
+            console.error('Load current user failed:', error);
+        } finally {
+            runInAction(() => {
+                this.userLoaded = true;
+            });
+        }
     }
 }
 
