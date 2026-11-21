@@ -1,5 +1,6 @@
 import { BellOutlined } from '@ant-design/icons';
 import { observer } from 'mobx-react-lite';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher.tsx';
@@ -7,6 +8,7 @@ import { useStore } from '../../../store';
 import UserAvatar from '../common/UserAvatar.tsx';
 import logo from '../../../assets/logo/logo2k.png';
 import BreadCrumbNav from '../../BreadCrumbNav.tsx';
+import ChangePasswordModal from './ChangePasswordModal.tsx';
 import {type AppRoute, ROUTER_CONFIG} from '../../../utils/RouterConfigUtil.tsx';
 
 interface AppHeaderProps {
@@ -18,6 +20,16 @@ const AppHeader = observer(({routes = ROUTER_CONFIG}: AppHeaderProps) => {
   const { sessionStore } = useStore();
   const { t } = useTranslation();
   const user = sessionStore.appSession?.user;
+  const adminSide = user?.adminSide === true;
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const avatar = (
+    <UserAvatar
+      size={32}
+      name={user?.publicUserName}
+      email={user?.email}
+      className="ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
+    />
+  );
 
   return (
     <>
@@ -37,16 +49,20 @@ const AppHeader = observer(({routes = ROUTER_CONFIG}: AppHeaderProps) => {
           </button>
 
           {/* User Avatar */}
-          <Link to="/profile" aria-label={user?.publicUserName || user?.email || t('profile')}>
-            <UserAvatar
-              size={32}
-              name={user?.publicUserName}
-              email={user?.email}
-              className="ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
-            />
-          </Link>
+          {adminSide ? (
+            // phia quan tri khong co /profile (guard day ve /admin): avatar mo modal doi mat khau
+            <button type="button" onClick={() => setPwdOpen(true)} aria-label={t('admin:changePassword.title')}>
+              {avatar}
+            </button>
+          ) : (
+            <Link to="/profile" aria-label={user?.publicUserName || user?.email || t('profile')}>
+              {avatar}
+            </Link>
+          )}
         </div>
       </nav>
+
+      {adminSide && <ChangePasswordModal open={pwdOpen} userId={user?.userId} onClose={() => setPwdOpen(false)} />}
 
       {/*{showBreadcrumb && (*/}
       {/*  <div className="fixed top-16 w-full z-40">*/}

@@ -13,7 +13,7 @@ public interface AdminUserService {
 
     AdminUserRowDto unlock(String userId);
 
-    AdminUserRowDto updateRoles(String userId, AdminRoleUpdateDto request);
+    AdminUserRowDto updateAdminRoles(String userId, AdminAssignRolesDto request);
 
     AdminUserRowDto revokeSessions(String userId);
 

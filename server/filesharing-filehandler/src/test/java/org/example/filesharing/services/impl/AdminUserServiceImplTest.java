@@ -13,7 +13,10 @@ import org.bson.Document;
 import org.example.filesharing.controllers.AdminUserController;
 import org.example.filesharing.entities.dtos.admin.*;
 import org.example.filesharing.entities.models.UserEntity;
+import org.example.filesharing.entities.models.AdminRoleEntity;
+import org.example.filesharing.repositories.AdminRoleRepo;
 import org.example.filesharing.repositories.AuditLogRepo;
+import org.example.filesharing.services.AdminPermissionResolver;
 import org.example.filesharing.repositories.UserRepo;
 import org.example.filesharing.services.AuditService;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,14 +54,16 @@ class AdminUserServiceImplTest {
     @Mock MongoTemplate mongoTemplate;
     @Mock AuditService auditService;
     @Mock AuditLogRepo auditLogRepo;
+    @Mock AdminRoleRepo adminRoleRepo;
     PasswordEncoder encoder = new BCryptPasswordEncoder();
     AdminUserServiceImpl service;
     UserEntity actor;
 
     @BeforeEach
     void setUp() {
-        service = new AdminUserServiceImpl(userRepo, mongoTemplate, encoder, auditService, auditLogRepo);
-        actor = user("sa1", "sa1@test.com", true, UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA);
+        service = new AdminUserServiceImpl(userRepo, mongoTemplate, encoder, auditService, auditLogRepo,
+                adminRoleRepo, new AdminPermissionResolver(adminRoleRepo));
+        actor = user("sa1", "sa1@test.com", true, UserGrantedRole.ROLE_SA);
         when(auditService.getCurrentUser()).thenReturn(actor);
         when(auditService.getCurrentUserId()).thenReturn("sa1");
         when(userRepo.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
@@ -78,7 +83,7 @@ class AdminUserServiceImplTest {
         when(mongoTemplate.count(any(Query.class), eq(UserEntity.class))).thenReturn(25L);
         when(mongoTemplate.find(any(Query.class), eq(UserEntity.class)))
                 .thenReturn(List.of(user("u1", "a@test.com", true, UserGrantedRole.ROLE_USER)));
-        AdminUserFilterDto f = new AdminUserFilterDto("a.b", UserGrantedRole.ROLE_SA, true, AuthProvider.LOCAL);
+        AdminUserFilterDto f = new AdminUserFilterDto("a.b", UserGrantedRole.ROLE_SA, true, AuthProvider.LOCAL, true, "r1");
         PageRequestDto<AdminUserFilterDto> req = new PageRequestDto<>(10, 10, "password asc", f);
 
         PageResult<AdminUserRowDto> res = service.getPaged(req);
@@ -89,10 +94,10 @@ class AdminUserServiceImplTest {
         ArgumentCaptor<Query> q = ArgumentCaptor.forClass(Query.class);
         verify(mongoTemplate).find(q.capture(), eq(UserEntity.class));
         Document qo = q.getValue().getQueryObject();
-        assertEquals(UserGrantedRole.ROLE_SA, qo.get("userGrantedRoles"));
-        assertEquals(true, qo.get("enabled"));
-        assertEquals(AuthProvider.LOCAL, qo.get("providers.provider"));
-        assertTrue(qo.containsKey("$or"));
+        String and = qo.get("$and").toString();
+        assertTrue(and.contains("ROLE_SA") && and.contains("$ne") && and.contains("ROLE_USER"), and);
+        assertTrue(and.contains("enabled") && and.contains("LOCAL") && and.contains("adminRoleIds") && and.contains("r1"), and);
+        assertTrue(and.contains("$or"), and);
         assertEquals(10L, q.getValue().getSkip());
         assertEquals(10, q.getValue().getLimit());
         // sort theo cot cam (password) bi bo, rơi ve createdAt
@@ -121,26 +126,8 @@ class AdminUserServiceImplTest {
     }
 
     @Test
-    void tuGoSa_biChan() {
-        when(userRepo.findById("sa1")).thenReturn(Optional.of(actor));
-        assertEquals(ErrorCode.ADMIN_SELF_ACTION_FORBIDDEN,
-                codeOf(() -> service.updateRoles("sa1", new AdminRoleUpdateDto(List.of(UserGrantedRole.ROLE_USER)))));
-    }
-
-    @Test
-    void khoaSaCuoi_409() {
-        UserEntity other = user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA);
-        when(userRepo.findById("sa2")).thenReturn(Optional.of(other));
-        when(userRepo.countByUserGrantedRolesContainingAndEnabled(UserGrantedRole.ROLE_SA, true)).thenReturn(1L);
-        assertEquals(ErrorCode.ADMIN_LAST_SA, codeOf(() -> service.lock("sa2")));
-        assertEquals(ErrorCode.ADMIN_LAST_SA,
-                codeOf(() -> service.updateRoles("sa2", new AdminRoleUpdateDto(List.of()))));
-        verify(userRepo, never()).save(any());
-    }
-
-    @Test
     void khoaSaKhiConSaKhac_duocVaGhiAudit() {
-        UserEntity other = user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA);
+        UserEntity other = user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_SA);
         when(userRepo.findById("sa2")).thenReturn(Optional.of(other));
         when(userRepo.countByUserGrantedRolesContainingAndEnabled(UserGrantedRole.ROLE_SA, true)).thenReturn(2L);
         assertFalse(service.lock("sa2").isEnabled());
@@ -152,13 +139,133 @@ class AdminUserServiceImplTest {
         assertEquals("sa2@test.com", a.getValue().getTargetName());
     }
 
+    private AdminRoleEntity role(String id, String... perms) {
+        return AdminRoleEntity.builder().id(id).code(id).name(id).permissions(new ArrayList<>(List.of(perms))).build();
+    }
+
+    // tai khoan van hanh khong ROLE_SA, quyen den tu cac nhom
+    private UserEntity operator(String id, String... roleIds) {
+        UserEntity u = user(id, id + "@test.com", true);
+        u.setAdminRoleIds(new ArrayList<>(List.of(roleIds)));
+        return u;
+    }
+
+    private void actAs(UserEntity a) {
+        actor = a;
+        when(auditService.getCurrentUser()).thenReturn(a);
+        when(auditService.getCurrentUserId()).thenReturn(a.getUserId());
+    }
+
+    private AdminAssignRolesDto assign(boolean sa, String... ids) {
+        return new AdminAssignRolesDto(sa, new ArrayList<>(List.of(ids)));
+    }
+
+    // nhom hep (chi xem) va nhom rong (them Drain)
+    private void stubNarrowWide() {
+        when(adminRoleRepo.findAllById(any())).thenAnswer(i -> {
+            Collection<String> ids = i.getArgument(0);
+            return ids.stream().filter(id -> !id.equals("missing"))
+                    .map(id -> id.equals("rNarrow") ? role("rNarrow", "Admin.Node.GetPaged")
+                            : role("rWide", "Admin.Node.GetPaged", "Admin.Node.Drain")).toList();
+        });
+    }
+
     @Test
-    void updateRoles_luonCoRoleUser() {
-        UserEntity u = user("u1", "u1@test.com", true, UserGrantedRole.ROLE_USER);
-        when(userRepo.findById("u1")).thenReturn(Optional.of(u));
-        AdminUserRowDto r = service.updateRoles("u1", new AdminRoleUpdateDto(List.of(UserGrantedRole.ROLE_SA)));
-        assertTrue(r.getRoles().contains(UserGrantedRole.ROLE_USER));
-        assertTrue(r.getRoles().contains(UserGrantedRole.ROLE_SA));
+    void tuGoSa_biChan() {
+        when(userRepo.findById("sa1")).thenReturn(Optional.of(actor));
+        assertEquals(ErrorCode.ADMIN_SELF_ACTION_FORBIDDEN, codeOf(() -> service.updateAdminRoles("sa1", assign(false))));
+    }
+
+    @Test
+    void khoaHoacGoSaCuoi_409() {
+        UserEntity other = user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_SA);
+        when(userRepo.findById("sa2")).thenReturn(Optional.of(other));
+        when(userRepo.countByUserGrantedRolesContainingAndEnabled(UserGrantedRole.ROLE_SA, true)).thenReturn(1L);
+        assertEquals(ErrorCode.ADMIN_LAST_SA, codeOf(() -> service.lock("sa2")));
+        assertEquals(ErrorCode.ADMIN_LAST_SA, codeOf(() -> service.updateAdminRoles("sa2", assign(false))));
+        verify(userRepo, never()).save(any());
+    }
+
+    @Test
+    void updateAdminRoles_khongEpRoleUser_ghiSaHoacRong() {
+        when(userRepo.findById("op1")).thenReturn(Optional.of(operator("op1")));
+        AdminUserRowDto r = service.updateAdminRoles("op1", assign(true));
+        assertEquals(List.of(UserGrantedRole.ROLE_SA), r.getRoles());
+        assertTrue(r.isAdminSide());
+        when(userRepo.countByUserGrantedRolesContainingAndEnabled(UserGrantedRole.ROLE_SA, true)).thenReturn(2L);
+        r = service.updateAdminRoles("op1", assign(false));
+        assertTrue(r.getRoles().isEmpty());
+    }
+
+    @Test
+    void g5_taiKhoanUser_400() {
+        when(userRepo.findById("u1")).thenReturn(Optional.of(user("u1", "u1@test.com", true, UserGrantedRole.ROLE_USER)));
+        assertEquals(ErrorCode.ADMIN_ROLE_TARGET_INVALID, codeOf(() -> service.updateAdminRoles("u1", assign(false))));
+        assertEquals(ErrorCode.ADMIN_ROLE_TARGET_INVALID, codeOf(() -> service.updateAdminRoles("u1", assign(true))));
+        verify(userRepo, never()).save(any());
+    }
+
+    @Test
+    void g1_khongSaCapHoacGoSa_403() {
+        actAs(operator("op1", "rNarrow"));
+        stubNarrowWide();
+        when(userRepo.findById("sa2")).thenReturn(Optional.of(user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_SA)));
+        // go SA
+        assertEquals(ErrorCode.ADMIN_PERMISSION_ESCALATION, codeOf(() -> service.updateAdminRoles("sa2", assign(false))));
+        // cap SA cho tai khoan van hanh
+        when(userRepo.findById("op2")).thenReturn(Optional.of(operator("op2")));
+        assertEquals(ErrorCode.ADMIN_PERMISSION_ESCALATION, codeOf(() -> service.updateAdminRoles("op2", assign(true))));
+        // tao tai khoan sa=true
+        assertEquals(ErrorCode.ADMIN_PERMISSION_ESCALATION, codeOf(() -> service.createOperatorAccount(
+                new AdminCreateUserRequestDto("n@test.com", "n", "fake-Password-1", true, null))));
+        verify(userRepo, never()).save(any());
+    }
+
+    @Test
+    void g2_khoaTaiKhoanRongQuyenHon_403() {
+        actAs(operator("op1", "rNarrow"));
+        stubNarrowWide();
+        when(userRepo.findById("op2")).thenReturn(Optional.of(operator("op2", "rWide")));
+        when(userRepo.findById("sa2")).thenReturn(Optional.of(user("sa2", "sa2@test.com", true, UserGrantedRole.ROLE_SA)));
+        assertEquals(ErrorCode.ADMIN_TARGET_FORBIDDEN, codeOf(() -> service.lock("op2")));
+        assertEquals(ErrorCode.ADMIN_TARGET_FORBIDDEN, codeOf(() -> service.unlock("op2")));
+        assertEquals(ErrorCode.ADMIN_TARGET_FORBIDDEN, codeOf(() -> service.revokeSessions("op2")));
+        assertEquals(ErrorCode.ADMIN_TARGET_FORBIDDEN, codeOf(() -> service.lock("sa2")));
+        assertEquals(ErrorCode.ADMIN_TARGET_FORBIDDEN, codeOf(() -> service.updateAdminRoles("op2", assign(false, "rNarrow"))));
+        verify(userRepo, never()).save(any());
+    }
+
+    @Test
+    void g2_saKhoaTaiKhoanVanHanhDuoc() {
+        stubNarrowWide();
+        when(userRepo.findById("op2")).thenReturn(Optional.of(operator("op2", "rWide")));
+        assertFalse(service.lock("op2").isEnabled());
+    }
+
+    @Test
+    void g4_gan_hoacGoNhomVuotQuyenActor_403() {
+        actAs(operator("op1", "rNarrow"));
+        stubNarrowWide();
+        when(userRepo.findById("op2")).thenReturn(Optional.of(operator("op2")));
+        // gan nhom rong hon quyen actor
+        assertEquals(ErrorCode.ADMIN_PERMISSION_ESCALATION, codeOf(() -> service.updateAdminRoles("op2", assign(false, "rWide"))));
+        // tao tai khoan voi nhom rong hon
+        assertEquals(ErrorCode.ADMIN_PERMISSION_ESCALATION, codeOf(() -> service.createOperatorAccount(
+                new AdminCreateUserRequestDto("n@test.com", "n", "fake-Password-1", false, List.of("rWide")))));
+        // gan nhom nam trong quyen actor: duoc
+        assertEquals(1, service.updateAdminRoles("op2", assign(false, "rNarrow")).getAdminRoles().size());
+        // nhom khong ton tai
+        when(userRepo.findById("op3")).thenReturn(Optional.of(operator("op3")));
+        assertEquals(ErrorCode.ADMIN_ROLE_NOT_FOUND, codeOf(() -> service.updateAdminRoles("op3", assign(false, "missing", "rNarrow"))));
+    }
+
+    @Test
+    void toRow_adminRolesVaAdminSide() {
+        stubNarrowWide();
+        when(userRepo.findById("op1")).thenReturn(Optional.of(operator("op1", "rNarrow")));
+        AdminUserRowDto r = service.revokeSessions("op1");
+        assertTrue(r.isAdminSide());
+        assertEquals("rNarrow", r.getAdminRoles().get(0).getCode());
     }
 
     @Test
@@ -173,8 +280,9 @@ class AdminUserServiceImplTest {
     @Test
     void taoTaiKhoanVanHanh_thanhCongHashBcryptVaAuditKhongChuaMatKhau() {
         String pw = "fake-Password-1";
-        AdminUserRowDto r = service.createOperatorAccount(new AdminCreateUserRequestDto("new@test.com", "Van hanh", pw));
-        assertTrue(r.getRoles().containsAll(List.of(UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA)));
+        AdminUserRowDto r = service.createOperatorAccount(new AdminCreateUserRequestDto("new@test.com", "Van hanh", pw, true, null));
+        assertEquals(List.of(UserGrantedRole.ROLE_SA), r.getRoles());
+        assertTrue(r.isAdminSide());
         assertTrue(r.isEnabled());
         ArgumentCaptor<UserEntity> saved = ArgumentCaptor.forClass(UserEntity.class);
         verify(userRepo).save(saved.capture());
@@ -193,11 +301,11 @@ class AdminUserServiceImplTest {
     void taoTaiKhoan_trungEmail() {
         when(userRepo.existsByEmail("dup@test.com")).thenReturn(true);
         assertEquals(ErrorCode.USER_ALREADY_EXISTS,
-                codeOf(() -> service.createOperatorAccount(new AdminCreateUserRequestDto("dup@test.com", "x", "fake-Password-1"))));
+                codeOf(() -> service.createOperatorAccount(new AdminCreateUserRequestDto("dup@test.com", "x", "fake-Password-1", false, null))));
         when(userRepo.existsByEmail("race@test.com")).thenReturn(false);
         when(userRepo.save(any(UserEntity.class))).thenThrow(new DuplicateKeyException("dup"));
         assertEquals(ErrorCode.USER_ALREADY_EXISTS,
-                codeOf(() -> service.createOperatorAccount(new AdminCreateUserRequestDto("race@test.com", "x", "fake-Password-1"))));
+                codeOf(() -> service.createOperatorAccount(new AdminCreateUserRequestDto("race@test.com", "x", "fake-Password-1", false, null))));
     }
 
     @Test

@@ -3,6 +3,7 @@
   "menu": {
     "home": "Overview",
     "users": "Accounts",
+    "roles": "Roles",
     "settings": "Settings",
     "emailTemplates": "Email templates",
     "nodes": "Workers / Nodes"
@@ -20,8 +21,8 @@
   },
   "user": {
     "title": "Account management",
-    "create": "Create operator account",
-    "createTitle": "Create operator account",
+    "create": "Create admin account",
+    "createTitle": "Create admin account",
     "createdOk": "Account created",
     "email": "Email",
     "publicUserName": "Display name",
@@ -40,15 +41,20 @@
     "fileCount": "Files",
     "storageBytes": "Storage",
     "sessionsValidAfter": "Sessions valid after",
-    "assignRoleTitle": "Assign roles",
-    "rolesOk": "Roles updated",
+    "assignRoleTitle": "Assign role groups",
+    "rolesOk": "Role groups updated",
     "lockConfirmTitle": "Lock this account?",
     "unlockConfirmTitle": "Unlock this account?",
     "lockedOk": "Account locked",
     "unlockedOk": "Account unlocked",
     "revokeConfirmTitle": "Revoke all sessions?",
     "revokeConfirmContent": "{{email}} will have to sign in again.",
-    "revokedOk": "Sessions revoked"
+    "revokedOk": "Sessions revoked",
+    "adminRoles": "Role groups",
+    "saLabel": "Super admin (SA)",
+    "side": "Side",
+    "sideUser": "User",
+    "sideAdmin": "Admin"
   },
   "setting": {
     "title": "System settings",
@@ -406,5 +412,77 @@
     "undrainConfirm": "Undrain and resume taking jobs?",
     "drainedOk": "Node drained",
     "undrainedOk": "Node undrained"
+  },
+  "changePassword": {
+    "title": "Change password",
+    "password": "New password (min 8 characters)",
+    "confirm": "Confirm password",
+    "mismatch": "Passwords do not match",
+    "ok": "Password changed"
+  },
+  "permission": {
+    "Admin": {
+      "User": {
+        "_": "Accounts",
+        "GetPaged": "View list",
+        "GetDetail": "View detail",
+        "Create": "Create account",
+        "Lock": "Lock / unlock",
+        "RevokeSession": "Revoke sessions",
+        "AssignRole": "Assign roles"
+      },
+      "Role": {
+        "_": "Roles",
+        "GetPaged": "View list",
+        "GetDetail": "View detail",
+        "Create": "Create",
+        "Update": "Update",
+        "Delete": "Delete"
+      },
+      "Setting": {
+        "_": "Settings",
+        "GetPaged": "View list",
+        "Update": "Update / reset",
+        "TestMail": "Test mail"
+      },
+      "EmailTemplate": {
+        "_": "Email templates",
+        "GetPaged": "View list",
+        "Update": "Update / reset",
+        "Preview": "Preview",
+        "SendTest": "Send test"
+      },
+      "Node": {
+        "_": "Workers / Nodes",
+        "GetPaged": "View list",
+        "Drain": "Drain / undrain"
+      }
+    }
+  },
+  "role": {
+    "title": "Role group management",
+    "code": "Code",
+    "name": "Name",
+    "userCount": "Users",
+    "description": "Description",
+    "searchText": "Search",
+    "searchPlaceholder": "Group code or name",
+    "tabInfo": "Info",
+    "tabPermission": "Permissions",
+    "codeInvalid": "Letters, digits and . _ - only (max 100 characters)",
+    "modalTitle": {
+      "create": "Add role group",
+      "edit": "Edit role group",
+      "view": "Role group details"
+    },
+    "createdOk": "Role group added",
+    "updatedOk": "Role group updated",
+    "deletedOk": "Role group deleted",
+    "deleteConfirmTitle": "Delete this role group?",
+    "usersTitle": "Users in {{name}}"
+  },
+  "permissionGroup": {
+    "AccountAndRole": "Accounts and roles",
+    "System": "System"
   }
 }

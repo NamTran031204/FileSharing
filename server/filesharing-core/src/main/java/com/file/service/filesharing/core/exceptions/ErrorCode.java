@@ -67,6 +67,13 @@ public enum ErrorCode {
     MAIL_TEST_FAILED("5807", "Mail test failed", HttpStatus.BAD_GATEWAY),
     NODE_NOT_FOUND("5808", "Node not found", HttpStatus.NOT_FOUND),
     SETTING_READ_ONLY("5809", "Setting group is read-only", HttpStatus.BAD_REQUEST),
+    ADMIN_ROLE_NOT_FOUND("5810", "Admin role not found", HttpStatus.NOT_FOUND),
+    ADMIN_ROLE_CODE_DUPLICATE("5811", "Admin role code already exists", HttpStatus.CONFLICT),
+    ADMIN_ROLE_IN_USE("5812", "Admin role is still assigned to users", HttpStatus.CONFLICT),
+    ADMIN_PERMISSION_UNKNOWN("5813", "Unknown admin permission", HttpStatus.BAD_REQUEST),
+    ADMIN_PERMISSION_ESCALATION("5814", "Cannot grant or revoke permission beyond own permissions", HttpStatus.FORBIDDEN),
+    ADMIN_TARGET_FORBIDDEN("5815", "Not allowed to act on this account", HttpStatus.FORBIDDEN),
+    ADMIN_ROLE_TARGET_INVALID("5816", "Admin role cannot be assigned to this account", HttpStatus.BAD_REQUEST),
 
     MONGO_ERROR("6100", "Mongo error", HttpStatus.INTERNAL_SERVER_ERROR),
     MAIL_MESSAGING_ERROR("6101", "Mail message error", HttpStatus.INTERNAL_SERVER_ERROR),

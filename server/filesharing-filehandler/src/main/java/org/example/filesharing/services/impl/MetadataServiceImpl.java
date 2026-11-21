@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.file.service.filesharing.core.entity.PageRequestDto;
 import com.file.service.filesharing.core.entity.PageResult;
-import com.file.service.filesharing.core.enums.auth.UserGrantedRole;
 import org.example.filesharing.entities.dtos.file.EmailSenderRequestDto;
 import org.example.filesharing.entities.dtos.file.UserFileFilterPageRequestDto;
 import org.example.filesharing.entities.dtos.metadata.DownloadFileRequestDto;
@@ -15,7 +14,6 @@ import com.file.service.filesharing.core.entity.models.MetadataEntity;
 import com.file.service.filesharing.core.enums.UploadStatus;
 import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
-import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.jobs.kafka.EmailProducer;
 import org.example.filesharing.repositories.MetadataRepo;
 import org.example.filesharing.services.AccessService;
@@ -323,7 +321,7 @@ public class MetadataServiceImpl implements MetadataService {
         return head.contentLength();
     }
 
-    // tai ban goc can DOWNLOAD theo AccessService; nguoi upload va admin khong duoc mien kiem tra (Q5)
+    // tai ban goc can DOWNLOAD theo AccessService; nguoi upload khong duoc mien kiem tra (Q5)
     private void ensureDownloadPermission(MetadataEntity metadata) {
         if (StringUtils.isNotNullOrBlank(metadata.getAssetId())) {
             accessService.require(ResourceRef.asset(metadata.getAssetId()), Action.DOWNLOAD);
@@ -333,17 +331,7 @@ public class MetadataServiceImpl implements MetadataService {
             accessService.require(ResourceRef.project(metadata.getProjectId()), Action.DOWNLOAD);
             return;
         }
-        // file Phase1 khong gan asset/project: chi admin tai duoc, khong thiet ke quyen cho file ca nhan
-        if (!isAdmin(auditService.getCurrentUser())) {
-            throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
-        }
-    }
-
-    private boolean isAdmin(UserEntity user) {
-        if (user == null || user.getUserGrantedRoles() == null) {
-            return false;
-        }
-        return user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_ADMIN)
-                || user.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
+        // file Phase1 khong gan asset/project: khong ai tai duoc (ke ca SA), khong thiet ke quyen cho file ca nhan
+        throw new FileBusinessException(ErrorCode.FILE_PERMISSION_ERROR);
     }
 }

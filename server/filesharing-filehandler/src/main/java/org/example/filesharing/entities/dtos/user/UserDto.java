@@ -25,4 +25,7 @@ public class UserDto {
     private Instant createdAt;
     private Instant updatedAt;
     private Instant lastLoginAt;
+    // chi co khi doc chinh minh: quyen quan tri hieu luc va phia tai khoan
+    private List<String> permissions;
+    private Boolean adminSide;
 }

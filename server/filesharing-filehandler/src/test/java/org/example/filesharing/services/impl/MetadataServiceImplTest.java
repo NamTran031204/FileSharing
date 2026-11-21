@@ -91,7 +91,7 @@ class MetadataServiceImplTest {
     @Test
     void assetFileDeniedForUploaderAndAdminWithoutRole() {
         file("a1", "p1");
-        currentUser(UPLOADER, UserGrantedRole.ROLE_ADMIN, UserGrantedRole.ROLE_SA);
+        currentUser(UPLOADER, UserGrantedRole.ROLE_SA);
         when(accessService.require(ResourceRef.asset("a1"), Action.DOWNLOAD))
                 .thenThrow(new FileBusinessException(ErrorCode.ACCESS_DENIED));
 
@@ -119,13 +119,12 @@ class MetadataServiceImplTest {
     }
 
     @Test
-    void phase1FileAdminAndSaCanDownload() {
+    void phase1FileSaIsDeniedToo() {
         file(null, null);
-        currentUser("u-admin", UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_ADMIN);
-        assertEquals("signed", service.getDownloadUrl(request()).getUrl());
-
         currentUser("u-sa", UserGrantedRole.ROLE_SA);
-        assertEquals("signed", service.getDownloadUrl(request()).getUrl());
+
+        assertEquals(ErrorCode.FILE_PERMISSION_ERROR, codeOf(() -> service.getDownloadUrl(request())));
         verify(accessService, never()).require(any(), any());
+        verify(storageService, never()).presignGetObject(anyString(), anyString(), anyLong());
     }
 }

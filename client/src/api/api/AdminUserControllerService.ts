@@ -1,9 +1,10 @@
 import {
-  type AdminRoleUpdateDto,
-  type UserGrantedRole,
+  type AdminAssignRolesDto,
   type CommonResponseAdminUserRowDto,
   type AdminUserRowDto,
+  type UserGrantedRole,
   type AuthProvider,
+  type AdminRoleRef,
   type AdminCreateUserRequestDto,
   type PageRequestDtoAdminUserFilterDto,
   type AdminUserFilterDto,
@@ -34,17 +35,17 @@ export class AdminUserControllerService {
   /**
    *
    */
-  static roles(
+  static adminRoles(
     params: {
       /**  */
       userId: string;
       /** requestBody */
-      body?: AdminRoleUpdateDto;
+      body?: AdminAssignRolesDto;
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<CommonResponseAdminUserRowDto> {
     return new Promise((resolve, reject) => {
-      let url = basePath + '/api/admin/users/{userId}/roles';
+      let url = basePath + '/api/admin/users/{userId}/admin-roles';
       url = url.replace('{userId}', params['userId'] + '');
 
       const configs: IRequestConfig = getConfigs('put', 'application/json', url, options);

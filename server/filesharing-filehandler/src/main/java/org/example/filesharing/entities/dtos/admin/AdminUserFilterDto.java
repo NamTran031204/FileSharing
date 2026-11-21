@@ -14,4 +14,6 @@ public class AdminUserFilterDto {
     private UserGrantedRole role;
     private Boolean enabled;
     private AuthProvider provider;
+    private Boolean adminSide;
+    private String adminRoleId;
 }

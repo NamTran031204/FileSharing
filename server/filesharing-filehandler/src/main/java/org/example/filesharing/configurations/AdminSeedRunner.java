@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Hien tai: khi khoi dong, neu cau hinh admin.seed co hash va email chua ton tai thi tao 1 tai khoan
- * ROLE_USER + ROLE_SA. Khong bao gio ghi de hay cap role cho user da co; hash rong thi bo qua.
+ * [ROLE_SA] (phia quan tri, khong ROLE_USER). Khong bao gio ghi de hay cap role cho user da co; hash rong thi bo qua.
  * Luong goi: Spring goi sau mongoIndexBootstrapRunner (order 0) de unique index email da san sang.
  * Sau nay mo rong: seed them tai khoan tenant, tai khoan theo doi benchmark hoac worker;
  * khi do role tach khoi ROLE_SA va moi tai khoan seed co role rieng.
@@ -53,7 +53,7 @@ public class AdminSeedRunner implements ApplicationRunner {
                 .email(email)
                 .publicUserName(publicUserName)
                 .password(passwordHash)
-                .userGrantedRoles(new ArrayList<>(List.of(UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA)))
+                .userGrantedRoles(new ArrayList<>(List.of(UserGrantedRole.ROLE_SA)))
                 .enabled(true)
                 .emailVerified(true)
                 .providers(new ArrayList<>(List.of(AuthProviderInfo.builder()

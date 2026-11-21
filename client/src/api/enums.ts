@@ -21,8 +21,7 @@ export enum AuthProvider {
 }
 
 export enum UserRole {
-    ROLE_USER = 'ROLE_USER',
-    ROLE_ADMIN = 'ROLE_ADMIN'
+    ROLE_USER = 'ROLE_USER'
 }
 
 export enum FileAppPermission {

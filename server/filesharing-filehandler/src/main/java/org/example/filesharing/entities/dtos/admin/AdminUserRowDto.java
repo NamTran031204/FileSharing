@@ -25,4 +25,17 @@ public class AdminUserRowDto {
     private List<AuthProvider> providers;
     private Instant createdAt;
     private Instant lastLoginAt;
+    private List<AdminRoleRef> adminRoles;
+    // phia quan tri = khong co ROLE_USER
+    private boolean adminSide;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminRoleRef {
+        private String id;
+        private String code;
+        private String name;
+    }
 }

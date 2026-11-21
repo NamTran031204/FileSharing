@@ -12,5 +12,6 @@ public enum AuditTargetType {
     PERMISSION,
     SETTING,
     EMAIL_TEMPLATE,
-    NODE
+    NODE,
+    ADMIN_ROLE
 }

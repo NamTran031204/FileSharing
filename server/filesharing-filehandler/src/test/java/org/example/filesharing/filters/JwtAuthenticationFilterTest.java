@@ -36,7 +36,7 @@ class JwtAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
         jwtService = mock(JwtService.class);
         userDetailsService = mock(UserDetailsService.class);
-        filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(org.example.filesharing.services.AdminPermissionResolver.class));
         user = UserEntity.builder().email(EMAIL).enabled(true).userGrantedRoles(new java.util.ArrayList<>()).build();
         when(jwtService.extractUsername("t")).thenReturn(EMAIL);
         when(jwtService.isTokenValid(any(), any())).thenReturn(true);

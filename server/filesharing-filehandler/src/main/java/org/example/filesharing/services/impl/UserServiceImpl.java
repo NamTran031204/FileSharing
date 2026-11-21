@@ -19,6 +19,7 @@ import com.file.service.filesharing.core.exceptions.ErrorCode;
 import com.file.service.filesharing.core.exceptions.specException.FileBusinessException;
 import com.file.service.filesharing.core.exceptions.specException.UserBusinessException;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.AdminPermissionResolver;
 import org.example.filesharing.services.AuditService;
 import org.example.filesharing.services.JwtService;
 import org.example.filesharing.services.UserService;
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final AuditService auditService;
+    private final AdminPermissionResolver permissionResolver;
 
     @Override
     public UserRegisterResponseDto registerUser(UserRegisterRequestDto input, AuthProviderInfo authProviderInfo) {
@@ -134,9 +136,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(String userId) {
-        UserEntity user = userRepo.findById(userId.isBlank() || userId.isEmpty() ? auditService.getCurrentUserId() : userId)
+        String currentId = auditService.getCurrentUserId();
+        UserEntity user = userRepo.findById(userId.isBlank() ? currentId : userId)
                 .orElseThrow(() -> new UserBusinessException(ErrorCode.USER_NOT_FOUND, "error.user.notFoundById", userId));
-        return mapToUserDto(user);
+        UserDto dto = mapToUserDto(user);
+        // permissions/adminSide chi tra cho chinh minh, khong lo quyen nguoi khac
+        if (user.getUserId() != null && user.getUserId().equals(currentId)) {
+            dto.setPermissions(permissionResolver.effective(user).stream().sorted().toList());
+            dto.setAdminSide(AdminPermissionResolver.isAdminSide(user));
+        }
+        return dto;
     }
 
     @Override

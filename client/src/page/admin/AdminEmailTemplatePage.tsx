@@ -12,6 +12,9 @@ import type {AdminEmailTemplateDto, AdminEmailTemplateRowDto} from '../../api/ap
 import {adminApi, adminCall} from '../../api/adminApiResource';
 import uiUtils from '../../utils/uiUtils';
 import AdminLayout from './AdminLayout.tsx';
+import {checkPermissionUser} from '@plugin-core/auth/utils/auth.utils';
+import {useSessionStore} from '@plugin-core/shared/store/useSessionStore';
+import {ADMIN_PER} from '../../components/core/layout/sidebarMenu';
 import {formatDateTime} from './adminFormat';
 
 type Locale = 'vi' | 'en';
@@ -19,6 +22,8 @@ type Locale = 'vi' | 'en';
 const AdminEmailTemplatePage = observer(() => {
     const {t} = useTranslation('admin');
     const {sessionStore} = useStore();
+    const appSession = useSessionStore((s) => s.appSession);
+    const can = (p: string) => checkPermissionUser(appSession, p);
     const tableStore = useTableStore(adminApi.templates);
     const {onLoadData} = tableStore();
     // dong dang sua (mot ma) + ngon ngu + mau hieu luc cua ngon ngu do
@@ -98,7 +103,7 @@ const AdminEmailTemplatePage = observer(() => {
     };
 
     const actions: ITableAction<AdminEmailTemplateRowDto>[] = [
-        {title: 'edit', onClick: openEdit},
+        {title: 'edit', permission: ADMIN_PER.EmailTemplate.Update, onClick: openEdit},
     ];
 
     const columns = TableUtil.getColumns<AdminEmailTemplateRowDto>(
@@ -147,6 +152,7 @@ const AdminEmailTemplatePage = observer(() => {
         <AdminLayout>
             {/* khong co topActions: khong co nut Them moi, ma template co dinh trong backend */}
             <PageLayoutWithTable
+                hiddenHeader
                 titleHeader={<h2 className="m-0 text-lg font-semibold text-foreground">{t('template.title')}</h2>}
                 searchFields={searchFields}
                 tableStore={tableStore}>
@@ -157,10 +163,10 @@ const AdminEmailTemplatePage = observer(() => {
                    title={row ? `${row.name} (${row.code})` : ''}
                    footer={
                        <Space>
-                           {current?.overridden && <Button danger onClick={onReset}>{t('template.reset')}</Button>}
-                           <Button onClick={onPreview}>{t('template.preview')}</Button>
+                           {current?.overridden && can(ADMIN_PER.EmailTemplate.Update) && <Button danger onClick={onReset}>{t('template.reset')}</Button>}
+                           {can(ADMIN_PER.EmailTemplate.Preview) && <Button onClick={onPreview}>{t('template.preview')}</Button>}
                            <Button onClick={close}>{t('common.cancel')}</Button>
-                           <Button type="primary" onClick={onSave}>{t('common.save')}</Button>
+                           {can(ADMIN_PER.EmailTemplate.Update) && <Button type="primary" onClick={onSave}>{t('common.save')}</Button>}
                        </Space>
                    }>
                 <div className="flex flex-col gap-3">
@@ -180,10 +186,12 @@ const AdminEmailTemplatePage = observer(() => {
                         <Input.TextArea rows={12} value={body} onChange={(e) => setBody(e.target.value)}
                                         className="font-mono text-xs"/>
                     </div>
-                    <Space.Compact>
-                        <Input value={toEmail} onChange={(e) => setToEmail(e.target.value)} placeholder={t('template.testTo')}/>
-                        <Button onClick={onSendTest}>{t('template.sendTest')}</Button>
-                    </Space.Compact>
+                    {can(ADMIN_PER.EmailTemplate.SendTest) && (
+                        <Space.Compact>
+                            <Input value={toEmail} onChange={(e) => setToEmail(e.target.value)} placeholder={t('template.testTo')}/>
+                            <Button onClick={onSendTest}>{t('template.sendTest')}</Button>
+                        </Space.Compact>
+                    )}
                     {previewHtml !== null && (
                         // sandbox rong: khong chay script, khong gui form
                         <iframe title="preview" sandbox="" srcDoc={previewHtml}

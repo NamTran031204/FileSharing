@@ -155,11 +155,31 @@ export interface UserDto {
 
   /**  */
   lastLoginAt?: Date;
+
+  /**  */
+  permissions?: string[];
+
+  /**  */
+  adminSide?: boolean;
 }
 
-export interface AdminRoleUpdateDto {
+export interface AdminAssignRolesDto {
   /**  */
-  roles?: UserGrantedRole[];
+  sa?: boolean;
+
+  /**  */
+  adminRoleIds?: string[];
+}
+
+export interface AdminRoleRef {
+  /**  */
+  id?: string;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  name?: string;
 }
 
 export interface AdminUserRowDto {
@@ -189,6 +209,12 @@ export interface AdminUserRowDto {
 
   /**  */
   lastLoginAt?: Date;
+
+  /**  */
+  adminRoles?: AdminRoleRef[];
+
+  /**  */
+  adminSide?: boolean;
 }
 
 export interface CommonResponseAdminUserRowDto {
@@ -263,6 +289,54 @@ export interface CommonResponseListAdminSettingItemDto {
 
   /**  */
   data?: AdminSettingItemDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface AdminRoleUpsertDto {
+  /**  */
+  code?: string;
+
+  /**  */
+  name?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  permissions?: string[];
+}
+
+export interface AdminRoleDetailDto {
+  /**  */
+  id?: string;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  name?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  userCount?: string;
+
+  /**  */
+  permissions?: string[];
+}
+
+export interface CommonResponseAdminRoleDetailDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminRoleDetailDto;
 
   /**  */
   code?: string;
@@ -2447,6 +2521,12 @@ export interface AdminCreateUserRequestDto {
 
   /**  */
   password?: string;
+
+  /**  */
+  sa?: boolean;
+
+  /**  */
+  adminRoleIds?: string[];
 }
 
 export interface AdminUserFilterDto {
@@ -2461,6 +2541,12 @@ export interface AdminUserFilterDto {
 
   /**  */
   provider?: AuthProvider;
+
+  /**  */
+  adminSide?: boolean;
+
+  /**  */
+  adminRoleId?: string;
 }
 
 export interface PageRequestDtoAdminUserFilterDto {
@@ -2544,6 +2630,64 @@ export interface CommonResponseAdminMailTestResultDto {
 
   /**  */
   message?: string;
+}
+
+export interface AdminRoleFilterDto {
+  /**  */
+  searchText?: string;
+}
+
+export interface PageRequestDtoAdminRoleFilterDto {
+  /**  */
+  maxResultCount?: number;
+
+  /**  */
+  skipCount?: number;
+
+  /**  */
+  sorting?: string;
+
+  /**  */
+  filter?: AdminRoleFilterDto;
+}
+
+export interface AdminRoleRowDto {
+  /**  */
+  id?: string;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  name?: string;
+
+  /**  */
+  description?: string;
+
+  /**  */
+  userCount?: string;
+}
+
+export interface CommonResponsePageResultAdminRoleRowDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: PageResultAdminRoleRowDto;
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface PageResultAdminRoleRowDto {
+  /**  */
+  totalCount?: string;
+
+  /**  */
+  data?: AdminRoleRowDto[];
 }
 
 export interface AdminNodeDrainRequestDto {
@@ -4070,6 +4214,36 @@ export interface CommonResponseListAdminSettingGroupDto {
   message?: string;
 }
 
+export interface AdminPermissionGroupDto {
+  /**  */
+  group?: string;
+
+  /**  */
+  resources?: Resource[];
+}
+
+export interface CommonResponseListAdminPermissionGroupDto {
+  /**  */
+  isSuccessful?: boolean;
+
+  /**  */
+  data?: AdminPermissionGroupDto[];
+
+  /**  */
+  code?: string;
+
+  /**  */
+  message?: string;
+}
+
+export interface Resource {
+  /**  */
+  resource?: string;
+
+  /**  */
+  permissions?: string[];
+}
+
 export interface CommonResponseListAdminNodeDto {
   /**  */
   isSuccessful?: boolean;
@@ -4274,7 +4448,6 @@ export enum AuthProvider {
 
 export enum UserGrantedRole {
   'ROLE_USER' = 'ROLE_USER',
-  'ROLE_ADMIN' = 'ROLE_ADMIN',
   'ROLE_SA' = 'ROLE_SA'
 }
 
@@ -4444,7 +4617,11 @@ export enum AuditAction {
   'SETTING_RESET' = 'SETTING_RESET',
   'TEMPLATE_UPDATED' = 'TEMPLATE_UPDATED',
   'TEMPLATE_RESET' = 'TEMPLATE_RESET',
-  'NODE_DRAINED' = 'NODE_DRAINED'
+  'NODE_DRAINED' = 'NODE_DRAINED',
+  'ADMIN_ROLE_CREATED' = 'ADMIN_ROLE_CREATED',
+  'ADMIN_ROLE_UPDATED' = 'ADMIN_ROLE_UPDATED',
+  'ADMIN_ROLE_DELETED' = 'ADMIN_ROLE_DELETED',
+  'USER_ADMIN_ROLES_CHANGED' = 'USER_ADMIN_ROLES_CHANGED'
 }
 
 export enum AuditActorType {
@@ -4466,7 +4643,8 @@ export enum AuditTargetType {
   'PERMISSION' = 'PERMISSION',
   'SETTING' = 'SETTING',
   'EMAIL_TEMPLATE' = 'EMAIL_TEMPLATE',
-  'NODE' = 'NODE'
+  'NODE' = 'NODE',
+  'ADMIN_ROLE' = 'ADMIN_ROLE'
 }
 
 export enum Action {

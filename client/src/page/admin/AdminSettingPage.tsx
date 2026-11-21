@@ -1,10 +1,14 @@
 import {useCallback, useEffect, useState} from 'react';
+import {observer} from 'mobx-react-lite';
 import {useTranslation} from 'react-i18next';
 import {Button, Card, Checkbox, Form, Input, InputNumber, Modal, Select, Space, Switch, Tag} from 'antd';
 import type {AdminSettingGroupDto, AdminSettingItemDto} from '../../api/api/index.defs';
 import {adminApi, adminCall} from '../../api/adminApiResource';
 import uiUtils from '../../utils/uiUtils';
 import AdminLayout from './AdminLayout.tsx';
+import {checkPermissionUser} from '@plugin-core/auth/utils/auth.utils';
+import {useSessionStore} from '@plugin-core/shared/store/useSessionStore';
+import {ADMIN_PER} from '../../components/core/layout/sidebarMenu';
 
 const MASK = '••••••••';
 const isNumeric = (type?: string) => type === 'INT' || type === 'LONG';
@@ -73,8 +77,11 @@ const SettingField = ({it, t}: {it: AdminSettingItemDto; t: TFn}) => {
     );
 };
 
-const AdminSettingPage = () => {
+const AdminSettingPage = observer(() => {
     const {t} = useTranslation('admin');
+    const appSession = useSessionStore((s) => s.appSession);
+    const canUpdate = checkPermissionUser(appSession, ADMIN_PER.Setting.Update);
+    const canTestMail = checkPermissionUser(appSession, ADMIN_PER.Setting.TestMail);
     const [groups, setGroups] = useState<AdminSettingGroupDto[]>([]);
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState<AdminSettingGroupDto | null>(null);
@@ -153,7 +160,7 @@ const AdminSettingPage = () => {
                           title={t(`setting.group.${g.group}`, {defaultValue: g.group})}
                           extra={
                               <Space>
-                                  {g.group === 'MAIL' && (
+                                  {g.group === 'MAIL' && canTestMail && (
                                       <>
                                           <Button size="small" onClick={() => onMailTest('CONNECT')}>{t('setting.mailConnect')}</Button>
                                           <Button size="small" onClick={() => onMailTest('SEND')}>{t('setting.mailSend')}</Button>
@@ -161,7 +168,7 @@ const AdminSettingPage = () => {
                                   )}
                                   {g.readOnly
                                       ? <Tag color="var(--color-muted-foreground)" title={t('setting.fixedHint')}>{t('setting.fixedBadge')}</Tag>
-                                      : <Button size="small" type="primary" onClick={() => openEdit(g)}>{t('common.edit')}</Button>}
+                                      : canUpdate && <Button size="small" type="primary" onClick={() => openEdit(g)}>{t('common.edit')}</Button>}
                               </Space>
                           }>
                         <div className="flex flex-col gap-2">
@@ -172,7 +179,7 @@ const AdminSettingPage = () => {
                                         <span className="text-muted-foreground break-all">{displayValue(it, t('setting.notConfigured'))}</span>
                                         {!g.readOnly && it.overridden && <Tag color="var(--color-primary)">{t('setting.overridden')}</Tag>}
                                         {it.apply === 'RESTART' && <Tag color="var(--color-warning)">{t('setting.needRestart')}</Tag>}
-                                        {!g.readOnly && it.overridden && (
+                                        {!g.readOnly && it.overridden && canUpdate && (
                                             <Button size="small" type="link" onClick={() => onReset(it)}>{t('setting.reset')}</Button>
                                         )}
                                     </div>
@@ -195,6 +202,6 @@ const AdminSettingPage = () => {
             </Modal>
         </AdminLayout>
     );
-};
+});
 
 export default AdminSettingPage;

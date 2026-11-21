@@ -49,4 +49,9 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
      * Dem so user con hoat dong theo role, dung de chan khoa hoac go SA cuoi cung
      */
     long countByUserGrantedRolesContainingAndEnabled(UserGrantedRole role, boolean enabled);
+
+    /**
+     * Dem user dang gan mot nhom quyen quan tri, dung de chan xoa nhom con user
+     */
+    long countByAdminRoleIdsContaining(String adminRoleId);
 }

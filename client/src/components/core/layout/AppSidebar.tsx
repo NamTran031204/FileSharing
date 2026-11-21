@@ -1,13 +1,6 @@
 import {
-  HomeOutlined,
-  AppstoreOutlined,
-  FolderOutlined,
-  SettingOutlined,
-  ShareAltOutlined,
-  QuestionCircleOutlined,
   LogoutOutlined,
   PlusOutlined,
-  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
 import { observer } from 'mobx-react-lite';
@@ -16,9 +9,11 @@ import CreateProjectModal, {type CreateProjectFormValues} from "../../project/Cr
 import {useState} from "react";
 import uiUtils from "../../../utils/uiUtils.tsx";
 import {ProjectControllerService} from "../../../api/api/ProjectControllerService";
-import {UserGrantedRole, type ProjectStatus} from "../../../api/api/index.defs";
+import type {ProjectStatus} from "../../../api/api/index.defs";
 import {useStore} from "../../../store";
 import i18n from '../../../i18n';
+import {checkPermissionUser} from '../../../utils/auth.utils';
+import {ADMIN_MENU, USER_MENU} from './sidebarMenu';
 
 interface AppSidebarProps {
   /** true = sidebar chi hien icon (72px), hover de mo rong de len content. Mac dinh false giu nguyen UI hien tai. */
@@ -39,48 +34,23 @@ const AppSidebar = observer(({ collapsed = false }: AppSidebarProps) => {
   const isExpanded = !collapsed || isHovering;
   const isOverlay = collapsed && isHovering;
 
-  const menuItems = [
-    {
-      key: '/home',
-      icon: <HomeOutlined />,
-      label: i18n.t('core:appSidebar.home'),
-    },
-    {
-      key: '/dashboard',
-      icon: <AppstoreOutlined />,
-      label: i18n.t('core:appSidebar.dashboard'),
-    },
-    {
-      key: '/projects',
-      icon: <FolderOutlined />,
-      label: i18n.t('core:appSidebar.projects'),
-      isActive: location.pathname.startsWith('/review') || location.pathname.startsWith('/projects'),
-    },
-    {
-      key: '/shared-with-me',
-      icon: <ShareAltOutlined />,
-      label: i18n.t('access:sharedWithMe.title'),
-    },
-    {
-      key: '/settings',
-      icon: <SettingOutlined />,
-      label: i18n.t('core:appSidebar.settings'),
-    },
-    {
-      key: '/help',
-      icon: <QuestionCircleOutlined />,
-      label: i18n.t('core:appSidebar.help'),
-    },
-    // chi ROLE_SA thay muc quan tri (backend van chan that)
-    ...(sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_SA)
-      ? [{
-          key: '/admin',
-          icon: <SafetyCertificateOutlined />,
-          label: i18n.t('admin:sidebar'),
-          isActive: location.pathname.startsWith('/admin'),
-        }]
-      : []),
-  ];
+  const {userLoaded, appSession} = sessionStore;
+  const adminSide = appSession.user?.adminSide === true;
+  // phia user/quan tri chon 1 danh sach; muc quan tri loc theo permission (SA nhan du catalogue tu backend)
+  const menuItems = (adminSide
+      ? ADMIN_MENU.filter((m) => checkPermissionUser(appSession, m.permission))
+      : USER_MENU
+  ).map((m) => {
+    const Icon = m.icon;
+    return {
+      key: m.key,
+      icon: <Icon />,
+      label: i18n.t(m.labelKey),
+      isActive: m.activePrefixes
+          ? m.activePrefixes.some((p) => location.pathname.startsWith(p))
+          : location.pathname === m.key,
+    };
+  });
 
   const handleItemClick = (key: string) => {
     navigate(key);
@@ -164,10 +134,12 @@ const AppSidebar = observer(({ collapsed = false }: AppSidebarProps) => {
 
                   {/* Navigation */}
                   <nav className="flex flex-col gap-1">
-                      {menuItems.map((item) => {
-                          const isActive = item.isActive !== undefined
-                              ? item.isActive
-                              : location.pathname === item.key;
+                      {/* chua nap user thi render skeleton, tranh nhay menu sai phia */}
+                      {!userLoaded && [0, 1, 2, 3].map((i) => (
+                          <div key={i} className="h-11 rounded-lg bg-accent/20 animate-pulse"/>
+                      ))}
+                      {userLoaded && menuItems.map((item) => {
+                          const isActive = item.isActive;
 
                           return (
                               <button
@@ -195,7 +167,7 @@ const AppSidebar = observer(({ collapsed = false }: AppSidebarProps) => {
                   {/* Bottom Actions */}
                   <div className="mt-auto">
                       {/* New Project Button */}
-                      <div className={isExpanded ? undefined : 'flex justify-center'}>
+                      {!adminSide && <div className={isExpanded ? undefined : 'flex justify-center'}>
                           <Button
                               type="primary"
                               icon={<PlusOutlined />}
@@ -205,7 +177,7 @@ const AppSidebar = observer(({ collapsed = false }: AppSidebarProps) => {
                           >
                               {isExpanded ? i18n.t('core:appSidebar.newProject') : null}
                           </Button>
-                      </div>
+                      </div>}
 
                       {/* Logout */}
                       <div className="mt-4 pt-4 border-t border-border/30">

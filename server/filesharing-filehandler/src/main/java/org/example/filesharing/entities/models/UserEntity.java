@@ -39,8 +39,14 @@ public class UserEntity extends EntityAuditBase implements UserDetails {
     // ten de hien thi ra man hinh, khong dung de dang nhap
     private String publicUserName;
 
+    @Builder.Default
     private List<UserGrantedRole> userGrantedRoles = new ArrayList<>();
 
+    // id cac nhom quyen quan tri (admin_roles); chi co y nghia voi tai khoan phia quan tri
+    @Builder.Default
+    private List<String> adminRoleIds = new ArrayList<>();
+
+    @Builder.Default
     private List<UserRole> roles = new ArrayList<>();
 
     private boolean enabled = true;
@@ -53,11 +59,13 @@ public class UserEntity extends EntityAuditBase implements UserDetails {
     /**
      * Danh sách provider đã liên kết (LOCAL, GOOGLE,...)
      */
+    @Builder.Default
     private List<AuthProviderInfo> providers = new ArrayList<>();
 
     /**
      * Optional metadata (avatar, locale, device info...), có thể lưu JSON
      */
+    @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
     /**

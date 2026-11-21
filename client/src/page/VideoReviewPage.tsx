@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Circle } from 'react-konva';
 import { ReviewCoreStore } from '../store/review/ReviewCoreStore';
 import type { AnnotationCore } from '../store/review/ReviewCoreStore';
-import { Action, MediaType, ProcessingStatus, UserGrantedRole } from '../api/api/index.defs';
+import { Action, MediaType, ProcessingStatus } from '../api/api/index.defs';
 import type { MediaAdapter } from '../components/mediaReview/bridge/MediaAdapter';
 import MediaReviewLayout from '../components/mediaReview/MediaReviewLayout';
 import HlsVideoPlayer from '../components/mediaReview/HlsVideoPlayer';
@@ -21,7 +21,6 @@ import DownloadProgress from '../components/uploadDownloadProgress/DownloadProgr
 import type { DownloadProgress as DownloadProgressType } from '../service/downloadService';
 import { downloadService } from '../service/downloadService';
 import uiUtils from '../utils/uiUtils.tsx';
-import { useStore } from '../store';
 import useKonvaCanvas from '../hooks/useKonvaCanvas';
 import type { Shape } from '../hooks/useKonvaCanvas';
 import { buildShapeInfoList } from '../utils/coordinateTransform';
@@ -87,7 +86,6 @@ function storeAnnToShape(ann: AnnotationCore): Shape | null {
 }
 
 const VideoReviewPage = observer(() => {
-  const { sessionStore } = useStore();
   const [searchParams] = useSearchParams();
   const assetId = searchParams.get('assetId') ?? '';
   const versionParam = searchParams.get('version');
@@ -352,7 +350,6 @@ const VideoReviewPage = observer(() => {
   });
 
   const isReady = store.currentVersionMetadata?.processingStatus === ProcessingStatus.READY;
-  const viewingAsAdmin = sessionStore.appSession.isGrantedRole(UserGrantedRole.ROLE_ADMIN);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -365,7 +362,7 @@ const VideoReviewPage = observer(() => {
         onDownload={handleDownload}
         topBarRight={
           <span className="flex items-center gap-2">
-            <span>{i18n.t('review:videoReviewPage.viewingAs')} {viewingAsAdmin ? i18n.t('review:videoReviewPage.admin') : i18n.t('review:videoReviewPage.customer')}</span>
+            <span>{i18n.t('review:videoReviewPage.viewingAs')} {i18n.t('review:videoReviewPage.customer')}</span>
             <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[9px] font-black text-[var(--color-foreground)]">HLS</span>
           </span>
         }
@@ -494,11 +491,7 @@ const VideoReviewPage = observer(() => {
             />
           )}
 
-          {/* TODO(role-gating): đang hiển thị Stream Health cho MỌI user để dựng UI trước (quyết định B.3-3).
-              Role có sẵn: UserGrantedRole = ROLE_USER | ROLE_ADMIN | ROLE_SA (api/api/index.defs.ts:3010),
-              check bằng sessionStore.isGrantedRole(UserGrantedRole.ROLE_ADMIN).
-              ReviewerRole (REVIEWER | APPROVER) là khái niệm khác, không dùng cho gating này.
-              Cần chốt với BA: "Admin" trong mockup = ROLE_ADMIN hệ thống hay vai trò riêng của review session? */}
+          {/* TODO(role-gating): Stream Health dang hien cho moi user. Can chot voi BA: "Admin" trong mockup la role nao (ROLE_SA he thong hay vai tro rieng cua review session)? */}
           {isReady && <StreamHealthPanel playerRef={playerRef} />}
         </div>
 

@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +26,9 @@ public class AdminCreateUserRequestDto {
     @Size(min = 8, max = 72)
     @ToString.Exclude
     private String password;
+
+    // chi nguoi co ROLE_SA moi duoc gui sa=true
+    private boolean sa;
+
+    private List<String> adminRoleIds;
 }

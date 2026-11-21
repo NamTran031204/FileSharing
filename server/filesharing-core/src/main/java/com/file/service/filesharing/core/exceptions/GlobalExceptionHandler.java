@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -129,6 +131,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.NOT_FOUND.getHttpStatus())
                 .body(CommonResponse.fail(ErrorCode.NOT_FOUND, localize(ErrorCode.NOT_FOUND, null, null)));
+    }
+
+    // @PreAuthorize bi tu choi tra 403 dung envelope, khong roi vao 500 chung
+    // (AuthorizationDeniedException la con cua AccessDeniedException, liet ke ro cho de doc)
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<CommonResponse<Object>> handleAccessDenied(Exception ex, WebRequest request) {
+        return ResponseEntity
+                .status(ErrorCode.FORBIDDEN.getHttpStatus())
+                .body(CommonResponse.fail(ErrorCode.FORBIDDEN, localize(ErrorCode.FORBIDDEN, null, null)));
     }
 
     @ExceptionHandler(Exception.class)

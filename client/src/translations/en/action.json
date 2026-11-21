@@ -11,7 +11,7 @@
   "more": "More",
   "lock": "Lock",
   "unlock": "Unlock",
-  "assignRole": "Assign roles",
+  "assignRole": "Assign role groups",
   "revokeSessions": "Revoke sessions",
   "retry": "Retry job",
   "cancel": "Cancel job",

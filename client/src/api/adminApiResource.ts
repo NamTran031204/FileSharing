@@ -3,7 +3,15 @@ import {AdminUserControllerService} from './api/AdminUserControllerService';
 import {AdminSettingControllerService} from './api/AdminSettingControllerService';
 import {AdminEmailTemplateControllerService} from './api/AdminEmailTemplateControllerService';
 import {AdminNodeControllerService} from './api/AdminNodeControllerService';
-import type {AdminUserRowDto, PageRequestDtoAdminUserFilterDto} from './api/index.defs';
+import {AdminRoleControllerService} from './api/AdminRoleControllerService';
+import {AdminPermissionControllerService} from './api/AdminPermissionControllerService';
+import type {
+    AdminRoleRowDto,
+    AdminUserRowDto,
+    PageRequestDtoAdminRoleFilterDto,
+    PageRequestDtoAdminUserFilterDto,
+} from './api/index.defs';
+import {rootStore} from '../store';
 import UiUtils from '../utils/uiUtils';
 import i18n from '../i18n';
 
@@ -53,6 +61,10 @@ export const adminCall = async <T>(
         if (successKey) UiUtils.showSuccess(i18n.t(successKey));
         return {ok: true, data: res?.data};
     } catch (err) {
+        // 403: quyen co the vua doi, nap lai user de menu va nut khop quyen moi
+        if ((err as {response?: {status?: number}})?.response?.status === 403) {
+            void rootStore.sessionStore.loadCurrentUser();
+        }
         UiUtils.showError((err as Error)?.message || i18n.t('admin:common.error'));
         return {ok: false};
     }
@@ -72,8 +84,21 @@ export const adminApi = {
         create: AdminUserControllerService.users,
         lock: AdminUserControllerService.lock,
         unlock: AdminUserControllerService.unlock,
-        roles: AdminUserControllerService.roles,
+        adminRoles: AdminUserControllerService.adminRoles,
         revokeSessions: AdminUserControllerService.revokeSessions,
+    },
+    roles: {
+        ...toCrudPaged<AdminRoleRowDto>(
+            (p) => AdminRoleControllerService.getPaged({body: p.body as PageRequestDtoAdminRoleFilterDto}),
+            'id',
+        ),
+        detail: AdminRoleControllerService.roles,
+        create: AdminRoleControllerService.roles3,
+        update: AdminRoleControllerService.roles1,
+        remove: AdminRoleControllerService.roles2,
+    },
+    permissions: {
+        list: () => AdminPermissionControllerService.permissions(),
     },
     settings: {
         list: () => S.settings1(),

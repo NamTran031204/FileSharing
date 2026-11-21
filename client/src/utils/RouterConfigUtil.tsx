@@ -25,6 +25,8 @@ import AdminUserPage from "../page/admin/AdminUserPage.tsx";
 import AdminSettingPage from "../page/admin/AdminSettingPage.tsx";
 import AdminEmailTemplatePage from "../page/admin/AdminEmailTemplatePage.tsx";
 import AdminNodePage from "../page/admin/AdminNodePage.tsx";
+import AdminRolePage from "../page/admin/AdminRolePage.tsx";
+import {ADMIN_PER} from "../components/core/layout/sidebarMenu.ts";
 
 export interface AppRoute extends Omit<RouteObject, 'children'> {
     path?: string;
@@ -34,6 +36,8 @@ export interface AppRoute extends Omit<RouteObject, 'children'> {
     icon?: ReactNode; // antd icon
     isShow?: boolean; // dùng sau
     roles?: string[];
+    side?: 'user' | 'admin'; // phia tai khoan duoc vao route, xem ProtectedRoute
+    permission?: string; // permission can co, xem ProtectedRoute
     isPublic?: boolean; // true = khong bao ProtectedRoute, mac dinh moi route deu can dang nhap
     children?: AppRoute[];
 }
@@ -75,66 +79,78 @@ export const ROUTER_CONFIG: AppRoute[] = [
     },
     {
         path: '/home',
+        side: 'user',
         name: 'Home',
         element: <MainPage/>
     },
     {
         path: '/preview/*',
+        side: 'user',
         name: 'Preview',
         element: <FilePreviewPage/>,
     },
     {
         path: '/my-files',
+        side: 'user',
         name: 'My Files',
         element: <UserFilePage/>,
     },
     {
         path: '/upload',
+        side: 'user',
         name: 'Upload',
         element: <UploadPage/>,
     },
     {
         path: '/profile',
+        side: 'user',
         name: 'Profile',
         element: <UserProfilePage/>,
     },
     {
         path: '/trash',
+        side: 'user',
         name: 'Trash',
         element: <TrashPage/>,
     },
     {
         path: '/mockup/image-review',
+        side: 'user',
         name: 'Mockup Image Review',
         element: <LocalImageCanvas/>,
         isShow: false,
     },
     {
         path: '/review/image-v2',
+        side: 'user',
         name: 'Image Review V2',
         element: <ImageReviewPage/>,
         isShow: false,
     },
     {
         path: '/review/video',
+        side: 'user',
         name: 'Video Review',
         element: <VideoReviewPage/>,
         isShow: false,
     },
     {
         path: '/dashboard',
+        side: 'user',
         name: 'Dashboard',
         element: <DashboardPage/>,
         isShow: true,
     },
     {
         path: '/projects',
+        side: 'user',
         name: 'Projects',
         element: <ProjectMain/>,
         isShow: true,
     },
     {
         path: '/shared-with-me',
+        side: 'user',
         name: 'Shared With Me',
         element: <SharedWithMePage/>,
         isShow: true,
@@ -148,6 +164,7 @@ export const ROUTER_CONFIG: AppRoute[] = [
     },
     {
         path: '/mockup/hls-video',
+        side: 'user',
         name: 'Mockup HLS Video',
         element: <HlsVideoMockup/>,
         isShow: false,
@@ -161,20 +178,22 @@ export const ROUTER_CONFIG: AppRoute[] = [
     },
     {
         path: '/projects/:projectId',
+        side: 'user',
         name: 'Project Assets',
         element: <FolderAssetPage/>,
         isShow: false,
     },
     {
-        // trang quan tri he thong: chi ROLE_SA (FE chi la UX, backend chan that o /api/admin/**)
+        // trang quan tri: gate theo phia + permission (FE chi la UX, backend chan that o /api/admin/**)
         path: '/admin',
         name: 'Admin',
         element: <AdminHomePage/>,
-        roles: ['ROLE_SA'],
+        side: 'admin',
         isShow: false,
     },
-    {path: '/admin/users', name: 'Admin Users', element: <AdminUserPage/>, roles: ['ROLE_SA'], isShow: false},
-    {path: '/admin/settings', name: 'Admin Settings', element: <AdminSettingPage/>, roles: ['ROLE_SA'], isShow: false},
-    {path: '/admin/email-templates', name: 'Admin Email Templates', element: <AdminEmailTemplatePage/>, roles: ['ROLE_SA'], isShow: false},
-    {path: '/admin/nodes', name: 'Admin Nodes', element: <AdminNodePage/>, roles: ['ROLE_SA'], isShow: false},
+    {path: '/admin/users', name: 'Admin Users', element: <AdminUserPage/>, side: 'admin', permission: ADMIN_PER.User.GetPaged, isShow: false},
+    {path: '/admin/roles', name: 'Admin Roles', element: <AdminRolePage/>, side: 'admin', permission: ADMIN_PER.Role.GetPaged, isShow: false},
+    {path: '/admin/settings', name: 'Admin Settings', element: <AdminSettingPage/>, side: 'admin', permission: ADMIN_PER.Setting.GetPaged, isShow: false},
+    {path: '/admin/email-templates', name: 'Admin Email Templates', element: <AdminEmailTemplatePage/>, side: 'admin', permission: ADMIN_PER.EmailTemplate.GetPaged, isShow: false},
+    {path: '/admin/nodes', name: 'Admin Nodes', element: <AdminNodePage/>, side: 'admin', permission: ADMIN_PER.Node.GetPaged, isShow: false},
 ];

@@ -64,7 +64,7 @@ const resolveRouteElement = (route: AppRoute) => {
         : route.element ?? null;
 
     if (!route.isPublic) {
-        return <ProtectedRoute roles={route.roles}>{baseElement}</ProtectedRoute>;
+        return <ProtectedRoute roles={route.roles} side={route.side} permission={route.permission}>{baseElement}</ProtectedRoute>;
     }
 
     return baseElement;

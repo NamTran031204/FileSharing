@@ -69,10 +69,10 @@
         }
       }
     },
-    "/api/admin/users/{userId}/roles" : {
+    "/api/admin/users/{userId}/admin-roles" : {
       "put" : {
         "tags" : [ "admin-user-controller" ],
-        "operationId" : "updateRoles",
+        "operationId" : "updateAdminRoles",
         "parameters" : [ {
           "name" : "userId",
           "in" : "path",
@@ -85,7 +85,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/AdminRoleUpdateDto"
+                "$ref" : "#/components/schemas/AdminAssignRolesDto"
               }
             }
           },
@@ -150,6 +150,117 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CommonResponseListAdminSettingItemDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/roles/{id}" : {
+      "get" : {
+        "tags" : [ "admin-role-controller" ],
+        "operationId" : "getDetail",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminRoleDetailDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "admin-role-controller" ],
+        "operationId" : "update",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminRoleUpsertDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminRoleDetailDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "admin-role-controller" ],
+        "operationId" : "delete",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseVoid"
                 }
               }
             }
@@ -2697,6 +2808,80 @@
         }
       }
     },
+    "/api/admin/roles" : {
+      "post" : {
+        "tags" : [ "admin-role-controller" ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminRoleUpsertDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseAdminRoleDetailDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/roles/get-paged" : {
+      "post" : {
+        "tags" : [ "admin-role-controller" ],
+        "operationId" : "getPaged",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PageRequestDtoAdminRoleFilterDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponsePageResultAdminRoleRowDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/admin/nodes/{nodeId}/drain" : {
       "post" : {
         "tags" : [ "admin-node-controller" ],
@@ -4449,6 +4634,33 @@
         }
       }
     },
+    "/api/admin/permissions" : {
+      "get" : {
+        "tags" : [ "admin-permission-controller" ],
+        "operationId" : "catalogue",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommonResponseListAdminPermissionGroupDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - Invalid or missing JWT token"
+          },
+          "403" : {
+            "description" : "Forbidden - Access denied"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/admin/nodes" : {
       "get" : {
         "tags" : [ "admin-node-controller" ],
@@ -4832,22 +5044,48 @@
           "lastLoginAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "adminSide" : {
+            "type" : "boolean"
           }
         }
       },
       "UserGrantedRole" : {
         "type" : "string",
-        "enum" : [ "ROLE_USER", "ROLE_ADMIN", "ROLE_SA" ]
+        "enum" : [ "ROLE_USER", "ROLE_SA" ]
       },
-      "AdminRoleUpdateDto" : {
-        "required" : [ "roles" ],
+      "AdminAssignRolesDto" : {
+        "required" : [ "adminRoleIds" ],
         "type" : "object",
         "properties" : {
-          "roles" : {
+          "sa" : {
+            "type" : "boolean"
+          },
+          "adminRoleIds" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/UserGrantedRole"
+              "type" : "string"
             }
+          }
+        }
+      },
+      "AdminRoleRef" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
           }
         }
       },
@@ -4888,6 +5126,15 @@
           "lastLoginAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "adminRoles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminRoleRef"
+            }
+          },
+          "adminSide" : {
+            "type" : "boolean"
           }
         }
       },
@@ -4989,6 +5236,76 @@
             "items" : {
               "$ref" : "#/components/schemas/AdminSettingItemDto"
             }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminRoleUpsertDto" : {
+        "required" : [ "code", "permissions" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "pattern" : "^[A-Za-z0-9_.-]{1,100}$",
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "description" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "AdminRoleDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "userCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "CommonResponseAdminRoleDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminRoleDetailDto"
           },
           "code" : {
             "type" : "string"
@@ -7834,6 +8151,15 @@
             "maxLength" : 72,
             "minLength" : 8,
             "type" : "string"
+          },
+          "sa" : {
+            "type" : "boolean"
+          },
+          "adminRoleIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -7851,6 +8177,12 @@
           },
           "provider" : {
             "$ref" : "#/components/schemas/AuthProvider"
+          },
+          "adminSide" : {
+            "type" : "boolean"
+          },
+          "adminRoleId" : {
+            "type" : "string"
           }
         }
       },
@@ -7962,6 +8294,86 @@
           },
           "message" : {
             "type" : "string"
+          }
+        }
+      },
+      "AdminRoleFilterDto" : {
+        "type" : "object",
+        "properties" : {
+          "searchText" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageRequestDtoAdminRoleFilterDto" : {
+        "type" : "object",
+        "properties" : {
+          "maxResultCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sorting" : {
+            "type" : "string"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/AdminRoleFilterDto"
+          }
+        }
+      },
+      "AdminRoleRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "userCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CommonResponsePageResultAdminRoleRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAdminRoleRowDto"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PageResultAdminRoleRowDto" : {
+        "type" : "object",
+        "properties" : {
+          "totalCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminRoleRowDto"
+            }
           }
         }
       },
@@ -8763,7 +9175,7 @@
       },
       "AuditAction" : {
         "type" : "string",
-        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION", "RESTORE", "USER_CREATED", "USER_LOCKED", "USER_UNLOCKED", "USER_ROLES_CHANGED", "SESSIONS_REVOKED", "SETTING_UPDATED", "SETTING_RESET", "TEMPLATE_UPDATED", "TEMPLATE_RESET", "NODE_DRAINED" ]
+        "enum" : [ "CREATE", "UPDATE", "TRASH", "DELETE", "STATUS_CHANGE", "PERMISSION_CHANGE", "LOGIN", "LOGOUT", "SHARE", "DOWNLOAD", "UPLOAD_COMPLETE", "UPLOAD_NEW_VERSION", "RESTORE", "USER_CREATED", "USER_LOCKED", "USER_UNLOCKED", "USER_ROLES_CHANGED", "SESSIONS_REVOKED", "SETTING_UPDATED", "SETTING_RESET", "TEMPLATE_UPDATED", "TEMPLATE_RESET", "NODE_DRAINED", "ADMIN_ROLE_CREATED", "ADMIN_ROLE_UPDATED", "ADMIN_ROLE_DELETED", "USER_ADMIN_ROLES_CHANGED" ]
       },
       "AuditLogFilterDTO" : {
         "type" : "object",
@@ -8929,7 +9341,7 @@
       },
       "AuditTargetType" : {
         "type" : "string",
-        "enum" : [ "PROJECT", "FOLDER", "FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION", "SETTING", "EMAIL_TEMPLATE", "NODE" ]
+        "enum" : [ "PROJECT", "FOLDER", "FILE", "ASSET", "ANNOTATION", "COMMENT", "REVIEW_SESSION", "USER", "PERMISSION", "SETTING", "EMAIL_TEMPLATE", "NODE", "ADMIN_ROLE" ]
       },
       "CommonResponsePageResultAuditLogEntity" : {
         "type" : "object",
@@ -9988,6 +10400,54 @@
           },
           "message" : {
             "type" : "string"
+          }
+        }
+      },
+      "AdminPermissionGroupDto" : {
+        "type" : "object",
+        "properties" : {
+          "group" : {
+            "type" : "string"
+          },
+          "resources" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Resource"
+            }
+          }
+        }
+      },
+      "CommonResponseListAdminPermissionGroupDto" : {
+        "type" : "object",
+        "properties" : {
+          "isSuccessful" : {
+            "type" : "boolean"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminPermissionGroupDto"
+            }
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Resource" : {
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },

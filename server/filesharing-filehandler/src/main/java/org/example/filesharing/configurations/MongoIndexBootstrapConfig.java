@@ -45,6 +45,7 @@ public class MongoIndexBootstrapConfig {
             applyUploadSessionsIndexes();
             applyProofSelectionIndexes();
             applyWorkerNodesIndexes();
+            applyAdminRolesIndexes();
 
             log.info("Mongo indexes bootstrap completed.");
         };
@@ -56,6 +57,13 @@ public class MongoIndexBootstrapConfig {
         ops.createIndex(new Index()
                 .on("providers.provider", Sort.Direction.ASC)
                 .on("providers.providerId", Sort.Direction.ASC));
+        // dem/liet ke user theo nhom quyen quan tri
+        ops.createIndex(new Index().on("adminRoleIds", Sort.Direction.ASC));
+    }
+
+    private void applyAdminRolesIndexes() {
+        IndexOperations ops = mongoTemplate.indexOps("admin_roles");
+        ops.createIndex(new Index().on("code", Sort.Direction.ASC).unique());
     }
 
     private void applyMetadataIndexes() {

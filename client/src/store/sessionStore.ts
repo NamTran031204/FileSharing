@@ -10,6 +10,9 @@ export interface UserSessionDto {
     publicUserName?: string;
     userGrantedRoles?: UserGrantedRole[];
     roles?: UserRole[];
+    // quyen admin hieu luc (Admin.User.GetPaged, ...) va co phia quan tri; backend tinh, FE khong tu suy ra
+    permissions?: string[];
+    adminSide?: boolean;
     enabled?: boolean;
     emailVerified?: boolean;
     lastLoginAt?: string;
@@ -122,10 +125,11 @@ class SessionStore {
     }
 
     setSession(session: AppSessionDto) {
-        if (session?.user?.userGrantedRoles) {
+        if (session?.user?.userGrantedRoles || session?.user?.permissions) {
             session.permissionGranted = {};
-            session.user.userGrantedRoles.forEach((role) => {
-                session.permissionGranted![role] = true;
+            // gop role lan permission vao cung 1 map, la shape checkPermissionUser va admin-core dang dung
+            [...(session.user.userGrantedRoles ?? []), ...(session.user.permissions ?? [])].forEach((name) => {
+                session.permissionGranted![name] = true;
             });
         }
 
@@ -185,6 +189,8 @@ class SessionStore {
                     email: dto.email,
                     publicUserName: dto.publicUserName,
                     userGrantedRoles: dto.roles,
+                    permissions: dto.permissions,
+                    adminSide: dto.adminSide,
                     enabled: dto.enabled,
                     emailVerified: dto.emailVerified,
                     lastLoginAt: dto.lastLoginAt?.toString(),

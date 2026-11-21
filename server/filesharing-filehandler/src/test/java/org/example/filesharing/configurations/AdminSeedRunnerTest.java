@@ -36,7 +36,7 @@ class AdminSeedRunnerTest {
         assertEquals(FAKE_HASH, u.getPassword());
         assertTrue(u.isEnabled());
         assertTrue(u.isEmailVerified());
-        assertTrue(u.getUserGrantedRoles().containsAll(java.util.List.of(UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA)));
+        assertEquals(java.util.List.of(UserGrantedRole.ROLE_SA), u.getUserGrantedRoles());
     }
 
     @Test

@@ -7,6 +7,10 @@ import com.file.service.filesharing.core.setting.RuntimeSettings;
 import com.file.service.filesharing.core.setting.SettingKey;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -55,7 +59,15 @@ public class SecurityConfig {
                         // proof link cho khach khong tai khoan, tu kiem token trong service
                         .requestMatchers("/api/public/**").permitAll()
 
-                        .requestMatchers("/api/admin/**").hasAuthority(UserGrantedRole.ROLE_SA.name())
+                        // cong phia: da dang nhap va khong co ROLE_USER; tung hanh dong do @PreAuthorize
+                        .requestMatchers("/api/admin/**").access((authentication, ctx) -> {
+                            Authentication a = authentication.get();
+                            boolean adminSide = a != null && a.isAuthenticated()
+                                    && !(a instanceof AnonymousAuthenticationToken)
+                                    && a.getAuthorities().stream()
+                                    .noneMatch(g -> UserGrantedRole.ROLE_USER.name().equals(g.getAuthority()));
+                            return new AuthorizationDecision(adminSide);
+                        })
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -64,7 +76,10 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                        .anyRequest().authenticated()
+                        // API ban than cua tai khoan phia quan tri (TK 5.5): tai khoan do chi duoc doc/sua chinh minh
+                        .requestMatchers(HttpMethod.GET, "/api/users").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").authenticated()
+                        .anyRequest().hasAuthority(UserGrantedRole.ROLE_USER.name())
                 )
 
                 .sessionManagement(session ->

@@ -17,10 +17,13 @@ import com.file.service.filesharing.core.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.example.filesharing.entities.dtos.admin.*;
+import org.example.filesharing.entities.models.AdminRoleEntity;
 import org.example.filesharing.entities.models.UserEntity;
 import org.example.filesharing.entities.models.user.AuthProviderInfo;
+import org.example.filesharing.repositories.AdminRoleRepo;
 import org.example.filesharing.repositories.AuditLogRepo;
 import org.example.filesharing.repositories.UserRepo;
+import org.example.filesharing.services.AdminPermissionResolver;
 import org.example.filesharing.services.AdminUserService;
 import org.example.filesharing.services.AuditService;
 import org.springframework.dao.DuplicateKeyException;
@@ -50,21 +53,31 @@ public class AdminUserServiceImpl implements AdminUserService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final AuditLogRepo auditLogRepo;
+    private final AdminRoleRepo adminRoleRepo;
+    private final AdminPermissionResolver permissionResolver;
 
     @Override
     public PageResult<AdminUserRowDto> getPaged(PageRequestDto<AdminUserFilterDto> request) {
         Query query = new Query();
         AdminUserFilterDto f = request.getFilter();
         if (f != null) {
+            // moi dieu kien vao $and de khong trung khoa (role va adminSide cung tren userGrantedRoles)
+            List<Criteria> and = new ArrayList<>();
             if (!StringUtils.isNullOrBlank(f.getSearchText())) {
                 String regex = Pattern.quote(f.getSearchText().trim());
-                query.addCriteria(new Criteria().orOperator(
+                and.add(new Criteria().orOperator(
                         Criteria.where("email").regex(regex, "i"),
                         Criteria.where("publicUserName").regex(regex, "i")));
             }
-            if (f.getRole() != null) query.addCriteria(Criteria.where("userGrantedRoles").is(f.getRole()));
-            if (f.getEnabled() != null) query.addCriteria(Criteria.where("enabled").is(f.getEnabled()));
-            if (f.getProvider() != null) query.addCriteria(Criteria.where("providers.provider").is(f.getProvider()));
+            if (f.getRole() != null) and.add(Criteria.where("userGrantedRoles").is(f.getRole()));
+            if (f.getAdminSide() != null) {
+                and.add(f.getAdminSide() ? Criteria.where("userGrantedRoles").ne(UserGrantedRole.ROLE_USER)
+                        : Criteria.where("userGrantedRoles").is(UserGrantedRole.ROLE_USER));
+            }
+            if (f.getEnabled() != null) and.add(Criteria.where("enabled").is(f.getEnabled()));
+            if (f.getProvider() != null) and.add(Criteria.where("providers.provider").is(f.getProvider()));
+            if (!StringUtils.isNullOrBlank(f.getAdminRoleId())) and.add(Criteria.where("adminRoleIds").is(f.getAdminRoleId()));
+            if (!and.isEmpty()) query.addCriteria(new Criteria().andOperator(and));
         }
         long total = mongoTemplate.count(query, UserEntity.class);
 
@@ -72,7 +85,9 @@ public class AdminUserServiceImpl implements AdminUserService {
         Sort sort = Sort.by(pageable.getSort().stream().filter(o -> SORTABLE.contains(o.getProperty())).toList());
         query.with(sort.isUnsorted() ? Sort.by(Sort.Direction.DESC, "createdAt") : sort)
                 .skip(pageable.getOffset()).limit(pageable.getPageSize());
-        List<AdminUserRowDto> data = mongoTemplate.find(query, UserEntity.class).stream().map(this::toRow).toList();
+        List<UserEntity> users = mongoTemplate.find(query, UserEntity.class);
+        Map<String, AdminRoleEntity> roleMap = loadRoles(users);
+        List<AdminUserRowDto> data = users.stream().map(u -> toRow(u, roleMap)).toList();
         return PageResult.<AdminUserRowDto>builder().totalCount(total).data(data).build();
     }
 
@@ -100,6 +115,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     public AdminUserRowDto lock(String userId) {
         UserEntity u = load(userId);
         guardSelf(userId);
+        guardTarget(u);
         guardLastSa(u);
         boolean before = u.isEnabled();
         u.setEnabled(false);
@@ -111,6 +127,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public AdminUserRowDto unlock(String userId) {
         UserEntity u = load(userId);
+        guardTarget(u);
         boolean before = u.isEnabled();
         u.setEnabled(true);
         userRepo.save(u);
@@ -119,26 +136,46 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    public AdminUserRowDto updateRoles(String userId, AdminRoleUpdateDto request) {
+    public AdminUserRowDto updateAdminRoles(String userId, AdminAssignRolesDto request) {
         UserEntity u = load(userId);
-        // ROLE_USER luon co
-        LinkedHashSet<UserGrantedRole> next = new LinkedHashSet<>();
-        next.add(UserGrantedRole.ROLE_USER);
-        next.addAll(request.getRoles());
-        List<UserGrantedRole> before = u.getUserGrantedRoles() == null ? List.of() : List.copyOf(u.getUserGrantedRoles());
-        if (before.contains(UserGrantedRole.ROLE_SA) && !next.contains(UserGrantedRole.ROLE_SA)) {
+        UserEntity actor = auditService.getCurrentUser();
+        // G5: chi gan cho tai khoan phia quan tri
+        if (!AdminPermissionResolver.isAdminSide(u)) {
+            throw new UserBusinessException(ErrorCode.ADMIN_ROLE_TARGET_INVALID);
+        }
+        boolean hadSa = hasSa(u);
+        // G1: chi SA cap/go ROLE_SA
+        if (hadSa != request.isSa() && !hasSa(actor)) {
+            throw new UserBusinessException(ErrorCode.ADMIN_PERMISSION_ESCALATION);
+        }
+        // G2
+        guardTarget(u);
+        List<String> beforeIds = u.getAdminRoleIds() == null ? List.of() : List.copyOf(u.getAdminRoleIds());
+        List<String> nextIds = new ArrayList<>(new LinkedHashSet<>(request.getAdminRoleIds()));
+        // G4: quyen cua moi nhom them hoac go phai thuoc quyen cua actor
+        Set<String> changed = new HashSet<>(nextIds);
+        for (String id : beforeIds) {
+            if (!changed.remove(id)) changed.add(id);
+        }
+        guardRolesEscalation(actor, changed, nextIds);
+        if (hadSa && !request.isSa()) {
             guardSelf(userId);
             guardLastSa(u);
         }
-        u.setUserGrantedRoles(new ArrayList<>(next));
+        List<UserGrantedRole> beforeRoles = u.getUserGrantedRoles() == null ? List.of() : List.copyOf(u.getUserGrantedRoles());
+        u.setUserGrantedRoles(request.isSa() ? new ArrayList<>(List.of(UserGrantedRole.ROLE_SA)) : new ArrayList<>());
+        u.setAdminRoleIds(nextIds);
         userRepo.save(u);
-        audit(AuditAction.USER_ROLES_CHANGED, u, Map.of("roles", names(before)), Map.of("roles", names(next)));
+        audit(AuditAction.USER_ADMIN_ROLES_CHANGED, u,
+                Map.of("roles", names(beforeRoles), "adminRoleIds", beforeIds),
+                Map.of("roles", names(u.getUserGrantedRoles()), "adminRoleIds", nextIds));
         return toRow(u);
     }
 
     @Override
     public AdminUserRowDto revokeSessions(String userId) {
         UserEntity u = load(userId);
+        guardTarget(u);
         // cat ve giay de khop cach so sanh iat cua jwt filter
         u.setSessionsValidAfter(Instant.now().truncatedTo(ChronoUnit.SECONDS));
         userRepo.save(u);
@@ -147,13 +184,23 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     /**
-     * Hien tai: SA tao tai khoan van hanh (ROLE_USER + ROLE_SA) bang email, ten hien thi, mat khau.
-     * Luong goi: nut tao tai khoan van hanh o AdminUserPage, goi POST /api/admin/users, roi toi ham nay.
+     * Hien tai: tao tai khoan phia quan tri (khong ROLE_USER): [ROLE_SA] khi sa=true (chi SA gui duoc), nguoc lai []
+     * va quyen den tu adminRoleIds (G1, G4 kiem o day).
+     * Luong goi: nut tao tai khoan quan tri o AdminUserPage, goi POST /api/admin/users, roi toi ham nay.
      * Sau nay mo rong: tao tai khoan tenant, tai khoan theo doi benchmark hoac worker;
-     * khi do role cua tai khoan van hanh se tach khoi ROLE_SA va ham nhan them tham so role.
+     * khi do ham nhan them tham so loai tai khoan.
      */
     @Override
     public AdminUserRowDto createOperatorAccount(AdminCreateUserRequestDto request) {
+        UserEntity actor = auditService.getCurrentUser();
+        // G1
+        if (request.isSa() && !hasSa(actor)) {
+            throw new UserBusinessException(ErrorCode.ADMIN_PERMISSION_ESCALATION);
+        }
+        List<String> roleIds = request.getAdminRoleIds() == null ? new ArrayList<>()
+                : new ArrayList<>(new LinkedHashSet<>(request.getAdminRoleIds()));
+        // G4
+        guardRolesEscalation(actor, new HashSet<>(roleIds), roleIds);
         String email = request.getEmail().trim();
         if (userRepo.existsByEmail(email)) {
             throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "error.user.alreadyExists");
@@ -162,7 +209,8 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .email(email)
                 .publicUserName(request.getPublicUserName().trim())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .userGrantedRoles(new ArrayList<>(List.of(UserGrantedRole.ROLE_USER, UserGrantedRole.ROLE_SA)))
+                .userGrantedRoles(request.isSa() ? new ArrayList<>(List.of(UserGrantedRole.ROLE_SA)) : new ArrayList<>())
+                .adminRoleIds(roleIds)
                 .enabled(true)
                 .emailVerified(true)
                 .providers(new ArrayList<>(List.of(AuthProviderInfo.builder()
@@ -176,7 +224,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             // 2 request cung email gan nhu dong thoi, unique index chan o tang db
             throw new UserBusinessException(ErrorCode.USER_ALREADY_EXISTS, "error.user.alreadyExists");
         }
-        audit(AuditAction.USER_CREATED, saved, null, Map.of("roles", names(saved.getUserGrantedRoles())));
+        audit(AuditAction.USER_CREATED, saved, null, Map.of("roles", names(saved.getUserGrantedRoles()), "adminRoleIds", roleIds));
         return toRow(saved);
     }
 
@@ -191,7 +239,36 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
     }
 
+    private static boolean hasSa(UserEntity u) {
+        return AdminPermissionResolver.isAdminSide(u) && u.getUserGrantedRoles() != null
+                && u.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
+    }
+
+    // G2: chi thao tac tai khoan co effective(target) la tap con cua effective(actor); SA co du catalogue nen luon qua
+    private void guardTarget(UserEntity target) {
+        UserEntity actor = auditService.getCurrentUser();
+        if (!permissionResolver.effective(actor).containsAll(permissionResolver.effective(target))) {
+            throw new UserBusinessException(ErrorCode.ADMIN_TARGET_FORBIDDEN);
+        }
+    }
+
+    // G4: id nhom phai ton tai (nextIds) va quyen cua cac nhom them/go (changed) phai thuoc quyen actor
+    private void guardRolesEscalation(UserEntity actor, Set<String> changed, List<String> nextIds) {
+        if (!nextIds.isEmpty() && adminRoleRepo.findAllById(nextIds).size() != nextIds.size()) {
+            throw new UserBusinessException(ErrorCode.ADMIN_ROLE_NOT_FOUND);
+        }
+        if (changed.isEmpty()) return;
+        Set<String> perms = new HashSet<>();
+        for (AdminRoleEntity r : adminRoleRepo.findAllById(changed)) {
+            if (r.getPermissions() != null) perms.addAll(r.getPermissions());
+        }
+        if (!permissionResolver.effective(actor).containsAll(perms)) {
+            throw new UserBusinessException(ErrorCode.ADMIN_PERMISSION_ESCALATION);
+        }
+    }
+
     // chan khi target la SA dang enabled va la nguoi cuoi cung
+    // ponytail: dem roi ghi, khong atomic; 2 SA khoa nhau cung luc co the con 0 SA, doi sang findAndModify co dieu kien khi can
     private void guardLastSa(UserEntity target) {
         boolean activeSa = target.isEnabled() && target.getUserGrantedRoles() != null
                 && target.getUserGrantedRoles().contains(UserGrantedRole.ROLE_SA);
@@ -224,7 +301,22 @@ public class AdminUserServiceImpl implements AdminUserService {
         return roles.stream().map(Enum::name).toList();
     }
 
+    private Map<String, AdminRoleEntity> loadRoles(Collection<UserEntity> users) {
+        Set<String> ids = new HashSet<>();
+        for (UserEntity u : users) if (u.getAdminRoleIds() != null) ids.addAll(u.getAdminRoleIds());
+        Map<String, AdminRoleEntity> out = new HashMap<>();
+        if (!ids.isEmpty()) adminRoleRepo.findAllById(ids).forEach(r -> out.put(r.getId(), r));
+        return out;
+    }
+
     private AdminUserRowDto toRow(UserEntity u) {
+        return toRow(u, loadRoles(List.of(u)));
+    }
+
+    private AdminUserRowDto toRow(UserEntity u, Map<String, AdminRoleEntity> roleMap) {
+        List<AdminUserRowDto.AdminRoleRef> refs = u.getAdminRoleIds() == null ? List.of()
+                : u.getAdminRoleIds().stream().map(roleMap::get).filter(Objects::nonNull)
+                .map(r -> new AdminUserRowDto.AdminRoleRef(r.getId(), r.getCode(), r.getName())).toList();
         return AdminUserRowDto.builder()
                 .userId(u.getUserId())
                 .email(u.getEmail())
@@ -236,6 +328,8 @@ public class AdminUserServiceImpl implements AdminUserService {
                         : u.getProviders().stream().map(AuthProviderInfo::getProvider).toList())
                 .createdAt(u.getCreatedAt())
                 .lastLoginAt(u.getLastLoginAt())
+                .adminRoles(refs)
+                .adminSide(AdminPermissionResolver.isAdminSide(u))
                 .build();
     }
 }

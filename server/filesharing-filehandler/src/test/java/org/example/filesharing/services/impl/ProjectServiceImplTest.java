@@ -101,7 +101,7 @@ class ProjectServiceImplTest {
 
     @Test
     void adminWithoutRoleIsDeniedOnGetById() {
-        loginAs("admin", UserGrantedRole.ROLE_ADMIN, UserGrantedRole.ROLE_SA);
+        loginAs("admin", UserGrantedRole.ROLE_SA);
         when(accessService.myAccess(ResourceRef.project(PX))).thenReturn(noAccess());
         when(accessService.require(ResourceRef.project(PX), Action.VIEW)).thenThrow(denied());
 
@@ -275,7 +275,7 @@ class ProjectServiceImplTest {
 
     @Test
     void nonMemberLeavingIsAccessDenied() {
-        loginAs("u4", UserGrantedRole.ROLE_ADMIN);
+        loginAs("u4", UserGrantedRole.ROLE_SA);
 
         FileBusinessException e = assertThrows(FileBusinessException.class, () -> service.leaveProject(PX));
 

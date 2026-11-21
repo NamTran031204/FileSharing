@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
+import {observer} from 'mobx-react-lite';
 import {useTranslation} from 'react-i18next';
 import {Button, Card, Empty, Progress, Tag} from 'antd';
 import {Line, LineChart, ResponsiveContainer} from 'recharts';
@@ -6,6 +7,9 @@ import type {AdminNodeDto} from '../../api/api/index.defs';
 import {adminApi, adminCall} from '../../api/adminApiResource';
 import uiUtils from '../../utils/uiUtils';
 import AdminLayout from './AdminLayout.tsx';
+import {checkPermissionUser} from '@plugin-core/auth/utils/auth.utils';
+import {useSessionStore} from '@plugin-core/shared/store/useSessionStore';
+import {ADMIN_PER} from '../../components/core/layout/sidebarMenu';
 import {formatBytes, formatPercent, formatUptime} from './adminFormat';
 
 const POLL_MS = 5000;
@@ -16,7 +20,7 @@ const STATUS_COLOR: Record<string, string> = {
     DRAINING: 'var(--color-warning)',
 };
 
-const NodeCard = ({node, onDrain}: {node: AdminNodeDto; onDrain: (n: AdminNodeDto) => void}) => {
+const NodeCard = ({node, onDrain, canDrain}: {node: AdminNodeDto; onDrain: (n: AdminNodeDto) => void; canDrain: boolean}) => {
     const {t} = useTranslation('admin');
     const w = node.worker;
     const heapPct = node.memory?.heapMax && Number(node.memory.heapMax) > 0
@@ -24,7 +28,7 @@ const NodeCard = ({node, onDrain}: {node: AdminNodeDto; onDrain: (n: AdminNodeDt
     const samples = (node.samples ?? []).map((s) => ({sys: s.sys ?? 0, proc: s.proc ?? 0, child: s.child ?? 0}));
     return (
         <Card size="small" title={<span>{node.nodeId} <Tag color={STATUS_COLOR[node.status ?? '']}>{node.status}</Tag></span>}
-              extra={node.kind === 'WORKER' && (
+              extra={node.kind === 'WORKER' && canDrain && (
                   <Button size="small" onClick={() => onDrain(node)}>
                       {t(node.draining ? 'node.undrain' : 'node.drain')}
                   </Button>
@@ -79,8 +83,9 @@ const NodeCard = ({node, onDrain}: {node: AdminNodeDto; onDrain: (n: AdminNodeDt
     );
 };
 
-const AdminNodePage = () => {
+const AdminNodePage = observer(() => {
     const {t} = useTranslation('admin');
+    const canDrain = checkPermissionUser(useSessionStore((s) => s.appSession), ADMIN_PER.Node.Drain);
     const [nodes, setNodes] = useState<AdminNodeDto[]>([]);
     const [loaded, setLoaded] = useState(false);
 
@@ -139,12 +144,12 @@ const AdminNodePage = () => {
                 <section key={service} className="mb-6">
                     <h3 className="mb-2 font-semibold text-foreground">{service}</h3>
                     <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">
-                        {list.map((n) => <NodeCard key={n.nodeId} node={n} onDrain={onDrain}/>)}
+                        {list.map((n) => <NodeCard key={n.nodeId} node={n} onDrain={onDrain} canDrain={canDrain}/>)}
                     </div>
                 </section>
             ))}
         </AdminLayout>
     );
-};
+});
 
 export default AdminNodePage;

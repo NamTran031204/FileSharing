@@ -3,6 +3,7 @@
   "menu": {
     "home": "Tổng quan",
     "users": "Tài khoản",
+    "roles": "Nhóm quyền",
     "settings": "Cấu hình",
     "emailTemplates": "Mẫu email",
     "nodes": "Worker / Node"
@@ -20,8 +21,8 @@
   },
   "user": {
     "title": "Quản lý tài khoản",
-    "create": "Tạo tài khoản vận hành",
-    "createTitle": "Tạo tài khoản vận hành",
+    "create": "Tạo tài khoản quản trị",
+    "createTitle": "Tạo tài khoản quản trị",
     "createdOk": "Đã tạo tài khoản",
     "email": "Email",
     "publicUserName": "Tên hiển thị",
@@ -40,15 +41,20 @@
     "fileCount": "Số file",
     "storageBytes": "Dung lượng",
     "sessionsValidAfter": "Phiên hợp lệ từ",
-    "assignRoleTitle": "Gán vai trò",
-    "rolesOk": "Đã cập nhật vai trò",
+    "assignRoleTitle": "Gán nhóm quyền",
+    "rolesOk": "Đã cập nhật nhóm quyền",
     "lockConfirmTitle": "Khoá tài khoản này?",
     "unlockConfirmTitle": "Mở khoá tài khoản này?",
     "lockedOk": "Đã khoá tài khoản",
     "unlockedOk": "Đã mở khoá tài khoản",
     "revokeConfirmTitle": "Thu hồi toàn bộ phiên đăng nhập?",
     "revokeConfirmContent": "Tài khoản {{email}} sẽ phải đăng nhập lại.",
-    "revokedOk": "Đã thu hồi phiên"
+    "revokedOk": "Đã thu hồi phiên",
+    "adminRoles": "Nhóm quyền",
+    "saLabel": "Quản trị viên tối cao (SA)",
+    "side": "Phía",
+    "sideUser": "Người dùng",
+    "sideAdmin": "Quản trị"
   },
   "setting": {
     "title": "Cấu hình hệ thống",
@@ -406,5 +412,77 @@
     "undrainConfirm": "Bỏ drain, node nhận job trở lại?",
     "drainedOk": "Đã drain node",
     "undrainedOk": "Đã bỏ drain"
+  },
+  "changePassword": {
+    "title": "Đổi mật khẩu",
+    "password": "Mật khẩu mới (tối thiểu 8 ký tự)",
+    "confirm": "Nhập lại mật khẩu",
+    "mismatch": "Mật khẩu nhập lại không khớp",
+    "ok": "Đã đổi mật khẩu"
+  },
+  "permission": {
+    "Admin": {
+      "User": {
+        "_": "Tài khoản",
+        "GetPaged": "Xem danh sách",
+        "GetDetail": "Xem chi tiết",
+        "Create": "Tạo tài khoản",
+        "Lock": "Khoá / mở khoá",
+        "RevokeSession": "Thu hồi phiên",
+        "AssignRole": "Gán nhóm quyền"
+      },
+      "Role": {
+        "_": "Nhóm quyền",
+        "GetPaged": "Xem danh sách",
+        "GetDetail": "Xem chi tiết",
+        "Create": "Thêm",
+        "Update": "Sửa",
+        "Delete": "Xoá"
+      },
+      "Setting": {
+        "_": "Cấu hình",
+        "GetPaged": "Xem danh sách",
+        "Update": "Sửa / đặt lại",
+        "TestMail": "Kiểm tra mail"
+      },
+      "EmailTemplate": {
+        "_": "Mẫu email",
+        "GetPaged": "Xem danh sách",
+        "Update": "Sửa / đặt lại",
+        "Preview": "Xem trước",
+        "SendTest": "Gửi thử"
+      },
+      "Node": {
+        "_": "Worker / Node",
+        "GetPaged": "Xem danh sách",
+        "Drain": "Drain / bỏ drain"
+      }
+    }
+  },
+  "role": {
+    "title": "Quản lý nhóm quyền",
+    "code": "Mã",
+    "name": "Tên",
+    "userCount": "Số user",
+    "description": "Mô tả",
+    "searchText": "Tìm kiếm",
+    "searchPlaceholder": "Mã hoặc tên nhóm",
+    "tabInfo": "Thông tin",
+    "tabPermission": "Phân quyền",
+    "codeInvalid": "Chỉ gồm chữ, số, dấu . _ - (tối đa 100 ký tự)",
+    "modalTitle": {
+      "create": "Thêm nhóm quyền",
+      "edit": "Sửa nhóm quyền",
+      "view": "Chi tiết nhóm quyền"
+    },
+    "createdOk": "Đã thêm nhóm quyền",
+    "updatedOk": "Đã cập nhật nhóm quyền",
+    "deletedOk": "Đã xoá nhóm quyền",
+    "deleteConfirmTitle": "Xoá nhóm quyền này?",
+    "usersTitle": "User trong nhóm {{name}}"
+  },
+  "permissionGroup": {
+    "AccountAndRole": "Tài khoản và nhóm quyền",
+    "System": "Hệ thống"
   }
 }

@@ -11,7 +11,7 @@
   "more": "Thêm",
   "lock": "Khoá",
   "unlock": "Mở khoá",
-  "assignRole": "Gán vai trò",
+  "assignRole": "Gán nhóm quyền",
   "revokeSessions": "Thu hồi phiên",
   "retry": "Thử lại job",
   "cancel": "Huỷ job",

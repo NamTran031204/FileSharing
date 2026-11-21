@@ -6,7 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.filesharing.entities.models.UserEntity;
+import org.example.filesharing.services.AdminPermissionResolver;
 import org.example.filesharing.services.JwtService;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final AdminPermissionResolver adminPermissionResolver;
 
     @Override
     protected void doFilterInternal(
@@ -63,10 +69,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Tạo Authentication object
                 // UsernamePasswordAuthenticationToken là implementation của Authentication
+                // authorities = ten role + quyen quan tri hieu luc, doc lai DB moi request (khong cache)
+                Set<GrantedAuthority> authorities = new HashSet<>(userDetails.getAuthorities());
+                if (userDetails instanceof UserEntity u) {
+                    adminPermissionResolver.effective(u).forEach(p -> authorities.add(new SimpleGrantedAuthority(p)));
+                }
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,                    // Principal (user info)
                         null,                           // Credentials (null vì đã authenticate qua JWT)
-                        userDetails.getAuthorities()    // Authorities (roles/permissions)
+                        authorities
                 );
 
                 // Thêm request details (IP, session ID, etc.)

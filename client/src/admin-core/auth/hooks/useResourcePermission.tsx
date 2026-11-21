@@ -12,20 +12,24 @@ export interface ResourcePermissionResult {
     canExport: boolean;
 }
 
-const ROLE = 'ROLE_SA';
+// permission co dang "<permissionBase>.<Action>" (vd Admin.User.Create); FE khong bypass cho ROLE_SA, backend da tra du catalogue cho SA
+const per = (base: string | undefined, action: string) => `${base}.${action}`;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- giữ nguyên mã gốc wifi-webapp (PORTING.md)
-export const useResourcePermission = (_permissionBase?: string): ResourcePermissionResult => {
+export const useResourcePermission = (permissionBase?: string): ResourcePermissionResult => {
     const appSession = useSessionStore(s => s.appSession);
-    const ok = checkPermissionUser(appSession, ROLE);
-    return {canCreate: ok, canUpdate: ok, canDelete: ok, canGetDetail: ok, canImport: false, canExport: false};
+    const can = (action: string) => !!permissionBase && checkPermissionUser(appSession, per(permissionBase, action));
+    return {
+        canCreate: can('Create'), canUpdate: can('Update'), canDelete: can('Delete'), canGetDetail: can('GetDetail'),
+        canImport: can('Import'), canExport: can('Export'),
+    };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- giữ nguyên mã gốc wifi-webapp (PORTING.md)
-export const usePermissionStrings = (_permissionBase?: string) => {
+export const usePermissionStrings = (permissionBase?: string) => {
     const permissions = {
-        create: ROLE, update: ROLE, delete: ROLE, getDetail: ROLE, getList: ROLE, detail: ROLE, list: ROLE,
-        import: ROLE, export: ROLE,
+        create: per(permissionBase, 'Create'), update: per(permissionBase, 'Update'), delete: per(permissionBase, 'Delete'),
+        getDetail: per(permissionBase, 'GetDetail'), getList: per(permissionBase, 'GetPaged'),
+        detail: per(permissionBase, 'GetDetail'), list: per(permissionBase, 'GetPaged'),
+        import: per(permissionBase, 'Import'), export: per(permissionBase, 'Export'),
     };
     return {permissions};
 };
